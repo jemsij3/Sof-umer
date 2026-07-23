@@ -1,0 +1,6 @@
+{
+  "name": "SOF-UMER",
+  "description": "Professional Property Listing Platform - discover, search, and manage properties in English, Afaan Oromoo, and Amharic.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

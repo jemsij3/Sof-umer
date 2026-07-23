@@ -1,0 +1,323 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", "Plus Jakarta Sans", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-serif: "Playfair Display", Georgia, Cambria, "Times New Roman", Times, serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: #050505;
+  color: #F5F5F4;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* Sophisticated modern scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #08080a;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 9999px;
+  border: 2px solid #08080a;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.18);
+}
+
+/* Premium Forms & Controls */
+input, select, textarea {
+  background-color: rgba(255, 255, 255, 0.02) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  color: #ffffff !important;
+  border-radius: 14px !important;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  padding: 0.75rem 1rem !important;
+}
+
+input:focus, select:focus, textarea:focus {
+  background-color: rgba(255, 255, 255, 0.04) !important;
+  border-color: rgba(245, 158, 11, 0.5) !important; /* Elegant gold focus */
+  box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.1) !important;
+  outline: none !important;
+}
+
+/* Glassmorphic premium container styling */
+.glass-panel {
+  background: rgba(15, 15, 18, 0.6);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+/* Custom rounded card overrides - making them look premium and curved */
+.rounded-3xl {
+  border-radius: 1.75rem !important;
+}
+.rounded-2xl {
+  border-radius: 1.25rem !important;
+}
+.rounded-xl {
+  border-radius: 0.85rem !important;
+}
+.rounded-lg {
+  border-radius: 0.6rem !important;
+}
+
+/* Admin Dashboard Specific Styles */
+.admin-console .bg-white,
+.admin-console .bg-slate-50,
+.admin-console .bg-slate-100 {
+  background-color: rgba(12, 12, 15, 0.8) !important;
+  border-color: rgba(255, 255, 255, 0.06) !important;
+  color: #F5F5F4 !important;
+}
+
+.admin-console .bg-amber-50,
+.admin-console .bg-blue-50 {
+  background-color: rgba(255, 255, 255, 0.02) !important;
+  border-color: rgba(255, 255, 255, 0.06) !important;
+  color: #F5F5F4 !important;
+}
+
+.admin-console .bg-amber-100,
+.admin-console .bg-blue-100 {
+  background-color: rgba(245, 158, 11, 0.1) !important;
+  color: #f59e0b !important;
+}
+
+.admin-console .text-slate-900,
+.admin-console .text-slate-850,
+.admin-console .text-slate-800,
+.admin-console .text-slate-700,
+.admin-console .text-slate-650,
+.admin-console .text-slate-600 {
+  color: rgba(255, 255, 255, 0.95) !important;
+}
+
+.admin-console .text-slate-500,
+.admin-console .text-slate-450,
+.admin-console .text-slate-400 {
+  color: rgba(255, 255, 255, 0.72) !important;
+}
+
+.admin-console .border-slate-100,
+.admin-console .border-slate-200 {
+  border-color: rgba(255, 255, 255, 0.06) !important;
+}
+
+.admin-console .divide-slate-100 > * {
+  border-color: rgba(255, 255, 255, 0.04) !important;
+}
+
+.admin-console .bg-slate-900 {
+  background-color: #ffffff !important;
+  color: #050505 !important;
+}
+
+.admin-console .bg-amber-500 {
+  background-color: #f59e0b !important;
+  color: #050505 !important;
+}
+
+.admin-console th {
+  background-color: rgba(255, 255, 255, 0.02) !important;
+  color: rgba(255, 255, 255, 0.5) !important;
+  font-family: var(--font-mono) !important;
+  font-size: 10px !important;
+  letter-spacing: 0.12em !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06) !important;
+}
+
+.admin-console tr:hover {
+  background-color: rgba(255, 255, 255, 0.02) !important;
+}
+
+.admin-console .text-indigo-600 {
+  color: #f59e0b !important;
+  text-decoration: underline !important;
+}
+
+.admin-console .text-amber-800,
+.admin-console .text-blue-800 {
+  color: #ffffff !important;
+}
+
+/* User Dashboard & Details View */
+.user-dashboard, .details-view, .create-modal-view {
+  color: #F5F5F4 !important;
+}
+
+.user-dashboard .bg-white,
+.details-view .bg-white,
+.create-modal-view .bg-white,
+.user-dashboard .bg-slate-50,
+.details-view .bg-slate-50,
+.create-modal-view .bg-slate-50 {
+  background-color: rgba(12, 12, 15, 0.9) !important;
+  border-color: rgba(255, 255, 255, 0.06) !important;
+}
+
+.user-dashboard .text-slate-900,
+.details-view .text-slate-900,
+.create-modal-view .text-slate-900 {
+  color: #ffffff !important;
+}
+
+.user-dashboard .text-slate-600,
+.details-view .text-slate-600,
+.create-modal-view .text-slate-600 {
+  color: rgba(255, 255, 255, 0.88) !important;
+}
+
+.user-dashboard .text-slate-500,
+.details-view .text-slate-500,
+.create-modal-view .text-slate-500,
+.user-dashboard .text-slate-400,
+.details-view .text-slate-400,
+.create-modal-view .text-slate-400 {
+  color: rgba(255, 255, 255, 0.74) !important;
+}
+
+.user-dashboard .border-slate-100,
+.details-view .border-slate-100,
+.create-modal-view .border-slate-100,
+.user-dashboard .border-slate-200,
+.details-view .border-slate-200,
+.create-modal-view .border-slate-200 {
+  border-color: rgba(255, 255, 255, 0.06) !important;
+}
+
+/* Form layout updates for User Dashboard and details inputs */
+.user-dashboard input, .user-dashboard select, .user-dashboard textarea,
+.details-view input, .details-view select, .details-view textarea,
+.create-modal-view input, .create-modal-view select, .create-modal-view textarea {
+  background-color: rgba(0, 0, 0, 0.3) !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+  color: #ffffff !important;
+}
+
+.user-dashboard .bg-amber-500, .details-view .bg-amber-500 {
+  background-color: #f59e0b !important;
+  color: #050505 !important;
+  border-radius: 12px !important;
+}
+
+.user-dashboard .bg-amber-500:hover, .details-view .bg-amber-500:hover {
+  background-color: #d97706 !important;
+}
+
+.user-dashboard .bg-slate-900, .details-view .bg-slate-900 {
+  background-color: rgba(255, 255, 255, 0.03) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  color: #ffffff !important;
+  border-radius: 12px !important;
+}
+
+/* Chat bubbles, files, and cards customization */
+.user-dashboard .border-slate-150 {
+  border-color: rgba(255, 255, 255, 0.06) !important;
+}
+
+.user-dashboard .bg-slate-50\/50 {
+  background-color: rgba(255, 255, 255, 0.01) !important;
+}
+
+/* ==========================================================================
+   SOF UMER PROFESSIONAL ACCESSIBILITY, CONTRAST & READABILITY ENHANCEMENTS
+   ========================================================================== */
+
+/* 1. Global Contrast Enhancements for Tailwind text opacity classes */
+[class*="text-white/20"], .text-white\/20 {
+  color: rgba(255, 255, 255, 0.58) !important;
+}
+[class*="text-white/30"], .text-white\/30 {
+  color: rgba(255, 255, 255, 0.68) !important;
+}
+[class*="text-white/40"], .text-white\/40 {
+  color: rgba(255, 255, 255, 0.78) !important;
+}
+[class*="text-white/50"], .text-white\/50 {
+  color: rgba(255, 255, 255, 0.85) !important;
+}
+[class*="text-white/60"], .text-white\/60 {
+  color: rgba(255, 255, 255, 0.90) !important;
+}
+[class*="text-white/70"], .text-white\/70 {
+  color: rgba(255, 255, 255, 0.94) !important;
+}
+
+/* 2. Scale up tiny typography to prevent unreadable text on mobile and older screens */
+[class*="text-[9px]"], .text-\[9px\] {
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.04em !important;
+}
+[class*="text-[10px]"], .text-\[10px\] {
+  font-size: 12.5px !important;
+  font-weight: 600 !important;
+}
+[class*="text-[11px]"], .text-\[11px\] {
+  font-size: 13px !important;
+}
+.text-xs {
+  font-size: 13.5px !important;
+}
+.text-sm {
+  font-size: 15px !important;
+}
+
+/* 3. Spacing, Line Height & Readability of Paragraphs and Content */
+p, .text-sm, .text-xs, .text-slate-400, .text-slate-500 {
+  line-height: 1.625 !important; /* Elegant modern line-height for seamless reading */
+  letter-spacing: 0.01em !important;
+}
+
+/* 4. Form Labels and Input Accessibility */
+label, [class*="uppercase"] {
+  font-weight: 700 !important;
+  letter-spacing: 0.05em !important;
+}
+label {
+  color: rgba(255, 255, 255, 0.92) !important; /* Bring up input labels to high contrast white */
+  margin-bottom: 0.5rem !important;
+  display: block;
+}
+input::placeholder, textarea::placeholder {
+  color: rgba(255, 255, 255, 0.55) !important; /* Make placeholders highly legible */
+}
+
+/* 5. Translation Layout Safety (Prevents cutoff / clipping for longer translations) */
+button, label, h1, h2, h3, h4, h5, h6 {
+  white-space: normal !important; /* Prevent text clipping in translations */
+  word-break: break-word !important;
+}
+
+/* 6. High Contrast Interactive Elements & Click Targets */
+button, a {
+  min-height: 40px; /* Comfortable touch target for mobile/elderly users */
+}
+/* Ensure Category Pill texts have crisp readability */
+.bg-amber-500\/10 {
+  background-color: rgba(245, 158, 11, 0.16) !important; /* Darker bg for amber badge */
+}
+.text-amber-500 {
+  color: #fbbf24 !important; /* Richer high-contrast golden amber */
+  font-weight: 600 !important;
+}
+.text-amber-400 {
+  color: #fbbf24 !important;
+  font-weight: 600 !important;
+}
+
+/* 7. Dropdown & Navigation Accessibility */
+nav a, nav button, select {
+  font-weight: 600 !important;
+}
