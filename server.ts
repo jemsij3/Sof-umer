@@ -1,4 +1,5 @@
 import express from 'express';
+import cors from 'cors';
 import path from 'path';
 import fs from 'fs/promises';
 import { createServer as createViteServer } from 'vite';
@@ -747,6 +748,8 @@ startServer();
 async function startServer() {
   await loadDb();
   const app = express();
+
+  app.use(cors({ origin: ["https://sofumerapp.com", "https://www.sofumerapp.com", "http://localhost:5173", "http://localhost:3000"], credentials: true }));
 
   // Support JSON payloads
   app.use(express.json({ limit: '10mb' }));
