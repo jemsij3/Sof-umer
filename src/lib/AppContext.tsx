@@ -182,10 +182,16 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
           }
         } else if (res.status === 401 || res.status === 403) {
           // Only clear session if token is explicitly rejected by backend
-          localStorage.removeItem('sof_umer_user');
-          localStorage.removeItem('sof_umer_token');
-          setCurrentUserState(null);
-          setTokenState(null);
+          res.json().then(err => {
+             if (err.error && (err.error.includes('Session expired') || err.error.includes('Unauthorized') || err.error.includes('suspended'))) {
+                localStorage.removeItem('sof_umer_user');
+                localStorage.removeItem('sof_umer_token');
+                setCurrentUserState(null);
+                setTokenState(null);
+             }
+          }).catch(() => {
+             // Avoid nuking session silently on random network proxy 401s
+          });
         }
       })
       .catch(err => {
