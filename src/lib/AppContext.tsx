@@ -252,6 +252,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     }
     setCurrentUser(null);
     setToken(null);
+    window.location.reload();
   };
 
   const refreshData = async () => {
