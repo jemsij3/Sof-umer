@@ -26,7 +26,10 @@
       ],
       "passwordHash": "$2b$10$NIdSavV/8epYfmvB3U19fegjudeatzclP0p7lCZdDNOZPv8hXNsTm",
       "failedLoginAttempts": 0,
-      "walletTransactions": []
+      "walletTransactions": [],
+      "passwordHistory": [
+        "$2b$10$NIdSavV/8epYfmvB3U19fegjudeatzclP0p7lCZdDNOZPv8hXNsTm"
+      ]
     }
   ],
   "properties": [
@@ -48,8 +51,8 @@
       "isTopAd": false,
       "isFeatured": false,
       "approvalStatus": "approved",
-      "verificationStatus": "pending",
-      "isVerifiedListing": false,
+      "verificationStatus": "verified",
+      "isVerifiedListing": true,
       "createdAt": "2026-07-23T09:59:44.462Z"
     }
   ],
@@ -3349,32 +3352,7 @@
       "isSystem": true
     }
   ],
-  "jobOpenings": [
-    {
-      "id": "job-1",
-      "title": "Customer Support Associate",
-      "location": "Addis Ababa (On-site)",
-      "department": "Operations",
-      "salary": "25,000 - 32,000 ETB / month",
-      "description": "Handle customer inquiries, moderate receipts, manage reports, and verify accounts in English, Amharic, and Afaan Oromoo."
-    },
-    {
-      "id": "job-2",
-      "title": "Community Safety Officer",
-      "location": "Dire Dawa (Hybrid)",
-      "department": "Trust & Safety",
-      "salary": "30,000 - 40,000 ETB / month",
-      "description": "Moderate listing compliance, prevent fraud, inspect title deeds, and perform offline validation for high-value properties."
-    },
-    {
-      "id": "job-3",
-      "title": "Lead Frontend Developer (React)",
-      "location": "Remote (Ethiopia)",
-      "department": "Engineering",
-      "salary": "80,000 - 110,000 ETB / month",
-      "description": "Maintain and scale our high-performance React application, implement responsive styles with Tailwind CSS, and improve micro-interactions."
-    }
-  ],
+  "jobOpenings": [],
   "supportTickets": [],
   "offers": [],
   "appSettings": {
@@ -3390,5 +3368,301 @@
   },
   "customRoles": [],
   "activityLogs": [],
-  "loginHistory": []
+  "loginHistory": [],
+  "faqs": [
+    {
+      "id": "faq-pop-1",
+      "category": "account",
+      "isPopular": true,
+      "status": "published",
+      "orderIndex": 1,
+      "helpfulYes": 48,
+      "helpfulNo": 2,
+      "createdAt": "2026-07-24T16:07:41.816Z",
+      "updatedAt": "2026-07-24T16:07:41.816Z",
+      "question": {
+        "en": "What is Sof Umer marketplace?",
+        "om": "Gabaan Sof Umer maali?",
+        "am": "ሶፍ ኡመር ገበያ ምንድነው?"
+      },
+      "answer": {
+        "en": "Sof Umer is Ethiopia's premier trusted digital marketplace where individuals, businesses, and communities buy, sell, rent, and discover properties, vehicles, jobs, services, products, and community events.",
+        "om": "Sof Umer gabaa naannoo Itoophiyaa amansiisaa fi ammayyaa ta'eedha, daldaltoonni, bitattoonni fi hawaasni manneen, konkolaattota, meeshota, hojii fi tajaajiloota adda addaa itti wal-qunnamaniidha.",
+        "am": "ሶፍ ኡመር ሰዎች ንብረቶችን፣ ተሽከርካሪዎችን፣ ስራዎችን፣ ምርቶችን፣ አገልግሎቶችን እና የአካባቢ ንግዶችን የሚያገኙበት፣ የሚገዙበት፣ የሚሸጡበት እና የሚከራዩበት የታመነ የኢትዮጵያ የገበያ ቦታ ነው።"
+      }
+    },
+    {
+      "id": "faq-pop-2",
+      "category": "account",
+      "isPopular": true,
+      "status": "published",
+      "orderIndex": 2,
+      "helpfulYes": 35,
+      "helpfulNo": 1,
+      "createdAt": "2026-07-24T16:07:41.816Z",
+      "updatedAt": "2026-07-24T16:07:41.816Z",
+      "question": {
+        "en": "How do I create an account and complete verification?",
+        "om": "Herrega akkamitti banna fi eenyummaa mirkaneessina?",
+        "am": "መለያ እንዴት እፈጥራለሁ እና ማረጋገጫ አጠናቅቃለሁ?"
+      },
+      "answer": {
+        "en": "Click Sign Up at the top right, select Email, Phone Number, or Google login, complete your personal details, and verify your phone or email to gain trusted seller status.",
+        "om": "Cilika \"Sign Up\" garagala mirga gubbaa, Imeelii, Bilbila ykn Google filadhu, odaffannoo guutii mirkaneessi.",
+        "am": "በቀኝ በኩል \"ይመዝገቡ\" የሚለውን ይጫኑ፣ በኢሜል፣ በስልክ ቁጥር ወይም በጉግል ይግቡ፣ መረጃዎን ያጠናቅቁ እና ያረጋግጡ።"
+      }
+    },
+    {
+      "id": "faq-prop-1",
+      "category": "properties",
+      "isPopular": true,
+      "status": "published",
+      "orderIndex": 3,
+      "helpfulYes": 62,
+      "helpfulNo": 3,
+      "createdAt": "2026-07-24T16:07:41.816Z",
+      "updatedAt": "2026-07-24T16:07:41.816Z",
+      "question": {
+        "en": "How do I post a property listing for sale or rent?",
+        "om": "Beeksisa mana ykn lafaa akkamitti gurgurtaa ykn kireessaaf dhiyeessina?",
+        "am": "የቤት ወይም የመሬት ማስታወቂያ ለሽያጭ ወይም ለኪራይ እንዴት እለጥፋለሁ?"
+      },
+      "answer": {
+        "en": "Click \"Post Listing\", select Properties, enter the precise location, price, property type (Villa, Apartment, Office, Commercial, Land), upload clear photos, and submit for instant publishing.",
+        "om": "\"Post Listing\" cuqaasi, Properties filadhu, iddoo, gatii, gosa mana (Viillaa, Appaartamaa, Lafa) galchi, suuraa qulqulluu irratti fe'i.",
+        "am": "\"ማስታወቂያ ይለጥፉ\" የሚለውን ይጫኑ፣ ንብረቶችን ይምረጡ፣ ቦታ፣ ዋጋ፣ የንብረት አይነት (ቪላ፣ አፓርታማ፣ መሬት) ያስገቡ እና ምስሎችን ያክሉ።"
+      }
+    },
+    {
+      "id": "faq-prop-2",
+      "category": "properties",
+      "isPopular": false,
+      "status": "published",
+      "orderIndex": 4,
+      "helpfulYes": 19,
+      "helpfulNo": 0,
+      "createdAt": "2026-07-24T16:07:41.816Z",
+      "updatedAt": "2026-07-24T16:07:41.816Z",
+      "question": {
+        "en": "What documents are needed for Verified Property badge?",
+        "om": "Mallattoo Mirkanaa'aa Manaa (Verified Badge) argachuuf sanadiin maal barbaachisa?",
+        "am": "የተረጋገጠ የንብረት ባጅ ለማግኘት ምን ሰነዶች ያስፈልጋሉ?"
+      },
+      "answer": {
+        "en": "To obtain a verified green checkmark badge, upload a clear photograph of your site title deed (Kaarta) and your national ID. Admin inspects and approves within 24 hours.",
+        "om": "Mallattoo qulqulluu argachuuf sanada abbummaa (Kaarta) fi waraqaa eenyummaa keessan admin-iif ergaa. Sa'aatii 24 keessatti mirkanaa'a.",
+        "am": "የተረጋገጠ አረንጓዴ ባጅ ለማግኘት የካርታ እና የመታወቂያ ፎቶ ለአስተዳዳሪው ያጋሩ። በ24 ሰዓት ውስጥ ይረጋገጣል።"
+      }
+    },
+    {
+      "id": "faq-job-1",
+      "category": "jobs",
+      "isPopular": true,
+      "status": "published",
+      "orderIndex": 5,
+      "helpfulYes": 29,
+      "helpfulNo": 1,
+      "createdAt": "2026-07-24T16:07:41.816Z",
+      "updatedAt": "2026-07-24T16:07:41.816Z",
+      "question": {
+        "en": "How do I post job vacancies and recruit candidates?",
+        "om": "Beeksisa hojii akkamitti baasna fi kandidaatota qacarta?",
+        "am": "የስራ ማስታወቂያዎችን እንዴት እለጥፋለሁ እና አመልካቾችን እቀጥራለሁ?"
+      },
+      "answer": {
+        "en": "Select the \"Jobs\" category when creating a new listing, provide the job title, company name, required qualifications, salary range, and candidate application instructions.",
+        "om": "Yeroo beeksisa baastu \"Jobs\" filadhu, maqaa hojii, maqaa dhaabbataa, dandeettii barbaachisu fi mindaa galchi.",
+        "am": "ማስታወቂያ በሚፈጥሩበት ጊዜ \"ስራዎች\" ምድብ ይምረጡ፣ የስራ መደብ፣ የድርጅት ስም፣ አስፈላጊ ክህሎቶችን እና ደሞዝ ያስገቡ።"
+      }
+    },
+    {
+      "id": "faq-prod-1",
+      "category": "products",
+      "isPopular": false,
+      "status": "published",
+      "orderIndex": 6,
+      "helpfulYes": 22,
+      "helpfulNo": 2,
+      "createdAt": "2026-07-24T16:07:41.816Z",
+      "updatedAt": "2026-07-24T16:07:41.816Z",
+      "question": {
+        "en": "Can I sell electronics, furniture, or personal goods?",
+        "om": "Meeshaalee ellektirooniksi, mi'a mana fi meeshaa dhuunfaa gurguruu danda'aa?",
+        "am": "ኤሌክትሮኒክስ፣ የቤት እቃዎችን ወይም የግል እቃዎችን መሸጥ እችላለሁ?"
+      },
+      "answer": {
+        "en": "Yes! Sof Umer supports selling new and pre-owned items including smartphones, laptops, clothing, home furniture, and vehicle accessories with clear pricing and photo galleries.",
+        "om": "Eeyyee! Meeshaalee haaraa fi tajaajilaman kanneen akka bilbilaa, kompiyuutara, uffata fi mi'a mana gurguruu dandeessu.",
+        "am": "አዎ! አዳዲስ እና ያገለገሉ ስልኮችን፣ ላፕቶፖችን፣ አልባሳትን እና የቤት እቃዎችን መሸጥ ይችላሉ።"
+      }
+    },
+    {
+      "id": "faq-serv-1",
+      "category": "services",
+      "isPopular": false,
+      "status": "published",
+      "orderIndex": 7,
+      "helpfulYes": 18,
+      "helpfulNo": 0,
+      "createdAt": "2026-07-24T16:07:41.816Z",
+      "updatedAt": "2026-07-24T16:07:41.816Z",
+      "question": {
+        "en": "How do freelancers and technicians list their services?",
+        "om": "Ogeeyyiin fi teekniishinoonni tajaajila isaanii akkamitti galmeessisu?",
+        "am": "ባለሙያዎች እና ቴክኒሺያኖች አገልግሎታቸውን እንዴት ይዘረዝራሉ?"
+      },
+      "answer": {
+        "en": "Create a listing under \"Services\", select your specialty (Plumbing, Electrical, IT, Legal, Moving, Design), set hourly or fixed pricing, and publish your direct contact details.",
+        "om": "Tajaajila keessan \"Services\" jalatti galcheera, gosa dandaettii keessanii (Pulaambingii, Elektirika, IT, Seera) filadhaa.",
+        "am": "አገልግሎትዎን \"አገልግሎቶች\" ስር ይዘርዝሩ፣ የሙያ ዘርፍዎን ይምረጡ፣ የሰዓት ወይም የቋሚ ዋጋ ያስገቡ።"
+      }
+    },
+    {
+      "id": "faq-biz-1",
+      "category": "businesses",
+      "isPopular": false,
+      "status": "published",
+      "orderIndex": 8,
+      "helpfulYes": 15,
+      "helpfulNo": 1,
+      "createdAt": "2026-07-24T16:07:41.816Z",
+      "updatedAt": "2026-07-24T16:07:41.816Z",
+      "question": {
+        "en": "How can local businesses feature their enterprise on Sof Umer?",
+        "om": "Dhaabbileen naannoo daldala isaanii akkamitti beeksifatu?",
+        "am": "የአካባቢ ንግዶች ድርጅታቸውን በሶፍ ኡመር ላይ እንዴት ማስተዋወቅ ይችላሉ?"
+      },
+      "answer": {
+        "en": "Register your store under \"Local Businesses\". Include your physical address, Google Maps location link, opening hours, business phone numbers, and official logo.",
+        "om": "\"Local Businesses\" jalatti suuqii ykn dhaabbata keessan galmeessisaa, teessoo, kaffaltii fi lakkoofsa bilbilaa qopheessaa.",
+        "am": "ድርጅትዎን \"የአካባቢ ንግዶች\" ስር ያስመዝግቡ። አድራሻዎን፣ የስራ ሰዓትዎን እና የስልክ ቁጥርዎን ያካቱ።"
+      }
+    },
+    {
+      "id": "faq-comm-1",
+      "category": "community",
+      "isPopular": false,
+      "status": "published",
+      "orderIndex": 9,
+      "helpfulYes": 14,
+      "helpfulNo": 0,
+      "createdAt": "2026-07-24T16:07:41.816Z",
+      "updatedAt": "2026-07-24T16:07:41.816Z",
+      "question": {
+        "en": "What community announcements and notices are allowed?",
+        "om": "Beeksisa hawaasaa fi beeksisa kamtu eeyyamamaa?",
+        "am": "ምን አይነት የማህበረሰብ ማስታወቂያዎች ይፈቀዳሉ?"
+      },
+      "answer": {
+        "en": "You can share local charity events, public gatherings, neighbourhood notices, educational workshops, and community lost-and-found items for free.",
+        "om": "Qophii tola-ooltummaa, beeksisa naannoo, barumsa fi walga'ii hawaasaa bilisaan qoodachuu dandeessu.",
+        "am": "የበጎ አድራጎት ዝግጅቶችን፣ የማህበረሰብ ማስታወቂያዎችን እና ትምህርታዊ ስልጠናዎችን በነፃ ማጋራት ይችላሉ።"
+      }
+    },
+    {
+      "id": "faq-chat-1",
+      "category": "chat_offer",
+      "isPopular": true,
+      "status": "published",
+      "orderIndex": 10,
+      "helpfulYes": 51,
+      "helpfulNo": 2,
+      "createdAt": "2026-07-24T16:07:41.817Z",
+      "updatedAt": "2026-07-24T16:07:41.817Z",
+      "question": {
+        "en": "How does the Make Offer and Chat system work?",
+        "om": "Sirni \"Make Offer\" fi Chaatii akkamitti hojjata?",
+        "am": "የዋጋ እቅረብ (Make Offer) እና የቻት ስርዓት እንዴት ይሰራሉ?"
+      },
+      "answer": {
+        "en": "On any listing detail page, click \"Make Offer\" to propose your purchase price, or click \"Chat\" to send an instant direct message. Sellers receive immediate notifications to accept, counter, or reject.",
+        "om": "Fuula beeksisaa irratti \"Make Offer\" cuqaasuun gatii dhiyeessaa, ykn \"Chat\" cuqaasuun ergaa kallattii ergaa. Gurguraan counter/accept gochuu danda'a.",
+        "am": "በማስታወቂያው ገጽ ላይ \"Make Offer\" በመጫን የገዢ ዋጋ ያቅርቡ ወይም \"Chat\" በመጫን ቀጥታ መልእክት ይላኩ።"
+      }
+    },
+    {
+      "id": "faq-prem-1",
+      "category": "premium",
+      "isPopular": true,
+      "status": "published",
+      "orderIndex": 11,
+      "helpfulYes": 40,
+      "helpfulNo": 1,
+      "createdAt": "2026-07-24T16:07:41.817Z",
+      "updatedAt": "2026-07-24T16:07:41.817Z",
+      "question": {
+        "en": "How do I boost or feature my listing with Telebirr or CBE?",
+        "om": "Telebirr ykn CBE-n beeksisa koo akkamitti ol-kaasa (boost)?",
+        "am": "በቴሌብር ወይም በንግድ ባንክ ማስታወቂያዬን እንዴት ላስተዋውቅ (Boost)?"
+      },
+      "answer": {
+        "en": "Go to your Dashboard or listing options, select \"Boost Listing\", choose your package (Basic, Featured, or VIP), transfer payment to our registered CBE/Telebirr account, and upload the transaction receipt screenshot for instant activation.",
+        "om": "Kellaa keessaniin \"Boost Listing\" filadhaa, Telebirr ykn CBE kaffalaa, risiiti kaffaltii fe'aa.",
+        "am": "ከዳሽቦርድዎ \"Boost Listing\" ይምረጡ፣ ጥቅሉን ይምረጡ፣ በቴሌብር ወይም በንግድ ባንክ ይክፈሉ እና ደረሰኙን ይስቀሉ።"
+      }
+    },
+    {
+      "id": "faq-safe-1",
+      "category": "safety",
+      "isPopular": true,
+      "status": "published",
+      "orderIndex": 12,
+      "helpfulYes": 73,
+      "helpfulNo": 1,
+      "createdAt": "2026-07-24T16:07:41.817Z",
+      "updatedAt": "2026-07-24T16:07:41.817Z",
+      "question": {
+        "en": "What safety precautions should I take during transactions?",
+        "om": "Tarkaanfii nageenyaa maal fudhachuu qaba?",
+        "am": "በግዢ እና ሽያጭ ወቅት ምን አይነት የደህንነት ጥንቃቄዎችን ማድረግ አለብኝ?"
+      },
+      "answer": {
+        "en": "Never send advance money transfers to unknown sellers. Inspect properties or physical items in person in busy public locations before making payments. Report any fraudulent activity immediately.",
+        "om": "Kaffaltii dursaa eenyummaa isaanii kan hin beekamneef maallaqa hin ergininaa. Iddoo ummataatti wal-argaa maallaqa kaffaluun dura ijaan sakatta'aa.",
+        "am": "ለማያውቁት ሰው በቅድሚያ ገንዘብ አይላኩ። ክፍያ ከመፈጸምዎ በፊት ንብረቱን በሕዝብ ቦታዎች በአካል ያረጋግጡ።"
+      }
+    },
+    {
+      "id": "faq-pol-1",
+      "category": "policies",
+      "isPopular": false,
+      "status": "published",
+      "orderIndex": 13,
+      "helpfulYes": 16,
+      "helpfulNo": 0,
+      "createdAt": "2026-07-24T16:07:41.817Z",
+      "updatedAt": "2026-07-24T16:07:41.817Z",
+      "question": {
+        "en": "What content or listings are strictly prohibited on Sof Umer?",
+        "om": "Qabiyyee fi beeksisi kamtu dhorkamaa ta'ee?",
+        "am": "በሶፍ ኡመር ላይ በጥብቅ የተከለከሉ ይዘቶች ምንድን ናቸው?"
+      },
+      "answer": {
+        "en": "Illegal drugs, weapons, counterfeit goods, fraudulent investments, deceptive prices, duplicate listings, and abusive content are strictly prohibited and result in permanent account termination.",
+        "om": "Dawaa seeraan ala ta'e, meeshaa waraanaa, beeksisa fakkaattii fi sobaa fayyadamuun dhorkamaadha.",
+        "am": "ህገ-ወጥ እቃዎች፣ መሳሪያዎች፣ የሃሰት ማስታወቂያዎች እና አታላይ መረጃዎች በጥብቅ የተከለከሉ ናቸው።"
+      }
+    },
+    {
+      "id": "faq-supp-1",
+      "category": "support",
+      "isPopular": true,
+      "status": "published",
+      "orderIndex": 14,
+      "helpfulYes": 38,
+      "helpfulNo": 1,
+      "createdAt": "2026-07-24T16:07:41.817Z",
+      "updatedAt": "2026-07-24T16:07:41.817Z",
+      "question": {
+        "en": "How can I contact Sof Umer support team directly?",
+        "om": "Garee deggarsa Sof Umer akkamitti kallattiin quunnama?",
+        "am": "የሶፍ ኡመር የድጋፍ ቡድንን በቀጥታ እንዴት ማግኘት እችላለሁ?"
+      },
+      "answer": {
+        "en": "You can submit a ticket on this page under \"Send a Support Inquiry\", email support@sofumer.com, call +251 911 000 000 during office hours (Monday to Saturday, 8:00 AM - 6:00 PM), or visit our head office in Addis Ababa.",
+        "om": "Ergaa deggarsaa \"Send a Support Inquiry\" kanaan ergaa, support@sofumer.com ykn bilbila +251 911 000 000 fayyadamaa.",
+        "am": "በዚህ ገጽ ላይ መልእክት ይላኩ፣ ወደ support@sofumer.com ኢሜል ያድርጉ ወይም በ +251 911 000 000 ይደውሉ።"
+      }
+    }
+  ]
 }
