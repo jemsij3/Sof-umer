@@ -1299,7 +1299,7 @@ async function startServer() {
             pass: resendApiKey,
           },
         });
-        await transporter.verify();
+        // await transporter.verify();
       } catch (err) {
         console.error('Resend SMTP configuration failed:', err);
       }
@@ -1317,7 +1317,7 @@ async function startServer() {
             rejectUnauthorized: false
           }
         });
-        await transporter.verify();
+        // await transporter.verify();
       } catch (err) {
         console.error('SMTP configuration failed:', err);
       }
@@ -1325,31 +1325,37 @@ async function startServer() {
 
     // Fallback if no valid transporter configured yet
     if (!transporter) {
-        const testAccount = await nodemailer.createTestAccount();
-        transporter = nodemailer.createTransport({
-          host: "smtp.ethereal.email",
-          port: 587,
-          secure: false,
-          auth: {
-            user: testAccount.user,
-            pass: testAccount.pass,
-          },
-        });
         console.log('Using Ethereal fallback email');
+        // We create it inline so it doesn't block the request if the network is bad
+        // we won't wait for createTestAccount
     }
 
     if (user.email) {
-      try {
+      // Fire and forget email sending so it doesn't block UI
+      (async () => {
+        try {
+            if (!transporter) {
+                const testAccount = await nodemailer.createTestAccount();
+                transporter = nodemailer.createTransport({
+                  host: "smtp.ethereal.email",
+                  port: 587,
+                  secure: false,
+                  auth: {
+                    user: testAccount.user,
+                    pass: testAccount.pass,
+                  },
+                });
+            }
 
-        let fromAddress = smtpFrom || '"Sof Umer" <noreply@sofumer.com>';
-        if (transporter.options.auth?.user?.includes('ethereal')) {
-            fromAddress = transporter.options.auth.user;
-        } else if (resendApiKey && transporter.options.host === 'smtp.resend.com') {
-            fromAddress = process.env.RESEND_FROM || smtpFrom || 'onboarding@resend.dev';
-        }
+            let fromAddress = smtpFrom || '"Sof Umer" <noreply@sofumer.com>';
+            if (transporter.options?.auth?.user?.includes('ethereal')) {
+                fromAddress = transporter.options.auth.user;
+            } else if (resendApiKey && transporter.options?.host === 'smtp.resend.com') {
+                fromAddress = process.env.RESEND_FROM || smtpFrom || 'onboarding@resend.dev';
+            }
 
-        let info = await transporter.sendMail({
-          from: fromAddress,
+            let info = await transporter.sendMail({
+              from: fromAddress,
           to: user.email,
           subject: 'Password Reset Code',
           text: `Your password reset code is: ${resetCode}
@@ -1363,9 +1369,10 @@ This code will expire in 15 minutes.`,
                 console.log('Preview URL: %s', testUrl);
             }
         }
-      } catch (err) {
-        console.error('Failed to send password reset email:', err);
-      }
+        } catch (err) {
+            console.error('Failed to send password reset email:', err);
+        }
+      })();
     } else {
       console.log(`[DEV/NO-SMTP] Password reset code for ${target}: ${resetCode}`);
     }
