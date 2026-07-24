@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import path from 'path';
 import fs from 'fs/promises';
+import fsSync from 'fs';
 import dns from 'dns';
 import { createServer as createViteServer } from 'vite';
 import jwt from 'jsonwebtoken';
@@ -30,7 +31,20 @@ import { staticTranslations } from './src/lib/translations';
 dns.setDefaultResultOrder('ipv4first');
 
 const PORT = process.env.PORT ? parseInt(process.env.PORT) : 3000;
-const DB_FILE = process.env.NODE_ENV === 'production' ? '/data/sof_umer_db.json' : path.join(process.cwd(), 'sof_umer_db.json');
+let DB_FILE = process.env.NODE_ENV === 'production' ? '/data/sof_umer_db.json' : path.join(process.cwd(), 'sof_umer_db.json');
+try {
+  if (process.env.NODE_ENV === 'production') {
+    // Check if /data is writable
+    try {
+      fsSync.accessSync('/data', fsSync.constants.W_OK);
+    } catch (e) {
+      console.warn('/data is not writable, falling back to local dir');
+      DB_FILE = path.join(process.cwd(), 'sof_umer_db.json');
+    }
+  }
+} catch (e) {
+  console.warn('Error checking /data', e);
+}
 
 export interface ServerUser extends User {
   passwordHash?: string;
@@ -602,18 +616,36 @@ async function sendEmail(to: string, subject: string, text: string, html: string
   const smtpPass = process.env.SMTP_PASS || process.env.VITE_SMTP_PASS || process.env.SMTP_PASSWORD || process.env.VITE_SMTP_PASSWORD;
   const smtpFrom = process.env.SMTP_FROM || process.env.VITE_SMTP_FROM || process.env.EMAIL_FROM || process.env.VITE_EMAIL_FROM;
 
-  let transporter;
   let fromAddress = smtpFrom || '"Sof Umer" <noreply@sofumer.com>';
 
   if (resendApiKey) {
-    transporter = nodemailer.createTransport({
-      host: 'smtp.resend.com',
-      port: 465,
-      secure: true,
-      auth: { user: 'resend', pass: resendApiKey },
-    });
     fromAddress = process.env.RESEND_FROM || smtpFrom || 'onboarding@resend.dev';
-  } else if (smtpHost && smtpUser && smtpPass) {
+    const response = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${resendApiKey}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        from: fromAddress,
+        to,
+        subject,
+        text,
+        html,
+      })
+    });
+
+    const data = await response.json();
+    if (!response.ok) {
+      console.error('Resend API error:', data);
+      throw new Error(`Resend API error: ${JSON.stringify(data)}`);
+    }
+    console.log('Email sent successfully via Resend API:', data.id);
+    return;
+  }
+
+  let transporter;
+  if (smtpHost && smtpUser && smtpPass) {
     transporter = nodemailer.createTransport({
       host: smtpHost,
       port: parseInt(smtpPort || '587', 10),
@@ -646,9 +678,8 @@ async function sendEmail(to: string, subject: string, text: string, html: string
   console.log('Email sent successfully:', info.messageId);
   if (info.messageId && nodemailer.getTestMessageUrl) {
     const testUrl = nodemailer.getTestMessageUrl(info);
-    if (testUrl) console.log('Preview URL: %s', testUrl);
+    if (testUrl) console.log('Test email URL:', testUrl);
   }
-  return info;
 }
 
 let localDb: ReturnType<typeof getInitialData>;
