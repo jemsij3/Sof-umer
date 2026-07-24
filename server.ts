@@ -748,13 +748,20 @@ startServer();
 async function startServer() {
   await loadDb();
   const app = express();
-  const allowedOrigins = ['http://localhost:3000', 'https://sofumerapp.com', 'https://www.sofumerapp.com'];
+  const allowedOrigins = [
+    'http://localhost:3000',
+    'http://localhost:5173',
+    'https://sofumerapp.com',
+    'https://www.sofumerapp.com',
+    process.env.FRONTEND_URL || 'https://sof-umerapp.onrender.com'
+  ];
+
   app.use(cors({
-    origin: function(origin, callback){
-      if(!origin) return callback(null, true);
-      if(allowedOrigins.indexOf(origin) === -1){
-        var msg = 'The CORS policy for this site does not allow access from the specified Origin.';
-        return callback(new Error(msg), false);
+    origin: function(origin, callback) {
+      if (!origin) return callback(null, true);
+      if (allowedOrigins.indexOf(origin) === -1) {
+        // Reject the CORS request without throwing a fatal error
+        return callback(null, false);
       }
       return callback(null, true);
     },
