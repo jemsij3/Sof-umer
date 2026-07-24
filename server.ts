@@ -25,7 +25,7 @@ import {
 } from './src/types';
 import { staticTranslations } from './src/lib/translations';
 
-const PORT = 3000;
+const PORT = process.env.PORT ? parseInt(process.env.PORT) : 3000;
 const DB_FILE = path.join(process.cwd(), 'sof_umer_db.json');
 
 export interface ServerUser extends User {
