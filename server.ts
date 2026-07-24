@@ -6,6 +6,10 @@ import { createServer as createViteServer } from 'vite';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import nodemailer from 'nodemailer';
+import dns from 'dns';
+
+// Force IPv4 first to fix ENETUNREACH on Render for SMTP (Gmail)
+dns.setDefaultResultOrder('ipv4first');
 import type {
   User,
   Property,
@@ -730,6 +734,10 @@ let savePromise: Promise<void> = Promise.resolve();
 const saveDb = (): Promise<void> => {
   savePromise = savePromise.then(async () => {
     try {
+      try {
+        const dir = path.dirname(DB_FILE);
+        await fs.mkdir(dir, { recursive: true });
+      } catch(e) { /* ignore */ }
       const jsonString = JSON.stringify(localDb, null, 2);
       const tempFile = `${DB_FILE}.tmp`;
       await fs.writeFile(tempFile, jsonString, 'utf-8');
@@ -737,6 +745,7 @@ const saveDb = (): Promise<void> => {
     } catch (err) {
       console.error('Failed atomic saveDb, falling back to direct write:', err);
       try {
+        try { await fs.mkdir(path.dirname(DB_FILE), { recursive: true }); } catch (e) {}
         await fs.writeFile(DB_FILE, JSON.stringify(localDb, null, 2), 'utf-8');
       } catch (e2) {
         console.error('CRITICAL: Fallback saveDb failed:', e2);
@@ -1237,6 +1246,11 @@ async function startServer() {
     const { email, phone, identifier } = req.body;
     const target = normalizeEmail(identifier || email) || normalizePhone(identifier || phone);
 
+    console.log('--- FORGOT PASSWORD REQUEST ---');
+    console.log('Target:', target);
+    console.log('Env keys:', Object.keys(process.env));
+    console.log('SMTP_HOST set?', !!process.env.SMTP_HOST);
+
     if (!target) {
       return res.status(400).json({ error: 'Email or Phone number is required.' });
     }
@@ -1259,26 +1273,96 @@ async function startServer() {
     await saveDb();
 
     // Send email using nodemailer if SMTP is configured
-    if (user.email && process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS) {
+    const smtpHost = process.env.SMTP_HOST || process.env.VITE_SMTP_HOST;
+    const smtpPort = process.env.SMTP_PORT || process.env.VITE_SMTP_PORT;
+    const smtpUser = process.env.SMTP_USER || process.env.VITE_SMTP_USER;
+    const smtpPass = process.env.SMTP_PASS || process.env.VITE_SMTP_PASS || process.env.SMTP_PASSWORD || process.env.VITE_SMTP_PASSWORD;
+    const smtpFrom = process.env.SMTP_FROM || process.env.VITE_SMTP_FROM || process.env.EMAIL_FROM || process.env.VITE_EMAIL_FROM;
+
+    console.log('--- SMTP CHECK ---');
+    console.log('Target Email:', user.email);
+    console.log('Host:', smtpHost);
+    console.log('User:', smtpUser);
+    console.log('Pass set?', !!smtpPass);
+
+    const resendApiKey = process.env.RESEND_API_KEY || process.env.VITE_RESEND_API_KEY;
+
+    let transporter;
+    if (user.email && resendApiKey) {
       try {
-        const transporter = nodemailer.createTransport({
-          host: process.env.SMTP_HOST,
-          port: parseInt(process.env.SMTP_PORT || '587'),
-          secure: process.env.SMTP_SECURE === 'true',
+        transporter = nodemailer.createTransport({
+          host: 'smtp.resend.com',
+          port: 465,
+          secure: true,
           auth: {
-            user: process.env.SMTP_USER,
-            pass: process.env.SMTP_PASS,
+            user: 'resend',
+            pass: resendApiKey,
           },
         });
+        await transporter.verify();
+      } catch (err) {
+        console.error('Resend SMTP configuration failed:', err);
+      }
+    } else if (user.email && smtpHost && smtpUser && smtpPass) {
+      try {
+        transporter = nodemailer.createTransport({
+          host: smtpHost,
+          port: parseInt(smtpPort || '587'),
+          secure: process.env.SMTP_SECURE === 'true' || process.env.VITE_SMTP_SECURE === 'true',
+          auth: {
+            user: smtpUser,
+            pass: smtpPass,
+          },
+          tls: {
+            rejectUnauthorized: false
+          }
+        });
+        await transporter.verify();
+      } catch (err) {
+        console.error('SMTP configuration failed:', err);
+      }
+    }
 
-        await transporter.sendMail({
-          from: process.env.SMTP_FROM || '"Sof Umer" <noreply@sofumer.com>',
+    // Fallback if no valid transporter configured yet
+    if (!transporter) {
+        const testAccount = await nodemailer.createTestAccount();
+        transporter = nodemailer.createTransport({
+          host: "smtp.ethereal.email",
+          port: 587,
+          secure: false,
+          auth: {
+            user: testAccount.user,
+            pass: testAccount.pass,
+          },
+        });
+        console.log('Using Ethereal fallback email');
+    }
+
+    if (user.email) {
+      try {
+
+        let fromAddress = smtpFrom || '"Sof Umer" <noreply@sofumer.com>';
+        if (transporter.options.auth?.user?.includes('ethereal')) {
+            fromAddress = transporter.options.auth.user;
+        } else if (resendApiKey && transporter.options.host === 'smtp.resend.com') {
+            fromAddress = process.env.RESEND_FROM || smtpFrom || 'onboarding@resend.dev';
+        }
+
+        let info = await transporter.sendMail({
+          from: fromAddress,
           to: user.email,
           subject: 'Password Reset Code',
           text: `Your password reset code is: ${resetCode}
 This code will expire in 15 minutes.`,
           html: `<p>Your password reset code is: <strong>${resetCode}</strong></p><p>This code will expire in 15 minutes.</p>`,
         });
+        console.log('Email sent successfully:', info.messageId);
+        if (info.messageId && nodemailer.getTestMessageUrl) {
+            const testUrl = nodemailer.getTestMessageUrl(info);
+            if (testUrl) {
+                console.log('Preview URL: %s', testUrl);
+            }
+        }
       } catch (err) {
         console.error('Failed to send password reset email:', err);
       }
