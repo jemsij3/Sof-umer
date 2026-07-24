@@ -881,6 +881,10 @@ async function startServer() {
   // --- API ROUTES ---
 
   // CAPTCHA Endpoint
+  app.get('/api/health', (req, res) => {
+    res.json({ status: 'ok', message: 'Server is healthy' });
+  });
+
   app.get('/api/auth/captcha', (req, res) => {
     const num1 = Math.floor(Math.random() * 9) + 1;
     const num2 = Math.floor(Math.random() * 9) + 1;
