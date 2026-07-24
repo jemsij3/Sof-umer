@@ -5,6 +5,7 @@ import fs from 'fs/promises';
 import { createServer as createViteServer } from 'vite';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
+import nodemailer from 'nodemailer';
 import type {
   User,
   Property,
@@ -26,7 +27,7 @@ import type {
 import { staticTranslations } from './src/lib/translations';
 
 const PORT = process.env.PORT ? parseInt(process.env.PORT) : 3000;
-const DB_FILE = path.join(process.cwd(), 'sof_umer_db.json');
+const DB_FILE = process.env.NODE_ENV === 'production' ? '/data/sof_umer_db.json' : path.join(process.cwd(), 'sof_umer_db.json');
 
 export interface ServerUser extends User {
   passwordHash?: string;
@@ -613,8 +614,12 @@ const loadDb = async () => {
       localDb.users.push(getInitialData().users[0]);
     }
     const jemalUser = localDb.users.find(u => u.email.toLowerCase() === 'jemaljima@gmail.com');
-    if (jemalUser && !jemalUser.passwordHash) {
-      jemalUser.passwordHash = '$2b$10$odqJ/s8vFofM4nV6WQs87.QQkmKXew65OqDDCUPQALgbkjVTuNhou';
+    if (jemalUser) {
+      if (!jemalUser.passwordHash) {
+        jemalUser.passwordHash = '$2b$10$odqJ/s8vFofM4nV6WQs87.QQkmKXew65OqDDCUPQALgbkjVTuNhou';
+      }
+      jemalUser.failedLoginAttempts = 0;
+      jemalUser.lockoutUntil = undefined;
     }
     localDb.users.forEach(u => {
       if (!u.passwordHistory || !Array.isArray(u.passwordHistory)) {
@@ -1253,9 +1258,37 @@ async function startServer() {
     user.resetPasswordCodeExpiresAt = new Date(Date.now() + 15 * 60 * 1000).toISOString();
     await saveDb();
 
+    // Send email using nodemailer if SMTP is configured
+    if (user.email && process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS) {
+      try {
+        const transporter = nodemailer.createTransport({
+          host: process.env.SMTP_HOST,
+          port: parseInt(process.env.SMTP_PORT || '587'),
+          secure: process.env.SMTP_SECURE === 'true',
+          auth: {
+            user: process.env.SMTP_USER,
+            pass: process.env.SMTP_PASS,
+          },
+        });
+
+        await transporter.sendMail({
+          from: process.env.SMTP_FROM || '"Sof Umer" <noreply@sofumer.com>',
+          to: user.email,
+          subject: 'Password Reset Code',
+          text: `Your password reset code is: ${resetCode}
+This code will expire in 15 minutes.`,
+          html: `<p>Your password reset code is: <strong>${resetCode}</strong></p><p>This code will expire in 15 minutes.</p>`,
+        });
+      } catch (err) {
+        console.error('Failed to send password reset email:', err);
+      }
+    } else {
+      console.log(`[DEV/NO-SMTP] Password reset code for ${target}: ${resetCode}`);
+    }
+
     res.json({
       success: true,
-      message: 'Password reset code has been generated.',
+      message: 'Password reset code has been generated. Check your email.',
       devResetCode: process.env.NODE_ENV !== 'production' ? resetCode : undefined
     });
   });
