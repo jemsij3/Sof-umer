@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import path from 'path';
 import fs from 'fs/promises';
+import dns from 'dns';
 import { createServer as createViteServer } from 'vite';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
@@ -25,6 +26,8 @@ import type {
   FAQItem
 } from './src/types';
 import { staticTranslations } from './src/lib/translations';
+
+dns.setDefaultResultOrder('ipv4first');
 
 const PORT = process.env.PORT ? parseInt(process.env.PORT) : 3000;
 const DB_FILE = process.env.NODE_ENV === 'production' ? '/data/sof_umer_db.json' : path.join(process.cwd(), 'sof_umer_db.json');
@@ -590,6 +593,64 @@ const syncAllWalletBalances = () => {
 };
 
 // Initialize file DB
+
+async function sendEmail(to: string, subject: string, text: string, html: string) {
+  const resendApiKey = process.env.RESEND_API_KEY || process.env.VITE_RESEND_API_KEY;
+  const smtpHost = process.env.SMTP_HOST || process.env.VITE_SMTP_HOST;
+  const smtpPort = process.env.SMTP_PORT || process.env.VITE_SMTP_PORT;
+  const smtpUser = process.env.SMTP_USER || process.env.VITE_SMTP_USER;
+  const smtpPass = process.env.SMTP_PASS || process.env.VITE_SMTP_PASS || process.env.SMTP_PASSWORD || process.env.VITE_SMTP_PASSWORD;
+  const smtpFrom = process.env.SMTP_FROM || process.env.VITE_SMTP_FROM || process.env.EMAIL_FROM || process.env.VITE_EMAIL_FROM;
+
+  let transporter;
+  let fromAddress = smtpFrom || '"Sof Umer" <noreply@sofumer.com>';
+
+  if (resendApiKey) {
+    transporter = nodemailer.createTransport({
+      host: 'smtp.resend.com',
+      port: 465,
+      secure: true,
+      auth: { user: 'resend', pass: resendApiKey },
+    });
+    fromAddress = process.env.RESEND_FROM || smtpFrom || 'onboarding@resend.dev';
+  } else if (smtpHost && smtpUser && smtpPass) {
+    transporter = nodemailer.createTransport({
+      host: smtpHost,
+      port: parseInt(smtpPort || '587', 10),
+      secure: process.env.SMTP_SECURE === 'true' || process.env.VITE_SMTP_SECURE === 'true',
+      auth: { user: smtpUser, pass: smtpPass },
+      tls: { rejectUnauthorized: false }
+    });
+  }
+
+  if (!transporter) {
+    console.log('No valid SMTP config found, using Ethereal dev email...');
+    const testAccount = await nodemailer.createTestAccount();
+    transporter = nodemailer.createTransport({
+      host: "smtp.ethereal.email",
+      port: 587,
+      secure: false,
+      auth: { user: testAccount.user, pass: testAccount.pass },
+    });
+    fromAddress = testAccount.user;
+  }
+
+  let info = await transporter.sendMail({
+    from: fromAddress,
+    to,
+    subject,
+    text,
+    html,
+  });
+
+  console.log('Email sent successfully:', info.messageId);
+  if (info.messageId && nodemailer.getTestMessageUrl) {
+    const testUrl = nodemailer.getTestMessageUrl(info);
+    if (testUrl) console.log('Preview URL: %s', testUrl);
+  }
+  return info;
+}
+
 let localDb: ReturnType<typeof getInitialData>;
 
 const loadDb = async () => {
@@ -1193,6 +1254,17 @@ async function startServer() {
     localDb.users.push(newUser);
     await saveDb();
 
+    if (!isJemal) {
+        sendEmail(
+          normEmail,
+          'Account Verification Code',
+          `Your verification code is: ${verificationCode}\nThis code will expire in 15 minutes.`,
+          `<p>Your verification code is: <strong>${verificationCode}</strong></p><p>This code will expire in 15 minutes.</p>`
+        ).catch(err => {
+          console.error('Failed to send verification email:', err);
+        });
+    }
+
     res.json({
       message: 'Registration successful! Please verify your email.',
       email: newUser.email,
@@ -1262,65 +1334,14 @@ async function startServer() {
 
     // Email logic in fire-and-forget IIFE to prevent hanging requests
     if (user.email) {
-      (async () => {
-        try {
-          const resendApiKey = process.env.RESEND_API_KEY || process.env.VITE_RESEND_API_KEY;
-          const smtpHost = process.env.SMTP_HOST || process.env.VITE_SMTP_HOST;
-          const smtpPort = process.env.SMTP_PORT || process.env.VITE_SMTP_PORT;
-          const smtpUser = process.env.SMTP_USER || process.env.VITE_SMTP_USER;
-          const smtpPass = process.env.SMTP_PASS || process.env.VITE_SMTP_PASS || process.env.SMTP_PASSWORD || process.env.VITE_SMTP_PASSWORD;
-          const smtpFrom = process.env.SMTP_FROM || process.env.VITE_SMTP_FROM || process.env.EMAIL_FROM || process.env.VITE_EMAIL_FROM;
-
-          let transporter;
-          let fromAddress = smtpFrom || '"Sof Umer" <noreply@sofumer.com>';
-
-          if (resendApiKey) {
-            transporter = nodemailer.createTransport({
-              host: 'smtp.resend.com',
-              port: 465,
-              secure: true,
-              auth: { user: 'resend', pass: resendApiKey },
-            });
-            fromAddress = process.env.RESEND_FROM || smtpFrom || 'onboarding@resend.dev';
-          } else if (smtpHost && smtpUser && smtpPass) {
-            transporter = nodemailer.createTransport({
-              host: smtpHost,
-              port: parseInt(smtpPort || '587'),
-              secure: process.env.SMTP_SECURE === 'true' || process.env.VITE_SMTP_SECURE === 'true',
-              auth: { user: smtpUser, pass: smtpPass },
-              tls: { rejectUnauthorized: false }
-            });
-          }
-
-          if (!transporter) {
-            console.log('No valid SMTP config found, using Ethereal dev email...');
-            const testAccount = await nodemailer.createTestAccount();
-            transporter = nodemailer.createTransport({
-              host: "smtp.ethereal.email",
-              port: 587,
-              secure: false,
-              auth: { user: testAccount.user, pass: testAccount.pass },
-            });
-            fromAddress = testAccount.user;
-          }
-
-          let info = await transporter.sendMail({
-            from: fromAddress,
-            to: user.email,
-            subject: 'Password Reset Code',
-            text: `Your password reset code is: ${resetCode}\nThis code will expire in 15 minutes.`,
-            html: `<p>Your password reset code is: <strong>${resetCode}</strong></p><p>This code will expire in 15 minutes.</p>`,
-          });
-
-          console.log('Email sent successfully:', info.messageId);
-          if (info.messageId && nodemailer.getTestMessageUrl) {
-            const testUrl = nodemailer.getTestMessageUrl(info);
-            if (testUrl) console.log('Preview URL: %s', testUrl);
-          }
-        } catch (err) {
-          console.error('Failed to send password reset email:', err);
-        }
-      })();
+      sendEmail(
+        user.email,
+        'Password Reset Code',
+        `Your password reset code is: ${resetCode}\nThis code will expire in 15 minutes.`,
+        `<p>Your password reset code is: <strong>${resetCode}</strong></p><p>This code will expire in 15 minutes.</p>`
+      ).catch(err => {
+        console.error('Failed to send password reset email:', err);
+      });
     } else {
       console.log(`[DEV/NO-SMTP] Password reset code for ${target}: ${resetCode}`);
     }
