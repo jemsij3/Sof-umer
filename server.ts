@@ -5,7 +5,7 @@ import fs from 'fs/promises';
 import { createServer as createViteServer } from 'vite';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
-import {
+import type {
   User,
   Property,
   PaymentMethod,
