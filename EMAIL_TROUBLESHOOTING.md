@@ -22,10 +22,10 @@ The invocation in the codebase is implemented using a "fire-and-forget" approach
 ## 3. Sender Email Configuration Requirements
 Yes, this is the most likely cause for emails not being sent despite the API key being set!
 Our email provider configuration in `server.ts` defaults the `fromAddress` to:
-`process.env.RESEND_FROM || smtpFrom || 'onboarding@resend.dev'`
+`process.env.RESEND_FROM || smtpFrom || '"Sof Umer" <noreply@sofumerapp.com>'`
 
 **Important Note regarding Resend (our provider):**
-If you use the default `onboarding@resend.dev` address, Resend restricts you to sending emails **only to the email address registered with your Resend account**.
+If you use an unverified sender domain, Resend will reject the email sending request.
 To send emails to your users, you must:
 1. Verify your own custom domain in the Resend dashboard.
 2. Set the `RESEND_FROM` (or `SMTP_FROM`) environment variable in Render to match that verified domain (e.g., `noreply@yourverifieddomain.com`).
