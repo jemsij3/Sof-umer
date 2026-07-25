@@ -616,10 +616,10 @@ async function sendEmail(to: string, subject: string, text: string, html: string
   const smtpPass = process.env.SMTP_PASS || process.env.VITE_SMTP_PASS || process.env.SMTP_PASSWORD || process.env.VITE_SMTP_PASSWORD;
   const smtpFrom = process.env.SMTP_FROM || process.env.VITE_SMTP_FROM || process.env.EMAIL_FROM || process.env.VITE_EMAIL_FROM;
 
-  let fromAddress = smtpFrom || '"Sof Umer" <noreply@sofumer.com>';
+  let fromAddress = smtpFrom || '"Sof Umer" <noreply@sofumerapp.com>';
 
   if (resendApiKey) {
-    fromAddress = process.env.RESEND_FROM || smtpFrom || 'onboarding@resend.dev';
+    fromAddress = process.env.RESEND_FROM || smtpFrom || 'noreply@sofumerapp.com';
     const response = await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: {
@@ -1017,10 +1017,14 @@ async function startServer() {
     const normEmail = normalizeEmail(identifier);
     const normPhone = normalizePhone(identifier);
 
-    const user = localDb.users.find(u => 
-      (normEmail && u.email && u.email.toLowerCase() === normEmail) ||
-      (normPhone && u.phone && normalizePhone(u.phone) === normPhone)
-    );
+    const isEmail = identifier.includes('@');
+    const user = localDb.users.find(u => {
+      if (isEmail) {
+        return u.email && u.email.toLowerCase() === normEmail;
+      } else {
+        return u.phone && normalizePhone(u.phone) === normPhone;
+      }
+    });
 
     if (!user) {
       return res.status(401).json({ error: 'Invalid email or password.' });
@@ -1349,10 +1353,14 @@ async function startServer() {
       return res.status(400).json({ error: 'Email or Phone number is required.' });
     }
 
-    const user = localDb.users.find(u => 
-      (target && u.email && u.email.toLowerCase() === target) ||
-      (target && u.phone && normalizePhone(u.phone) === target)
-    );
+    const isEmail = target.includes('@');
+    const user = localDb.users.find(u => {
+      if (isEmail) {
+        return u.email && u.email.toLowerCase() === target;
+      } else {
+        return u.phone && normalizePhone(u.phone) === target;
+      }
+    });
 
     if (!user) {
       return res.json({
@@ -1399,10 +1407,14 @@ async function startServer() {
       return res.status(400).json({ error: 'Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, one number, and one special character.' });
     }
 
-    const user = localDb.users.find(u => 
-      (target && u.email && u.email.toLowerCase() === target) ||
-      (target && u.phone && normalizePhone(u.phone) === target)
-    );
+    const isEmail = target.includes('@');
+    const user = localDb.users.find(u => {
+      if (isEmail) {
+        return u.email && u.email.toLowerCase() === target;
+      } else {
+        return u.phone && normalizePhone(u.phone) === target;
+      }
+    });
 
     if (!user || user.resetPasswordCode !== String(code).trim()) {
       return res.status(400).json({ error: 'Invalid account identifier or password reset code.' });
