@@ -1,0 +1,107 @@
+--- server.ts
++++ server.ts
+@@ -1621,9 +1621,11 @@
+   });
+
+   // Properties Endpoints
+   app.get('/api/properties', async (req, res) => {
+-    res.json(localDb.properties);
++    const adminRequested = req.query.admin === 'true';
++    const filtered = adminRequested ? localDb.properties : localDb.properties.filter(p => p.approvalStatus === 'approved');
++    res.json(filtered);
+   });
+
+-  app.post('/api/properties', async (req, res) => {
++  app.post('/api/properties', requireAuth, async (req, res) => {
+     const propertyData = req.body;
++    const currentUser = (req as any).user;
+
+     const categoryAllowedKeys: Record<string, string[]> = {
+       Products: ['subcategory', 'brand', 'model', 'size', 'dimensions', 'color', 'material', 'condition', 'quantity', 'negotiable', 'gender', 'clothing type', 'storage / spec'],
+@@ -1659,7 +1661,7 @@
+       isTopAd: propertyData.isTopAd === true,
+       isFeatured: propertyData.isFeatured === true || propertyData.boostPlan === 'vip',
+       promotionExpiresAt: propertyData.promotionExpiresAt || undefined,
+-      approvalStatus: propertyData.approvalStatus || 'approved',
++      approvalStatus: currentUser?.role === 'admin' ? (propertyData.approvalStatus || 'approved') : 'pending',
+       verificationStatus: propertyData.verificationStatus || 'verified',
+       isVerifiedListing: propertyData.isVerifiedListing !== undefined ? propertyData.isVerifiedListing : true,
+       createdAt: new Date().toISOString()
+@@ -1688,6 +1690,9 @@
+         if (updates.verificationStatus !== undefined) {
+           updates.isVerifiedListing = updates.verificationStatus === 'verified';
+         }
++      } else {
++        // Regular users cannot approve their own listings via an edit
++        delete updates.approvalStatus;
+       }
+
+       localDb.properties[idx] = { ...property, ...updates };
+@@ -2035,9 +2040,11 @@
+
+   // Payment Methods Endpoints
+   app.get('/api/payment-methods', async (req, res) => {
+-    res.json(localDb.paymentMethods);
++    const adminRequested = req.query.admin === 'true';
++    const filtered = adminRequested ? localDb.paymentMethods : localDb.paymentMethods.filter(p => p.isActive);
++    res.json(filtered);
+   });
+
+-  app.post('/api/payment-methods', async (req, res) => {
++  app.post('/api/payment-methods', requireAuth, async (req, res) => {
+     const methodData = req.body;
+     const newMethod: PaymentMethod = {
+       id: 'pay-' + Date.now(),
+-      isActive: true,
++      isActive: (req as any).user?.role === 'admin' ? true : false,
+       ...methodData
+     };
+@@ -2058,9 +2065,13 @@
+     res.json(newMethod);
+   });
+
+-  app.put('/api/payment-methods/:id', async (req, res) => {
++  app.put('/api/payment-methods/:id', requireAuth, async (req, res) => {
+     const { id } = req.params;
+     const updates = req.body;
++    const currentUser = (req as any).user;
++    if (currentUser.role !== 'admin') {
++      delete updates.isActive;
++    }
+     const idx = localDb.paymentMethods.findIndex(m => m.id === id);
+     if (idx !== -1) {
+       localDb.paymentMethods[idx] = { ...localDb.paymentMethods[idx], ...updates };
+@@ -2237,13 +2248,15 @@
+
+   // Advertisements
+   app.get('/api/advertisements', async (req, res) => {
+-    res.json(localDb.advertisements);
++    const adminRequested = req.query.admin === 'true';
++    const filtered = adminRequested ? localDb.advertisements : localDb.advertisements.filter((a: any) => a.isActive);
++    res.json(filtered);
+   });
+
+-  app.post('/api/advertisements', async (req, res) => {
++  app.post('/api/advertisements', requireAuth, async (req, res) => {
+     const advData = req.body;
+     const newAdv: Advertisement = {
+       id: 'adv-' + Date.now(),
+-      isActive: true,
++      isActive: (req as any).user?.role === 'admin' ? true : false,
+       ...advData
+     };
+@@ -2260,9 +2273,13 @@
+     res.json(newAdv);
+   });
+
+-  app.put('/api/advertisements/:id', async (req, res) => {
++  app.put('/api/advertisements/:id', requireAuth, async (req, res) => {
+     const { id } = req.params;
+     const updates = req.body;
++    const currentUser = (req as any).user;
++    if (currentUser.role !== 'admin') {
++      delete updates.isActive;
++    }
+     const idx = localDb.advertisements.findIndex(a => a.id === id);
+     if (idx !== -1) {
+       localDb.advertisements[idx] = { ...localDb.advertisements[idx], ...updates };

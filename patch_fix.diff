@@ -1,0 +1,18 @@
+--- server.ts
++++ server.ts
+@@ -1623,10 +1623,13 @@
+
+   // Properties Endpoints
+   app.get('/api/properties', async (req, res) => {
+-    res.json(localDb.properties);
++    const adminRequested = req.query.admin === 'true';
++    const filtered = adminRequested ? localDb.properties : localDb.properties.filter(p => p.approvalStatus === 'approved');
++    res.json(filtered);
+   });
+
+-  app.post('/api/properties', async (req, res) => {
++  app.post('/api/properties', requireAuth, async (req, res) => {
+     const propertyData = req.body;
++    const currentUser = (req as any).user;
+
+     const categoryAllowedKeys: Record<string, string[]> = {
