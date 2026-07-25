@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../lib/AppContext';
+import { formatTimeAgo } from '../lib/utils';
 import { Bell, Languages, User, LogOut, MessageSquare, Settings, Shield, Plus, Building, Heart, CheckCircle2, Wallet, CreditCard } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
 
@@ -221,7 +222,7 @@ export default function Navbar({ onNavigate, activeView, onOpenCreateModal }: Na
                                 </p>
                                 <p className="leading-relaxed text-white/60">{notif.message}</p>
                                 <span className="text-[10px] text-white/30 block mt-1 font-mono">
-                                  {new Date(notif.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                  {formatTimeAgo(notif.createdAt)}
                                 </span>
                               </div>
                             ))

@@ -9,22 +9,16 @@
       "isVerified": true,
       "verificationStatus": "verified",
       "createdAt": "2026-07-23T09:48:55.986Z",
-      "tokenVersion": 3,
+      "tokenVersion": 4,
       "loginHistory": [
         {
           "ip": "127.0.0.1",
-          "userAgent": "curl/7.88.1",
-          "timestamp": "2026-07-23T09:59:39.375Z",
-          "deviceType": "Desktop"
-        },
-        {
-          "ip": "127.0.0.1",
           "userAgent": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Mobile Safari/537.36",
-          "timestamp": "2026-07-23T09:57:25.767Z",
+          "timestamp": "2026-07-25T22:11:11.568Z",
           "deviceType": "Mobile"
         }
       ],
-      "passwordHash": "$2b$10$NIdSavV/8epYfmvB3U19fegjudeatzclP0p7lCZdDNOZPv8hXNsTm",
+      "passwordHash": "$2b$10$HKtnwAvEhvF2JkYukPZ3BObM92Sd2g1W5lta4d8YwOMAn0M708s96",
       "failedLoginAttempts": 0,
       "walletTransactions": [],
       "passwordHistory": [
@@ -32,30 +26,7 @@
       ]
     }
   ],
-  "properties": [
-    {
-      "id": "prop-1784800784462",
-      "title": "Test Villa in Addis Ababa",
-      "price": 2500000,
-      "majorCategory": "Properties",
-      "category": "Residential",
-      "location": "Addis Ababa",
-      "description": "Beautiful test villa",
-      "images": [
-        "https://images.unsplash.com/photo-1580587771525-78b9dba3b914"
-      ],
-      "amenities": [],
-      "brand": "",
-      "condition": "Used - Like New",
-      "boostPlan": "free",
-      "isTopAd": false,
-      "isFeatured": false,
-      "approvalStatus": "approved",
-      "verificationStatus": "verified",
-      "isVerifiedListing": true,
-      "createdAt": "2026-07-23T09:59:44.462Z"
-    }
-  ],
+  "properties": [],
   "paymentMethods": [
     {
       "id": "pay-cbe",
@@ -3230,17 +3201,7 @@
     }
   ],
   "reports": [],
-  "notifications": [
-    {
-      "id": "notif-1784800779375",
-      "userId": "usr-jemal",
-      "title": "New Device Login Detected",
-      "message": "A new login was detected from a Desktop device (curl/7.88.1) on 7/23/2026, 9:59:39 AM. If this wasn't you, please change your password or log out of all devices immediately.",
-      "type": "security",
-      "isRead": false,
-      "createdAt": "2026-07-23T09:59:39.392Z"
-    }
-  ],
+  "notifications": [],
   "categories": [
     {
       "id": "cat-properties",
@@ -3378,8 +3339,8 @@
       "orderIndex": 1,
       "helpfulYes": 48,
       "helpfulNo": 2,
-      "createdAt": "2026-07-24T16:07:41.816Z",
-      "updatedAt": "2026-07-24T16:07:41.816Z",
+      "createdAt": "2026-07-25T22:09:29.451Z",
+      "updatedAt": "2026-07-25T22:09:29.451Z",
       "question": {
         "en": "What is Sof Umer marketplace?",
         "om": "Gabaan Sof Umer maali?",
@@ -3399,8 +3360,8 @@
       "orderIndex": 2,
       "helpfulYes": 35,
       "helpfulNo": 1,
-      "createdAt": "2026-07-24T16:07:41.816Z",
-      "updatedAt": "2026-07-24T16:07:41.816Z",
+      "createdAt": "2026-07-25T22:09:29.451Z",
+      "updatedAt": "2026-07-25T22:09:29.451Z",
       "question": {
         "en": "How do I create an account and complete verification?",
         "om": "Herrega akkamitti banna fi eenyummaa mirkaneessina?",
@@ -3420,8 +3381,8 @@
       "orderIndex": 3,
       "helpfulYes": 62,
       "helpfulNo": 3,
-      "createdAt": "2026-07-24T16:07:41.816Z",
-      "updatedAt": "2026-07-24T16:07:41.816Z",
+      "createdAt": "2026-07-25T22:09:29.451Z",
+      "updatedAt": "2026-07-25T22:09:29.451Z",
       "question": {
         "en": "How do I post a property listing for sale or rent?",
         "om": "Beeksisa mana ykn lafaa akkamitti gurgurtaa ykn kireessaaf dhiyeessina?",
@@ -3441,8 +3402,8 @@
       "orderIndex": 4,
       "helpfulYes": 19,
       "helpfulNo": 0,
-      "createdAt": "2026-07-24T16:07:41.816Z",
-      "updatedAt": "2026-07-24T16:07:41.816Z",
+      "createdAt": "2026-07-25T22:09:29.451Z",
+      "updatedAt": "2026-07-25T22:09:29.451Z",
       "question": {
         "en": "What documents are needed for Verified Property badge?",
         "om": "Mallattoo Mirkanaa'aa Manaa (Verified Badge) argachuuf sanadiin maal barbaachisa?",
@@ -3462,8 +3423,8 @@
       "orderIndex": 5,
       "helpfulYes": 29,
       "helpfulNo": 1,
-      "createdAt": "2026-07-24T16:07:41.816Z",
-      "updatedAt": "2026-07-24T16:07:41.816Z",
+      "createdAt": "2026-07-25T22:09:29.451Z",
+      "updatedAt": "2026-07-25T22:09:29.451Z",
       "question": {
         "en": "How do I post job vacancies and recruit candidates?",
         "om": "Beeksisa hojii akkamitti baasna fi kandidaatota qacarta?",
@@ -3483,8 +3444,8 @@
       "orderIndex": 6,
       "helpfulYes": 22,
       "helpfulNo": 2,
-      "createdAt": "2026-07-24T16:07:41.816Z",
-      "updatedAt": "2026-07-24T16:07:41.816Z",
+      "createdAt": "2026-07-25T22:09:29.451Z",
+      "updatedAt": "2026-07-25T22:09:29.451Z",
       "question": {
         "en": "Can I sell electronics, furniture, or personal goods?",
         "om": "Meeshaalee ellektirooniksi, mi'a mana fi meeshaa dhuunfaa gurguruu danda'aa?",
@@ -3504,8 +3465,8 @@
       "orderIndex": 7,
       "helpfulYes": 18,
       "helpfulNo": 0,
-      "createdAt": "2026-07-24T16:07:41.816Z",
-      "updatedAt": "2026-07-24T16:07:41.816Z",
+      "createdAt": "2026-07-25T22:09:29.451Z",
+      "updatedAt": "2026-07-25T22:09:29.451Z",
       "question": {
         "en": "How do freelancers and technicians list their services?",
         "om": "Ogeeyyiin fi teekniishinoonni tajaajila isaanii akkamitti galmeessisu?",
@@ -3525,8 +3486,8 @@
       "orderIndex": 8,
       "helpfulYes": 15,
       "helpfulNo": 1,
-      "createdAt": "2026-07-24T16:07:41.816Z",
-      "updatedAt": "2026-07-24T16:07:41.816Z",
+      "createdAt": "2026-07-25T22:09:29.451Z",
+      "updatedAt": "2026-07-25T22:09:29.451Z",
       "question": {
         "en": "How can local businesses feature their enterprise on Sof Umer?",
         "om": "Dhaabbileen naannoo daldala isaanii akkamitti beeksifatu?",
@@ -3546,8 +3507,8 @@
       "orderIndex": 9,
       "helpfulYes": 14,
       "helpfulNo": 0,
-      "createdAt": "2026-07-24T16:07:41.816Z",
-      "updatedAt": "2026-07-24T16:07:41.816Z",
+      "createdAt": "2026-07-25T22:09:29.451Z",
+      "updatedAt": "2026-07-25T22:09:29.451Z",
       "question": {
         "en": "What community announcements and notices are allowed?",
         "om": "Beeksisa hawaasaa fi beeksisa kamtu eeyyamamaa?",
@@ -3567,8 +3528,8 @@
       "orderIndex": 10,
       "helpfulYes": 51,
       "helpfulNo": 2,
-      "createdAt": "2026-07-24T16:07:41.817Z",
-      "updatedAt": "2026-07-24T16:07:41.817Z",
+      "createdAt": "2026-07-25T22:09:29.451Z",
+      "updatedAt": "2026-07-25T22:09:29.451Z",
       "question": {
         "en": "How does the Make Offer and Chat system work?",
         "om": "Sirni \"Make Offer\" fi Chaatii akkamitti hojjata?",
@@ -3588,8 +3549,8 @@
       "orderIndex": 11,
       "helpfulYes": 40,
       "helpfulNo": 1,
-      "createdAt": "2026-07-24T16:07:41.817Z",
-      "updatedAt": "2026-07-24T16:07:41.817Z",
+      "createdAt": "2026-07-25T22:09:29.451Z",
+      "updatedAt": "2026-07-25T22:09:29.451Z",
       "question": {
         "en": "How do I boost or feature my listing with Telebirr or CBE?",
         "om": "Telebirr ykn CBE-n beeksisa koo akkamitti ol-kaasa (boost)?",
@@ -3609,8 +3570,8 @@
       "orderIndex": 12,
       "helpfulYes": 73,
       "helpfulNo": 1,
-      "createdAt": "2026-07-24T16:07:41.817Z",
-      "updatedAt": "2026-07-24T16:07:41.817Z",
+      "createdAt": "2026-07-25T22:09:29.451Z",
+      "updatedAt": "2026-07-25T22:09:29.451Z",
       "question": {
         "en": "What safety precautions should I take during transactions?",
         "om": "Tarkaanfii nageenyaa maal fudhachuu qaba?",
@@ -3630,8 +3591,8 @@
       "orderIndex": 13,
       "helpfulYes": 16,
       "helpfulNo": 0,
-      "createdAt": "2026-07-24T16:07:41.817Z",
-      "updatedAt": "2026-07-24T16:07:41.817Z",
+      "createdAt": "2026-07-25T22:09:29.451Z",
+      "updatedAt": "2026-07-25T22:09:29.451Z",
       "question": {
         "en": "What content or listings are strictly prohibited on Sof Umer?",
         "om": "Qabiyyee fi beeksisi kamtu dhorkamaa ta'ee?",
@@ -3651,8 +3612,8 @@
       "orderIndex": 14,
       "helpfulYes": 38,
       "helpfulNo": 1,
-      "createdAt": "2026-07-24T16:07:41.817Z",
-      "updatedAt": "2026-07-24T16:07:41.817Z",
+      "createdAt": "2026-07-25T22:09:29.451Z",
+      "updatedAt": "2026-07-25T22:09:29.451Z",
       "question": {
         "en": "How can I contact Sof Umer support team directly?",
         "om": "Garee deggarsa Sof Umer akkamitti kallattiin quunnama?",

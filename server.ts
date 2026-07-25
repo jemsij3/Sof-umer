@@ -1,14 +1,10 @@
 import express from 'express';
-import cors from 'cors';
 import path from 'path';
 import fs from 'fs/promises';
-import fsSync from 'fs';
-import dns from 'dns';
 import { createServer as createViteServer } from 'vite';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
-import nodemailer from 'nodemailer';
-import type {
+import {
   User,
   Property,
   PaymentMethod,
@@ -28,23 +24,8 @@ import type {
 } from './src/types';
 import { staticTranslations } from './src/lib/translations';
 
-dns.setDefaultResultOrder('ipv4first');
-
-const PORT = process.env.PORT ? parseInt(process.env.PORT) : 3000;
-let DB_FILE = (process.env.NODE_ENV === 'production' || process.env.RENDER === 'true') ? '/data/sof_umer_db.json' : path.join(process.cwd(), 'sof_umer_db.json');
-try {
-  if (process.env.NODE_ENV === 'production' || process.env.RENDER === 'true') {
-    // Check if /data is writable
-    try {
-      fsSync.accessSync('/data', fsSync.constants.W_OK);
-    } catch (e) {
-      console.warn('/data is not writable, falling back to local dir');
-      DB_FILE = path.join(process.cwd(), 'sof_umer_db.json');
-    }
-  }
-} catch (e) {
-  console.warn('Error checking /data', e);
-}
+const PORT = 3000;
+const DB_FILE = path.join(process.cwd(), 'sof_umer_db.json');
 
 export interface ServerUser extends User {
   passwordHash?: string;
@@ -607,84 +588,6 @@ const syncAllWalletBalances = () => {
 };
 
 // Initialize file DB
-
-async function sendEmail(to: string, subject: string, text: string, html: string) {
-  const resendApiKey = process.env.RESEND_API_KEY || process.env.VITE_RESEND_API_KEY;
-  const smtpHost = process.env.SMTP_HOST || process.env.VITE_SMTP_HOST;
-  const smtpPort = process.env.SMTP_PORT || process.env.VITE_SMTP_PORT;
-  const smtpUser = process.env.SMTP_USER || process.env.VITE_SMTP_USER;
-  const smtpPass = process.env.SMTP_PASS || process.env.VITE_SMTP_PASS || process.env.SMTP_PASSWORD || process.env.VITE_SMTP_PASSWORD;
-  const smtpFrom = process.env.SMTP_FROM || process.env.VITE_SMTP_FROM || process.env.EMAIL_FROM || process.env.VITE_EMAIL_FROM;
-
-  let fromAddress = smtpFrom || '"Sof Umer" <noreply@sofumerapp.com>';
-
-  if (resendApiKey) {
-    fromAddress = process.env.RESEND_FROM || smtpFrom || '"Sof Umer" <noreply@sofumerapp.com>';
-    const response = await fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${resendApiKey}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        from: fromAddress,
-        to,
-        subject,
-        text,
-        html,
-      })
-    });
-
-    const data = await response.json();
-    if (!response.ok) {
-      console.error('Resend API error:', data);
-      if (data.statusCode === 403 && data.name === 'validation_error' && data.message.includes('domain')) {
-         console.error('CRITICAL: Resend is rejecting emails. You must verify a custom domain and set RESEND_FROM in Render, OR you are trying to send to an unverified email address using the test onboarding@resend.dev domain.');
-      }
-      throw new Error(`Resend API error: ${JSON.stringify(data)}`);
-    }
-    console.log('Email sent successfully via Resend API:', data.id);
-    return;
-  }
-
-  let transporter;
-  if (smtpHost && smtpUser && smtpPass) {
-    transporter = nodemailer.createTransport({
-      host: smtpHost,
-      port: parseInt(smtpPort || '587', 10),
-      secure: process.env.SMTP_SECURE === 'true' || process.env.VITE_SMTP_SECURE === 'true',
-      auth: { user: smtpUser, pass: smtpPass },
-      tls: { rejectUnauthorized: false }
-    });
-  }
-
-  if (!transporter) {
-    console.log('No valid SMTP config found, using Ethereal dev email...');
-    const testAccount = await nodemailer.createTestAccount();
-    transporter = nodemailer.createTransport({
-      host: "smtp.ethereal.email",
-      port: 587,
-      secure: false,
-      auth: { user: testAccount.user, pass: testAccount.pass },
-    });
-    fromAddress = testAccount.user;
-  }
-
-  let info = await transporter.sendMail({
-    from: fromAddress,
-    to,
-    subject,
-    text,
-    html,
-  });
-
-  console.log('Email sent successfully:', info.messageId);
-  if (info.messageId && nodemailer.getTestMessageUrl) {
-    const testUrl = nodemailer.getTestMessageUrl(info);
-    if (testUrl) console.log('Test email URL:', testUrl);
-  }
-}
-
 let localDb: ReturnType<typeof getInitialData>;
 
 const loadDb = async () => {
@@ -709,12 +612,8 @@ const loadDb = async () => {
       localDb.users.push(getInitialData().users[0]);
     }
     const jemalUser = localDb.users.find(u => u.email.toLowerCase() === 'jemaljima@gmail.com');
-    if (jemalUser) {
-      if (!jemalUser.passwordHash) {
-        jemalUser.passwordHash = '$2b$10$odqJ/s8vFofM4nV6WQs87.QQkmKXew65OqDDCUPQALgbkjVTuNhou';
-      }
-      jemalUser.failedLoginAttempts = 0;
-      jemalUser.lockoutUntil = undefined;
+    if (jemalUser && !jemalUser.passwordHash) {
+      jemalUser.passwordHash = '$2b$10$odqJ/s8vFofM4nV6WQs87.QQkmKXew65OqDDCUPQALgbkjVTuNhou';
     }
     localDb.users.forEach(u => {
       if (!u.passwordHistory || !Array.isArray(u.passwordHistory)) {
@@ -777,8 +676,41 @@ const loadDb = async () => {
       };
     }
 
-    // Auto-repair migration for registered staff missing isEmployee fields
+    // Migration: Purge test/curl notifications and test/curl loginHistory logs
     let dbChanged = false;
+    if (localDb.notifications && Array.isArray(localDb.notifications)) {
+      const prevNotifCount = localDb.notifications.length;
+      localDb.notifications = localDb.notifications.filter(n => {
+        const msg = (n.message || '').toLowerCase();
+        const title = (n.title || '').toLowerCase();
+        return !msg.includes('curl/') && !title.includes('curl/') && !msg.includes('curl');
+      });
+      if (localDb.notifications.length !== prevNotifCount) {
+        dbChanged = true;
+      }
+    }
+
+    if (localDb.users && Array.isArray(localDb.users)) {
+      localDb.users.forEach(u => {
+        if (u.loginHistory && Array.isArray(u.loginHistory)) {
+          const origLen = u.loginHistory.length;
+          u.loginHistory = u.loginHistory.filter(h => !(h.userAgent || '').toLowerCase().includes('curl'));
+          if (u.loginHistory.length !== origLen) {
+            dbChanged = true;
+          }
+        }
+      });
+    }
+
+    if ((localDb as any).loginHistory && Array.isArray((localDb as any).loginHistory)) {
+      const origLen = (localDb as any).loginHistory.length;
+      (localDb as any).loginHistory = (localDb as any).loginHistory.filter((h: any) => !(h.userAgent || h.deviceInfo || '').toLowerCase().includes('curl'));
+      if ((localDb as any).loginHistory.length !== origLen) {
+        dbChanged = true;
+      }
+    }
+
+    // Auto-repair migration for registered staff missing isEmployee fields
     if (localDb.users && localDb.users.length > 0) {
       localDb.users = localDb.users.map(u => {
         if (u.role === 'admin' && u.email.toLowerCase() !== 'jemaljima@gmail.com' && !u.isEmployee) {
@@ -827,13 +759,11 @@ const saveDb = (): Promise<void> => {
     try {
       const jsonString = JSON.stringify(localDb, null, 2);
       const tempFile = `${DB_FILE}.tmp`;
-      try { await fs.mkdir(path.dirname(DB_FILE), { recursive: true }); } catch (e) {}
       await fs.writeFile(tempFile, jsonString, 'utf-8');
       await fs.rename(tempFile, DB_FILE);
     } catch (err) {
       console.error('Failed atomic saveDb, falling back to direct write:', err);
       try {
-        try { await fs.mkdir(path.dirname(DB_FILE), { recursive: true }); } catch (e) {}
         await fs.writeFile(DB_FILE, JSON.stringify(localDb, null, 2), 'utf-8');
       } catch (e2) {
         console.error('CRITICAL: Fallback saveDb failed:', e2);
@@ -850,25 +780,6 @@ startServer();
 async function startServer() {
   await loadDb();
   const app = express();
-  const allowedOrigins = [
-    'http://localhost:3000',
-    'http://localhost:5173',
-    'https://sofumerapp.com',
-    'https://www.sofumerapp.com',
-    process.env.FRONTEND_URL || 'https://sof-umerapp.onrender.com'
-  ];
-
-  app.use(cors({
-    origin: function(origin, callback) {
-      if (!origin) return callback(null, true);
-      if (allowedOrigins.indexOf(origin) === -1) {
-        // Reject the CORS request without throwing a fatal error
-        return callback(null, false);
-      }
-      return callback(null, true);
-    },
-    credentials: true
-  }));
 
   // Support JSON payloads
   app.use(express.json({ limit: '10mb' }));
@@ -990,10 +901,6 @@ async function startServer() {
   // --- API ROUTES ---
 
   // CAPTCHA Endpoint
-  app.get('/api/health', (req, res) => {
-    res.json({ status: 'ok', message: 'Server is healthy' });
-  });
-
   app.get('/api/auth/captcha', (req, res) => {
     const num1 = Math.floor(Math.random() * 9) + 1;
     const num2 = Math.floor(Math.random() * 9) + 1;
@@ -1017,14 +924,10 @@ async function startServer() {
     const normEmail = normalizeEmail(identifier);
     const normPhone = normalizePhone(identifier);
 
-    const isEmail = identifier.includes('@');
-    const user = localDb.users.find(u => {
-      if (isEmail) {
-        return u.email && u.email.toLowerCase() === normEmail;
-      } else {
-        return u.phone && normalizePhone(u.phone) === normPhone;
-      }
-    });
+    const user = localDb.users.find(u => 
+      (u.email && u.email.toLowerCase() === normEmail) ||
+      (u.phone && normalizePhone(u.phone) === normPhone)
+    );
 
     if (!user) {
       return res.status(401).json({ error: 'Invalid email or password.' });
@@ -1103,7 +1006,7 @@ async function startServer() {
         id: 'notif-' + Date.now(),
         userId: user.id,
         title: 'New Device Login Detected',
-        message: `A new login was detected from a ${deviceType} device (${userAgent}) on ${new Date().toLocaleString()}. If this wasn't you, please change your password or log out of all devices immediately.`,
+        message: `A new login was detected from a ${deviceType} device (${userAgent}). If this wasn't you, please change your password or log out of all devices immediately.`,
         type: 'security',
         isRead: false,
         createdAt: new Date().toISOString()
@@ -1236,9 +1139,9 @@ async function startServer() {
       return res.status(400).json({ error: 'Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, one number, and one special character.' });
     }
 
-    let existing = localDb.users.find(u => normEmail && u.email && u.email.toLowerCase() === normEmail);
+    let existing = localDb.users.find(u => u.email && u.email.toLowerCase() === normEmail);
     if (!existing && normPhone) {
-      existing = localDb.users.find(u => normPhone && u.phone && normalizePhone(u.phone) === normPhone);
+      existing = localDb.users.find(u => u.phone && normalizePhone(u.phone) === normPhone);
     }
 
     if (existing) {
@@ -1292,17 +1195,6 @@ async function startServer() {
     localDb.users.push(newUser);
     await saveDb();
 
-    if (!isJemal) {
-        sendEmail(
-          normEmail,
-          'Account Verification Code',
-          `Your verification code is: ${verificationCode}\nThis code will expire in 15 minutes.`,
-          `<p>Your verification code is: <strong>${verificationCode}</strong></p><p>This code will expire in 15 minutes.</p>`
-        ).catch(err => {
-          console.error('Failed to send verification email:', err);
-        });
-    }
-
     res.json({
       message: 'Registration successful! Please verify your email.',
       email: newUser.email,
@@ -1318,7 +1210,7 @@ async function startServer() {
       return res.status(400).json({ error: 'Email and verification code are required.' });
     }
 
-    const user = localDb.users.find(u => normEmail && u.email && u.email.toLowerCase() === normEmail);
+    const user = localDb.users.find(u => u.email && u.email.toLowerCase() === normEmail);
     if (!user || user.verificationCode !== String(code).trim()) {
       return res.status(400).json({ error: 'Invalid email or verification code.' });
     }
@@ -1353,14 +1245,10 @@ async function startServer() {
       return res.status(400).json({ error: 'Email or Phone number is required.' });
     }
 
-    const isEmail = target.includes('@');
-    const user = localDb.users.find(u => {
-      if (isEmail) {
-        return u.email && u.email.toLowerCase() === target;
-      } else {
-        return u.phone && normalizePhone(u.phone) === target;
-      }
-    });
+    const user = localDb.users.find(u => 
+      (u.email && u.email.toLowerCase() === target) ||
+      (u.phone && normalizePhone(u.phone) === target)
+    );
 
     if (!user) {
       return res.json({
@@ -1374,23 +1262,9 @@ async function startServer() {
     user.resetPasswordCodeExpiresAt = new Date(Date.now() + 15 * 60 * 1000).toISOString();
     await saveDb();
 
-    // Email logic in fire-and-forget IIFE to prevent hanging requests
-    if (user.email) {
-      sendEmail(
-        user.email,
-        'Password Reset Code',
-        `Your password reset code is: ${resetCode}\nThis code will expire in 15 minutes.`,
-        `<p>Your password reset code is: <strong>${resetCode}</strong></p><p>This code will expire in 15 minutes.</p>`
-      ).catch(err => {
-        console.error('Failed to send password reset email:', err);
-      });
-    } else {
-      console.log(`[DEV/NO-SMTP] Password reset code for ${target}: ${resetCode}`);
-    }
-
     res.json({
       success: true,
-      message: 'Password reset code has been generated. Check your email.',
+      message: 'Password reset code has been generated.',
       devResetCode: process.env.NODE_ENV !== 'production' ? resetCode : undefined
     });
   });
@@ -1407,14 +1281,10 @@ async function startServer() {
       return res.status(400).json({ error: 'Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, one number, and one special character.' });
     }
 
-    const isEmail = target.includes('@');
-    const user = localDb.users.find(u => {
-      if (isEmail) {
-        return u.email && u.email.toLowerCase() === target;
-      } else {
-        return u.phone && normalizePhone(u.phone) === target;
-      }
-    });
+    const user = localDb.users.find(u => 
+      (u.email && u.email.toLowerCase() === target) ||
+      (u.phone && normalizePhone(u.phone) === target)
+    );
 
     if (!user || user.resetPasswordCode !== String(code).trim()) {
       return res.status(400).json({ error: 'Invalid account identifier or password reset code.' });
@@ -1559,7 +1429,7 @@ async function startServer() {
         id: 'notif-' + Date.now(),
         userId: user.id,
         title: 'New Device Login Detected',
-        message: `A new login was detected from a ${deviceType} device (${userAgent}) on ${new Date().toLocaleString()}. If this wasn't you, please change your password or log out of all devices immediately.`,
+        message: `A new login was detected from a ${deviceType} device (${userAgent}). If this wasn't you, please change your password or log out of all devices immediately.`,
         type: 'security',
         isRead: false,
         createdAt: new Date().toISOString()
@@ -1622,14 +1492,11 @@ async function startServer() {
 
   // Properties Endpoints
   app.get('/api/properties', async (req, res) => {
-    const adminRequested = req.query.admin === 'true';
-    const filtered = adminRequested ? localDb.properties : localDb.properties.filter(p => p.approvalStatus === 'approved');
-    res.json(filtered);
+    res.json(localDb.properties);
   });
 
-  app.post('/api/properties', requireAuth, async (req, res) => {
+  app.post('/api/properties', async (req, res) => {
     const propertyData = req.body;
-    const currentUser = (req as any).user;
 
     const categoryAllowedKeys: Record<string, string[]> = {
       Products: ['subcategory', 'brand', 'model', 'size', 'dimensions', 'color', 'material', 'condition', 'quantity', 'negotiable', 'gender', 'clothing type', 'storage / spec'],
@@ -1663,7 +1530,7 @@ async function startServer() {
       isTopAd: propertyData.isTopAd === true,
       isFeatured: propertyData.isFeatured === true || propertyData.boostPlan === 'vip',
       promotionExpiresAt: propertyData.promotionExpiresAt || undefined,
-      approvalStatus: currentUser?.role === 'admin' ? (propertyData.approvalStatus || 'approved') : 'pending',
+      approvalStatus: propertyData.approvalStatus || 'approved',
       verificationStatus: propertyData.verificationStatus || 'verified',
       isVerifiedListing: propertyData.isVerifiedListing !== undefined ? propertyData.isVerifiedListing : true,
       createdAt: new Date().toISOString()
@@ -1689,9 +1556,6 @@ async function startServer() {
         if (updates.verificationStatus !== undefined) {
           updates.isVerifiedListing = updates.verificationStatus === 'verified';
         }
-      } else {
-        // Regular users cannot approve their own listings via an edit
-        delete updates.approvalStatus;
       }
 
       localDb.properties[idx] = { ...property, ...updates };
@@ -2039,12 +1903,10 @@ async function startServer() {
 
   // Payment Methods Endpoints
   app.get('/api/payment-methods', async (req, res) => {
-    const adminRequested = req.query.admin === 'true';
-    const filtered = adminRequested ? localDb.paymentMethods : localDb.paymentMethods.filter(p => p.isActive);
-    res.json(filtered);
+    res.json(localDb.paymentMethods);
   });
 
-  app.post('/api/payment-methods', requireAuth, async (req, res) => {
+  app.post('/api/payment-methods', async (req, res) => {
     const methodData = req.body;
     const newMethod: PaymentMethod = {
       id: 'pay-' + Date.now(),
@@ -2056,13 +1918,9 @@ async function startServer() {
     res.json(newMethod);
   });
 
-  app.put('/api/payment-methods/:id', requireAuth, async (req, res) => {
+  app.put('/api/payment-methods/:id', async (req, res) => {
     const { id } = req.params;
     const updates = req.body;
-    const currentUser = (req as any).user;
-    if (currentUser.role !== 'admin') {
-      delete updates.isActive;
-    }
     const idx = localDb.paymentMethods.findIndex(m => m.id === id);
     if (idx !== -1) {
       localDb.paymentMethods[idx] = { ...localDb.paymentMethods[idx], ...updates };
@@ -2247,16 +2105,14 @@ async function startServer() {
 
   // Advertisements
   app.get('/api/advertisements', async (req, res) => {
-    const adminRequested = req.query.admin === 'true';
-    const filtered = adminRequested ? localDb.advertisements : localDb.advertisements.filter((a: any) => a.isActive);
-    res.json(filtered);
+    res.json(localDb.advertisements);
   });
 
-  app.post('/api/advertisements', requireAuth, async (req, res) => {
+  app.post('/api/advertisements', async (req, res) => {
     const advData = req.body;
     const newAdv: Advertisement = {
       id: 'adv-' + Date.now(),
-      isActive: (req as any).user?.role === 'admin' ? true : false,
+      isActive: true,
       ...advData
     };
     localDb.advertisements.push(newAdv);
@@ -2264,13 +2120,9 @@ async function startServer() {
     res.json(newAdv);
   });
 
-  app.put('/api/advertisements/:id', requireAuth, async (req, res) => {
+  app.put('/api/advertisements/:id', async (req, res) => {
     const { id } = req.params;
     const updates = req.body;
-    const currentUser = (req as any).user;
-    if (currentUser.role !== 'admin') {
-      delete updates.isActive;
-    }
     const idx = localDb.advertisements.findIndex(a => a.id === id);
     if (idx !== -1) {
       localDb.advertisements[idx] = { ...localDb.advertisements[idx], ...updates };
@@ -2797,7 +2649,7 @@ async function startServer() {
     app.use(vite.middlewares);
   } else {
     const distPath = path.join(process.cwd(), 'dist');
-    app.use(express.static(distPath, { setHeaders: (res, path) => { if (path.endsWith('.css')) { res.setHeader('Content-Type', 'text/css'); } if (path.endsWith('.js')) { res.setHeader('Content-Type', 'application/javascript'); } } }));
+    app.use(express.static(distPath));
     app.get('*', (req, res) => {
       res.sendFile(path.join(distPath, 'index.html'));
     });

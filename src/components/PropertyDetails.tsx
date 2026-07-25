@@ -1,4 +1,3 @@
-import Chat from './Chat';
 import React, { useState, useMemo } from 'react';
 import { Property, PropertyOffer } from '../types';
 import { useApp } from '../lib/AppContext';
@@ -50,7 +49,6 @@ export default function PropertyDetails({
   onSelectProperty,
   onNavigateToAuth
 }: PropertyDetailsProps) {
-  const [showChat, setShowChat] = useState(false);
   const {
     favorites,
     toggleFavorite,
@@ -348,8 +346,7 @@ export default function PropertyDetails({
                       <span>{t('share_whatsapp')}</span>
                     </a>
                   </div>
-                  {showChat && currentUser && <Chat propertyId={property.id} sellerId={property.ownerId} onClose={() => setShowChat(false)} />}
-    </motion.div>
+                </motion.div>
               )}
             </AnimatePresence>
           </div>
@@ -681,8 +678,7 @@ export default function PropertyDetails({
                       <span className="truncate">{property.contactEmail}</span>
                     </a>
                   )}
-                  {showChat && currentUser && <Chat propertyId={property.id} sellerId={property.ownerId} onClose={() => setShowChat(false)} />}
-    </motion.div>
+                </motion.div>
               )}
 
             </div>
@@ -1000,8 +996,7 @@ export default function PropertyDetails({
                   </button>
                 </form>
               )}
-              {showChat && currentUser && <Chat propertyId={property.id} sellerId={property.ownerId} onClose={() => setShowChat(false)} />}
-    </motion.div>
+            </motion.div>
           </div>
         )}
       </AnimatePresence>
@@ -1072,8 +1067,7 @@ export default function PropertyDetails({
                   </div>
                 ))}
               </div>
-              {showChat && currentUser && <Chat propertyId={property.id} sellerId={property.ownerId} onClose={() => setShowChat(false)} />}
-    </motion.div>
+            </motion.div>
           </div>
         )}
       </AnimatePresence>

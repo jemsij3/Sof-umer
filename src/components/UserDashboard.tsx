@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useApp } from '../lib/AppContext';
+import { formatTimeAgo } from '../lib/utils';
 import { Property, Inquiry, AppNotification } from '../types';
 import { 
   User, MessageSquare, Bell, CreditCard, Settings, LogOut, CheckCircle2, 
@@ -1820,7 +1821,7 @@ export default function UserDashboard({
                               </div>
                               <p className="text-[11px] text-white/60 mt-1 pl-3.5 leading-relaxed">{n.message}</p>
                               <span className="text-[9px] text-white/30 block pl-3.5 mt-1.5 font-mono">
-                                {new Date(n.createdAt).toLocaleString()}
+                                {formatTimeAgo(n.createdAt)}
                               </span>
                             </div>
                           </div>
