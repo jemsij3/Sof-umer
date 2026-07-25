@@ -31,9 +31,9 @@ import { staticTranslations } from './src/lib/translations';
 dns.setDefaultResultOrder('ipv4first');
 
 const PORT = process.env.PORT ? parseInt(process.env.PORT) : 3000;
-let DB_FILE = (process.env.NODE_ENV === 'production' || process.env.RENDER === 'true') ? '/data/sof_umer_db.json' : path.join(process.cwd(), 'sof_umer_db.json');
+let DB_FILE = process.env.NODE_ENV === 'production' ? '/data/sof_umer_db.json' : path.join(process.cwd(), 'sof_umer_db.json');
 try {
-  if (process.env.NODE_ENV === 'production' || process.env.RENDER === 'true') {
+  if (process.env.NODE_ENV === 'production') {
     // Check if /data is writable
     try {
       fsSync.accessSync('/data', fsSync.constants.W_OK);
@@ -551,7 +551,7 @@ const syncAllWalletBalances = () => {
     if (!user.walletTransactions) user.walletTransactions = [];
 
     // Match receipts belonging to this user
-    const userReceipts = localDb.receipts.filter(r => 
+    const userReceipts = localDb.receipts.filter(r =>
       r.userId === user.id || (r.userEmail && user.email && r.userEmail.toLowerCase() === user.email.toLowerCase())
     );
 
@@ -742,7 +742,7 @@ const loadDb = async () => {
     if (!localDb.languages || !Array.isArray(localDb.languages)) {
       localDb.languages = getInitialData().languages;
     }
-    
+
     // Merge missing default translation keys without overwriting user custom edits
     const defaultData = getInitialData();
     if (!localDb.translations || !Array.isArray(localDb.translations) || localDb.translations.length === 0) {
@@ -1017,7 +1017,7 @@ async function startServer() {
     const normEmail = normalizeEmail(identifier);
     const normPhone = normalizePhone(identifier);
 
-    const user = localDb.users.find(u => 
+    const user = localDb.users.find(u =>
       (u.email && u.email.toLowerCase() === normEmail) ||
       (u.phone && normalizePhone(u.phone) === normPhone)
     );
@@ -1084,11 +1084,11 @@ async function startServer() {
     const userAgent = req.headers['user-agent'] || 'Unknown';
     const deviceType = /mobile/i.test(userAgent) ? 'Mobile' : 'Desktop';
     const loginEntry = { ip, userAgent, timestamp: new Date().toISOString(), deviceType };
-    
+
     if (!user.loginHistory) user.loginHistory = [];
     const seenDevices = user.loginHistory.slice(0, 10).map(h => h.userAgent);
     const isNewDevice = seenDevices.length > 0 && !seenDevices.includes(userAgent);
-    
+
     user.loginHistory.unshift(loginEntry);
     if (user.loginHistory.length > 20) {
       user.loginHistory.pop();
@@ -1349,7 +1349,7 @@ async function startServer() {
       return res.status(400).json({ error: 'Email or Phone number is required.' });
     }
 
-    const user = localDb.users.find(u => 
+    const user = localDb.users.find(u =>
       (u.email && u.email.toLowerCase() === target) ||
       (u.phone && normalizePhone(u.phone) === target)
     );
@@ -1399,7 +1399,7 @@ async function startServer() {
       return res.status(400).json({ error: 'Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, one number, and one special character.' });
     }
 
-    const user = localDb.users.find(u => 
+    const user = localDb.users.find(u =>
       (u.email && u.email.toLowerCase() === target) ||
       (u.phone && normalizePhone(u.phone) === target)
     );
@@ -1482,11 +1482,11 @@ async function startServer() {
     if (!email) {
       return res.status(400).json({ error: 'Email is required for Google authentication.' });
     }
-    
+
     // Check if the user already exists by email (case-insensitive)
     let user = localDb.users.find(u => u.email.toLowerCase() === email.toLowerCase());
     let isNew = false;
-    
+
     if (user) {
       if (user.status === 'suspended') {
         return res.status(403).json({ error: 'This account has been suspended by the administrator.' });
@@ -1532,11 +1532,11 @@ async function startServer() {
     const userAgent = req.headers['user-agent'] || 'Unknown';
     const deviceType = /mobile/i.test(userAgent) ? 'Mobile' : 'Desktop';
     const loginEntry = { ip, userAgent, timestamp: new Date().toISOString(), deviceType };
-    
+
     if (!user.loginHistory) user.loginHistory = [];
     const seenDevices = user.loginHistory.slice(0, 10).map(h => h.userAgent);
     const isNewDevice = seenDevices.length > 0 && !seenDevices.includes(userAgent);
-    
+
     user.loginHistory.unshift(loginEntry);
     if (user.loginHistory.length > 20) {
       user.loginHistory.pop();
@@ -1668,7 +1668,7 @@ async function startServer() {
       if (currentUser.role !== 'admin' && property.ownerId !== currentUser.id) {
         return res.status(403).json({ error: 'You are not authorized to edit this listing.' });
       }
-      
+
       // Admin verification overrides
       if (currentUser.role === 'admin') {
         if (updates.verificationStatus !== undefined) {
@@ -2093,7 +2093,7 @@ async function startServer() {
       receipt.status = status;
       if (adminNotes !== undefined) receipt.adminNotes = adminNotes;
       if (rejectionReason !== undefined) receipt.rejectionReason = rejectionReason;
-      
+
       // Automatically sync wallet balances and transactions for topup approvals/rejections
       syncAllWalletBalances();
 
@@ -2118,7 +2118,7 @@ async function startServer() {
         id: 'notif-' + Date.now() + '-user',
         userId: receipt.userId,
         title: `Payment Receipt ${status}`,
-        message: status === 'Approved' 
+        message: status === 'Approved'
           ? `Your payment receipt for "${receipt.relatedPropertyTitle}" has been approved! ${receipt.amount ? receipt.amount + ' ETB has been processed successfully.' : ''}`
           : `Your payment receipt for "${receipt.relatedPropertyTitle}" was rejected. Reason: ${rejectionReason || 'Receipt was invalid.'}`,
         isRead: false,
@@ -2178,7 +2178,7 @@ async function startServer() {
 
   app.post('/api/inquiries', async (req, res) => {
     const { propertyId, propertyTitle, senderId, senderName, receiverId, messageText } = req.body;
-    
+
     // Check if there is an existing inquiry between this user and this property
     let inquiry = localDb.inquiries.find(
       i => i.propertyId === propertyId && i.senderId === senderId
@@ -2456,7 +2456,7 @@ async function startServer() {
     if (user.role === 'admin') {
       return res.json((localDb as any).offers);
     }
-    const userOffers = (localDb as any).offers.filter((o: PropertyOffer) => 
+    const userOffers = (localDb as any).offers.filter((o: PropertyOffer) =>
       o.buyerId === user.id || o.sellerId === user.id || o.buyerName === user.fullName
     );
     res.json(userOffers);
@@ -2481,15 +2481,15 @@ async function startServer() {
     }
 
     // Check for existing active offer from this buyer for this property
-    const existingActiveOffer = (localDb as any).offers.find((o: PropertyOffer) => 
+    const existingActiveOffer = (localDb as any).offers.find((o: PropertyOffer) =>
       o.propertyId === propertyId &&
       o.buyerId === user.id &&
       ['Pending', 'Counter Offer'].includes(o.status)
     );
 
     if (existingActiveOffer) {
-      return res.status(400).json({ 
-        error: 'You already have an active offer for this property. Please wait for the seller to respond.' 
+      return res.status(400).json({
+        error: 'You already have an active offer for this property. Please wait for the seller to respond.'
       });
     }
 
