@@ -619,7 +619,7 @@ async function sendEmail(to: string, subject: string, text: string, html: string
   let fromAddress = smtpFrom || '"Sof Umer" <noreply@sofumerapp.com>';
 
   if (resendApiKey) {
-    fromAddress = process.env.RESEND_FROM || smtpFrom || 'noreply@sofumerapp.com';
+    fromAddress = process.env.RESEND_FROM || smtpFrom || '"Sof Umer" <noreply@sofumerapp.com>';
     const response = await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: {
