@@ -31,9 +31,9 @@ import { staticTranslations } from './src/lib/translations';
 dns.setDefaultResultOrder('ipv4first');
 
 const PORT = process.env.PORT ? parseInt(process.env.PORT) : 3000;
-let DB_FILE = process.env.NODE_ENV === 'production' ? '/data/sof_umer_db.json' : path.join(process.cwd(), 'sof_umer_db.json');
+let DB_FILE = (process.env.NODE_ENV === 'production' || process.env.RENDER === 'true') ? '/data/sof_umer_db.json' : path.join(process.cwd(), 'sof_umer_db.json');
 try {
-  if (process.env.NODE_ENV === 'production') {
+  if (process.env.NODE_ENV === 'production' || process.env.RENDER === 'true') {
     // Check if /data is writable
     try {
       fsSync.accessSync('/data', fsSync.constants.W_OK);
@@ -616,10 +616,10 @@ async function sendEmail(to: string, subject: string, text: string, html: string
   const smtpPass = process.env.SMTP_PASS || process.env.VITE_SMTP_PASS || process.env.SMTP_PASSWORD || process.env.VITE_SMTP_PASSWORD;
   const smtpFrom = process.env.SMTP_FROM || process.env.VITE_SMTP_FROM || process.env.EMAIL_FROM || process.env.VITE_EMAIL_FROM;
 
-  let fromAddress = smtpFrom || '"Sof Umer" <noreply@sofumer.com>';
+  let fromAddress = smtpFrom || '"Sof Umer" <noreply@sofumerapp.com>';
 
   if (resendApiKey) {
-    fromAddress = process.env.RESEND_FROM || smtpFrom || 'onboarding@resend.dev';
+    fromAddress = process.env.RESEND_FROM || smtpFrom || '"Sof Umer" <noreply@sofumerapp.com>';
     const response = await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: {
@@ -1017,10 +1017,14 @@ async function startServer() {
     const normEmail = normalizeEmail(identifier);
     const normPhone = normalizePhone(identifier);
 
-    const user = localDb.users.find(u =>
-      (u.email && u.email.toLowerCase() === normEmail) ||
-      (u.phone && normalizePhone(u.phone) === normPhone)
-    );
+    const isEmail = identifier.includes('@');
+    const user = localDb.users.find(u => {
+      if (isEmail) {
+        return u.email && u.email.toLowerCase() === normEmail;
+      } else {
+        return u.phone && normalizePhone(u.phone) === normPhone;
+      }
+    });
 
     if (!user) {
       return res.status(401).json({ error: 'Invalid email or password.' });
@@ -1232,9 +1236,9 @@ async function startServer() {
       return res.status(400).json({ error: 'Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, one number, and one special character.' });
     }
 
-    let existing = localDb.users.find(u => u.email && u.email.toLowerCase() === normEmail);
+    let existing = localDb.users.find(u => normEmail && u.email && u.email.toLowerCase() === normEmail);
     if (!existing && normPhone) {
-      existing = localDb.users.find(u => u.phone && normalizePhone(u.phone) === normPhone);
+      existing = localDb.users.find(u => normPhone && u.phone && normalizePhone(u.phone) === normPhone);
     }
 
     if (existing) {
@@ -1314,7 +1318,7 @@ async function startServer() {
       return res.status(400).json({ error: 'Email and verification code are required.' });
     }
 
-    const user = localDb.users.find(u => u.email && u.email.toLowerCase() === normEmail);
+    const user = localDb.users.find(u => normEmail && u.email && u.email.toLowerCase() === normEmail);
     if (!user || user.verificationCode !== String(code).trim()) {
       return res.status(400).json({ error: 'Invalid email or verification code.' });
     }
@@ -1349,10 +1353,14 @@ async function startServer() {
       return res.status(400).json({ error: 'Email or Phone number is required.' });
     }
 
-    const user = localDb.users.find(u =>
-      (u.email && u.email.toLowerCase() === target) ||
-      (u.phone && normalizePhone(u.phone) === target)
-    );
+    const isEmail = target.includes('@');
+    const user = localDb.users.find(u => {
+      if (isEmail) {
+        return u.email && u.email.toLowerCase() === target;
+      } else {
+        return u.phone && normalizePhone(u.phone) === target;
+      }
+    });
 
     if (!user) {
       return res.json({
@@ -1399,10 +1407,14 @@ async function startServer() {
       return res.status(400).json({ error: 'Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, one number, and one special character.' });
     }
 
-    const user = localDb.users.find(u =>
-      (u.email && u.email.toLowerCase() === target) ||
-      (u.phone && normalizePhone(u.phone) === target)
-    );
+    const isEmail = target.includes('@');
+    const user = localDb.users.find(u => {
+      if (isEmail) {
+        return u.email && u.email.toLowerCase() === target;
+      } else {
+        return u.phone && normalizePhone(u.phone) === target;
+      }
+    });
 
     if (!user || user.resetPasswordCode !== String(code).trim()) {
       return res.status(400).json({ error: 'Invalid account identifier or password reset code.' });
@@ -1648,7 +1660,7 @@ async function startServer() {
       isTopAd: propertyData.isTopAd === true,
       isFeatured: propertyData.isFeatured === true || propertyData.boostPlan === 'vip',
       promotionExpiresAt: propertyData.promotionExpiresAt || undefined,
-      approvalStatus: propertyData.approvalStatus || 'approved',
+      approvalStatus: currentUser?.role === 'admin' ? (propertyData.approvalStatus || 'approved') : 'pending',
       verificationStatus: propertyData.verificationStatus || 'verified',
       isVerifiedListing: propertyData.isVerifiedListing !== undefined ? propertyData.isVerifiedListing : true,
       createdAt: new Date().toISOString()
@@ -1674,6 +1686,9 @@ async function startServer() {
         if (updates.verificationStatus !== undefined) {
           updates.isVerifiedListing = updates.verificationStatus === 'verified';
         }
+      } else {
+        // Regular users cannot approve their own listings via an edit
+        delete updates.approvalStatus;
       }
 
       localDb.properties[idx] = { ...property, ...updates };
@@ -2021,10 +2036,12 @@ async function startServer() {
 
   // Payment Methods Endpoints
   app.get('/api/payment-methods', async (req, res) => {
-    res.json(localDb.paymentMethods);
+    const adminRequested = req.query.admin === 'true';
+    const filtered = adminRequested ? localDb.paymentMethods : localDb.paymentMethods.filter(p => p.isActive);
+    res.json(filtered);
   });
 
-  app.post('/api/payment-methods', async (req, res) => {
+  app.post('/api/payment-methods', requireAuth, async (req, res) => {
     const methodData = req.body;
     const newMethod: PaymentMethod = {
       id: 'pay-' + Date.now(),
@@ -2036,9 +2053,13 @@ async function startServer() {
     res.json(newMethod);
   });
 
-  app.put('/api/payment-methods/:id', async (req, res) => {
+  app.put('/api/payment-methods/:id', requireAuth, async (req, res) => {
     const { id } = req.params;
     const updates = req.body;
+    const currentUser = (req as any).user;
+    if (currentUser.role !== 'admin') {
+      delete updates.isActive;
+    }
     const idx = localDb.paymentMethods.findIndex(m => m.id === id);
     if (idx !== -1) {
       localDb.paymentMethods[idx] = { ...localDb.paymentMethods[idx], ...updates };
@@ -2223,14 +2244,16 @@ async function startServer() {
 
   // Advertisements
   app.get('/api/advertisements', async (req, res) => {
-    res.json(localDb.advertisements);
+    const adminRequested = req.query.admin === 'true';
+    const filtered = adminRequested ? localDb.advertisements : localDb.advertisements.filter((a: any) => a.isActive);
+    res.json(filtered);
   });
 
-  app.post('/api/advertisements', async (req, res) => {
+  app.post('/api/advertisements', requireAuth, async (req, res) => {
     const advData = req.body;
     const newAdv: Advertisement = {
       id: 'adv-' + Date.now(),
-      isActive: true,
+      isActive: (req as any).user?.role === 'admin' ? true : false,
       ...advData
     };
     localDb.advertisements.push(newAdv);
@@ -2238,9 +2261,13 @@ async function startServer() {
     res.json(newAdv);
   });
 
-  app.put('/api/advertisements/:id', async (req, res) => {
+  app.put('/api/advertisements/:id', requireAuth, async (req, res) => {
     const { id } = req.params;
     const updates = req.body;
+    const currentUser = (req as any).user;
+    if (currentUser.role !== 'admin') {
+      delete updates.isActive;
+    }
     const idx = localDb.advertisements.findIndex(a => a.id === id);
     if (idx !== -1) {
       localDb.advertisements[idx] = { ...localDb.advertisements[idx], ...updates };
