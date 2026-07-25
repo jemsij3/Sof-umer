@@ -1018,8 +1018,8 @@ async function startServer() {
     const normPhone = normalizePhone(identifier);
 
     const user = localDb.users.find(u => 
-      (u.email && u.email.toLowerCase() === normEmail) ||
-      (u.phone && normalizePhone(u.phone) === normPhone)
+      (normEmail && u.email && u.email.toLowerCase() === normEmail) ||
+      (normPhone && u.phone && normalizePhone(u.phone) === normPhone)
     );
 
     if (!user) {
@@ -1232,9 +1232,9 @@ async function startServer() {
       return res.status(400).json({ error: 'Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, one number, and one special character.' });
     }
 
-    let existing = localDb.users.find(u => u.email && u.email.toLowerCase() === normEmail);
+    let existing = localDb.users.find(u => normEmail && u.email && u.email.toLowerCase() === normEmail);
     if (!existing && normPhone) {
-      existing = localDb.users.find(u => u.phone && normalizePhone(u.phone) === normPhone);
+      existing = localDb.users.find(u => normPhone && u.phone && normalizePhone(u.phone) === normPhone);
     }
 
     if (existing) {
@@ -1314,7 +1314,7 @@ async function startServer() {
       return res.status(400).json({ error: 'Email and verification code are required.' });
     }
 
-    const user = localDb.users.find(u => u.email && u.email.toLowerCase() === normEmail);
+    const user = localDb.users.find(u => normEmail && u.email && u.email.toLowerCase() === normEmail);
     if (!user || user.verificationCode !== String(code).trim()) {
       return res.status(400).json({ error: 'Invalid email or verification code.' });
     }
@@ -1350,8 +1350,8 @@ async function startServer() {
     }
 
     const user = localDb.users.find(u => 
-      (u.email && u.email.toLowerCase() === target) ||
-      (u.phone && normalizePhone(u.phone) === target)
+      (target && u.email && u.email.toLowerCase() === target) ||
+      (target && u.phone && normalizePhone(u.phone) === target)
     );
 
     if (!user) {
@@ -1400,8 +1400,8 @@ async function startServer() {
     }
 
     const user = localDb.users.find(u => 
-      (u.email && u.email.toLowerCase() === target) ||
-      (u.phone && normalizePhone(u.phone) === target)
+      (target && u.email && u.email.toLowerCase() === target) ||
+      (target && u.phone && normalizePhone(u.phone) === target)
     );
 
     if (!user || user.resetPasswordCode !== String(code).trim()) {
