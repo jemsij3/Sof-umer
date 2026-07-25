@@ -638,6 +638,9 @@ async function sendEmail(to: string, subject: string, text: string, html: string
     const data = await response.json();
     if (!response.ok) {
       console.error('Resend API error:', data);
+      if (data.statusCode === 403 && data.name === 'validation_error' && data.message.includes('domain')) {
+         console.error('CRITICAL: Resend is rejecting emails. You must verify a custom domain and set RESEND_FROM in Render, OR you are trying to send to an unverified email address using the test onboarding@resend.dev domain.');
+      }
       throw new Error(`Resend API error: ${JSON.stringify(data)}`);
     }
     console.log('Email sent successfully via Resend API:', data.id);
