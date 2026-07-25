@@ -781,7 +781,7 @@ export default function Marketplace({
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 font-sans">
       {/* Wallet Balance & Quick Top Up Banner for Logged-In Users */}
       {currentUser && (
-        <div className="mb-6 p-4.5 rounded-2xl bg-gradient-to-r from-[#0d0d14] via-[#141522] to-[#0d0d14] border border-amber-500/25 shadow-2xl flex flex-wrap items-center justify-between gap-4">
+        <div className="mb-6 p-4 sm:p-4.5 rounded-2xl bg-gradient-to-r from-[#0d0d14] via-[#141522] to-[#0d0d14] border border-amber-500/25 shadow-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 sm:gap-4 relative z-10">
           <div className="flex items-center gap-3.5">
             <div className="w-11 h-11 rounded-xl bg-amber-500/15 border border-amber-500/30 text-amber-400 flex items-center justify-center shadow-inner">
               <Wallet className="w-5 h-5" />
