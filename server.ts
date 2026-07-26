@@ -764,7 +764,17 @@ const loadDb = async () => {
         homepageSubheading: 'Properties, Jobs, Local Businesses, and Community events. Clean, manual-receipt audited, and fully verified.',
         termsAndPrivacy: 'Sof Umer guarantees user security. All listed properties are audited for legal compliance before publishing. Transactions are processed manually by our finance team.',
         notificationsEnabled: true,
-        siteStatus: 'Online'
+        siteStatus: 'Online',
+        marketplaceSettings: {
+          freeListingsEnabled: true,
+          freePlanLimit: 5,
+          basicBoostPrice: 50,
+          premiumBoostPrice: 150,
+          vipBoostPrice: 500,
+          topAdPrice: 150,
+          featuredAdPrice: 300,
+          creditPackages: []
+        }
       };
     }
 
@@ -2317,7 +2327,17 @@ async function startServer() {
         homepageSubheading: 'Properties, Jobs, Local Businesses, and Community events. Clean, manual-receipt audited, and fully verified.',
         termsAndPrivacy: 'Sof Umer guarantees user security. All listed properties are audited for legal compliance before publishing. Transactions are processed manually by our finance team.',
         notificationsEnabled: true,
-        siteStatus: 'Online'
+        siteStatus: 'Online',
+        marketplaceSettings: {
+          freeListingsEnabled: true,
+          freePlanLimit: 5,
+          basicBoostPrice: 50,
+          premiumBoostPrice: 150,
+          vipBoostPrice: 500,
+          topAdPrice: 150,
+          featuredAdPrice: 300,
+          creditPackages: []
+        }
       };
     }
     res.json((localDb as any).appSettings);
