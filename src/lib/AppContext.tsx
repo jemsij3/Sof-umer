@@ -48,6 +48,7 @@ export interface SystemSettings {
     description: string;
   }>;
   marketplaceSettings?: {
+    freeListingsEnabled?: boolean;
     freePlanLimit: number;
     basicBoostPrice: number;
     premiumBoostPrice: number;
@@ -152,7 +153,17 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     homepageSubheading: 'Properties, Jobs, Local Businesses, and Community events. Clean, manual-receipt audited, and fully verified.',
     termsAndPrivacy: 'Sof Umer guarantees user security. All listed properties are audited for legal compliance before publishing. Transactions are processed manually by our finance team.',
     notificationsEnabled: true,
-    siteStatus: 'Online'
+    siteStatus: 'Online',
+    marketplaceSettings: {
+      freeListingsEnabled: true,
+      freePlanLimit: 5,
+      basicBoostPrice: 50,
+      premiumBoostPrice: 150,
+      vipBoostPrice: 500,
+      topAdPrice: 150,
+      featuredAdPrice: 300,
+      creditPackages: []
+    }
   });
   const [loading, setLoading] = useState<boolean>(true);
 
