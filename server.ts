@@ -904,6 +904,7 @@ const apiLimiter = rateLimit({
   max: 1000, // Limit each IP to 1000 requests per `window` (here, per 15 minutes)
   standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
   legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+  message: { error: 'Too many requests, please try again later.' }
 });
 
 const authLimiter = rateLimit({
@@ -2932,6 +2933,17 @@ app.use('/api/', apiLimiter);
       await saveDb();
     }
     res.json({ success: true });
+  });
+
+
+  // Global API error handler
+  app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+    if (req.path.startsWith('/api/')) {
+      console.error('API Error:', err);
+      res.status(err.status || 500).json({ error: err.message || 'Internal server error' });
+    } else {
+      next(err);
+    }
   });
 
   // Vite Integration for Front-end serving
