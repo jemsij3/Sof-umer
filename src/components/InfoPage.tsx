@@ -15,6 +15,11 @@ interface InfoPageProps {
 
 export default function InfoPage({ pageId, onBack, onOpenReportModalFromInfo }: InfoPageProps) {
   const { currentLanguage, appFeatures, jobOpenings, systemSettings } = useApp();
+  const [stats, setStats] = useState({ propertiesCount: 0, usersCount: 0 });
+
+  React.useEffect(() => {
+    fetch('/api/stats').then(res => res.json()).then(data => setStats(data)).catch(err => console.error(err));
+  }, []);
   const [activeTab, setActiveTab] = useState<string>(pageId);
 
   const defaultContactUs = {
@@ -582,11 +587,11 @@ export default function InfoPage({ pageId, onBack, onOpenReportModalFromInfo }: 
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 border-t border-white/5">
                 <div className="text-center p-3.5 bg-black/40 rounded-xl border border-white/5">
-                  <h4 className="text-base font-serif text-emerald-400 font-bold">10k+</h4>
+                  <h4 className="text-base font-serif text-emerald-400 font-bold">{stats.propertiesCount.toLocaleString()}</h4>
                   <p className="text-[10px] uppercase text-white/40 mt-1">Verified Listings</p>
                 </div>
                 <div className="text-center p-3.5 bg-black/40 rounded-xl border border-white/5">
-                  <h4 className="text-base font-serif text-amber-500 font-bold">50k+</h4>
+                  <h4 className="text-base font-serif text-amber-500 font-bold">{stats.usersCount.toLocaleString()}</h4>
                   <p className="text-[10px] uppercase text-white/40 mt-1">Active Profiles</p>
                 </div>
                 <div className="text-center p-3.5 bg-black/40 rounded-xl border border-white/5">
