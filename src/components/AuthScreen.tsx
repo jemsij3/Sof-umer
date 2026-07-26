@@ -330,7 +330,11 @@ export default function AuthScreen({ initialMode }: AuthScreenProps) {
 
   const handleForgotPassword = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email) {
+    if (authMethod === 'email' && !email) {
+      setError(t('enter_registered_email'));
+      return;
+    }
+    if (authMethod === 'phone' && !phoneNumber) {
       setError(t('enter_registered_email'));
       return;
     }
@@ -342,7 +346,7 @@ export default function AuthScreen({ initialMode }: AuthScreenProps) {
       const res = await fetch('/api/auth/forgot-password', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email })
+        body: JSON.stringify({ identifier: authMethod === 'email' ? email : phoneNumber })
       });
       const data = await res.json();
       if (!res.ok) {

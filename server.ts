@@ -1022,7 +1022,7 @@ async function startServer() {
       if (isEmail) {
         return u.email && u.email.toLowerCase() === normEmail;
       } else {
-        return u.phone && normalizePhone(u.phone) === normPhone;
+        return Boolean(u.phone) && normalizePhone(u.phone) === normPhone;
       }
     });
 
@@ -1358,7 +1358,7 @@ async function startServer() {
       if (isEmail) {
         return u.email && u.email.toLowerCase() === target;
       } else {
-        return u.phone && normalizePhone(u.phone) === target;
+        return Boolean(u.phone) && normalizePhone(u.phone) === target;
       }
     });
 
@@ -1412,7 +1412,7 @@ async function startServer() {
       if (isEmail) {
         return u.email && u.email.toLowerCase() === target;
       } else {
-        return u.phone && normalizePhone(u.phone) === target;
+        return Boolean(u.phone) && normalizePhone(u.phone) === target;
       }
     });
 
@@ -1623,7 +1623,7 @@ async function startServer() {
   // Properties Endpoints
   app.get('/api/properties', async (req, res) => {
     const adminRequested = req.query.admin === 'true';
-    const filtered = adminRequested ? localDb.properties : localDb.properties.filter(p => p.approvalStatus === 'approved');
+    const filtered = adminRequested ? localDb.properties : localDb.properties.filter(p => !p.approvalStatus || p.approvalStatus === 'approved');
     res.json(filtered);
   });
 
@@ -2197,7 +2197,7 @@ async function startServer() {
 
   // Inquiries / Chats
   app.get('/api/inquiries', async (req, res) => {
-    res.json(localDb.inquiries);
+    res.json(localDb.inquiries || []);
   });
 
   app.post('/api/inquiries', async (req, res) => {
@@ -2461,7 +2461,7 @@ async function startServer() {
 
   // Notifications Endpoints
   app.get('/api/notifications', async (req, res) => {
-    res.json(localDb.notifications);
+    res.json(localDb.notifications || []);
   });
 
   app.put('/api/notifications/read', async (req, res) => {

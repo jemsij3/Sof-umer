@@ -68,8 +68,8 @@ export default function Navbar({ onNavigate, activeView, onOpenCreateModal }: Na
                 {(systemSettings?.appLogoText || systemSettings?.appName || 'S')[0].toUpperCase()}
               </div>
             )}
-            <div className="flex flex-col">
-              <span className="text-lg font-serif font-bold tracking-wider text-[#F5F5F4] leading-none">
+            <div className="flex flex-col min-w-0">
+              <span className="text-base sm:text-lg font-serif font-bold tracking-wider text-[#F5F5F4] leading-none truncate max-w-[80px] sm:max-w-none">
                 {systemSettings?.appLogoText || systemSettings?.appName || 'SOF-UMER'}
               </span>
               <span className="text-[9px] uppercase tracking-[0.25em] text-amber-500/80 font-bold mt-1">
@@ -84,7 +84,7 @@ export default function Navbar({ onNavigate, activeView, onOpenCreateModal }: Na
             {currentUser && (
               <button
                 onClick={() => onNavigate('payments')}
-                className="flex items-center gap-2 px-2.5 sm:px-3.5 py-1.5 sm:py-2 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-400 transition cursor-pointer group shadow-lg shadow-amber-500/5 hover:scale-[1.02]"
+                className="flex shrink-0 items-center gap-1 sm:gap-2 px-1.5 sm:px-3.5 py-1 sm:py-2 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-400 transition cursor-pointer group shadow-lg shadow-amber-500/5 hover:scale-[1.02]"
                 title="Wallet Balance - Click to Top Up"
               >
                 <div className="w-6 h-6 rounded-lg bg-amber-500/20 text-amber-400 flex items-center justify-center group-hover:scale-110 transition-transform">
@@ -137,7 +137,7 @@ export default function Navbar({ onNavigate, activeView, onOpenCreateModal }: Na
                     initial={{ opacity: 0, y: 10, scale: 0.95 }}
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                    className="absolute right-0 mt-2 w-48 bg-[#0d0d12] rounded-2xl shadow-2xl border border-white/10 py-1.5 z-50 overflow-hidden"
+                    className="absolute -right-8 sm:right-0 mt-2 w-48 bg-[#0d0d12] rounded-2xl shadow-2xl border border-white/10 py-1.5 z-50 overflow-hidden"
                   >
                     {activeLanguages.map(lang => (
                       <button
@@ -188,7 +188,7 @@ export default function Navbar({ onNavigate, activeView, onOpenCreateModal }: Na
                       initial={{ opacity: 0, y: 10, scale: 0.95 }}
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                      className="absolute right-0 mt-2 w-80 bg-[#0d0d12] rounded-2xl shadow-2xl border border-white/10 py-2.5 z-50 max-h-[400px] overflow-y-auto"
+                      className="absolute -right-16 sm:right-0 mt-2 w-[calc(100vw-2rem)] sm:w-80 bg-[#0d0d12] rounded-2xl shadow-2xl border border-white/10 py-2.5 z-50 max-h-[400px] overflow-y-auto"
                     >
                       <div className="px-4 py-3 border-b border-white/5 flex justify-between items-center">
                         <span className="font-bold text-[10px] uppercase tracking-widest text-white/50">{t('notifications')}</span>
@@ -221,7 +221,7 @@ export default function Navbar({ onNavigate, activeView, onOpenCreateModal }: Na
                                 </p>
                                 <p className="leading-relaxed text-white/60">{notif.message}</p>
                                 <span className="text-[10px] text-white/30 block mt-1 font-mono">
-                                  {new Date(notif.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                  {notif.createdAt ? new Date(notif.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}
                                 </span>
                               </div>
                             ))
@@ -274,7 +274,7 @@ export default function Navbar({ onNavigate, activeView, onOpenCreateModal }: Na
                       initial={{ opacity: 0, y: 10, scale: 0.95 }}
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                      className="absolute right-0 mt-2 w-60 bg-[#0d0d12] rounded-2xl shadow-2xl border border-white/10 py-2.5 z-50 overflow-hidden"
+                      className="absolute -right-4 sm:right-0 mt-2 w-[calc(100vw-2rem)] sm:w-60 bg-[#0d0d12] rounded-2xl shadow-2xl border border-white/10 py-2.5 z-50 overflow-hidden"
                     >
                       <div className="px-4 py-3 border-b border-white/5 flex items-center gap-3">
                         {currentUser.photoUrl ? (
