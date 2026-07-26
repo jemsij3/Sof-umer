@@ -1,4 +1,7 @@
 import express from 'express';
+import helmet from 'helmet';
+import cookieParser from 'cookie-parser';
+import { rateLimit } from 'express-rate-limit';
 import path from 'path';
 import fs from 'fs/promises';
 import { createServer as createViteServer } from 'vite';
@@ -7,6 +10,7 @@ import bcrypt from 'bcryptjs';
 import nodemailer from 'nodemailer';
 import dns from 'dns';
 import mongoose from 'mongoose';
+import crypto from 'crypto';
 
 // Fix IPv6 resolution issues on Render
 dns.setDefaultResultOrder('ipv4first');
@@ -877,6 +881,31 @@ startServer();
 async function startServer() {
   await loadDb();
   const app = express();
+app.set('trust proxy', 1);
+// Security headers and cookie parsing
+app.use(helmet({
+  contentSecurityPolicy: false, // Disabled to prevent blocking inline scripts/styles if not fully configured
+}));
+app.use(cookieParser());
+
+// Basic rate limiting middleware
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 1000, // Limit each IP to 1000 requests per `window` (here, per 15 minutes)
+  standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
+  legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+});
+
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 10, // Limit each IP to 10 requests per `window` for auth routes
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many authentication attempts, please try again later.' }
+});
+
+app.use('/api/', apiLimiter);
+
 
   // Support JSON payloads
   app.use(express.json({ limit: '10mb' }));
@@ -959,6 +988,9 @@ async function startServer() {
     if (authHeader && authHeader.startsWith('Bearer ')) {
       token = authHeader.substring(7);
     }
+    if (!token && req.cookies && req.cookies.sof_umer_token) {
+      token = req.cookies.sof_umer_token;
+    }
 
     if (token) {
       try {
@@ -1010,7 +1042,7 @@ async function startServer() {
   });
 
   // Auth Endpoints
-  app.post('/api/auth/login', async (req, res) => {
+  app.post('/api/auth/login', authLimiter, async (req, res) => {
     const { email, phone, password, captchaId, captchaAnswer, rememberMe } = req.body;
     const identifier = normalizeEmail(email) || normalizePhone(phone || email);
 
@@ -1123,7 +1155,33 @@ async function startServer() {
       tokenVersion: user.tokenVersion
     }, JWT_SECRET, { expiresIn: '365d' });
 
-    res.json({ token, user: stripSecrets(user) });
+
+
+    if (user.twoFactorEnabled) {
+      const otp = crypto.randomInt(100000, 999999).toString();
+      user.twoFactorCode = otp;
+      user.twoFactorCodeExpiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString();
+      await saveDb();
+
+      const html = `<div style="font-family:sans-serif;padding:20px;">
+        <h2>Login Verification</h2>
+        <p>Your two-factor authentication code is:</p>
+        <h1 style="color:#10b981;font-size:32px;letter-spacing:4px;">${otp}</h1>
+        <p>This code expires in 10 minutes. If you did not attempt to login, please ignore this email.</p>
+      </div>`;
+
+      sendSystemEmail(user.email, 'Your 2FA Login Code', html);
+      return res.status(403).json({ error: '2fa_required', email: user.email });
+    }
+
+    const isProd = process.env.NODE_ENV === 'production';
+    res.cookie('sof_umer_token', token, {
+      httpOnly: true,
+      secure: isProd,
+      sameSite: 'strict',
+      maxAge: 365 * 24 * 60 * 60 * 1000 // 1 year
+    });
+    return res.json({ token, user: stripSecrets(user) });
   });
 
   // Phone OTP Routes
@@ -1216,11 +1274,32 @@ async function startServer() {
       tokenVersion: user.tokenVersion
     }, JWT_SECRET, { expiresIn: '365d' });
 
-    res.json({ token, user: stripSecrets(user) });
+
+    const isProd = process.env.NODE_ENV === 'production';
+    res.cookie('sof_umer_token', token, {
+      httpOnly: true,
+      secure: isProd,
+      sameSite: 'strict',
+      maxAge: 365 * 24 * 60 * 60 * 1000 // 1 year
+    });
+    return res.json({ token, user: stripSecrets(user) });
   });
 
-  app.post('/api/auth/register', async (req, res) => {
-    const { email, fullName, password, phone, role } = req.body;
+  app.post('/api/auth/register', authLimiter, async (req, res) => {
+    let { email, fullName, password, phone, role } = req.body;
+
+    // Input validation
+    if (!email || !fullName || !password) {
+      return res.status(400).json({ error: 'Email, Full Name, and Password are required.' });
+    }
+    email = email.trim();
+    fullName = fullName.trim();
+    if (!/^\S+@\S+\.\S+$/.test(email)) {
+      return res.status(400).json({ error: 'Invalid email format.' });
+    }
+    if (password.length < 8) {
+      return res.status(400).json({ error: 'Password must be at least 8 characters long.' });
+    }
     const normEmail = normalizeEmail(email);
     const normPhone = normalizePhone(phone);
 
@@ -1261,6 +1340,14 @@ async function startServer() {
           role: existing.role,
           tokenVersion: existing.tokenVersion
         }, JWT_SECRET, { expiresIn: '365d' });
+
+        const isProd = process.env.NODE_ENV === 'production';
+        res.cookie('sof_umer_token', token, {
+          httpOnly: true,
+          secure: isProd,
+          sameSite: 'strict',
+          maxAge: 365 * 24 * 60 * 60 * 1000 // 1 year
+        });
         return res.json({ token, user: stripSecrets(existing) });
       }
       return res.status(400).json({ error: 'An account with this email address or phone number already exists.' });
@@ -1339,10 +1426,18 @@ async function startServer() {
       tokenVersion: user.tokenVersion
     }, JWT_SECRET, { expiresIn: '365d' });
 
-    res.json({ token, user: stripSecrets(user) });
+
+    const isProd = process.env.NODE_ENV === 'production';
+    res.cookie('sof_umer_token', token, {
+      httpOnly: true,
+      secure: isProd,
+      sameSite: 'strict',
+      maxAge: 365 * 24 * 60 * 60 * 1000 // 1 year
+    });
+    return res.json({ token, user: stripSecrets(user) });
   });
 
-  app.post('/api/auth/forgot-password', async (req, res) => {
+  app.post('/api/auth/forgot-password', authLimiter, async (req, res) => {
     const { email, phone, identifier } = req.body;
     const target = normalizeEmail(identifier || email) || normalizePhone(identifier || phone);
 
@@ -1382,7 +1477,7 @@ async function startServer() {
     });
   });
 
-  app.post('/api/auth/reset-password', async (req, res) => {
+  app.post('/api/auth/reset-password', authLimiter, async (req, res) => {
     const { email, phone, identifier, code, newPassword } = req.body;
     const target = normalizeEmail(identifier || email) || normalizePhone(identifier || phone);
 
@@ -2592,11 +2687,11 @@ async function startServer() {
   });
 
   // Employee Admins & Staff Management APIs
-  app.get('/api/employee/custom-roles', async (req, res) => {
+  app.get('/api/employee/custom-roles', requireAdmin, async (req, res) => {
     res.json((localDb as any).customRoles || []);
   });
 
-  app.post('/api/employee/custom-roles', async (req, res) => {
+  app.post('/api/employee/custom-roles', requireAdmin, async (req, res) => {
     const role = req.body;
     if (!role || !role.name) {
       return res.status(400).json({ error: 'Role name is required.' });
@@ -2608,7 +2703,7 @@ async function startServer() {
     res.json({ success: true, customRoles: (localDb as any).customRoles });
   });
 
-  app.delete('/api/employee/custom-roles/:name', async (req, res) => {
+  app.delete('/api/employee/custom-roles/:name', requireAdmin, async (req, res) => {
     const { name } = req.params;
     if (!(localDb as any).customRoles) (localDb as any).customRoles = [];
     (localDb as any).customRoles = (localDb as any).customRoles.filter((r: any) => r.name !== name);
@@ -2642,6 +2737,63 @@ async function startServer() {
 
   app.get('/api/employee/login-history', async (req, res) => {
     res.json((localDb as any).loginHistory || []);
+  });
+
+
+  app.post('/api/auth/verify-2fa', authLimiter, async (req, res) => {
+    const { email, code } = req.body;
+    if (!email || !code) {
+      return res.status(400).json({ error: 'Email and 2FA code are required.' });
+    }
+
+    const normEmail = normalizeEmail(email);
+    const user = localDb.users.find((u: any) => u.email && u.email.toLowerCase() === normEmail);
+
+    if (!user) {
+      return res.status(400).json({ error: 'Invalid 2FA code.' });
+    }
+
+    if (!user.twoFactorCode || user.twoFactorCode !== code) {
+      return res.status(400).json({ error: 'Invalid 2FA code.' });
+    }
+
+    if (user.twoFactorCodeExpiresAt && new Date(user.twoFactorCodeExpiresAt).getTime() < Date.now()) {
+      return res.status(400).json({ error: '2FA code has expired. Please login again.' });
+    }
+
+    user.twoFactorCode = undefined;
+    user.twoFactorCodeExpiresAt = undefined;
+    await saveDb();
+
+    const token = jwt.sign({
+      userId: user.id,
+      email: user.email,
+      role: user.role,
+      tokenVersion: user.tokenVersion
+    }, JWT_SECRET, { expiresIn: '365d' });
+
+    const isProd = process.env.NODE_ENV === 'production';
+    res.cookie('sof_umer_token', token, {
+      httpOnly: true,
+      secure: isProd,
+      sameSite: 'strict',
+      maxAge: 365 * 24 * 60 * 60 * 1000
+    });
+
+    res.json({ token, user: stripSecrets(user) });
+  });
+
+  app.post('/api/auth/enable-2fa', requireAuth, async (req, res) => {
+    const { enabled } = req.body;
+    const user = localDb.users.find((u: any) => u.id === (req as any).user.userId);
+    if (!user) {
+      return res.status(404).json({ error: 'User not found.' });
+    }
+
+    user.twoFactorEnabled = !!enabled;
+    await saveDb();
+
+    res.json({ success: true, twoFactorEnabled: user.twoFactorEnabled, user: stripSecrets(user) });
   });
 
   app.post('/api/auth/logout', async (req, res) => {

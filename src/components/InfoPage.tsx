@@ -60,6 +60,7 @@ export default function InfoPage({ pageId, onBack, onOpenReportModalFromInfo }: 
   const [contactMessage, setContactMessage] = useState('');
   const [contactSuccess, setContactSuccess] = useState(false);
   const [contactSubmitting, setContactSubmitting] = useState(false);
+  const [revealAdminContact, setRevealAdminContact] = useState(false);
 
   // Careers state
   const [selectedJob, setSelectedJob] = useState<string | null>(null);
@@ -677,7 +678,7 @@ export default function InfoPage({ pageId, onBack, onOpenReportModalFromInfo }: 
               {/* Contact Info */}
               <div className="lg:col-span-5 bg-[#0c0c10]/60 p-6 rounded-2xl border border-white/5 space-y-6 text-left">
                 <div className="space-y-2">
-                  <h3 className="font-serif text-base text-white">{activeContactUs.hqTitle || 'Sof Umer Headquarters'}</h3>
+                  <h3 className="font-serif text-base text-white">{revealAdminContact ? (activeContactUs.hqTitle || 'Sof Umer Headquarters') : (activeContactUs.hqTitle || 'Sof Umer Headquarters').replace(/[^\s]/g, '*')}</h3>
                   <p className="text-xs text-white/50 leading-relaxed">
                     {activeContactUs.hqAddress || '6th Floor, Premium Plaza Building, Churchill Road, Addis Ababa, Ethiopia.'}
                   </p>
@@ -690,18 +691,24 @@ export default function InfoPage({ pageId, onBack, onOpenReportModalFromInfo }: 
                       <span>{activeContactUs.location}</span>
                     </div>
                   )}
-                  {activeContactUs.email && (
+                                    {activeContactUs.email && (
                     <div className="flex items-center gap-3 text-xs text-white/70">
                       <Mail className="w-4 h-4 text-amber-500 shrink-0" />
-                      <span>{activeContactUs.email}</span>
+                      <span>{revealAdminContact ? activeContactUs.email : activeContactUs.email.replace(/^(.{1,2})(.*)(@.*)$/, (_, a, b, c) => a + '*'.repeat(b.length || 2) + c)}</span>
                     </div>
                   )}
-                  {activeContactUs.phone && (
+                                    {activeContactUs.phone && (
                     <div className="flex items-center gap-3 text-xs text-white/70">
                       <HelpCircle className="w-4 h-4 text-emerald-400 shrink-0" />
-                      <span>{activeContactUs.phone}</span>
+                      <span>{revealAdminContact ? activeContactUs.phone : activeContactUs.phone.replace(/(\d{4})$/, '****')}</span>
                     </div>
                   )}
+                  <button
+                    onClick={() => setRevealAdminContact(!revealAdminContact)}
+                    className="mt-2 text-[10px] uppercase tracking-widest font-bold text-amber-500 hover:text-amber-400 px-3 py-1.5 border border-amber-500/20 rounded-lg hover:bg-amber-500/10 transition"
+                  >
+                    {revealAdminContact ? 'Hide Contact Details' : 'Reveal Contact Details'}
+                  </button>
                 </div>
               </div>
 
