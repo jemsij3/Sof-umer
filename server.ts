@@ -4,6 +4,12 @@ import fs from 'fs/promises';
 import { createServer as createViteServer } from 'vite';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
+import nodemailer from 'nodemailer';
+import dns from 'dns';
+
+// Fix IPv6 resolution issues on Render
+dns.setDefaultResultOrder('ipv4first');
+
 import {
   User,
   Property,
@@ -26,6 +32,65 @@ import { staticTranslations } from './src/lib/translations';
 
 const PORT = 3000;
 const DB_FILE = path.join(process.cwd(), 'sof_umer_db.json');
+
+const RESEND_API_KEY = process.env.RESEND_API_KEY;
+const RESEND_FROM = process.env.RESEND_FROM || '"Sof Umer" <noreply@sofumerapp.com>';
+
+const SMTP_HOST = process.env.SMTP_HOST;
+const SMTP_PORT = parseInt(process.env.SMTP_PORT || '587', 10);
+const SMTP_USER = process.env.SMTP_USER;
+const SMTP_PASS = process.env.SMTP_PASS;
+const SMTP_FROM = process.env.SMTP_FROM || RESEND_FROM;
+
+let transporter: nodemailer.Transporter | null = null;
+if (!RESEND_API_KEY && SMTP_HOST && SMTP_USER && SMTP_PASS) {
+  transporter = nodemailer.createTransport({
+    host: SMTP_HOST,
+    port: SMTP_PORT,
+    secure: SMTP_PORT === 465,
+    auth: {
+      user: SMTP_USER,
+      pass: SMTP_PASS,
+    }
+  });
+}
+
+function sendSystemEmail(to: string, subject: string, html: string) {
+  // Fire-and-forget email dispatch
+  (async () => {
+    try {
+      if (RESEND_API_KEY) {
+        const res = await fetch('https://api.resend.com/emails', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${RESEND_API_KEY}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            from: RESEND_FROM,
+            to,
+            subject,
+            html
+          })
+        });
+        if (!res.ok) {
+          console.error('Resend API error:', res.status, await res.text());
+        }
+      } else if (transporter) {
+        await transporter.sendMail({
+          from: SMTP_FROM,
+          to, // Use dynamic 'to' argument
+          subject,
+          html
+        });
+      } else {
+        console.log(`[Mock Email] To: ${to} | Subject: ${subject}`);
+      }
+    } catch (err) {
+      console.error('Failed to send email:', err);
+    }
+  })();
+}
 
 export interface ServerUser extends User {
   passwordHash?: string;
@@ -1195,6 +1260,14 @@ async function startServer() {
     localDb.users.push(newUser);
     await saveDb();
 
+    if (newUser.email) {
+      sendSystemEmail(
+        newUser.email,
+        'Verify your Sof Umer account',
+        `<h1>Welcome to Sof Umer!</h1><p>Your verification code is: <strong>${verificationCode}</strong></p><p>This code will expire in 15 minutes.</p>`
+      );
+    }
+
     res.json({
       message: 'Registration successful! Please verify your email.',
       email: newUser.email,
@@ -1261,6 +1334,14 @@ async function startServer() {
     user.resetPasswordCode = resetCode;
     user.resetPasswordCodeExpiresAt = new Date(Date.now() + 15 * 60 * 1000).toISOString();
     await saveDb();
+
+    if (user.email) {
+      sendSystemEmail(
+        user.email,
+        'Password Reset Request - Sof Umer',
+        `<h1>Password Reset</h1><p>Your password reset code is: <strong>${resetCode}</strong></p><p>This code will expire in 15 minutes.</p>`
+      );
+    }
 
     res.json({
       success: true,
