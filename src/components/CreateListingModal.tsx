@@ -319,8 +319,8 @@ const DICTIONARY: Record<'en' | 'om' | 'am', Record<string, string>> = {
     qtyDesc: "Meeshaalee ammaan tana jiran kiyya.",
     qtyPlaceholder: "fkn, 5",
     qtyVal: "Maaloo baay'ina galchi.",
-    warrantyLabel: "Wabii (Warranty)",
-    warrantyDesc: "Wabiin gurgurataa ykn oomishaa jiraa?",
+    warLabel: "Wabii (Warranty)",
+    warDesc: "Wabiin gurgurataa ykn oomishaa jiraa?",
 
     compLabel: "Maqaa Dhaabbataa",
     compDesc: "Maqaa dhaabbata qaxaruu barbaaduu.",
@@ -522,8 +522,8 @@ const DICTIONARY: Record<'en' | 'om' | 'am', Record<string, string>> = {
     qtyDesc: "በአሁኑ ሰዓት በክምችት ውስጥ የሚገኘው የእቃ ብዛት።",
     qtyPlaceholder: "ምሳሌ: 5",
     qtyVal: "እባክዎ የምርት ብዛት ያስገቡ።",
-    warrantyLabel: "ዋስትና አለው?",
-    warrantyDesc: "ከሻጭ ወይም ከአምራች የተሰጠ ዋስትና መኖሩን ይግለጹ።",
+    warLabel: "ዋስትና አለው?",
+    warDesc: "ከሻጭ ወይም ከአምራች የተሰጠ ዋስትና መኖሩን ይግለጹ።",
 
     compLabel: "የድርጅቱ ስም",
     compDesc: "ቀጣሪው ድርጅት ወይም ኩባንያ ስም።",

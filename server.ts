@@ -6,6 +6,7 @@ import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import nodemailer from 'nodemailer';
 import dns from 'dns';
+import mongoose from 'mongoose';
 
 // Fix IPv6 resolution issues on Render
 dns.setDefaultResultOrder('ipv4first');
@@ -32,6 +33,21 @@ import { staticTranslations } from './src/lib/translations';
 
 const PORT = 3000;
 const DB_FILE = path.join(process.cwd(), 'sof_umer_db.json');
+
+let DbStateModel: any;
+if (process.env.MONGODB_URI) {
+  mongoose.connect(process.env.MONGODB_URI).then(() => {
+    console.log('Connected to live MongoDB Database.');
+  }).catch(err => {
+    console.error('CRITICAL: Failed to connect to MongoDB:', err);
+  });
+
+  const dbStateSchema = new mongoose.Schema({
+    state: Object
+  });
+  DbStateModel = mongoose.models.DbState || mongoose.model('DbState', dbStateSchema);
+}
+
 
 const RESEND_API_KEY = process.env.RESEND_API_KEY;
 const RESEND_FROM = process.env.RESEND_FROM || '"Sof Umer" <noreply@sofumerapp.com>';
@@ -657,8 +673,19 @@ let localDb: ReturnType<typeof getInitialData>;
 
 const loadDb = async () => {
   try {
-    const content = await fs.readFile(DB_FILE, 'utf-8');
-    localDb = JSON.parse(content);
+    if (process.env.MONGODB_URI && DbStateModel) {
+      const doc = await DbStateModel.findOne();
+      if (doc && doc.state) {
+        localDb = doc.state;
+      } else {
+        localDb = getInitialData();
+        await new DbStateModel({ state: localDb }).save();
+      }
+    } else {
+      const content = await fs.readFile(DB_FILE, 'utf-8');
+      localDb = JSON.parse(content);
+    }
+
     // Backward compatibility & required fields verification
     if (!localDb.appFeatures || !Array.isArray(localDb.appFeatures)) {
       localDb.appFeatures = getInitialData().appFeatures;
@@ -822,10 +849,15 @@ let savePromise: Promise<void> = Promise.resolve();
 const saveDb = (): Promise<void> => {
   savePromise = savePromise.then(async () => {
     try {
-      const jsonString = JSON.stringify(localDb, null, 2);
-      const tempFile = `${DB_FILE}.tmp`;
-      await fs.writeFile(tempFile, jsonString, 'utf-8');
-      await fs.rename(tempFile, DB_FILE);
+      if (process.env.MONGODB_URI && DbStateModel) {
+        await DbStateModel.deleteMany({});
+        await new DbStateModel({ state: localDb }).save();
+      } else {
+        const jsonString = JSON.stringify(localDb, null, 2);
+        const tempFile = `${DB_FILE}.tmp`;
+        await fs.writeFile(tempFile, jsonString, 'utf-8');
+        await fs.rename(tempFile, DB_FILE);
+      }
     } catch (err) {
       console.error('Failed atomic saveDb, falling back to direct write:', err);
       try {
