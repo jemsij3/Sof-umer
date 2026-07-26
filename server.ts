@@ -1603,6 +1603,15 @@ async function startServer() {
     res.json(localDb.users.map(stripSecrets));
   });
 
+
+  app.get('/api/stats', async (req, res) => {
+    // Only return lengths to avoid exposing sensitive user data
+    res.json({
+      propertiesCount: localDb.properties.filter(p => p.approvalStatus !== 'rejected').length,
+      usersCount: localDb.users.length
+    });
+  });
+
   // Properties Endpoints
   app.get('/api/properties', async (req, res) => {
     res.json(localDb.properties);
