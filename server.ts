@@ -7,6 +7,7 @@ import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import { rateLimit } from 'express-rate-limit';
 import path from 'path';
+import os from 'os';
 import fs from 'fs/promises';
 import { createServer as createViteServer } from 'vite';
 import jwt from 'jsonwebtoken';
@@ -40,11 +41,11 @@ import {
 import { staticTranslations } from './src/lib/translations';
 
 const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
-let DB_FILE = process.env.RENDER ? '/data/sof_umer_db.json' : path.join(process.cwd(), 'sof_umer_db.json');
+let DB_FILE = process.env.RENDER ? '/data/sof_umer_db.json' : path.join(os.tmpdir(), 'sof_umer_db.json');
 
 let DbStateModel: any;
 if (process.env.MONGODB_URI) {
-  mongoose.connect(process.env.MONGODB_URI).then(() => {
+  mongoose.connect(process.env.MONGODB_URI, { serverSelectionTimeoutMS: 5000 }).then(() => {
     console.log('Connected to live MongoDB Database.');
   }).catch(err => {
     console.error('CRITICAL: Failed to connect to MongoDB:', err);
@@ -685,20 +686,28 @@ const loadDb = async () => {
       await fs.access('/data', fs.constants.W_OK);
     } catch (err) {
       console.warn('WARNING: /data is not writable on Render. Falling back to local file.');
-      DB_FILE = path.join(process.cwd(), 'sof_umer_db.json');
+      DB_FILE = path.join(os.tmpdir(), 'sof_umer_db.json');
     }
   }
 
   try {
+    let loadedFromMongo = false;
     if (process.env.MONGODB_URI && DbStateModel) {
-      const doc = await DbStateModel.findOne();
-      if (doc && doc.state) {
-        localDb = doc.state;
-      } else {
-        localDb = getInitialData();
-        await DbStateModel.updateOne({}, { state: localDb }, { upsert: true });
+      try {
+        const doc = await DbStateModel.findOne();
+        if (doc && doc.state) {
+          localDb = doc.state;
+        } else {
+          localDb = getInitialData();
+          await DbStateModel.updateOne({}, { state: localDb }, { upsert: true });
+        }
+        loadedFromMongo = true;
+      } catch (mongoErr: any) {
+        console.error('MongoDB query failed during loadDb, falling back to local file:', mongoErr.message);
       }
-    } else {
+    }
+
+    if (!loadedFromMongo) {
       try {
         const content = await fs.readFile(DB_FILE, 'utf-8');
         localDb = JSON.parse(content);
@@ -898,10 +907,17 @@ let savePromise: Promise<void> = Promise.resolve();
 const saveDb = (): Promise<void> => {
   savePromise = savePromise.then(async () => {
     try {
+      let savedToMongo = false;
       if (process.env.MONGODB_URI && DbStateModel) {
-        await DbStateModel.updateOne({}, { state: localDb }, { upsert: true });
-        // await new DbStateModel({ state: localDb }).save();
-      } else {
+        try {
+          await DbStateModel.updateOne({}, { state: localDb }, { upsert: true });
+          savedToMongo = true;
+        } catch (mongoErr: any) {
+          console.error('MongoDB update failed during saveDb, falling back to local file:', mongoErr.message);
+        }
+      }
+
+      if (!savedToMongo) {
         const jsonString = JSON.stringify(localDb, null, 2);
         const tempFile = `${DB_FILE}.tmp`;
         await fs.writeFile(tempFile, jsonString, 'utf-8');
