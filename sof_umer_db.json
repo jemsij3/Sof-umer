@@ -18,12 +18,33 @@
           "deviceType": "Mobile"
         }
       ],
-      "passwordHash": "$2b$10$HKtnwAvEhvF2JkYukPZ3BObM92Sd2g1W5lta4d8YwOMAn0M708s96",
+      "passwordHash": "$2b$10$hLe2ED0/X4M8VxMDWruVLeYtwqu2aXAks0dvPWwHZWPV7F1WsuJ1S",
       "failedLoginAttempts": 0,
       "walletTransactions": [],
       "passwordHistory": [
         "$2b$10$NIdSavV/8epYfmvB3U19fegjudeatzclP0p7lCZdDNOZPv8hXNsTm"
-      ]
+      ],
+      "isEmployee": false
+    },
+    {
+      "id": "emp-1",
+      "email": "emp@sofumer.com",
+      "role": "admin",
+      "isEmployee": true,
+      "employeeRole": "Customer Support",
+      "status": "active",
+      "tokenVersion": 1,
+      "isVerified": true,
+      "verificationStatus": "verified",
+      "passwordHash": "$2b$10$P7lKxurglpO3F57GI.ng0eiBzPwX0d/iz6nMU7VkC7J6/ngHBTuVG"
+    },
+    {
+      "id": "norm-1",
+      "email": "norm@sofumer.com",
+      "role": "user",
+      "isEmployee": false,
+      "status": "active",
+      "tokenVersion": 1
     }
   ],
   "properties": [],
