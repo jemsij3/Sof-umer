@@ -5,6 +5,7 @@ import cookieParser from 'cookie-parser';
 import { rateLimit } from 'express-rate-limit';
 import path from 'path';
 import fs from 'fs/promises';
+import fsSync from 'fs';
 import { createServer as createViteServer } from 'vite';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
@@ -37,7 +38,16 @@ import {
 import { staticTranslations } from './src/lib/translations';
 
 const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
-const DB_FILE = process.env.RENDER ? '/data/sof_umer_db.json' : path.join(process.cwd(), 'sof_umer_db.json');
+let DB_FILE = path.join(process.cwd(), 'sof_umer_db.json');
+if (process.env.RENDER) {
+  try {
+    // Check if /data directory exists and is writable
+    fsSync.accessSync('/data', fsSync.constants.W_OK);
+    DB_FILE = '/data/sof_umer_db.json';
+  } catch (err) {
+    console.warn('Persistent /data volume is not writable. Falling back to local file.', err.message);
+  }
+}
 
 let DbStateModel: any;
 if (process.env.MONGODB_URI) {
@@ -924,7 +934,7 @@ app.use(cors({
 // Basic rate limiting middleware
 const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 1000, // Limit each IP to 1000 requests per `window` (here, per 15 minutes)
+  max: 5000, // Limit each IP to 5000 requests per `window` (here, per 15 minutes)
   standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
   legacyHeaders: false, // Disable the `X-RateLimit-*` headers
   message: { error: 'Too many requests, please try again later.' }
@@ -932,7 +942,7 @@ const apiLimiter = rateLimit({
 
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 10, // Limit each IP to 10 requests per `window` for auth routes
+  max: 100, // Limit each IP to 100 requests per `window` for auth routes
   standardHeaders: true,
   legacyHeaders: false,
   message: { error: 'Too many authentication attempts, please try again later.' }
@@ -1088,8 +1098,7 @@ app.use('/api/', apiLimiter);
     const normPhone = normalizePhone(identifier);
 
     const user = localDb.users.find(u => 
-      (normEmail && u.email && u.email.toLowerCase() === normEmail) ||
-      (normPhone && u.phone && normalizePhone(u.phone) === normPhone)
+      (identifier.includes('@') ? (Boolean(u.email) && u.email.toLowerCase() === normEmail) : (Boolean(u.phone) && normalizePhone(u.phone) === normPhone))
     );
 
     if (!user) {
@@ -1349,9 +1358,9 @@ app.use('/api/', apiLimiter);
       return res.status(400).json({ error: 'Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, one number, and one special character.' });
     }
 
-    let existing = localDb.users.find(u => u.email && u.email.toLowerCase() === normEmail);
+    let existing = localDb.users.find(u => Boolean(u.email) && u.email.toLowerCase() === normEmail);
     if (!existing && normPhone) {
-      existing = localDb.users.find(u => u.phone && normalizePhone(u.phone) === normPhone);
+      existing = localDb.users.find(u => Boolean(u.phone) && normalizePhone(u.phone) === normPhone);
     }
 
     if (existing) {
@@ -1436,7 +1445,7 @@ app.use('/api/', apiLimiter);
       return res.status(400).json({ error: 'Email and verification code are required.' });
     }
 
-    const user = localDb.users.find(u => u.email && u.email.toLowerCase() === normEmail);
+    const user = localDb.users.find(u => Boolean(u.email) && u.email.toLowerCase() === normEmail);
     if (!user || user.verificationCode !== String(code).trim()) {
       return res.status(400).json({ error: 'Invalid email or verification code.' });
     }
@@ -1480,7 +1489,7 @@ app.use('/api/', apiLimiter);
     }
 
     const user = localDb.users.find(u => 
-      (target.includes('@') ? (u.email && u.email.toLowerCase() === target) : (u.phone && normalizePhone(u.phone) === target))
+      (target.includes('@') ? (Boolean(u.email) && u.email.toLowerCase() === target) : (Boolean(u.phone) && normalizePhone(u.phone) === target))
     );
 
     if (!user) {
@@ -1523,7 +1532,7 @@ app.use('/api/', apiLimiter);
     }
 
     const user = localDb.users.find(u => 
-      (target.includes('@') ? (u.email && u.email.toLowerCase() === target) : (u.phone && normalizePhone(u.phone) === target))
+      (target.includes('@') ? (Boolean(u.email) && u.email.toLowerCase() === target) : (Boolean(u.phone) && normalizePhone(u.phone) === target))
     );
 
     if (!user || user.resetPasswordCode !== String(code).trim()) {
@@ -2789,7 +2798,7 @@ app.use('/api/', apiLimiter);
     }
 
     const normEmail = normalizeEmail(email);
-    const user = localDb.users.find((u: any) => u.email && u.email.toLowerCase() === normEmail);
+    const user = localDb.users.find((u: any) => Boolean(u.email) && u.email.toLowerCase() === normEmail);
 
     if (!user) {
       return res.status(400).json({ error: 'Invalid 2FA code.' });
@@ -2841,10 +2850,10 @@ app.use('/api/', apiLimiter);
   app.post('/api/auth/logout', async (req, res) => {
     const { email } = req.body;
     if (email) {
-      const user = localDb.users.find(u => u.email.toLowerCase() === email.toLowerCase());
+      const user = localDb.users.find(u => Boolean(u.email) && u.email.toLowerCase() === email.toLowerCase());
       if (user && user.isEmployee) {
         if (!(localDb as any).loginHistory) (localDb as any).loginHistory = [];
-        const lastEntry = (localDb as any).loginHistory.find((h: any) => h.email === user.email && h.logoutTime === null);
+        const lastEntry = (localDb as any).loginHistory.find((h: any) => Boolean(h.email) && h.email === user.email && h.logoutTime === null);
         if (lastEntry) {
           lastEntry.logoutTime = new Date().toISOString();
           await saveDb();

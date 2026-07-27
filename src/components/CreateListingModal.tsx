@@ -1250,7 +1250,7 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
 
   // Final submission of listing and promotion purchase
   const handleFinalPublish = async () => {
-    if (!currentUser) return;
+    if (!currentUser || submitting) return;
     setError('');
     setSubmitting(true);
 
