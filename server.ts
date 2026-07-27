@@ -1794,7 +1794,7 @@ app.use('/api/', apiLimiter);
     res.json(localDb.properties);
   });
 
-  app.post('/api/properties', async (req, res) => {
+  app.post('/api/properties', requireAuth, async (req, res) => {
     const propertyData = req.body;
 
     const categoryAllowedKeys: Record<string, string[]> = {
@@ -2046,7 +2046,7 @@ app.use('/api/', apiLimiter);
     res.json(localDb.categories || []);
   });
 
-  app.post('/api/categories', async (req, res) => {
+  app.post('/api/categories', requireAdmin, async (req, res) => {
     const { name, description, iconName } = req.body;
     const newCategory: Category = {
       id: 'cat-' + Date.now(),
@@ -2062,7 +2062,7 @@ app.use('/api/', apiLimiter);
     res.json(newCategory);
   });
 
-  app.put('/api/categories/:id', async (req, res) => {
+  app.put('/api/categories/:id', requireAdmin, async (req, res) => {
     const { id } = req.params;
     const { name, description, iconName } = req.body;
     if (!localDb.categories) {
@@ -2205,7 +2205,7 @@ app.use('/api/', apiLimiter);
     res.json(localDb.paymentMethods);
   });
 
-  app.post('/api/payment-methods', async (req, res) => {
+  app.post('/api/payment-methods', requireAdmin, async (req, res) => {
     const methodData = req.body;
     const newMethod: PaymentMethod = {
       id: 'pay-' + Date.now(),
@@ -2217,7 +2217,7 @@ app.use('/api/', apiLimiter);
     res.json(newMethod);
   });
 
-  app.put('/api/payment-methods/:id', async (req, res) => {
+  app.put('/api/payment-methods/:id', requireAdmin, async (req, res) => {
     const { id } = req.params;
     const updates = req.body;
     const idx = localDb.paymentMethods.findIndex(m => m.id === id);
@@ -2241,7 +2241,7 @@ app.use('/api/', apiLimiter);
     res.json(localDb.receipts);
   });
 
-  app.post('/api/receipts', async (req, res) => {
+  app.post('/api/receipts', requireAuth, async (req, res) => {
     const receiptData = req.body;
     const newReceipt: PaymentReceipt = {
       id: 'rcpt-' + Date.now(),
@@ -2265,7 +2265,7 @@ app.use('/api/', apiLimiter);
     res.json(newReceipt);
   });
 
-  app.put('/api/receipts/:id', async (req, res) => {
+  app.put('/api/receipts/:id', requireAdmin, async (req, res) => {
     const { id } = req.params;
     const { status, adminNotes, rejectionReason } = req.body;
     const idx = localDb.receipts.findIndex(r => r.id === id);
@@ -2357,7 +2357,7 @@ app.use('/api/', apiLimiter);
     res.json(localDb.inquiries);
   });
 
-  app.post('/api/inquiries', async (req, res) => {
+  app.post('/api/inquiries', requireAuth, async (req, res) => {
     const { propertyId, propertyTitle, senderId, senderName, receiverId, messageText } = req.body;
     
     // Check if there is an existing inquiry between this user and this property
@@ -2407,7 +2407,7 @@ app.use('/api/', apiLimiter);
     res.json(localDb.advertisements);
   });
 
-  app.post('/api/advertisements', async (req, res) => {
+  app.post('/api/advertisements', requireAdmin, async (req, res) => {
     const advData = req.body;
     const newAdv: Advertisement = {
       id: 'adv-' + Date.now(),
@@ -2419,7 +2419,7 @@ app.use('/api/', apiLimiter);
     res.json(newAdv);
   });
 
-  app.put('/api/advertisements/:id', async (req, res) => {
+  app.put('/api/advertisements/:id', requireAdmin, async (req, res) => {
     const { id } = req.params;
     const updates = req.body;
     const idx = localDb.advertisements.findIndex(a => a.id === id);
@@ -2446,7 +2446,7 @@ app.use('/api/', apiLimiter);
     });
   });
 
-  app.post('/api/languages', async (req, res) => {
+  app.post('/api/languages', requireAdmin, async (req, res) => {
     const lang = req.body; // { code, name }
     const exists = localDb.languages.find(l => l.code === lang.code);
     if (!exists) {
@@ -2461,7 +2461,7 @@ app.use('/api/', apiLimiter);
     res.json(localDb.languages);
   });
 
-  app.put('/api/languages/translations', async (req, res) => {
+  app.put('/api/languages/translations', requireAdmin, async (req, res) => {
     const { translations } = req.body; // Full updated translations list
     if (translations && Array.isArray(translations)) {
       localDb.translations = translations;
@@ -2470,7 +2470,7 @@ app.use('/api/', apiLimiter);
     res.json({ success: true, translations: localDb.translations });
   });
 
-  app.put('/api/languages/:code', async (req, res) => {
+  app.put('/api/languages/:code', requireAdmin, async (req, res) => {
     const { code } = req.params;
     const { isActive } = req.body;
     const idx = localDb.languages.findIndex(l => l.code === code);
@@ -2533,7 +2533,7 @@ app.use('/api/', apiLimiter);
     res.json(localDb.supportTickets || []);
   });
 
-  app.post('/api/support-tickets', async (req, res) => {
+  app.post('/api/support-tickets', requireAuth, async (req, res) => {
     const { email, subject, message } = req.body;
     const newTicket: SupportTicket = {
       id: 'tkt-' + Date.now(),
@@ -2561,7 +2561,7 @@ app.use('/api/', apiLimiter);
     res.json(newTicket);
   });
 
-  app.put('/api/support-tickets/:id', async (req, res) => {
+  app.put('/api/support-tickets/:id', requireAdmin, async (req, res) => {
     const { id } = req.params;
     const updates = req.body;
     if (!localDb.supportTickets) localDb.supportTickets = [];
@@ -2574,7 +2574,7 @@ app.use('/api/', apiLimiter);
     res.status(404).json({ error: 'Ticket not found' });
   });
 
-  app.delete('/api/support-tickets/:id', async (req, res) => {
+  app.delete('/api/support-tickets/:id', requireAdmin, async (req, res) => {
     const { id } = req.params;
     if (!localDb.supportTickets) localDb.supportTickets = [];
     localDb.supportTickets = localDb.supportTickets.filter(t => t.id !== id);
@@ -2584,7 +2584,7 @@ app.use('/api/', apiLimiter);
 
 
 
-  app.post('/api/reports', async (req, res) => {
+  app.post('/api/reports', requireAuth, async (req, res) => {
     const reportData = req.body;
     const newReport: SafetyReport = {
       id: 'rep-' + Date.now(),
@@ -2608,7 +2608,7 @@ app.use('/api/', apiLimiter);
     res.json(newReport);
   });
 
-  app.put('/api/reports/:id', async (req, res) => {
+  app.put('/api/reports/:id', requireAdmin, async (req, res) => {
     const { id } = req.params;
     const { status } = req.body;
     const idx = localDb.reports.findIndex(r => r.id === id);
@@ -2625,7 +2625,7 @@ app.use('/api/', apiLimiter);
     res.json(localDb.notifications);
   });
 
-  app.put('/api/notifications/read', async (req, res) => {
+  app.put('/api/notifications/read', requireAuth, async (req, res) => {
     const { userId } = req.body;
     localDb.notifications = localDb.notifications.map(n => {
       if (n.userId === userId) {
@@ -2807,7 +2807,7 @@ app.use('/api/', apiLimiter);
     res.json((localDb as any).activityLogs || []);
   });
 
-  app.post('/api/employee/activity-logs', async (req, res) => {
+  app.post('/api/employee/activity-logs', requireAuth, async (req, res) => {
     const log = req.body;
     if (!log || !log.fullName || !log.action) {
       return res.status(400).json({ error: 'FullName and action are required.' });
