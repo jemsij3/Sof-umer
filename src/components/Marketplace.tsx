@@ -369,7 +369,7 @@ export default function Marketplace({
       const matchesFeaturedOnly = !featuredOnlyFilter || prop.isFeatured;
 
       // Only display approved/verified properties to the public
-      const isApproved = prop.verificationStatus === 'verified' || prop.isVerifiedListing === true;
+      const isApproved = prop.verificationStatus === 'verified' || prop.isVerifiedListing === true || prop.approvalStatus === 'approved' || prop.verificationStatus === undefined;
 
       return (
         isApproved &&
@@ -429,7 +429,7 @@ export default function Marketplace({
     if (!selectedRedesignedCategory) return properties;
 
     return properties.filter(p => {
-      const isApproved = p.verificationStatus === 'verified' || p.isVerifiedListing === true;
+      const isApproved = p.verificationStatus === 'verified' || p.isVerifiedListing === true || p.approvalStatus === 'approved' || p.verificationStatus === undefined;
       if (!isApproved) return false;
 
       const mapping = selectedRedesignedCategory.dbMapping;
