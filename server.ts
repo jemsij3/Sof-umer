@@ -1,5 +1,6 @@
 import express from 'express';
 import helmet from 'helmet';
+import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import { rateLimit } from 'express-rate-limit';
 import path from 'path';
@@ -35,8 +36,8 @@ import {
 } from './src/types';
 import { staticTranslations } from './src/lib/translations';
 
-const PORT = 3000;
-const DB_FILE = path.join(process.cwd(), 'sof_umer_db.json');
+const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
+const DB_FILE = process.env.RENDER ? '/data/sof_umer_db.json' : path.join(process.cwd(), 'sof_umer_db.json');
 
 let DbStateModel: any;
 if (process.env.MONGODB_URI) {
@@ -897,6 +898,28 @@ app.use(helmet({
   contentSecurityPolicy: false, // Disabled to prevent blocking inline scripts/styles if not fully configured
 }));
 app.use(cookieParser());
+
+const allowedOrigins = [
+  'http://localhost:5173',
+  'http://localhost:3000',
+  'https://sofumerapp.com',
+  'https://www.sofumerapp.com',
+  'https://sof-umerapp.onrender.com'
+];
+if (process.env.FRONTEND_URL) {
+  allowedOrigins.push(process.env.FRONTEND_URL);
+}
+app.use(cors({
+  origin: function(origin, callback) {
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.indexOf(origin) === -1) {
+      return callback(null, false);
+    }
+    return callback(null, true);
+  },
+  credentials: true
+}));
+
 
 // Basic rate limiting middleware
 const apiLimiter = rateLimit({
@@ -2947,6 +2970,13 @@ app.use('/api/', apiLimiter);
   });
 
   // Vite Integration for Front-end serving
+
+  // Global API error handler to ensure JSON responses
+  app.use('/api', (err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+    console.error('API Error:', err);
+    res.status(err.status || 500).json({ error: 'Internal Server Error' });
+  });
+
   if (process.env.NODE_ENV !== 'production') {
     const vite = await createViteServer({
       server: { middlewareMode: true },
@@ -2955,7 +2985,15 @@ app.use('/api/', apiLimiter);
     app.use(vite.middlewares);
   } else {
     const distPath = path.join(process.cwd(), 'dist');
-    app.use(express.static(distPath));
+    app.use(express.static(distPath, {
+      setHeaders: (res, path) => {
+        if (path.endsWith('.js')) {
+          res.setHeader('Content-Type', 'application/javascript');
+        } else if (path.endsWith('.css')) {
+          res.setHeader('Content-Type', 'text/css');
+        }
+      }
+    }));
     app.get('*', (req, res) => {
       res.sendFile(path.join(distPath, 'index.html'));
     });
