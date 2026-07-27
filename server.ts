@@ -1,10 +1,24 @@
+import dotenv from "dotenv";
+dotenv.config();
+
 import express from 'express';
+import helmet from 'helmet';
+import cors from 'cors';
+import cookieParser from 'cookie-parser';
+import { rateLimit } from 'express-rate-limit';
 import path from 'path';
 import fs from 'fs/promises';
-import fsSync from 'fs';
 import { createServer as createViteServer } from 'vite';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
+import nodemailer from 'nodemailer';
+import dns from 'dns';
+import mongoose from 'mongoose';
+import crypto from 'crypto';
+
+// Fix IPv6 resolution issues on Render
+dns.setDefaultResultOrder('ipv4first');
+
 import {
   User,
   Property,
@@ -25,15 +39,81 @@ import {
 } from './src/types';
 import { staticTranslations } from './src/lib/translations';
 
-const PORT = 3000;
-let DB_FILE = path.join(process.cwd(), 'sof_umer_db.json');
-if (process.env.RENDER) {
-    try {
-        fsSync.accessSync('/data', fsSync.constants.W_OK);
-        DB_FILE = '/data/sof_umer_db.json';
-    } catch (err) {
-        console.warn('Persistent /data volume is not writable');
+const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
+let DB_FILE = process.env.RENDER ? '/data/sof_umer_db.json' : path.join(process.cwd(), 'sof_umer_db.json');
+
+let DbStateModel: any;
+if (process.env.MONGODB_URI) {
+  mongoose.connect(process.env.MONGODB_URI).then(() => {
+    console.log('Connected to live MongoDB Database.');
+  }).catch(err => {
+    console.error('CRITICAL: Failed to connect to MongoDB:', err);
+  });
+
+  const dbStateSchema = new mongoose.Schema({
+    state: Object
+  });
+  DbStateModel = mongoose.models.DbState || mongoose.model('DbState', dbStateSchema);
+}
+
+
+const RESEND_API_KEY = process.env.RESEND_API_KEY;
+const RESEND_FROM = process.env.RESEND_FROM || '"Sof Umer" <noreply@sofumerapp.com>';
+
+const SMTP_HOST = process.env.SMTP_HOST;
+const SMTP_PORT = parseInt(process.env.SMTP_PORT || '587', 10);
+const SMTP_USER = process.env.SMTP_USER;
+const SMTP_PASS = process.env.SMTP_PASS;
+const SMTP_FROM = process.env.SMTP_FROM || RESEND_FROM;
+
+let transporter: nodemailer.Transporter | null = null;
+if (!RESEND_API_KEY && SMTP_HOST && SMTP_USER && SMTP_PASS) {
+  transporter = nodemailer.createTransport({
+    host: SMTP_HOST,
+    port: SMTP_PORT,
+    secure: SMTP_PORT === 465,
+    auth: {
+      user: SMTP_USER,
+      pass: SMTP_PASS,
     }
+  });
+}
+
+function sendSystemEmail(to: string, subject: string, html: string) {
+  // Fire-and-forget email dispatch
+  (async () => {
+    try {
+      if (RESEND_API_KEY) {
+        const res = await fetch('https://api.resend.com/emails', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${RESEND_API_KEY}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            from: RESEND_FROM,
+            to,
+            subject,
+            html
+          })
+        });
+        if (!res.ok) {
+          console.error('Resend API error:', res.status, await res.text());
+        }
+      } else if (transporter) {
+        await transporter.sendMail({
+          from: SMTP_FROM,
+          to, // Use dynamic 'to' argument
+          subject,
+          html
+        });
+      } else {
+        console.log(`[Mock Email] To: ${to} | Subject: ${subject}`);
+      }
+    } catch (err) {
+      console.error('Failed to send email:', err);
+    }
+  })();
 }
 
 export interface ServerUser extends User {
@@ -600,9 +680,53 @@ const syncAllWalletBalances = () => {
 let localDb: ReturnType<typeof getInitialData>;
 
 const loadDb = async () => {
+  if (process.env.RENDER && DB_FILE === '/data/sof_umer_db.json') {
+    try {
+      await fs.access('/data', fs.constants.W_OK);
+    } catch (err) {
+      console.error('CRITICAL: /data is not writable on Render. Halting to prevent data wipe.');
+      process.exit(1);
+    }
+  }
+
   try {
-    const content = await fs.readFile(DB_FILE, 'utf-8');
-    localDb = JSON.parse(content);
+    if (process.env.MONGODB_URI && DbStateModel) {
+      const doc = await DbStateModel.findOne();
+      if (doc && doc.state) {
+        localDb = doc.state;
+      } else {
+        localDb = getInitialData();
+        await DbStateModel.updateOne({}, { state: localDb }, { upsert: true });
+      }
+    } else {
+      try {
+        const content = await fs.readFile(DB_FILE, 'utf-8');
+        localDb = JSON.parse(content);
+      } catch (readErr: any) {
+        if (readErr.code === 'ENOENT') {
+          const seedPath = path.join(process.cwd(), 'sof_umer_db.json');
+          if (DB_FILE !== seedPath) {
+            console.log('Persistent DB not found, seeding from bundled database...');
+            try {
+              const seedContent = await fs.readFile(seedPath, 'utf-8');
+              localDb = JSON.parse(seedContent);
+            } catch (seedErr) {
+              console.error('CRITICAL: Bundled DB not found or invalid. Halting to prevent data wipe.');
+              process.exit(1);
+            }
+          } else {
+            console.error('CRITICAL: Database file not found. Halting to prevent data wipe.');
+            process.exit(1);
+          }
+          // We don't save immediately here to allow migrations to run first
+        } else {
+          throw readErr;
+        }
+      }
+    }
+
+    // Preserve existing arrays if they are empty in the seed but have data in localDb (though this is already handled by not overwriting localDb unless ENOENT)
+
     // Backward compatibility & required fields verification
     if (!localDb.appFeatures || !Array.isArray(localDb.appFeatures)) {
       localDb.appFeatures = getInitialData().appFeatures;
@@ -633,8 +757,12 @@ const loadDb = async () => {
       localDb.properties = [];
     } else {
       localDb.properties.forEach(p => {
-        if (!p.verificationStatus || p.verificationStatus === 'pending') {
+        // Only override if actually missing or explicitly 'pending'.
+        // If it was already approved/verified/rejected, leave it alone.
+        if (p.verificationStatus === undefined) {
           p.verificationStatus = 'verified';
+          p.isVerifiedListing = true;
+        } else if (p.verificationStatus === 'verified' && p.isVerifiedListing === undefined) {
           p.isVerifiedListing = true;
         }
       });
@@ -681,7 +809,17 @@ const loadDb = async () => {
         homepageSubheading: 'Properties, Jobs, Local Businesses, and Community events. Clean, manual-receipt audited, and fully verified.',
         termsAndPrivacy: 'Sof Umer guarantees user security. All listed properties are audited for legal compliance before publishing. Transactions are processed manually by our finance team.',
         notificationsEnabled: true,
-        siteStatus: 'Online'
+        siteStatus: 'Online',
+        marketplaceSettings: {
+          freeListingsEnabled: true,
+          freePlanLimit: 5,
+          basicBoostPrice: 50,
+          premiumBoostPrice: 150,
+          vipBoostPrice: 500,
+          topAdPrice: 150,
+          featuredAdPrice: 300,
+          creditPackages: []
+        }
       };
     }
 
@@ -743,20 +881,14 @@ const loadDb = async () => {
       await saveDb();
     }
 
-    // Sync all approved receipts and wallet balances
+        // Sync all approved receipts and wallet balances
     syncAllWalletBalances();
     await saveDb();
   } catch (error: any) {
-    if (error.code === 'ENOENT') {
-      console.log('Database file not found, initializing brand new database...');
-      localDb = getInitialData();
-      await saveDb();
-    } else {
-      console.error('CRITICAL: Error reading database file:', error);
-      // Fallback object to keep system running without wiping corrupted JSON
-      if (!localDb) {
-        localDb = getInitialData();
-      }
+    console.error('CRITICAL: Error reading database file:', error);
+    if (!localDb) {
+      console.error('CRITICAL: Database failed to load. Halting to prevent data wipe.');
+      process.exit(1);
     }
   }
 };
@@ -766,10 +898,15 @@ let savePromise: Promise<void> = Promise.resolve();
 const saveDb = (): Promise<void> => {
   savePromise = savePromise.then(async () => {
     try {
-      const jsonString = JSON.stringify(localDb, null, 2);
-      const tempFile = `${DB_FILE}.tmp`;
-      await fs.writeFile(tempFile, jsonString, 'utf-8');
-      await fs.rename(tempFile, DB_FILE);
+      if (process.env.MONGODB_URI && DbStateModel) {
+        await DbStateModel.updateOne({}, { state: localDb }, { upsert: true });
+        // await new DbStateModel({ state: localDb }).save();
+      } else {
+        const jsonString = JSON.stringify(localDb, null, 2);
+        const tempFile = `${DB_FILE}.tmp`;
+        await fs.writeFile(tempFile, jsonString, 'utf-8');
+        await fs.rename(tempFile, DB_FILE);
+      }
     } catch (err) {
       console.error('Failed atomic saveDb, falling back to direct write:', err);
       try {
@@ -789,6 +926,54 @@ startServer();
 async function startServer() {
   await loadDb();
   const app = express();
+app.set('trust proxy', 1);
+// Security headers and cookie parsing
+app.use(helmet({
+  contentSecurityPolicy: false, // Disabled to prevent blocking inline scripts/styles if not fully configured
+}));
+app.use(cookieParser());
+
+const allowedOrigins = [
+  'http://localhost:5173',
+  'http://localhost:3000',
+  'https://sofumerapp.com',
+  'https://www.sofumerapp.com',
+  'https://sof-umerapp.onrender.com'
+];
+if (process.env.FRONTEND_URL) {
+  allowedOrigins.push(process.env.FRONTEND_URL);
+}
+app.use(cors({
+  origin: function(origin, callback) {
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.indexOf(origin) === -1) {
+      return callback(null, false);
+    }
+    return callback(null, true);
+  },
+  credentials: true
+}));
+
+
+// Basic rate limiting middleware
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 1000, // Limit each IP to 1000 requests per `window` (here, per 15 minutes)
+  standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
+  legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+  message: { error: 'Too many requests, please try again later.' }
+});
+
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 10, // Limit each IP to 10 requests per `window` for auth routes
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many authentication attempts, please try again later.' }
+});
+
+app.use('/api/', apiLimiter);
+
 
   // Support JSON payloads
   app.use(express.json({ limit: '10mb' }));
@@ -871,6 +1056,9 @@ async function startServer() {
     if (authHeader && authHeader.startsWith('Bearer ')) {
       token = authHeader.substring(7);
     }
+    if (!token && req.cookies && req.cookies.sof_umer_token) {
+      token = req.cookies.sof_umer_token;
+    }
 
     if (token) {
       try {
@@ -922,7 +1110,7 @@ async function startServer() {
   });
 
   // Auth Endpoints
-  app.post('/api/auth/login', async (req, res) => {
+  app.post('/api/auth/login', authLimiter, async (req, res) => {
     const { email, phone, password, captchaId, captchaAnswer, rememberMe } = req.body;
     const identifier = normalizeEmail(email) || normalizePhone(phone || email);
 
@@ -934,8 +1122,8 @@ async function startServer() {
     const normPhone = normalizePhone(identifier);
 
     const user = localDb.users.find(u => 
-      (u.email && u.email.toLowerCase() === normEmail) ||
-      (u.phone && normalizePhone(u.phone) === normPhone)
+      (normEmail && u.email && u.email.toLowerCase() === normEmail) ||
+      (normPhone && u.phone && normalizePhone(u.phone) === normPhone)
     );
 
     if (!user) {
@@ -1035,7 +1223,33 @@ async function startServer() {
       tokenVersion: user.tokenVersion
     }, JWT_SECRET, { expiresIn: '365d' });
 
-    res.json({ token, user: stripSecrets(user) });
+
+
+    if (user.twoFactorEnabled) {
+      const otp = crypto.randomInt(100000, 999999).toString();
+      user.twoFactorCode = otp;
+      user.twoFactorCodeExpiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString();
+      await saveDb();
+
+      const html = `<div style="font-family:sans-serif;padding:20px;">
+        <h2>Login Verification</h2>
+        <p>Your two-factor authentication code is:</p>
+        <h1 style="color:#10b981;font-size:32px;letter-spacing:4px;">${otp}</h1>
+        <p>This code expires in 10 minutes. If you did not attempt to login, please ignore this email.</p>
+      </div>`;
+
+      sendSystemEmail(user.email, 'Your 2FA Login Code', html);
+      return res.status(403).json({ error: '2fa_required', email: user.email });
+    }
+
+    const isProd = process.env.NODE_ENV === 'production';
+    res.cookie('sof_umer_token', token, {
+      httpOnly: true,
+      secure: isProd,
+      sameSite: 'strict',
+      maxAge: 365 * 24 * 60 * 60 * 1000 // 1 year
+    });
+    return res.json({ token, user: stripSecrets(user) });
   });
 
   // Phone OTP Routes
@@ -1128,11 +1342,32 @@ async function startServer() {
       tokenVersion: user.tokenVersion
     }, JWT_SECRET, { expiresIn: '365d' });
 
-    res.json({ token, user: stripSecrets(user) });
+
+    const isProd = process.env.NODE_ENV === 'production';
+    res.cookie('sof_umer_token', token, {
+      httpOnly: true,
+      secure: isProd,
+      sameSite: 'strict',
+      maxAge: 365 * 24 * 60 * 60 * 1000 // 1 year
+    });
+    return res.json({ token, user: stripSecrets(user) });
   });
 
-  app.post('/api/auth/register', async (req, res) => {
-    const { email, fullName, password, phone, role } = req.body;
+  app.post('/api/auth/register', authLimiter, async (req, res) => {
+    let { email, fullName, password, phone, role } = req.body;
+
+    // Input validation
+    if (!email || !fullName || !password) {
+      return res.status(400).json({ error: 'Email, Full Name, and Password are required.' });
+    }
+    email = email.trim();
+    fullName = fullName.trim();
+    if (!/^\S+@\S+\.\S+$/.test(email)) {
+      return res.status(400).json({ error: 'Invalid email format.' });
+    }
+    if (password.length < 8) {
+      return res.status(400).json({ error: 'Password must be at least 8 characters long.' });
+    }
     const normEmail = normalizeEmail(email);
     const normPhone = normalizePhone(phone);
 
@@ -1173,6 +1408,14 @@ async function startServer() {
           role: existing.role,
           tokenVersion: existing.tokenVersion
         }, JWT_SECRET, { expiresIn: '365d' });
+
+        const isProd = process.env.NODE_ENV === 'production';
+        res.cookie('sof_umer_token', token, {
+          httpOnly: true,
+          secure: isProd,
+          sameSite: 'strict',
+          maxAge: 365 * 24 * 60 * 60 * 1000 // 1 year
+        });
         return res.json({ token, user: stripSecrets(existing) });
       }
       return res.status(400).json({ error: 'An account with this email address or phone number already exists.' });
@@ -1203,6 +1446,14 @@ async function startServer() {
 
     localDb.users.push(newUser);
     await saveDb();
+
+    if (newUser.email) {
+      sendSystemEmail(
+        newUser.email,
+        'Verify your Sof Umer account',
+        `<h1>Welcome to Sof Umer!</h1><p>Your verification code is: <strong>${verificationCode}</strong></p><p>This code will expire in 15 minutes.</p>`
+      );
+    }
 
     res.json({
       message: 'Registration successful! Please verify your email.',
@@ -1243,10 +1494,18 @@ async function startServer() {
       tokenVersion: user.tokenVersion
     }, JWT_SECRET, { expiresIn: '365d' });
 
-    res.json({ token, user: stripSecrets(user) });
+
+    const isProd = process.env.NODE_ENV === 'production';
+    res.cookie('sof_umer_token', token, {
+      httpOnly: true,
+      secure: isProd,
+      sameSite: 'strict',
+      maxAge: 365 * 24 * 60 * 60 * 1000 // 1 year
+    });
+    return res.json({ token, user: stripSecrets(user) });
   });
 
-  app.post('/api/auth/forgot-password', async (req, res) => {
+  app.post('/api/auth/forgot-password', authLimiter, async (req, res) => {
     const { email, phone, identifier } = req.body;
     const target = normalizeEmail(identifier || email) || normalizePhone(identifier || phone);
 
@@ -1255,8 +1514,7 @@ async function startServer() {
     }
 
     const user = localDb.users.find(u => 
-      (u.email && u.email.toLowerCase() === target) ||
-      (u.phone && normalizePhone(u.phone) === target)
+      (target.includes('@') ? (u.email && u.email.toLowerCase() === target) : (u.phone && normalizePhone(u.phone) === target))
     );
 
     if (!user) {
@@ -1271,6 +1529,14 @@ async function startServer() {
     user.resetPasswordCodeExpiresAt = new Date(Date.now() + 15 * 60 * 1000).toISOString();
     await saveDb();
 
+    if (user.email) {
+      sendSystemEmail(
+        user.email,
+        'Password Reset Request - Sof Umer',
+        `<h1>Password Reset</h1><p>Your password reset code is: <strong>${resetCode}</strong></p><p>This code will expire in 15 minutes.</p>`
+      );
+    }
+
     res.json({
       success: true,
       message: 'Password reset code has been generated.',
@@ -1278,7 +1544,7 @@ async function startServer() {
     });
   });
 
-  app.post('/api/auth/reset-password', async (req, res) => {
+  app.post('/api/auth/reset-password', authLimiter, async (req, res) => {
     const { email, phone, identifier, code, newPassword } = req.body;
     const target = normalizeEmail(identifier || email) || normalizePhone(identifier || phone);
 
@@ -1291,8 +1557,7 @@ async function startServer() {
     }
 
     const user = localDb.users.find(u => 
-      (u.email && u.email.toLowerCase() === target) ||
-      (u.phone && normalizePhone(u.phone) === target)
+      (target.includes('@') ? (u.email && u.email.toLowerCase() === target) : (u.phone && normalizePhone(u.phone) === target))
     );
 
     if (!user || user.resetPasswordCode !== String(code).trim()) {
@@ -1497,6 +1762,15 @@ async function startServer() {
 
   app.get('/api/users', requireAdmin, async (req, res) => {
     res.json(localDb.users.map(stripSecrets));
+  });
+
+
+  app.get('/api/stats', async (req, res) => {
+    // Only return lengths to avoid exposing sensitive user data
+    res.json({
+      propertiesCount: localDb.properties.filter(p => p.approvalStatus !== 'rejected').length,
+      usersCount: localDb.users.length
+    });
   });
 
   // Properties Endpoints
@@ -2204,7 +2478,17 @@ async function startServer() {
         homepageSubheading: 'Properties, Jobs, Local Businesses, and Community events. Clean, manual-receipt audited, and fully verified.',
         termsAndPrivacy: 'Sof Umer guarantees user security. All listed properties are audited for legal compliance before publishing. Transactions are processed manually by our finance team.',
         notificationsEnabled: true,
-        siteStatus: 'Online'
+        siteStatus: 'Online',
+        marketplaceSettings: {
+          freeListingsEnabled: true,
+          freePlanLimit: 5,
+          basicBoostPrice: 50,
+          premiumBoostPrice: 150,
+          vipBoostPrice: 500,
+          topAdPrice: 150,
+          featuredAdPrice: 300,
+          creditPackages: []
+        }
       };
     }
     res.json((localDb as any).appSettings);
@@ -2479,11 +2763,11 @@ async function startServer() {
   });
 
   // Employee Admins & Staff Management APIs
-  app.get('/api/employee/custom-roles', async (req, res) => {
+  app.get('/api/employee/custom-roles', requireAdmin, async (req, res) => {
     res.json((localDb as any).customRoles || []);
   });
 
-  app.post('/api/employee/custom-roles', async (req, res) => {
+  app.post('/api/employee/custom-roles', requireAdmin, async (req, res) => {
     const role = req.body;
     if (!role || !role.name) {
       return res.status(400).json({ error: 'Role name is required.' });
@@ -2495,7 +2779,7 @@ async function startServer() {
     res.json({ success: true, customRoles: (localDb as any).customRoles });
   });
 
-  app.delete('/api/employee/custom-roles/:name', async (req, res) => {
+  app.delete('/api/employee/custom-roles/:name', requireAdmin, async (req, res) => {
     const { name } = req.params;
     if (!(localDb as any).customRoles) (localDb as any).customRoles = [];
     (localDb as any).customRoles = (localDb as any).customRoles.filter((r: any) => r.name !== name);
@@ -2529,6 +2813,63 @@ async function startServer() {
 
   app.get('/api/employee/login-history', async (req, res) => {
     res.json((localDb as any).loginHistory || []);
+  });
+
+
+  app.post('/api/auth/verify-2fa', authLimiter, async (req, res) => {
+    const { email, code } = req.body;
+    if (!email || !code) {
+      return res.status(400).json({ error: 'Email and 2FA code are required.' });
+    }
+
+    const normEmail = normalizeEmail(email);
+    const user = localDb.users.find((u: any) => u.email && u.email.toLowerCase() === normEmail);
+
+    if (!user) {
+      return res.status(400).json({ error: 'Invalid 2FA code.' });
+    }
+
+    if (!user.twoFactorCode || user.twoFactorCode !== code) {
+      return res.status(400).json({ error: 'Invalid 2FA code.' });
+    }
+
+    if (user.twoFactorCodeExpiresAt && new Date(user.twoFactorCodeExpiresAt).getTime() < Date.now()) {
+      return res.status(400).json({ error: '2FA code has expired. Please login again.' });
+    }
+
+    user.twoFactorCode = undefined;
+    user.twoFactorCodeExpiresAt = undefined;
+    await saveDb();
+
+    const token = jwt.sign({
+      userId: user.id,
+      email: user.email,
+      role: user.role,
+      tokenVersion: user.tokenVersion
+    }, JWT_SECRET, { expiresIn: '365d' });
+
+    const isProd = process.env.NODE_ENV === 'production';
+    res.cookie('sof_umer_token', token, {
+      httpOnly: true,
+      secure: isProd,
+      sameSite: 'strict',
+      maxAge: 365 * 24 * 60 * 60 * 1000
+    });
+
+    res.json({ token, user: stripSecrets(user) });
+  });
+
+  app.post('/api/auth/enable-2fa', requireAuth, async (req, res) => {
+    const { enabled } = req.body;
+    const user = localDb.users.find((u: any) => u.id === (req as any).user.userId);
+    if (!user) {
+      return res.status(404).json({ error: 'User not found.' });
+    }
+
+    user.twoFactorEnabled = !!enabled;
+    await saveDb();
+
+    res.json({ success: true, twoFactorEnabled: user.twoFactorEnabled, user: stripSecrets(user) });
   });
 
   app.post('/api/auth/logout', async (req, res) => {
@@ -2649,7 +2990,25 @@ async function startServer() {
     res.json({ success: true });
   });
 
+
+  // Global API error handler
+  app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+    if (req.path.startsWith('/api/')) {
+      console.error('API Error:', err);
+      res.status(err.status || 500).json({ error: err.message || 'Internal server error' });
+    } else {
+      next(err);
+    }
+  });
+
   // Vite Integration for Front-end serving
+
+  // Global API error handler to ensure JSON responses
+  app.use('/api', (err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+    console.error('API Error:', err);
+    res.status(err.status || 500).json({ error: 'Internal Server Error' });
+  });
+
   if (process.env.NODE_ENV !== 'production') {
     const vite = await createViteServer({
       server: { middlewareMode: true },
@@ -2658,7 +3017,15 @@ async function startServer() {
     app.use(vite.middlewares);
   } else {
     const distPath = path.join(process.cwd(), 'dist');
-    app.use(express.static(distPath));
+    app.use(express.static(distPath, {
+      setHeaders: (res, path) => {
+        if (path.endsWith('.js')) {
+          res.setHeader('Content-Type', 'application/javascript');
+        } else if (path.endsWith('.css')) {
+          res.setHeader('Content-Type', 'text/css');
+        }
+      }
+    }));
     app.get('*', (req, res) => {
       res.sendFile(path.join(distPath, 'index.html'));
     });
