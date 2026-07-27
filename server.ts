@@ -1,3 +1,6 @@
+import dotenv from "dotenv";
+dotenv.config();
+
 import express from 'express';
 import helmet from 'helmet';
 import cors from 'cors';
@@ -681,8 +684,8 @@ const loadDb = async () => {
     try {
       await fs.access('/data', fs.constants.W_OK);
     } catch (err) {
-      console.warn('/data is not writable, falling back to local directory for DB');
-      DB_FILE = path.join(process.cwd(), 'sof_umer_db.json');
+      console.error('CRITICAL: /data is not writable on Render. Halting to prevent data wipe.');
+      process.exit(1);
     }
   }
 
@@ -693,7 +696,7 @@ const loadDb = async () => {
         localDb = doc.state;
       } else {
         localDb = getInitialData();
-        await new DbStateModel({ state: localDb }).save();
+        await DbStateModel.updateOne({}, { state: localDb }, { upsert: true });
       }
     } else {
       try {
@@ -708,12 +711,12 @@ const loadDb = async () => {
               const seedContent = await fs.readFile(seedPath, 'utf-8');
               localDb = JSON.parse(seedContent);
             } catch (seedErr) {
-              console.log('Bundled DB not found or invalid, initializing empty database...');
-              localDb = getInitialData();
+              console.error('CRITICAL: Bundled DB not found or invalid. Halting to prevent data wipe.');
+              process.exit(1);
             }
           } else {
-            console.log('Database file not found, initializing brand new database...');
-            localDb = getInitialData();
+            console.error('CRITICAL: Database file not found. Halting to prevent data wipe.');
+            process.exit(1);
           }
           // We don't save immediately here to allow migrations to run first
         } else {
@@ -884,7 +887,8 @@ const loadDb = async () => {
   } catch (error: any) {
     console.error('CRITICAL: Error reading database file:', error);
     if (!localDb) {
-      localDb = getInitialData();
+      console.error('CRITICAL: Database failed to load. Halting to prevent data wipe.');
+      process.exit(1);
     }
   }
 };
@@ -895,8 +899,8 @@ const saveDb = (): Promise<void> => {
   savePromise = savePromise.then(async () => {
     try {
       if (process.env.MONGODB_URI && DbStateModel) {
-        await DbStateModel.deleteMany({});
-        await new DbStateModel({ state: localDb }).save();
+        await DbStateModel.updateOne({}, { state: localDb }, { upsert: true });
+        // await new DbStateModel({ state: localDb }).save();
       } else {
         const jsonString = JSON.stringify(localDb, null, 2);
         const tempFile = `${DB_FILE}.tmp`;
