@@ -81,7 +81,28 @@ export default function Navbar({ onNavigate, activeView, onOpenCreateModal }: Na
 
           {/* Navigation Items */}
           <div className="flex items-center gap-2 sm:gap-3">
-
+            {/* Wallet Balance & Top Up Badge */}
+            {currentUser && (
+              <button
+                onClick={() => onNavigate('payments')}
+                className="flex items-center gap-2 px-2.5 sm:px-3.5 py-1.5 sm:py-2 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-400 transition cursor-pointer group shadow-lg shadow-amber-500/5 hover:scale-[1.02]"
+                title="Wallet Balance - Click to Top Up"
+              >
+                <div className="w-6 h-6 rounded-lg bg-amber-500/20 text-amber-400 flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <Wallet className="w-3.5 h-3.5" />
+                </div>
+                <div className="flex flex-col text-left leading-none">
+                  <span className="text-[8px] uppercase font-extrabold tracking-wider text-white/50 mb-0.5">Wallet</span>
+                  <span className="text-xs font-black font-mono text-amber-400">
+                    {(currentUser.walletBalance || 0).toLocaleString()} ETB
+                  </span>
+                </div>
+                <div className="ml-1 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black text-[9px] font-black px-2 py-0.5 rounded-lg flex items-center gap-1 shadow-sm transition-all">
+                  <Plus className="w-2.5 h-2.5 stroke-[3]" />
+                  <span className="hidden sm:inline uppercase tracking-wide">Top Up</span>
+                </div>
+              </button>
+            )}
 
             {/* Quick Listing Creator Button (Admin or Verified User) */}
             {currentUser && (currentUser.role === 'admin' || currentUser.isVerified) && (
