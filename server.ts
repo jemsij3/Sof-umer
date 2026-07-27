@@ -37,7 +37,7 @@ import {
 import { staticTranslations } from './src/lib/translations';
 
 const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
-const DB_FILE = process.env.RENDER ? '/data/sof_umer_db.json' : path.join(process.cwd(), 'sof_umer_db.json');
+let DB_FILE = process.env.RENDER ? '/data/sof_umer_db.json' : path.join(process.cwd(), 'sof_umer_db.json');
 
 let DbStateModel: any;
 if (process.env.MONGODB_URI) {
@@ -677,6 +677,15 @@ const syncAllWalletBalances = () => {
 let localDb: ReturnType<typeof getInitialData>;
 
 const loadDb = async () => {
+  if (process.env.RENDER && DB_FILE === '/data/sof_umer_db.json') {
+    try {
+      await fs.access('/data', fs.constants.W_OK);
+    } catch (err) {
+      console.warn('/data is not writable, falling back to local directory for DB');
+      DB_FILE = path.join(process.cwd(), 'sof_umer_db.json');
+    }
+  }
+
   try {
     if (process.env.MONGODB_URI && DbStateModel) {
       const doc = await DbStateModel.findOne();
@@ -687,9 +696,33 @@ const loadDb = async () => {
         await new DbStateModel({ state: localDb }).save();
       }
     } else {
-      const content = await fs.readFile(DB_FILE, 'utf-8');
-      localDb = JSON.parse(content);
+      try {
+        const content = await fs.readFile(DB_FILE, 'utf-8');
+        localDb = JSON.parse(content);
+      } catch (readErr: any) {
+        if (readErr.code === 'ENOENT') {
+          const seedPath = path.join(process.cwd(), 'sof_umer_db.json');
+          if (DB_FILE !== seedPath) {
+            console.log('Persistent DB not found, seeding from bundled database...');
+            try {
+              const seedContent = await fs.readFile(seedPath, 'utf-8');
+              localDb = JSON.parse(seedContent);
+            } catch (seedErr) {
+              console.log('Bundled DB not found or invalid, initializing empty database...');
+              localDb = getInitialData();
+            }
+          } else {
+            console.log('Database file not found, initializing brand new database...');
+            localDb = getInitialData();
+          }
+          // We don't save immediately here to allow migrations to run first
+        } else {
+          throw readErr;
+        }
+      }
     }
+
+    // Preserve existing arrays if they are empty in the seed but have data in localDb (though this is already handled by not overwriting localDb unless ENOENT)
 
     // Backward compatibility & required fields verification
     if (!localDb.appFeatures || !Array.isArray(localDb.appFeatures)) {
@@ -721,8 +754,12 @@ const loadDb = async () => {
       localDb.properties = [];
     } else {
       localDb.properties.forEach(p => {
-        if (!p.verificationStatus || p.verificationStatus === 'pending') {
+        // Only override if actually missing or explicitly 'pending'.
+        // If it was already approved/verified/rejected, leave it alone.
+        if (p.verificationStatus === undefined) {
           p.verificationStatus = 'verified';
+          p.isVerifiedListing = true;
+        } else if (p.verificationStatus === 'verified' && p.isVerifiedListing === undefined) {
           p.isVerifiedListing = true;
         }
       });
@@ -841,20 +878,13 @@ const loadDb = async () => {
       await saveDb();
     }
 
-    // Sync all approved receipts and wallet balances
+        // Sync all approved receipts and wallet balances
     syncAllWalletBalances();
     await saveDb();
   } catch (error: any) {
-    if (error.code === 'ENOENT') {
-      console.log('Database file not found, initializing brand new database...');
+    console.error('CRITICAL: Error reading database file:', error);
+    if (!localDb) {
       localDb = getInitialData();
-      await saveDb();
-    } else {
-      console.error('CRITICAL: Error reading database file:', error);
-      // Fallback object to keep system running without wiping corrupted JSON
-      if (!localDb) {
-        localDb = getInitialData();
-      }
     }
   }
 };
