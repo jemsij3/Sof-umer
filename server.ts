@@ -1088,8 +1088,8 @@ app.use('/api/', apiLimiter);
     const normPhone = normalizePhone(identifier);
 
     const user = localDb.users.find(u => 
-      (u.email && u.email.toLowerCase() === normEmail) ||
-      (u.phone && normalizePhone(u.phone) === normPhone)
+      (normEmail && u.email && u.email.toLowerCase() === normEmail) ||
+      (normPhone && u.phone && normalizePhone(u.phone) === normPhone)
     );
 
     if (!user) {
@@ -1480,8 +1480,7 @@ app.use('/api/', apiLimiter);
     }
 
     const user = localDb.users.find(u => 
-      (u.email && u.email.toLowerCase() === target) ||
-      (u.phone && normalizePhone(u.phone) === target)
+      (target.includes('@') ? (u.email && u.email.toLowerCase() === target) : (u.phone && normalizePhone(u.phone) === target))
     );
 
     if (!user) {
@@ -1524,8 +1523,7 @@ app.use('/api/', apiLimiter);
     }
 
     const user = localDb.users.find(u => 
-      (u.email && u.email.toLowerCase() === target) ||
-      (u.phone && normalizePhone(u.phone) === target)
+      (target.includes('@') ? (u.email && u.email.toLowerCase() === target) : (u.phone && normalizePhone(u.phone) === target))
     );
 
     if (!user || user.resetPasswordCode !== String(code).trim()) {
