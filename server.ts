@@ -684,8 +684,8 @@ const loadDb = async () => {
     try {
       await fs.access('/data', fs.constants.W_OK);
     } catch (err) {
-      console.error('CRITICAL: /data is not writable on Render. Halting to prevent data wipe.');
-      process.exit(1);
+      console.warn('WARNING: /data is not writable on Render. Falling back to local file.');
+      DB_FILE = path.join(process.cwd(), 'sof_umer_db.json');
     }
   }
 
