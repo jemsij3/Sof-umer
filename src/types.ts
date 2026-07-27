@@ -45,6 +45,9 @@ export interface User {
   photoUrl?: string;
   temporaryPassword?: string;
   lastLogin?: string;
+  twoFactorEnabled?: boolean;
+  twoFactorCode?: string;
+  twoFactorCodeExpiresAt?: string;
 }
 
 export interface Property {

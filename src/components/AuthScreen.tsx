@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../lib/AppContext';
-import { Building2, Eye, EyeOff, Lock, Mail, User as UserIcon, ArrowLeft, ArrowRight, ShieldCheck, Sparkles, Compass, RefreshCw, Phone, Smartphone } from 'lucide-react';
+import { Building2, Eye, EyeOff, Lock, Mail, User as UserIcon, ArrowLeft, ArrowRight, ShieldCheck, Sparkles, Compass, RefreshCw, AlertCircle, Key } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
 interface AuthScreenProps {
@@ -11,7 +11,7 @@ export default function AuthScreen({ initialMode }: AuthScreenProps) {
   const { setCurrentUser, setToken, t, sessionExpired, setSessionExpired, currentLanguage, systemSettings } = useApp();
   
   // Use 'splash' as default if no initial mode is provided
-  const [mode, setMode] = useState<'splash' | 'welcome' | 'login' | 'signup' | 'forgot' | 'verify' | 'reset'>(
+  const [mode, setMode] = useState<'splash' | 'welcome' | 'login' | 'signup' | 'forgot' | 'verify' | 'reset' | '2fa'>(
     initialMode || 'splash'
   );
   
@@ -32,6 +32,8 @@ export default function AuthScreen({ initialMode }: AuthScreenProps) {
 
   // Email verification state
   const [verificationCode, setVerificationCode] = useState('');
+  const [twoFactorCode, setTwoFactorCode] = useState('');
+  const [twoFactorEmail, setTwoFactorEmail] = useState('');
   const [verifyEmailAddress, setVerifyEmailAddress] = useState('');
   const [devVerificationCode, setDevVerificationCode] = useState('');
 
@@ -42,76 +44,9 @@ export default function AuthScreen({ initialMode }: AuthScreenProps) {
   const [devResetCode, setDevResetCode] = useState('');
   
   // Auth method state (email vs phone)
-  const [authMethod, setAuthMethod] = useState<'email' | 'phone'>('email');
-  const [phoneNumber, setPhoneNumber] = useState('');
-  const [phoneOtp, setPhoneOtp] = useState('');
-  const [otpSent, setOtpSent] = useState(false);
-  const [devPhoneOtp, setDevPhoneOtp] = useState('');
 
-  const handleSendPhoneOtp = async (e?: React.FormEvent) => {
-    if (e) e.preventDefault();
-    if (!phoneNumber || phoneNumber.trim().length < 8) {
-      setError('Please enter a valid phone number.');
-      return;
-    }
-    setError('');
-    setSuccess('');
-    setSubmitting(true);
-    try {
-      const res = await fetch('/api/auth/phone/send-otp', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone: phoneNumber })
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.error || 'Failed to send OTP verification code.');
-      }
-      setOtpSent(true);
-      setDevPhoneOtp(data.devOtp || '');
-      setSuccess(data.message || 'OTP verification code sent to your phone number.');
-    } catch (err: any) {
-      setError(err.message || 'Failed to send OTP verification code.');
-    } finally {
-      setSubmitting(false);
-    }
-  };
 
-  const handleVerifyPhoneOtp = async (e: React.FormEvent) => {
-    if (e) e.preventDefault();
-    if (!phoneOtp) {
-      setError('Please enter the 6-digit OTP code.');
-      return;
-    }
-    setError('');
-    setSuccess('');
-    setSubmitting(true);
-    try {
-      const res = await fetch('/api/auth/phone/verify-otp', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          phone: phoneNumber,
-          otp: phoneOtp,
-          fullName: mode === 'signup' ? fullName : undefined
-        })
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.error || 'OTP verification failed.');
-      }
-      setSuccess('Phone verified successfully!');
-      setToken(data.token);
-      setTimeout(() => {
-        setCurrentUser(data.user);
-        setSessionExpired(false);
-      }, 1000);
-    } catch (err: any) {
-      setError(err.message || 'Invalid or expired OTP code.');
-    } finally {
-      setSubmitting(false);
-    }
-  };
+
 
   // Google Account Chooser simulation states
   const [showGoogleChooser, setShowGoogleChooser] = useState(false);
@@ -188,13 +123,7 @@ export default function AuthScreen({ initialMode }: AuthScreenProps) {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (authMethod === 'phone') {
-      if (otpSent) {
-        return handleVerifyPhoneOtp(e);
-      } else {
-        return handleSendPhoneOtp(e);
-      }
-    }
+
 
     if (!email || !password) {
       setError(t('fill_all_fields'));
@@ -216,6 +145,12 @@ export default function AuthScreen({ initialMode }: AuthScreenProps) {
           setRequiresCaptcha(true);
           await fetchCaptcha();
           throw new Error(t('captcha_required'));
+        }
+        if (data.error === '2fa_required') {
+          setTwoFactorEmail(data.email || email);
+          setMode('2fa');
+          setSubmitting(false);
+          return;
         }
         if (data.error === 'unverified') {
           setVerifyEmailAddress(data.email || email);
@@ -241,17 +176,7 @@ export default function AuthScreen({ initialMode }: AuthScreenProps) {
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (authMethod === 'phone') {
-      if (otpSent) {
-        return handleVerifyPhoneOtp(e);
-      } else {
-        if (!fullName) {
-          setError('Please enter your full name.');
-          return;
-        }
-        return handleSendPhoneOtp(e);
-      }
-    }
+
 
     if (!email || !fullName || !password) {
       setError(t('fill_all_fields'));
@@ -273,7 +198,7 @@ export default function AuthScreen({ initialMode }: AuthScreenProps) {
       const res = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, fullName, password, phone: phoneNumber, role: 'user' })
+        body: JSON.stringify({ email, fullName, password, phone: "", role: 'user' })
       });
       const data = await res.json();
       if (!res.ok) {
@@ -289,6 +214,38 @@ export default function AuthScreen({ initialMode }: AuthScreenProps) {
       }, 2000);
     } catch (err: any) {
       setError(err.message || t('server_error'));
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+
+  const handleVerify2FA = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!twoFactorCode) {
+      setError('Please enter the 2FA code.');
+      return;
+    }
+    setError('');
+    setSuccess('');
+    setSubmitting(true);
+
+    try {
+      const res = await fetch('/api/auth/verify-2fa', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: twoFactorEmail, code: twoFactorCode })
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || 'Invalid 2FA code.');
+      }
+
+      setToken(data.token);
+      setCurrentUser(data.user);
+      setSessionExpired(false);
+    } catch (err: any) {
+      setError(err.message || 'Verification failed.');
     } finally {
       setSubmitting(false);
     }
@@ -692,35 +649,11 @@ export default function AuthScreen({ initialMode }: AuthScreenProps) {
               </motion.div>
             )}
 
-            {/* Method switcher tabs for login and signup */}
-            {(mode === 'login' || mode === 'signup') && (
-              <div className="flex bg-[#121216] p-1.5 rounded-2xl border border-white/5 mb-2">
-                <button
-                  type="button"
-                  onClick={() => { setAuthMethod('email'); setError(''); setSuccess(''); setOtpSent(false); }}
-                  className={`flex-1 py-2.5 text-xs font-bold rounded-xl transition cursor-pointer flex items-center justify-center gap-2 ${authMethod === 'email' ? 'bg-amber-500 text-black shadow-lg' : 'text-white/60 hover:text-white'}`}
-                >
-                  <Mail className="w-3.5 h-3.5" />
-                  Email & Password
-                </button>
-                <button
-                  type="button"
-                  onClick={() => { setAuthMethod('phone'); setError(''); setSuccess(''); setOtpSent(false); }}
-                  className={`flex-1 py-2.5 text-xs font-bold rounded-xl transition cursor-pointer flex items-center justify-center gap-2 ${authMethod === 'phone' ? 'bg-amber-500 text-black shadow-lg' : 'text-white/60 hover:text-white'}`}
-                >
-                  <Phone className="w-3.5 h-3.5" />
-                  Phone (OTP)
-                </button>
-              </div>
-            )}
-
             {/* Login Mode */}
             {mode === 'login' && (
               <form className="space-y-5" onSubmit={handleLogin}>
                 <div className="space-y-4">
-                  {authMethod === 'email' ? (
-                    <>
-                      <div>
+                  <div>
                         <label className="block text-xs font-semibold text-[#F5F5F4]/60 uppercase tracking-widest mb-2">{t('email')}</label>
                         <div className="relative">
                           <Mail className="absolute left-4 top-4 w-4 h-4 text-[#F5F5F4]/30" />
@@ -800,64 +733,6 @@ export default function AuthScreen({ initialMode }: AuthScreenProps) {
                           {t('auth_remember_me')}
                         </label>
                       </div>
-                    </>
-                  ) : (
-                    <>
-                      {!otpSent ? (
-                        <div>
-                          <label className="block text-xs font-semibold text-[#F5F5F4]/60 uppercase tracking-widest mb-2">Phone Number</label>
-                          <div className="relative">
-                            <Phone className="absolute left-4 top-4 w-4 h-4 text-[#F5F5F4]/30" />
-                            <input
-                              type="tel"
-                              required
-                              value={phoneNumber}
-                              onChange={e => setPhoneNumber(e.target.value)}
-                              className="w-full pl-12 pr-4 py-3.5 bg-[#121216] border border-white/5 rounded-2xl text-[#F5F5F4] placeholder-white/20 text-sm focus:outline-none transition"
-                              placeholder="+251 91 234 5678 or 0912345678"
-                            />
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="space-y-4">
-                          <div className="p-3 bg-amber-500/10 border border-amber-500/20 text-amber-200 text-xs rounded-2xl leading-relaxed">
-                            Enter the 6-digit OTP code sent to <span className="font-bold text-white">{phoneNumber}</span>.
-                          </div>
-
-                          {devPhoneOtp && (
-                            <div className="p-3 bg-blue-500/10 border border-blue-500/20 rounded-2xl">
-                              <p className="text-[10px] text-blue-300 font-bold uppercase tracking-wider mb-1">Development Mode OTP Code</p>
-                              <p className="text-xl font-mono font-bold text-white tracking-widest text-center bg-[#07070a] py-2 rounded-xl border border-white/5">{devPhoneOtp}</p>
-                            </div>
-                          )}
-
-                          <div>
-                            <label className="block text-xs font-semibold text-[#F5F5F4]/60 uppercase tracking-widest mb-2">6-Digit Verification Code</label>
-                            <div className="relative">
-                              <ShieldCheck className="absolute left-4 top-4 w-4 h-4 text-[#F5F5F4]/30" />
-                              <input
-                                type="text"
-                                required
-                                maxLength={6}
-                                value={phoneOtp}
-                                onChange={e => setPhoneOtp(e.target.value.replace(/\D/g, ''))}
-                                className="w-full pl-12 pr-4 py-3.5 bg-[#121216] border border-white/5 rounded-2xl text-[#F5F5F4] placeholder-white/20 text-base tracking-[0.5em] text-center font-mono focus:outline-none transition font-bold"
-                                placeholder="000000"
-                              />
-                            </div>
-                          </div>
-
-                          <button
-                            type="button"
-                            onClick={() => { setOtpSent(false); setPhoneOtp(''); setError(''); }}
-                            className="text-xs text-amber-500 hover:underline"
-                          >
-                            Change Phone Number
-                          </button>
-                        </div>
-                      )}
-                    </>
-                  )}
                 </div>
 
                 <button
@@ -865,7 +740,7 @@ export default function AuthScreen({ initialMode }: AuthScreenProps) {
                   disabled={submitting}
                   className="w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black font-semibold py-4 px-4 rounded-2xl shadow-xl transition disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer text-sm uppercase tracking-wider"
                 >
-                  {submitting ? t('auth_authenticating') : (authMethod === 'phone' ? (!otpSent ? 'Send OTP Code' : 'Verify & Sign In') : t('login'))}
+                  {submitting ? t('auth_authenticating') : t('login')}
                 </button>
               </form>
             )}
@@ -889,9 +764,7 @@ export default function AuthScreen({ initialMode }: AuthScreenProps) {
                     </div>
                   </div>
 
-                  {authMethod === 'email' ? (
-                    <>
-                      <div>
+                  <div>
                         <label className="block text-xs font-semibold text-[#F5F5F4]/60 uppercase tracking-widest mb-2">{t('email')}</label>
                         <div className="relative">
                           <Mail className="absolute left-4 top-4 w-4 h-4 text-[#F5F5F4]/30" />
@@ -943,64 +816,6 @@ export default function AuthScreen({ initialMode }: AuthScreenProps) {
                           </div>
                         )}
                       </div>
-                    </>
-                  ) : (
-                    <>
-                      {!otpSent ? (
-                        <div>
-                          <label className="block text-xs font-semibold text-[#F5F5F4]/60 uppercase tracking-widest mb-2">Phone Number</label>
-                          <div className="relative">
-                            <Phone className="absolute left-4 top-4 w-4 h-4 text-[#F5F5F4]/30" />
-                            <input
-                              type="tel"
-                              required
-                              value={phoneNumber}
-                              onChange={e => setPhoneNumber(e.target.value)}
-                              className="w-full pl-12 pr-4 py-3.5 bg-[#121216] border border-white/5 rounded-2xl text-[#F5F5F4] placeholder-white/20 text-sm focus:outline-none transition"
-                              placeholder="+251 91 234 5678 or 0912345678"
-                            />
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="space-y-4">
-                          <div className="p-3 bg-amber-500/10 border border-amber-500/20 text-amber-200 text-xs rounded-2xl leading-relaxed">
-                            Enter the 6-digit OTP code sent to <span className="font-bold text-white">{phoneNumber}</span>.
-                          </div>
-
-                          {devPhoneOtp && (
-                            <div className="p-3 bg-blue-500/10 border border-blue-500/20 rounded-2xl">
-                              <p className="text-[10px] text-blue-300 font-bold uppercase tracking-wider mb-1">Development Mode OTP Code</p>
-                              <p className="text-xl font-mono font-bold text-white tracking-widest text-center bg-[#07070a] py-2 rounded-xl border border-white/5">{devPhoneOtp}</p>
-                            </div>
-                          )}
-
-                          <div>
-                            <label className="block text-xs font-semibold text-[#F5F5F4]/60 uppercase tracking-widest mb-2">6-Digit Verification Code</label>
-                            <div className="relative">
-                              <ShieldCheck className="absolute left-4 top-4 w-4 h-4 text-[#F5F5F4]/30" />
-                              <input
-                                type="text"
-                                required
-                                maxLength={6}
-                                value={phoneOtp}
-                                onChange={e => setPhoneOtp(e.target.value.replace(/\D/g, ''))}
-                                className="w-full pl-12 pr-4 py-3.5 bg-[#121216] border border-white/5 rounded-2xl text-[#F5F5F4] placeholder-white/20 text-base tracking-[0.5em] text-center font-mono focus:outline-none transition font-bold"
-                                placeholder="000000"
-                              />
-                            </div>
-                          </div>
-
-                          <button
-                            type="button"
-                            onClick={() => { setOtpSent(false); setPhoneOtp(''); setError(''); }}
-                            className="text-xs text-amber-500 hover:underline"
-                          >
-                            Change Phone Number
-                          </button>
-                        </div>
-                      )}
-                    </>
-                  )}
                 </div>
 
                 <button
@@ -1008,13 +823,91 @@ export default function AuthScreen({ initialMode }: AuthScreenProps) {
                   disabled={submitting}
                   className="w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black font-semibold py-4 px-4 rounded-2xl shadow-xl transition disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer text-sm uppercase tracking-wider"
                 >
-                  {submitting ? t('auth_creating_profile') : (authMethod === 'phone' ? (!otpSent ? 'Send OTP Code' : 'Verify & Register') : t('signup'))}
+                  {submitting ? t('auth_creating_profile') : t('signup')}
                 </button>
               </form>
             )}
 
             {/* Email Verification Mode */}
-            {mode === 'verify' && (
+
+        {mode === '2fa' && (
+          <motion.div
+            key="2fa"
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            className="w-full max-w-md mx-auto relative z-10"
+          >
+            <div className="bg-black/40 backdrop-blur-3xl p-8 rounded-[2rem] border border-white/10 shadow-2xl relative overflow-hidden">
+              <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 via-transparent to-emerald-500/5 pointer-events-none" />
+
+              <div className="mb-8 relative text-center">
+                <div className="inline-flex p-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 mb-4 text-emerald-400">
+                  <ShieldCheck className="w-8 h-8" />
+                </div>
+                <h2 className="text-3xl font-black text-white font-serif mb-2 tracking-tight">
+                  Two-Factor Auth
+                </h2>
+                <p className="text-white/60 text-sm font-light">
+                  A verification code has been sent to your email.
+                </p>
+              </div>
+
+              {error && (
+                <div className="mb-6 p-4 bg-red-500/10 border border-red-500/30 rounded-xl flex items-start gap-3">
+                  <AlertCircle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
+                  <p className="text-sm text-red-400">{error}</p>
+                </div>
+              )}
+
+              <form onSubmit={handleVerify2FA} className="space-y-5 relative">
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-xs font-bold text-white/70 uppercase tracking-wider mb-2 ml-1">
+                      Verification Code
+                    </label>
+                    <div className="relative group">
+                      <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                        <Key className="w-5 h-5 text-emerald-400" />
+                      </div>
+                      <input
+                        type="text"
+                        value={twoFactorCode}
+                        onChange={(e) => setTwoFactorCode(e.target.value)}
+                        placeholder="Enter 6-digit code"
+                        className="w-full pl-12 pr-4 py-3.5 bg-black/50 border border-white/10 rounded-xl text-white placeholder-white/30 focus:outline-none focus:border-emerald-400 transition"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className="w-full py-4 bg-emerald-500 hover:bg-emerald-400 text-black font-black uppercase tracking-wider rounded-xl transition duration-300 transform hover:scale-[1.02] disabled:opacity-50 disabled:hover:scale-100 flex items-center justify-center gap-2"
+                >
+                  {submitting ? 'Verifying...' : 'Verify Login'}
+                </button>
+
+                <div className="mt-6 text-center">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMode('login');
+                      setTwoFactorCode('');
+                      setError('');
+                    }}
+                    className="text-white/40 hover:text-white transition text-xs font-medium uppercase tracking-wider"
+                  >
+                    <ArrowLeft className="w-3.5 h-3.5 inline mr-1" />
+                    Back to Sign In
+                  </button>
+                </div>
+              </form>
+            </div>
+          </motion.div>
+        )}
+        {mode === 'verify' && (
               <form className="space-y-5" onSubmit={handleVerifyEmail}>
                 <div className="space-y-4">
                   <div className="p-4 bg-amber-500/10 border border-amber-500/20 text-amber-200 text-xs rounded-2xl leading-relaxed">
