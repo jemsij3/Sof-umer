@@ -1237,23 +1237,25 @@ async function startServer() {
 
   // Auth Endpoints
   app.post('/api/auth/login', async (req, res) => {
-    const { email, phone, password, captchaId, captchaAnswer, rememberMe } = req.body;
-    const identifier = normalizeEmail(email) || normalizePhone(phone || email);
+    const { email, phone, username, password, captchaId, captchaAnswer, rememberMe } = req.body;
+    const rawInput = (username || email || phone || '').trim();
 
-    if (!identifier || !password) {
-      return res.status(400).json({ error: 'Email/Phone and password are required.' });
+    if (!rawInput || !password) {
+      return res.status(400).json({ error: 'Username, email, or phone number and password are required.' });
     }
 
-    const normEmail = normalizeEmail(identifier);
-    const normPhone = normalizePhone(identifier);
+    const normEmail = normalizeEmail(rawInput);
+    const normPhone = normalizePhone(rawInput);
+    const normUsername = rawInput.toLowerCase();
 
     const user = localDb.users.find(u => 
+      (u.username && u.username.toLowerCase() === normUsername) ||
       (u.email && u.email.toLowerCase() === normEmail) ||
       (u.phone && normalizePhone(u.phone) === normPhone)
     );
 
     if (!user) {
-      return res.status(401).json({ error: 'Invalid email or password.' });
+      return res.status(401).json({ error: 'Invalid credentials. Please check your username, email, or password.' });
     }
 
     // Auto-clear security lockout/CAPTCHA state for admin account
@@ -1382,7 +1384,7 @@ async function startServer() {
   });
 
   app.post('/api/auth/register', async (req, res) => {
-    const { email, fullName, password, phone, role } = req.body;
+    const { email, fullName, password, phone, role, username } = req.body;
     const normEmail = normalizeEmail(email);
     const normPhone = normalizePhone(phone);
 
@@ -1396,6 +1398,14 @@ async function startServer() {
 
     if (!isValidPassword(password)) {
       return res.status(400).json({ error: 'Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, one number, and one special character.' });
+    }
+
+    if (username && username.trim()) {
+      const normU = username.trim().toLowerCase();
+      const existingUser = localDb.users.find(u => u.username && u.username.toLowerCase() === normU);
+      if (existingUser) {
+        return res.status(400).json({ error: 'This username is already taken. Please choose a different username.' });
+      }
     }
 
     let existing = localDb.users.find(u => u.email && u.email.toLowerCase() === normEmail);
@@ -1437,6 +1447,7 @@ async function startServer() {
       id: 'usr-' + Date.now(),
       email: normEmail,
       phone: normPhone || undefined,
+      username: username ? username.trim() : undefined,
       fullName,
       role: isJemal ? 'admin' : (role || 'user'),
       status: 'active',
@@ -1771,6 +1782,14 @@ async function startServer() {
 
     const idx = localDb.users.findIndex(u => u.id === id);
     if (idx !== -1) {
+      if (updates.username && updates.username.trim()) {
+        const normU = updates.username.trim().toLowerCase();
+        const existingUser = localDb.users.find(u => u.id !== id && u.username && u.username.toLowerCase() === normU);
+        if (existingUser) {
+          return res.status(400).json({ error: 'This username is already taken by another user.' });
+        }
+      }
+
       // Prevent non-admins from changing their role or status
       if (currentUser.role !== 'admin') {
         delete updates.role;

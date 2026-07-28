@@ -346,6 +346,7 @@ export const EmployeeAdminsModule: React.FC<EmployeeAdminsModuleProps> = ({
         const registerPayload = {
           email,
           fullName,
+          username,
           password: tempPassword,
           role: 'admin'
         };

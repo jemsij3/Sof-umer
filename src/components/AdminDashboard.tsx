@@ -65,7 +65,13 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
   const isTabAllowed = (tab: string) => {
     if (!currentUser) return false;
     if (currentUser.role !== 'admin') return false;
-    if (currentUser.isEmployee !== true) return true; // Super Admin has access to all
+    
+    // Strict Security: Employees can NEVER access system settings or employee management
+    if (currentUser.isEmployee === true && (tab === 'settings' || tab === 'employeeAdmins')) {
+      return false;
+    }
+
+    if (currentUser.isEmployee !== true) return true; // Super Admin (Owner) has access to all
 
     const role = currentUser.employeeRole;
     if (role === 'Content Moderator') {
@@ -100,13 +106,26 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
 
   useEffect(() => {
     if (currentUser?.isEmployee === true) {
-      const allTabs = ['overview', 'users', 'listings', 'categories', 'ads', 'verification', 'reports', 'support', 'languages', 'payments', 'settings', 'analytics'];
-      const allowed = allTabs.filter(isTabAllowed);
-      if (allowed.length > 0 && !allowed.includes(adminTab)) {
-        setAdminTab(allowed[0] as any);
+      const role = currentUser.employeeRole;
+      let primaryRoleTab = 'overview';
+      if (role === 'Content Moderator') primaryRoleTab = 'listings';
+      else if (role === 'Customer Support') primaryRoleTab = 'support';
+      else if (role === 'Verification Officer') primaryRoleTab = 'verification';
+      else if (role === 'Advertisement Manager') primaryRoleTab = 'ads';
+      else if (role === 'Finance Manager') primaryRoleTab = 'payments';
+      else if (role === 'Analytics Manager') primaryRoleTab = 'analytics';
+
+      if (isTabAllowed(primaryRoleTab)) {
+        setAdminTab(primaryRoleTab as any);
+      } else {
+        const allTabs = ['overview', 'users', 'listings', 'categories', 'ads', 'verification', 'reports', 'support', 'languages', 'payments', 'settings', 'analytics'];
+        const allowed = allTabs.filter(isTabAllowed);
+        if (allowed.length > 0 && !allowed.includes(adminTab)) {
+          setAdminTab(allowed[0] as any);
+        }
       }
     }
-  }, [currentUser]);
+  }, [currentUser?.id, currentUser?.employeeRole]);
 
   // Dynamic App Features State
   const [editingFeature, setEditingFeature] = useState<any | null>(null);
