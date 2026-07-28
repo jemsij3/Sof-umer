@@ -958,7 +958,7 @@ async function startServer() {
       try {
         let primaryFrom = resendFromEnv;
         if (!primaryFrom) {
-          primaryFrom = 'Sof Umer Marketplace <onboarding@resend.dev>';
+          primaryFrom = 'Sof Umer Marketplace <noreply@sofumerapp.com>';
         } else if (!primaryFrom.includes('<')) {
           primaryFrom = `Sof Umer Marketplace <${primaryFrom}>`;
         }
@@ -2650,7 +2650,7 @@ async function startServer() {
   app.get('/api/admin/email/status', requireAdmin, async (req, res) => {
     res.json({
       resendConfigured: !!(process.env.RESEND_API_KEY && process.env.RESEND_API_KEY.trim()),
-      resendSender: process.env.RESEND_FROM || process.env.EMAIL_FROM || process.env.SMTP_FROM || 'Sof Umer Marketplace <onboarding@resend.dev>',
+      resendSender: process.env.RESEND_FROM || process.env.EMAIL_FROM || process.env.SMTP_FROM || 'Sof Umer Marketplace <noreply@sofumerapp.com>',
       smtpConfigured: !!(process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS),
       smtpHost: process.env.SMTP_HOST || 'Not Configured',
       smtpPort: process.env.SMTP_PORT || '587',
