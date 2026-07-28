@@ -14,6 +14,12 @@
         {
           "ip": "127.0.0.1",
           "userAgent": "Unknown",
+          "timestamp": "2026-07-28T17:33:04.331Z",
+          "deviceType": "Desktop"
+        },
+        {
+          "ip": "127.0.0.1",
+          "userAgent": "Unknown",
           "timestamp": "2026-07-28T17:03:13.019Z",
           "deviceType": "Desktop"
         },
@@ -124,12 +130,6 @@
           "userAgent": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Mobile Safari/537.36",
           "timestamp": "2026-07-28T13:06:44.316Z",
           "deviceType": "Mobile"
-        },
-        {
-          "ip": "127.0.0.1",
-          "userAgent": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Mobile Safari/537.36",
-          "timestamp": "2026-07-25T22:11:11.568Z",
-          "deviceType": "Mobile"
         }
       ],
       "passwordHash": "$2b$10$8M.OZ7bfDTd8e724T1tSneytfS2iE4nLdSr27YVOBgkIJVdL7ENvC",
@@ -211,7 +211,21 @@
       "isActive": false
     }
   ],
-  "receipts": [],
+  "receipts": [
+    {
+      "id": "rec-1785259984359",
+      "userId": "usr-jemal",
+      "userEmail": "jemaljima@gmail.com",
+      "amount": 500,
+      "paymentMethodId": "pm-cbe",
+      "paymentMethodName": "Commercial Bank of Ethiopia (CBE)",
+      "relatedPropertyId": "wtx-1785259984359",
+      "relatedPropertyTitle": "Wallet Credits Top-Up (500 ETB)",
+      "receiptUrlOrFile": "TX-TEST-12345",
+      "status": "Pending",
+      "submittedAt": "2026-07-28T17:33:04.359Z"
+    }
+  ],
   "inquiries": [],
   "advertisements": [],
   "languages": [
