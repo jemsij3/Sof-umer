@@ -1372,97 +1372,13 @@ async function startServer() {
     res.json({ token, user: stripSecrets(user) });
   });
 
-  // Phone OTP Routes
+  // Phone OTP Routes (Disabled)
   app.post('/api/auth/phone/send-otp', async (req, res) => {
-    const { phone } = req.body;
-    const normPhone = normalizePhone(phone);
-
-    if (!normPhone || normPhone.length < 8) {
-      return res.status(400).json({ error: 'Please enter a valid phone number.' });
-    }
-
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    const expiresAt = Date.now() + 10 * 60 * 1000;
-
-    const existingUser = localDb.users.find(u => u.phone && normalizePhone(u.phone) === normPhone);
-    if (existingUser) {
-      existingUser.phoneOtp = otp;
-      existingUser.phoneOtpExpiresAt = new Date(expiresAt).toISOString();
-    } else {
-      phoneOtpStore[normPhone] = { otp, expiresAt };
-    }
-
-    await saveDb();
-
-    res.json({
-      success: true,
-      message: 'OTP verification code sent to your phone number.',
-      devOtp: process.env.NODE_ENV !== 'production' ? otp : undefined
-    });
+    return res.status(400).json({ error: 'Phone OTP login/registration is currently disabled. Please use email and password.' });
   });
 
   app.post('/api/auth/phone/verify-otp', async (req, res) => {
-    const { phone, otp, fullName } = req.body;
-    const normPhone = normalizePhone(phone);
-    const submittedOtp = String(otp || '').trim();
-
-    if (!normPhone || !submittedOtp) {
-      return res.status(400).json({ error: 'Phone number and OTP code are required.' });
-    }
-
-    let user = localDb.users.find(u => u.phone && normalizePhone(u.phone) === normPhone);
-
-    if (user) {
-      if (!user.phoneOtp || user.phoneOtp !== submittedOtp) {
-        return res.status(400).json({ error: 'Invalid OTP verification code.' });
-      }
-      if (user.phoneOtpExpiresAt && new Date(user.phoneOtpExpiresAt) < new Date()) {
-        return res.status(400).json({ error: 'OTP verification code has expired. Please request a new code.' });
-      }
-      user.phoneOtp = undefined;
-      user.phoneOtpExpiresAt = undefined;
-      user.isVerified = true;
-      user.verificationStatus = 'verified';
-    } else {
-      const stored = phoneOtpStore[normPhone];
-      if (!stored || stored.otp !== submittedOtp) {
-        return res.status(400).json({ error: 'Invalid OTP verification code.' });
-      }
-      if (stored.expiresAt < Date.now()) {
-        delete phoneOtpStore[normPhone];
-        return res.status(400).json({ error: 'OTP verification code has expired. Please request a new code.' });
-      }
-      delete phoneOtpStore[normPhone];
-
-      user = {
-        id: 'usr-' + Date.now(),
-        email: `${normPhone.replace(/[^0-9]/g, '')}@phone.sofumer.local`,
-        phone: normPhone,
-        fullName: fullName || 'Verified User',
-        role: 'user',
-        status: 'active',
-        isVerified: true,
-        verificationStatus: 'verified',
-        createdAt: new Date().toISOString(),
-        passwordHistory: [],
-        tokenVersion: 1,
-        loginHistory: []
-      };
-      localDb.users.push(user);
-    }
-
-    user.failedLoginAttempts = 0;
-    user.lockoutUntil = undefined;
-    await saveDb();
-
-    const token = jwt.sign({
-      userId: user.id,
-      email: user.email,
-      role: user.role,
-      tokenVersion: user.tokenVersion
-    }, JWT_SECRET, { expiresIn: '365d' });
-
-    res.json({ token, user: stripSecrets(user) });
+    return res.status(400).json({ error: 'Phone OTP login/registration is currently disabled. Please use email and password.' });
   });
 
   app.post('/api/auth/register', async (req, res) => {

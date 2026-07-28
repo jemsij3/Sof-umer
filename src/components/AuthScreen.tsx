@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../lib/AppContext';
-import { Building2, Eye, EyeOff, Lock, Mail, User as UserIcon, ArrowLeft, ArrowRight, ShieldCheck, Sparkles, Compass, RefreshCw, Phone, Smartphone } from 'lucide-react';
+import { Building2, Eye, EyeOff, Lock, Mail, User as UserIcon, ArrowLeft, ArrowRight, ShieldCheck, Sparkles, Compass, RefreshCw } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
 interface AuthScreenProps {
@@ -40,78 +40,6 @@ export default function AuthScreen({ initialMode }: AuthScreenProps) {
   const [newPassword, setNewPassword] = useState('');
   const [confirmNewPassword, setConfirmNewPassword] = useState('');
   const [devResetCode, setDevResetCode] = useState('');
-  
-  // Auth method state (email vs phone)
-  const [authMethod, setAuthMethod] = useState<'email' | 'phone'>('email');
-  const [phoneNumber, setPhoneNumber] = useState('');
-  const [phoneOtp, setPhoneOtp] = useState('');
-  const [otpSent, setOtpSent] = useState(false);
-  const [devPhoneOtp, setDevPhoneOtp] = useState('');
-
-  const handleSendPhoneOtp = async (e?: React.FormEvent) => {
-    if (e) e.preventDefault();
-    if (!phoneNumber || phoneNumber.trim().length < 8) {
-      setError('Please enter a valid phone number.');
-      return;
-    }
-    setError('');
-    setSuccess('');
-    setSubmitting(true);
-    try {
-      const res = await fetch('/api/auth/phone/send-otp', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone: phoneNumber })
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.error || 'Failed to send OTP verification code.');
-      }
-      setOtpSent(true);
-      setDevPhoneOtp(data.devOtp || '');
-      setSuccess(data.message || 'OTP verification code sent to your phone number.');
-    } catch (err: any) {
-      setError(err.message || 'Failed to send OTP verification code.');
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  const handleVerifyPhoneOtp = async (e: React.FormEvent) => {
-    if (e) e.preventDefault();
-    if (!phoneOtp) {
-      setError('Please enter the 6-digit OTP code.');
-      return;
-    }
-    setError('');
-    setSuccess('');
-    setSubmitting(true);
-    try {
-      const res = await fetch('/api/auth/phone/verify-otp', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          phone: phoneNumber,
-          otp: phoneOtp,
-          fullName: mode === 'signup' ? fullName : undefined
-        })
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.error || 'OTP verification failed.');
-      }
-      setSuccess('Phone verified successfully!');
-      setToken(data.token);
-      setTimeout(() => {
-        setCurrentUser(data.user);
-        setSessionExpired(false);
-      }, 1000);
-    } catch (err: any) {
-      setError(err.message || 'Invalid or expired OTP code.');
-    } finally {
-      setSubmitting(false);
-    }
-  };
 
   // Google Account Chooser simulation states
   const [showGoogleChooser, setShowGoogleChooser] = useState(false);
@@ -212,13 +140,6 @@ export default function AuthScreen({ initialMode }: AuthScreenProps) {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (authMethod === 'phone') {
-      if (otpSent) {
-        return handleVerifyPhoneOtp(e);
-      } else {
-        return handleSendPhoneOtp(e);
-      }
-    }
 
     if (!email || !password) {
       setError(t('fill_all_fields'));
@@ -265,17 +186,6 @@ export default function AuthScreen({ initialMode }: AuthScreenProps) {
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (authMethod === 'phone') {
-      if (otpSent) {
-        return handleVerifyPhoneOtp(e);
-      } else {
-        if (!fullName) {
-          setError('Please enter your full name.');
-          return;
-        }
-        return handleSendPhoneOtp(e);
-      }
-    }
 
     if (!email || !fullName || !password) {
       setError(t('fill_all_fields'));
@@ -297,7 +207,7 @@ export default function AuthScreen({ initialMode }: AuthScreenProps) {
       const res = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, fullName, password, phone: phoneNumber, role: 'user' })
+        body: JSON.stringify({ email, fullName, password, role: 'user' })
       });
       const data = await res.json();
       if (!res.ok) {
@@ -745,172 +655,90 @@ export default function AuthScreen({ initialMode }: AuthScreenProps) {
               </motion.div>
             )}
 
-            {/* Method switcher tabs for login and signup */}
-            {(mode === 'login' || mode === 'signup') && (
-              <div className="flex bg-[#121216] p-1.5 rounded-2xl border border-white/5 mb-2">
-                <button
-                  type="button"
-                  onClick={() => { setAuthMethod('email'); setError(''); setSuccess(''); setOtpSent(false); }}
-                  className={`flex-1 py-2.5 text-xs font-bold rounded-xl transition cursor-pointer flex items-center justify-center gap-2 ${authMethod === 'email' ? 'bg-amber-500 text-black shadow-lg' : 'text-white/60 hover:text-white'}`}
-                >
-                  <Mail className="w-3.5 h-3.5" />
-                  Email & Password
-                </button>
-                <button
-                  type="button"
-                  onClick={() => { setAuthMethod('phone'); setError(''); setSuccess(''); setOtpSent(false); }}
-                  className={`flex-1 py-2.5 text-xs font-bold rounded-xl transition cursor-pointer flex items-center justify-center gap-2 ${authMethod === 'phone' ? 'bg-amber-500 text-black shadow-lg' : 'text-white/60 hover:text-white'}`}
-                >
-                  <Phone className="w-3.5 h-3.5" />
-                  Phone (OTP)
-                </button>
-              </div>
-            )}
-
             {/* Login Mode */}
             {mode === 'login' && (
               <form className="space-y-5" onSubmit={handleLogin}>
                 <div className="space-y-4">
-                  {authMethod === 'email' ? (
-                    <>
-                      <div>
-                        <label className="block text-xs font-semibold text-[#F5F5F4]/60 uppercase tracking-widest mb-2">{t('email')}</label>
-                        <div className="relative">
-                          <Mail className="absolute left-4 top-4 w-4 h-4 text-[#F5F5F4]/30" />
-                          <input
-                            type="email"
-                            required
-                            value={email}
-                            onChange={e => setEmail(e.target.value)}
-                            className="w-full pl-12 pr-4 py-3.5 bg-[#121216] border border-white/5 rounded-2xl text-[#F5F5F4] placeholder-white/20 text-sm focus:outline-none transition"
-                            placeholder="name@domain.com"
-                          />
-                        </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-[#F5F5F4]/60 uppercase tracking-widest mb-2">{t('email')}</label>
+                    <div className="relative">
+                      <Mail className="absolute left-4 top-4 w-4 h-4 text-[#F5F5F4]/30" />
+                      <input
+                        type="email"
+                        required
+                        value={email}
+                        onChange={e => setEmail(e.target.value)}
+                        className="w-full pl-12 pr-4 py-3.5 bg-[#121216] border border-white/5 rounded-2xl text-[#F5F5F4] placeholder-white/20 text-sm focus:outline-none transition"
+                        placeholder="name@domain.com"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <div className="flex justify-between items-center mb-2">
+                      <label className="block text-xs font-semibold text-[#F5F5F4]/60 uppercase tracking-widest">{t('password')}</label>
+                      <button
+                        type="button"
+                        onClick={() => setMode('forgot')}
+                        className="text-xs font-medium text-amber-500 hover:text-amber-400 transition"
+                      >
+                        {t('forgot_password')}
+                      </button>
+                    </div>
+                    <div className="relative">
+                      <Lock className="absolute left-4 top-4 w-4 h-4 text-[#F5F5F4]/30" />
+                      <input
+                        type={showPassword ? 'text' : 'password'}
+                        required
+                        value={password}
+                        onChange={e => setPassword(e.target.value)}
+                        className="w-full pl-12 pr-12 py-3.5 bg-[#121216] border border-white/5 rounded-2xl text-[#F5F5F4] placeholder-white/20 text-sm focus:outline-none transition"
+                        placeholder="••••••••"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-4 top-4 text-[#F5F5F4]/40 hover:text-[#F5F5F4]/70 transition"
+                      >
+                        {showPassword ? <EyeOff className="w-4.5 h-4.5" /> : <Eye className="w-4.5 h-4.5" />}
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* CAPTCHA Protection */}
+                  {requiresCaptcha && (
+                    <div className="space-y-2 p-4 bg-white/5 border border-white/10 rounded-2xl">
+                      <div className="flex justify-between items-center mb-1">
+                        <label className="block text-xs font-semibold text-amber-500 uppercase tracking-wider">Security CAPTCHA Check</label>
+                        <button type="button" onClick={fetchCaptcha} className="text-[10px] text-white/50 hover:text-amber-500 flex items-center gap-1 transition">
+                          <RefreshCw className="w-3 h-3" /> Refresh
+                        </button>
                       </div>
-
-                      <div>
-                        <div className="flex justify-between items-center mb-2">
-                          <label className="block text-xs font-semibold text-[#F5F5F4]/60 uppercase tracking-widest">{t('password')}</label>
-                          <button
-                            type="button"
-                            onClick={() => setMode('forgot')}
-                            className="text-xs font-medium text-amber-500 hover:text-amber-400 transition"
-                          >
-                            {t('forgot_password')}
-                          </button>
-                        </div>
-                        <div className="relative">
-                          <Lock className="absolute left-4 top-4 w-4 h-4 text-[#F5F5F4]/30" />
-                          <input
-                            type={showPassword ? 'text' : 'password'}
-                            required
-                            value={password}
-                            onChange={e => setPassword(e.target.value)}
-                            className="w-full pl-12 pr-12 py-3.5 bg-[#121216] border border-white/5 rounded-2xl text-[#F5F5F4] placeholder-white/20 text-sm focus:outline-none transition"
-                            placeholder="••••••••"
-                          />
-                          <button
-                            type="button"
-                            onClick={() => setShowPassword(!showPassword)}
-                            className="absolute right-4 top-4 text-[#F5F5F4]/40 hover:text-[#F5F5F4]/70 transition"
-                          >
-                            {showPassword ? <EyeOff className="w-4.5 h-4.5" /> : <Eye className="w-4.5 h-4.5" />}
-                          </button>
-                        </div>
-                      </div>
-
-                      {/* CAPTCHA Protection */}
-                      {requiresCaptcha && (
-                        <div className="space-y-2 p-4 bg-white/5 border border-white/10 rounded-2xl">
-                          <div className="flex justify-between items-center mb-1">
-                            <label className="block text-xs font-semibold text-amber-500 uppercase tracking-wider">Security CAPTCHA Check</label>
-                            <button type="button" onClick={fetchCaptcha} className="text-[10px] text-white/50 hover:text-amber-500 flex items-center gap-1 transition">
-                              <RefreshCw className="w-3 h-3" /> Refresh
-                            </button>
-                          </div>
-                          <p className="text-sm font-medium text-white mb-2">{captchaQuestion || 'Loading security challenge...'}</p>
-                          <input
-                            type="text"
-                            required
-                            value={captchaAnswer}
-                            onChange={e => setCaptchaAnswer(e.target.value)}
-                            className="w-full px-4 py-2.5 bg-[#121216] border border-white/5 rounded-xl text-[#F5F5F4] placeholder-white/20 text-sm focus:outline-none transition"
-                            placeholder="Enter the math answer"
-                          />
-                        </div>
-                      )}
-
-                      {/* Remember Me checkbox */}
-                      <div className="flex items-center">
-                        <input
-                          id="remember-me"
-                          type="checkbox"
-                          checked={rememberMe}
-                          onChange={e => setRememberMe(e.target.checked)}
-                          className="h-4 w-4 rounded border-white/10 bg-[#121216] text-amber-500 focus:ring-amber-500 focus:ring-offset-0 cursor-pointer"
-                        />
-                        <label htmlFor="remember-me" className="ml-2.5 block text-xs font-medium text-[#F5F5F4]/70 cursor-pointer selection:bg-transparent">
-                          {t('auth_remember_me')}
-                        </label>
-                      </div>
-                    </>
-                  ) : (
-                    <>
-                      {!otpSent ? (
-                        <div>
-                          <label className="block text-xs font-semibold text-[#F5F5F4]/60 uppercase tracking-widest mb-2">Phone Number</label>
-                          <div className="relative">
-                            <Phone className="absolute left-4 top-4 w-4 h-4 text-[#F5F5F4]/30" />
-                            <input
-                              type="tel"
-                              required
-                              value={phoneNumber}
-                              onChange={e => setPhoneNumber(e.target.value)}
-                              className="w-full pl-12 pr-4 py-3.5 bg-[#121216] border border-white/5 rounded-2xl text-[#F5F5F4] placeholder-white/20 text-sm focus:outline-none transition"
-                              placeholder="+251 91 234 5678 or 0912345678"
-                            />
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="space-y-4">
-                          <div className="p-3 bg-amber-500/10 border border-amber-500/20 text-amber-200 text-xs rounded-2xl leading-relaxed">
-                            Enter the 6-digit OTP code sent to <span className="font-bold text-white">{phoneNumber}</span>.
-                          </div>
-
-                          {devPhoneOtp && (
-                            <div className="p-3 bg-blue-500/10 border border-blue-500/20 rounded-2xl">
-                              <p className="text-[10px] text-blue-300 font-bold uppercase tracking-wider mb-1">Development Mode OTP Code</p>
-                              <p className="text-xl font-mono font-bold text-white tracking-widest text-center bg-[#07070a] py-2 rounded-xl border border-white/5">{devPhoneOtp}</p>
-                            </div>
-                          )}
-
-                          <div>
-                            <label className="block text-xs font-semibold text-[#F5F5F4]/60 uppercase tracking-widest mb-2">6-Digit Verification Code</label>
-                            <div className="relative">
-                              <ShieldCheck className="absolute left-4 top-4 w-4 h-4 text-[#F5F5F4]/30" />
-                              <input
-                                type="text"
-                                required
-                                maxLength={6}
-                                value={phoneOtp}
-                                onChange={e => setPhoneOtp(e.target.value.replace(/\D/g, ''))}
-                                className="w-full pl-12 pr-4 py-3.5 bg-[#121216] border border-white/5 rounded-2xl text-[#F5F5F4] placeholder-white/20 text-base tracking-[0.5em] text-center font-mono focus:outline-none transition font-bold"
-                                placeholder="000000"
-                              />
-                            </div>
-                          </div>
-
-                          <button
-                            type="button"
-                            onClick={() => { setOtpSent(false); setPhoneOtp(''); setError(''); }}
-                            className="text-xs text-amber-500 hover:underline"
-                          >
-                            Change Phone Number
-                          </button>
-                        </div>
-                      )}
-                    </>
+                      <p className="text-sm font-medium text-white mb-2">{captchaQuestion || 'Loading security challenge...'}</p>
+                      <input
+                        type="text"
+                        required
+                        value={captchaAnswer}
+                        onChange={e => setCaptchaAnswer(e.target.value)}
+                        className="w-full px-4 py-2.5 bg-[#121216] border border-white/5 rounded-xl text-[#F5F5F4] placeholder-white/20 text-sm focus:outline-none transition"
+                        placeholder="Enter the math answer"
+                      />
+                    </div>
                   )}
+
+                  {/* Remember Me checkbox */}
+                  <div className="flex items-center">
+                    <input
+                      id="remember-me"
+                      type="checkbox"
+                      checked={rememberMe}
+                      onChange={e => setRememberMe(e.target.checked)}
+                      className="h-4 w-4 rounded border-white/10 bg-[#121216] text-amber-500 focus:ring-amber-500 focus:ring-offset-0 cursor-pointer"
+                    />
+                    <label htmlFor="remember-me" className="ml-2.5 block text-xs font-medium text-[#F5F5F4]/70 cursor-pointer selection:bg-transparent">
+                      {t('auth_remember_me')}
+                    </label>
+                  </div>
                 </div>
 
                 <button
@@ -918,7 +746,7 @@ export default function AuthScreen({ initialMode }: AuthScreenProps) {
                   disabled={submitting}
                   className="w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black font-semibold py-4 px-4 rounded-2xl shadow-xl transition disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer text-sm uppercase tracking-wider"
                 >
-                  {submitting ? t('auth_authenticating') : (authMethod === 'phone' ? (!otpSent ? 'Send OTP Code' : 'Verify & Sign In') : t('login'))}
+                  {submitting ? t('auth_authenticating') : t('login')}
                 </button>
               </form>
             )}
@@ -942,118 +770,58 @@ export default function AuthScreen({ initialMode }: AuthScreenProps) {
                     </div>
                   </div>
 
-                  {authMethod === 'email' ? (
-                    <>
-                      <div>
-                        <label className="block text-xs font-semibold text-[#F5F5F4]/60 uppercase tracking-widest mb-2">{t('email')}</label>
-                        <div className="relative">
-                          <Mail className="absolute left-4 top-4 w-4 h-4 text-[#F5F5F4]/30" />
-                          <input
-                            type="email"
-                            required
-                            value={email}
-                            onChange={e => setEmail(e.target.value)}
-                            className="w-full pl-12 pr-4 py-3.5 bg-[#121216] border border-white/5 rounded-2xl text-[#F5F5F4] placeholder-white/20 text-sm focus:outline-none transition"
-                            placeholder="name@domain.com"
-                          />
+                  <div>
+                    <label className="block text-xs font-semibold text-[#F5F5F4]/60 uppercase tracking-widest mb-2">{t('email')}</label>
+                    <div className="relative">
+                      <Mail className="absolute left-4 top-4 w-4 h-4 text-[#F5F5F4]/30" />
+                      <input
+                        type="email"
+                        required
+                        value={email}
+                        onChange={e => setEmail(e.target.value)}
+                        className="w-full pl-12 pr-4 py-3.5 bg-[#121216] border border-white/5 rounded-2xl text-[#F5F5F4] placeholder-white/20 text-sm focus:outline-none transition"
+                        placeholder="name@domain.com"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-[#F5F5F4]/60 uppercase tracking-widest mb-2">Password</label>
+                    <div className="relative">
+                      <Lock className="absolute left-4 top-4 w-4 h-4 text-[#F5F5F4]/30" />
+                      <input
+                        type={showPassword ? 'text' : 'password'}
+                        required
+                        value={password}
+                        onChange={e => setPassword(e.target.value)}
+                        className="w-full pl-12 pr-12 py-3.5 bg-[#121216] border border-white/5 rounded-2xl text-[#F5F5F4] placeholder-white/20 text-sm focus:outline-none transition"
+                        placeholder="••••••••"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-4 top-4 text-[#F5F5F4]/40 hover:text-[#F5F5F4]/70 transition"
+                      >
+                        {showPassword ? <EyeOff className="w-4.5 h-4.5" /> : <Eye className="w-4.5 h-4.5" />}
+                      </button>
+                    </div>
+
+                    {/* Password Strength Indicator */}
+                    {password && (
+                      <div className="space-y-1.5 pt-1.5">
+                        <div className="flex justify-between items-center text-[11px]">
+                          <span className="text-white/40">{t('auth_password_strength')}</span>
+                          <span className="font-semibold text-[#F5F5F4]/80">{getPasswordStrength(password).text}</span>
                         </div>
+                        <div className="w-full h-1 bg-white/10 rounded-full overflow-hidden">
+                          <div className={`h-full ${getPasswordStrength(password).color} ${getPasswordStrength(password).barWidth} transition-all duration-300`} />
+                        </div>
+                        <p className="text-[10px] text-white/30 leading-normal">
+                          {t('auth_password_requirements')}
+                        </p>
                       </div>
-
-                      <div>
-                        <label className="block text-xs font-semibold text-[#F5F5F4]/60 uppercase tracking-widest mb-2">Password</label>
-                        <div className="relative">
-                          <Lock className="absolute left-4 top-4 w-4 h-4 text-[#F5F5F4]/30" />
-                          <input
-                            type={showPassword ? 'text' : 'password'}
-                            required
-                            value={password}
-                            onChange={e => setPassword(e.target.value)}
-                            className="w-full pl-12 pr-12 py-3.5 bg-[#121216] border border-white/5 rounded-2xl text-[#F5F5F4] placeholder-white/20 text-sm focus:outline-none transition"
-                            placeholder="••••••••"
-                          />
-                          <button
-                            type="button"
-                            onClick={() => setShowPassword(!showPassword)}
-                            className="absolute right-4 top-4 text-[#F5F5F4]/40 hover:text-[#F5F5F4]/70 transition"
-                          >
-                            {showPassword ? <EyeOff className="w-4.5 h-4.5" /> : <Eye className="w-4.5 h-4.5" />}
-                          </button>
-                        </div>
-
-                        {/* Password Strength Indicator */}
-                        {password && (
-                          <div className="space-y-1.5 pt-1.5">
-                            <div className="flex justify-between items-center text-[11px]">
-                              <span className="text-white/40">{t('auth_password_strength')}</span>
-                              <span className="font-semibold text-[#F5F5F4]/80">{getPasswordStrength(password).text}</span>
-                            </div>
-                            <div className="w-full h-1 bg-white/10 rounded-full overflow-hidden">
-                              <div className={`h-full ${getPasswordStrength(password).color} ${getPasswordStrength(password).barWidth} transition-all duration-300`} />
-                            </div>
-                            <p className="text-[10px] text-white/30 leading-normal">
-                              {t('auth_password_requirements')}
-                            </p>
-                          </div>
-                        )}
-                      </div>
-                    </>
-                  ) : (
-                    <>
-                      {!otpSent ? (
-                        <div>
-                          <label className="block text-xs font-semibold text-[#F5F5F4]/60 uppercase tracking-widest mb-2">Phone Number</label>
-                          <div className="relative">
-                            <Phone className="absolute left-4 top-4 w-4 h-4 text-[#F5F5F4]/30" />
-                            <input
-                              type="tel"
-                              required
-                              value={phoneNumber}
-                              onChange={e => setPhoneNumber(e.target.value)}
-                              className="w-full pl-12 pr-4 py-3.5 bg-[#121216] border border-white/5 rounded-2xl text-[#F5F5F4] placeholder-white/20 text-sm focus:outline-none transition"
-                              placeholder="+251 91 234 5678 or 0912345678"
-                            />
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="space-y-4">
-                          <div className="p-3 bg-amber-500/10 border border-amber-500/20 text-amber-200 text-xs rounded-2xl leading-relaxed">
-                            Enter the 6-digit OTP code sent to <span className="font-bold text-white">{phoneNumber}</span>.
-                          </div>
-
-                          {devPhoneOtp && (
-                            <div className="p-3 bg-blue-500/10 border border-blue-500/20 rounded-2xl">
-                              <p className="text-[10px] text-blue-300 font-bold uppercase tracking-wider mb-1">Development Mode OTP Code</p>
-                              <p className="text-xl font-mono font-bold text-white tracking-widest text-center bg-[#07070a] py-2 rounded-xl border border-white/5">{devPhoneOtp}</p>
-                            </div>
-                          )}
-
-                          <div>
-                            <label className="block text-xs font-semibold text-[#F5F5F4]/60 uppercase tracking-widest mb-2">6-Digit Verification Code</label>
-                            <div className="relative">
-                              <ShieldCheck className="absolute left-4 top-4 w-4 h-4 text-[#F5F5F4]/30" />
-                              <input
-                                type="text"
-                                required
-                                maxLength={6}
-                                value={phoneOtp}
-                                onChange={e => setPhoneOtp(e.target.value.replace(/\D/g, ''))}
-                                className="w-full pl-12 pr-4 py-3.5 bg-[#121216] border border-white/5 rounded-2xl text-[#F5F5F4] placeholder-white/20 text-base tracking-[0.5em] text-center font-mono focus:outline-none transition font-bold"
-                                placeholder="000000"
-                              />
-                            </div>
-                          </div>
-
-                          <button
-                            type="button"
-                            onClick={() => { setOtpSent(false); setPhoneOtp(''); setError(''); }}
-                            className="text-xs text-amber-500 hover:underline"
-                          >
-                            Change Phone Number
-                          </button>
-                        </div>
-                      )}
-                    </>
-                  )}
+                    )}
+                  </div>
                 </div>
 
                 <button
@@ -1061,7 +829,7 @@ export default function AuthScreen({ initialMode }: AuthScreenProps) {
                   disabled={submitting}
                   className="w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black font-semibold py-4 px-4 rounded-2xl shadow-xl transition disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer text-sm uppercase tracking-wider"
                 >
-                  {submitting ? t('auth_creating_profile') : (authMethod === 'phone' ? (!otpSent ? 'Send OTP Code' : 'Verify & Register') : t('signup'))}
+                  {submitting ? t('auth_creating_profile') : t('signup')}
                 </button>
               </form>
             )}
