@@ -289,9 +289,9 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
     }
     const saved = localStorage.getItem('sof_umer_ad_packages');
     return saved ? JSON.parse(saved) : [
-      { id: 'basic', name: 'Basic Boost', price: globalSystemSettings?.marketplaceSettings?.basicBoostPrice ?? 50, currency: 'ETB', duration: '3 days', views: '2.5k target', badge: 'STARTER', desc: 'Category top placement + Basic Verified Badge' },
-      { id: 'premium', name: 'Premium Boost', price: globalSystemSettings?.marketplaceSettings?.premiumBoostPrice ?? 150, currency: 'ETB', duration: '7 days', views: '15k target', badge: 'HIGH ROI', desc: 'Featured hero slider + High priority ranking' },
-      { id: 'vip', name: 'VIP Elite Boost', price: globalSystemSettings?.marketplaceSettings?.vipBoostPrice ?? 500, currency: 'ETB', duration: '30 days', views: '40k target', badge: 'VIP ELITE', desc: 'Top search billboard pin + Full site promotion' }
+      { id: 'pkg-1', name: 'Starter Sidebar Slot', price: 450, currency: 'ETB', duration: '7 days', views: '2.5k target', badge: 'STARTER', desc: 'Category top placement + Basic Verified Badge' },
+      { id: 'pkg-2', name: 'Premium Hero Top Slider', price: 1800, currency: 'ETB', duration: '14 days', views: '15k target', badge: 'HIGH ROI', desc: 'Featured hero slider + High priority ranking' },
+      { id: 'pkg-3', name: 'Dynamic Search Billboard', price: 4500, currency: 'ETB', duration: '30 days', views: '40k target', badge: 'VIP ELITE', desc: 'Top search billboard pin + Full site promotion' }
     ];
   });
 
@@ -3470,110 +3470,6 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
                     className="w-full px-3.5 py-2.5 bg-black/40 border border-white/5 rounded-xl text-xs text-white"
                   />
                 </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
-                <div className="col-span-1 sm:col-span-2">
-                  <h4 className="text-xs font-bold text-amber-500 uppercase tracking-widest flex items-center gap-1.5">
-                    <DollarSign className="w-4 h-4" />
-                    <span>Listing Boost Pricing Config</span>
-                  </h4>
-                </div>
-                <div>
-                  <label className="block text-[10px] text-white/40 font-bold mb-1.5 uppercase">Basic Boost Price (ETB)</label>
-                  <input
-                    type="number"
-                    value={systemSettings.marketplaceSettings?.basicBoostPrice ?? 50}
-                    onChange={e => setSystemSettings({
-                      ...systemSettings,
-                      marketplaceSettings: {
-                        ...(systemSettings.marketplaceSettings || {}),
-                        basicBoostPrice: Number(e.target.value)
-                      }
-                    })}
-                    className="w-full px-3.5 py-2.5 bg-black/40 border border-white/5 rounded-xl text-xs"
-                  />
-                </div>
-                <div>
-                  <label className="block text-[10px] text-white/40 font-bold mb-1.5 uppercase">Premium Boost Price (ETB)</label>
-                  <input
-                    type="number"
-                    value={systemSettings.marketplaceSettings?.premiumBoostPrice ?? 150}
-                    onChange={e => setSystemSettings({
-                      ...systemSettings,
-                      marketplaceSettings: {
-                        ...(systemSettings.marketplaceSettings || {}),
-                        premiumBoostPrice: Number(e.target.value)
-                      }
-                    })}
-                    className="w-full px-3.5 py-2.5 bg-black/40 border border-white/5 rounded-xl text-xs"
-                  />
-                </div>
-                <div>
-                  <label className="block text-[10px] text-white/40 font-bold mb-1.5 uppercase">VIP Boost Price (ETB)</label>
-                  <input
-                    type="number"
-                    value={systemSettings.marketplaceSettings?.vipBoostPrice ?? 500}
-                    onChange={e => setSystemSettings({
-                      ...systemSettings,
-                      marketplaceSettings: {
-                        ...(systemSettings.marketplaceSettings || {}),
-                        vipBoostPrice: Number(e.target.value)
-                      }
-                    })}
-                    className="w-full px-3.5 py-2.5 bg-black/40 border border-white/5 rounded-xl text-xs"
-                  />
-                </div>
-                <div>
-                  <label className="block text-[10px] text-white/40 font-bold mb-1.5 uppercase">Top Ad Price (ETB)</label>
-                  <input
-                    type="number"
-                    value={systemSettings.marketplaceSettings?.topAdPrice ?? 150}
-                    onChange={e => setSystemSettings({
-                      ...systemSettings,
-                      marketplaceSettings: {
-                        ...(systemSettings.marketplaceSettings || {}),
-                        topAdPrice: Number(e.target.value)
-                      }
-                    })}
-                    className="w-full px-3.5 py-2.5 bg-black/40 border border-white/5 rounded-xl text-xs"
-                  />
-                </div>
-                <div>
-                  <label className="block text-[10px] text-white/40 font-bold mb-1.5 uppercase">Featured Ad Price (ETB)</label>
-                  <input
-                    type="number"
-                    value={systemSettings.marketplaceSettings?.featuredAdPrice ?? 300}
-                    onChange={e => setSystemSettings({
-                      ...systemSettings,
-                      marketplaceSettings: {
-                        ...(systemSettings.marketplaceSettings || {}),
-                        featuredAdPrice: Number(e.target.value)
-                      }
-                    })}
-                    className="w-full px-3.5 py-2.5 bg-black/40 border border-white/5 rounded-xl text-xs"
-                  />
-                </div>
-              </div>
-
-              <div className="p-3.5 bg-white/5 border border-white/10 rounded-2xl flex justify-between items-center mt-4">
-                <div className="space-y-0.5">
-                  <h5 className="font-bold text-xs">Free Listings Enabled</h5>
-                  <p className="text-[10px] text-white/40">Toggle whether users can post free basic listings or must pay for every ad.</p>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setSystemSettings({
-                    ...systemSettings,
-                    marketplaceSettings: {
-                      ...(systemSettings.marketplaceSettings || {}),
-                      freeListingsEnabled: !(systemSettings.marketplaceSettings?.freeListingsEnabled ?? true)
-                    }
-                  })}
-                  className="cursor-pointer"
-                >
-                  {(systemSettings.marketplaceSettings?.freeListingsEnabled ?? true) ? <ToggleRight className="w-8 h-8 text-amber-500" /> : <ToggleLeft className="w-8 h-8 text-white/20" />}
-                </button>
               </div>
 
               <div className="p-3.5 bg-white/5 border border-white/10 rounded-2xl flex justify-between items-center">

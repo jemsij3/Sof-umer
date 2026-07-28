@@ -13,38 +13,41 @@
       "loginHistory": [
         {
           "ip": "127.0.0.1",
+          "userAgent": "node",
+          "timestamp": "2026-07-28T13:28:00.712Z",
+          "deviceType": "Desktop"
+        },
+        {
+          "ip": "127.0.0.1",
+          "userAgent": "node",
+          "timestamp": "2026-07-28T13:27:52.960Z",
+          "deviceType": "Desktop"
+        },
+        {
+          "ip": "127.0.0.1",
+          "userAgent": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Mobile Safari/537.36",
+          "timestamp": "2026-07-28T13:27:05.693Z",
+          "deviceType": "Mobile"
+        },
+        {
+          "ip": "127.0.0.1",
+          "userAgent": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Mobile Safari/537.36",
+          "timestamp": "2026-07-28T13:06:44.316Z",
+          "deviceType": "Mobile"
+        },
+        {
+          "ip": "127.0.0.1",
           "userAgent": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Mobile Safari/537.36",
           "timestamp": "2026-07-25T22:11:11.568Z",
           "deviceType": "Mobile"
         }
       ],
-      "passwordHash": "$2b$10$odqJ/s8vFofM4nV6WQs87.QQkmKXew65OqDDCUPQALgbkjVTuNhou",
+      "passwordHash": "$2b$10$8M.OZ7bfDTd8e724T1tSneytfS2iE4nLdSr27YVOBgkIJVdL7ENvC",
       "failedLoginAttempts": 0,
       "walletTransactions": [],
       "passwordHistory": [
         "$2b$10$NIdSavV/8epYfmvB3U19fegjudeatzclP0p7lCZdDNOZPv8hXNsTm"
-      ],
-      "isEmployee": false
-    },
-    {
-      "id": "emp-1",
-      "email": "emp@sofumer.com",
-      "role": "admin",
-      "isEmployee": true,
-      "employeeRole": "Customer Support",
-      "status": "active",
-      "tokenVersion": 1,
-      "isVerified": true,
-      "verificationStatus": "verified",
-      "passwordHash": "$2b$10$P7lKxurglpO3F57GI.ng0eiBzPwX0d/iz6nMU7VkC7J6/ngHBTuVG"
-    },
-    {
-      "id": "norm-1",
-      "email": "norm@sofumer.com",
-      "role": "user",
-      "isEmployee": false,
-      "status": "active",
-      "tokenVersion": 1
+      ]
     }
   ],
   "properties": [],
@@ -3222,7 +3225,17 @@
     }
   ],
   "reports": [],
-  "notifications": [],
+  "notifications": [
+    {
+      "id": "notif-1785245272960",
+      "userId": "usr-jemal",
+      "title": "New Device Login Detected",
+      "message": "A new login was detected from a Desktop device (node). If this wasn't you, please change your password or log out of all devices immediately.",
+      "type": "security",
+      "isRead": false,
+      "createdAt": "2026-07-28T13:27:52.961Z"
+    }
+  ],
   "categories": [
     {
       "id": "cat-properties",

@@ -319,8 +319,8 @@ const DICTIONARY: Record<'en' | 'om' | 'am', Record<string, string>> = {
     qtyDesc: "Meeshaalee ammaan tana jiran kiyya.",
     qtyPlaceholder: "fkn, 5",
     qtyVal: "Maaloo baay'ina galchi.",
-    warLabel: "Wabii (Warranty)",
-    warDesc: "Wabiin gurgurataa ykn oomishaa jiraa?",
+    warrantyLabel: "Wabii (Warranty)",
+    warrantyDesc: "Wabiin gurgurataa ykn oomishaa jiraa?",
 
     compLabel: "Maqaa Dhaabbataa",
     compDesc: "Maqaa dhaabbata qaxaruu barbaaduu.",
@@ -522,8 +522,8 @@ const DICTIONARY: Record<'en' | 'om' | 'am', Record<string, string>> = {
     qtyDesc: "በአሁኑ ሰዓት በክምችት ውስጥ የሚገኘው የእቃ ብዛት።",
     qtyPlaceholder: "ምሳሌ: 5",
     qtyVal: "እባክዎ የምርት ብዛት ያስገቡ።",
-    warLabel: "ዋስትና አለው?",
-    warDesc: "ከሻጭ ወይም ከአምራች የተሰጠ ዋስትና መኖሩን ይግለጹ።",
+    warrantyLabel: "ዋስትና አለው?",
+    warrantyDesc: "ከሻጭ ወይም ከአምራች የተሰጠ ዋስትና መኖሩን ይግለጹ።",
 
     compLabel: "የድርጅቱ ስም",
     compDesc: "ቀጣሪው ድርጅት ወይም ኩባንያ ስም።",
@@ -1040,22 +1040,7 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
   const [currency, setCurrency] = useState<'ETB' | 'USD' | 'SAR' | 'EUR' | 'AED'>('ETB');
 
   // Plan & Monetization State
-  const [selectedPlan, setSelectedPlan] = useState<string>('pkg-1');
-
-  useEffect(() => {
-    if (systemSettings) {
-        const freeEnabled = systemSettings.marketplaceSettings?.freeListingsEnabled ?? true;
-        if (freeEnabled) {
-           setSelectedPlan('free');
-        } else {
-           const fallback = systemSettings.adPackages && systemSettings.adPackages.length > 0
-               ? systemSettings.adPackages[0].id || systemSettings.adPackages[0].name
-               : 'basic';
-           setSelectedPlan(fallback);
-        }
-    }
-  }, [systemSettings]);
-
+  const [selectedPlan, setSelectedPlan] = useState<'free' | 'basic' | 'premium' | 'vip'>('free');
   const [isTopAdAddon, setIsTopAdAddon] = useState(false);
   const [isFeaturedAddon, setIsFeaturedAddon] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<'wallet' | 'direct'>('wallet');
@@ -1174,9 +1159,6 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
   // Calculate pricing & dynamic Admin Ad Packages from Ads & Campaigns
   const topAdPrice = systemSettings?.marketplaceSettings?.topAdPrice ?? 150;
   const featuredPrice = systemSettings?.marketplaceSettings?.featuredAdPrice ?? 300;
-  const basicBoostPrice = systemSettings?.marketplaceSettings?.basicBoostPrice ?? 50;
-  const premiumBoostPrice = systemSettings?.marketplaceSettings?.premiumBoostPrice ?? 150;
-  const vipBoostPrice = systemSettings?.marketplaceSettings?.vipBoostPrice ?? 500;
 
   const dynamicPackages = (systemSettings?.adPackages && systemSettings.adPackages.length > 0)
     ? systemSettings.adPackages
@@ -1186,16 +1168,14 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
           if (saved) return JSON.parse(saved);
         } catch (e) {}
         return [
-          { id: 'basic', name: 'Basic Boost', price: basicBoostPrice, currency: 'ETB', duration: '3 days', views: '2.5k target', badge: 'STARTER', desc: 'Category top placement + Basic Verified Badge' },
-          { id: 'premium', name: 'Premium Boost', price: premiumBoostPrice, currency: 'ETB', duration: '7 days', views: '15k target', badge: 'HIGH ROI', desc: 'Featured hero slider + High priority ranking' },
-          { id: 'vip', name: 'VIP Elite Boost', price: vipBoostPrice, currency: 'ETB', duration: '30 days', views: '40k target', badge: 'VIP ELITE', desc: 'Top search billboard pin + Full site promotion' }
+          { id: 'pkg-1', name: 'Starter Sidebar Slot', price: 450, currency: 'ETB', duration: '7 days', views: '2.5k target', badge: 'STARTER', desc: 'Category top placement + Basic Verified Badge' },
+          { id: 'pkg-2', name: 'Premium Hero Top Slider', price: 1800, currency: 'ETB', duration: '14 days', views: '15k target', badge: 'HIGH ROI', desc: 'Featured hero slider + High priority ranking' },
+          { id: 'pkg-3', name: 'Dynamic Search Billboard', price: 4500, currency: 'ETB', duration: '30 days', views: '40k target', badge: 'VIP ELITE', desc: 'Top search billboard pin + Full site promotion' }
         ];
       })();
 
-  const freeListingsEnabled = systemSettings?.marketplaceSettings?.freeListingsEnabled ?? true;
-
   const allPromotionPlans = [
-    ...(freeListingsEnabled ? [{ id: 'free', name: 'Standard Free Listing', cost: 0, days: '30 Days', desc: 'Standard catalog listing with basic visibility', badge: 'FREE' }] : []),
+    { id: 'free', name: 'Standard Free Listing', cost: 0, days: '30 Days', desc: 'Standard catalog listing with basic visibility', badge: 'FREE' },
     ...dynamicPackages.map((pkg: any) => ({
       id: pkg.id || pkg.name,
       name: pkg.name,
@@ -1206,7 +1186,7 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
     }))
   ];
 
-  const selectedPlanObj = allPromotionPlans.find(p => p.id === selectedPlan) || allPromotionPlans[0] || { cost: 0, days: 0 };
+  const selectedPlanObj = allPromotionPlans.find(p => p.id === selectedPlan) || allPromotionPlans[0];
   const baseCost = selectedPlanObj.cost;
   const addonTopCost = isTopAdAddon ? topAdPrice : 0;
   const addonFeaturedCost = isFeaturedAddon ? featuredPrice : 0;
@@ -1288,7 +1268,7 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
         amenities: finalAmenities
       });
 
-      const days = selectedPlanObj.days ? parseInt(selectedPlanObj.days.toString(), 10) : 7;
+      const days = selectedPlan === 'basic' ? 3 : selectedPlan === 'premium' ? 7 : selectedPlan === 'vip' ? 30 : 0;
       const expiresAt = days > 0 ? new Date(Date.now() + days * 24 * 60 * 60 * 1000).toISOString() : undefined;
 
       const propertyData = {

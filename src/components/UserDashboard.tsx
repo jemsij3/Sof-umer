@@ -541,9 +541,9 @@ export default function UserDashboard({
             if (saved) return JSON.parse(saved);
           } catch (e) {}
           return [
-            { id: 'basic', name: 'Basic Boost', price: systemSettings?.marketplaceSettings?.basicBoostPrice ?? 50, currency: 'ETB', duration: '3 days', views: '2.5k target', badge: 'STARTER', desc: 'Category top placement + Basic Verified Badge' },
-            { id: 'premium', name: 'Premium Boost', price: systemSettings?.marketplaceSettings?.premiumBoostPrice ?? 150, currency: 'ETB', duration: '7 days', views: '15k target', badge: 'HIGH ROI', desc: 'Featured hero slider + High priority ranking' },
-            { id: 'vip', name: 'VIP Elite Boost', price: systemSettings?.marketplaceSettings?.vipBoostPrice ?? 500, currency: 'ETB', duration: '30 days', views: '40k target', badge: 'VIP ELITE', desc: 'Top search billboard pin + Full site promotion' }
+            { id: 'pkg-1', name: 'Starter Sidebar Slot', price: 450, currency: 'ETB', duration: '7 days', views: '2.5k target', badge: 'STARTER', desc: 'Category top placement + Basic Verified Badge' },
+            { id: 'pkg-2', name: 'Premium Hero Top Slider', price: 1800, currency: 'ETB', duration: '14 days', views: '15k target', badge: 'HIGH ROI', desc: 'Featured hero slider + High priority ranking' },
+            { id: 'pkg-3', name: 'Dynamic Search Billboard', price: 4500, currency: 'ETB', duration: '30 days', views: '40k target', badge: 'VIP ELITE', desc: 'Top search billboard pin + Full site promotion' }
           ];
         })();
 
