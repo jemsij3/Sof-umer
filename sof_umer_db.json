@@ -14,6 +14,18 @@
         {
           "ip": "127.0.0.1",
           "userAgent": "node",
+          "timestamp": "2026-07-28T13:59:31.178Z",
+          "deviceType": "Desktop"
+        },
+        {
+          "ip": "127.0.0.1",
+          "userAgent": "node",
+          "timestamp": "2026-07-28T13:59:30.908Z",
+          "deviceType": "Desktop"
+        },
+        {
+          "ip": "127.0.0.1",
+          "userAgent": "node",
           "timestamp": "2026-07-28T13:40:35.096Z",
           "deviceType": "Desktop"
         },
@@ -90,7 +102,7 @@
           "deviceType": "Mobile"
         }
       ],
-      "passwordHash": "$2b$10$UF2iQxCcgonwiNey/OBmfuVfHuKTmaIO/ESn.PDd6/BZW.WRMBww6",
+      "passwordHash": "$2b$10$R.boF6b1OGEpX/7.VOrOg.IaNHCDd1cDu11SGAsVa5DfxDJ1eIgQm",
       "failedLoginAttempts": 0,
       "walletTransactions": [],
       "passwordHistory": [

