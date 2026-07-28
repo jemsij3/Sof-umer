@@ -695,40 +695,41 @@ const createDatabaseBackup = async (reason = 'startup') => {
 const loadDb = async () => {
 
   try {
+    let loadedFromMongo = false;
     if (DbStateModel) {
       try {
         const state = await DbStateModel.findOne({});
         if (state && state.data && state.data.users && state.data.users.length > 0) {
           localDb = state.data;
-          console.log('[Storage] Successfully initialized database from MongoDB backup.');
-          // Save it back to the local ephemeral disk so other functions working on disk can work.
-          await fs.writeFile(DB_FILE, JSON.stringify(localDb, null, 2), 'utf-8');
+          loadedFromMongo = true;
+          console.log('[Storage] Successfully initialized database from MongoDB.');
         }
       } catch (err) {
         console.error('[Storage] Error reading from MongoDB:', err);
       }
     }
 
-    // If DB_FILE does not exist at target persistent path, copy seed database from workspace repository
-
-    if (!fsSync.existsSync(DB_FILE)) {
-      const workspaceSeed = path.join(process.cwd(), 'sof_umer_db.json');
-      if (DB_FILE !== workspaceSeed && fsSync.existsSync(workspaceSeed)) {
-        console.log(`[Storage] Copying initial seed database to persistent location: ${workspaceSeed} -> ${DB_FILE}`);
-        const targetDir = path.dirname(DB_FILE);
-        if (!fsSync.existsSync(targetDir)) {
-          await fs.mkdir(targetDir, { recursive: true });
+    if (!loadedFromMongo) {
+      // If DB_FILE does not exist at target persistent path, copy seed database from workspace repository
+      if (!fsSync.existsSync(DB_FILE)) {
+        const workspaceSeed = path.join(process.cwd(), 'sof_umer_db.json');
+        if (DB_FILE !== workspaceSeed && fsSync.existsSync(workspaceSeed)) {
+          console.log(`[Storage] Copying initial seed database to persistent location: ${workspaceSeed} -> ${DB_FILE}`);
+          const targetDir = path.dirname(DB_FILE);
+          if (!fsSync.existsSync(targetDir)) {
+            await fs.mkdir(targetDir, { recursive: true });
+          }
+          await fs.copyFile(workspaceSeed, DB_FILE);
         }
-        await fs.copyFile(workspaceSeed, DB_FILE);
       }
+
+      const content = await fs.readFile(DB_FILE, 'utf-8');
+
+      // Auto backup existing DB before any runtime migrations
+      await createDatabaseBackup('premigration');
+
+      localDb = JSON.parse(content);
     }
-
-    const content = await fs.readFile(DB_FILE, 'utf-8');
-    
-    // Auto backup existing DB before any runtime migrations
-    await createDatabaseBackup('premigration');
-
-    localDb = JSON.parse(content);
     // Backward compatibility & required fields verification
     if (!localDb.appFeatures || !Array.isArray(localDb.appFeatures)) {
       localDb.appFeatures = getInitialData().appFeatures;
@@ -968,18 +969,19 @@ let savePromise: Promise<void> = Promise.resolve();
 const saveDb = (): Promise<void> => {
   savePromise = savePromise.then(async () => {
     try {
+      if (DbStateModel) {
+        try {
+          await DbStateModel.findOneAndUpdate({}, { data: localDb, updatedAt: new Date() }, { upsert: true });
+          return; // Skip JSON file write if MongoDB is successful
+        } catch (err) {
+          console.error('[MongoDB] Failed to backup to MongoDB, falling back to JSON:', err);
+        }
+      }
+
       const jsonString = JSON.stringify(localDb, null, 2);
       const tempFile = `${DB_FILE}.tmp`;
       await fs.writeFile(tempFile, jsonString, 'utf-8');
       await fs.rename(tempFile, DB_FILE);
-
-      if (DbStateModel) {
-        try {
-          await DbStateModel.findOneAndUpdate({}, { data: localDb, updatedAt: new Date() }, { upsert: true });
-        } catch (err) {
-          console.error('[MongoDB] Failed to backup to MongoDB:', err);
-        }
-      }
 
     } catch (err) {
       console.error('Failed atomic saveDb, falling back to direct write:', err);
