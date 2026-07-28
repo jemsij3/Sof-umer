@@ -599,9 +599,47 @@ const syncAllWalletBalances = () => {
 // Initialize file DB
 let localDb: ReturnType<typeof getInitialData>;
 
+const createDatabaseBackup = async (reason = 'startup') => {
+  try {
+    if (!fsSync.existsSync(DB_FILE)) return;
+    const backupDir = path.join(path.dirname(DB_FILE), 'backups');
+    if (!fsSync.existsSync(backupDir)) {
+      await fs.mkdir(backupDir, { recursive: true });
+    }
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+    const backupPath = path.join(backupDir, `sof_umer_db_${timestamp}_${reason}.json`);
+    const primaryBakPath = `${DB_FILE}.bak`;
+    
+    // Copy to primary .bak file and timestamped backup
+    await fs.copyFile(DB_FILE, primaryBakPath);
+    await fs.copyFile(DB_FILE, backupPath);
+
+    // Keep up to 10 latest timestamped backups
+    const files = await fs.readdir(backupDir);
+    const dbBackups = files
+      .filter(f => f.startsWith('sof_umer_db_') && f.endsWith('.json'))
+      .map(f => path.join(backupDir, f));
+
+    if (dbBackups.length > 10) {
+      dbBackups.sort();
+      const toDelete = dbBackups.slice(0, dbBackups.length - 10);
+      for (const file of toDelete) {
+        await fs.unlink(file).catch(() => {});
+      }
+    }
+    console.log(`[Backup] Database backup created successfully (${reason}): ${backupPath}`);
+  } catch (err) {
+    console.warn('Warning: Could not create database backup:', err);
+  }
+};
+
 const loadDb = async () => {
   try {
     const content = await fs.readFile(DB_FILE, 'utf-8');
+    
+    // Auto backup existing DB before any runtime migrations
+    await createDatabaseBackup('premigration');
+
     localDb = JSON.parse(content);
     // Backward compatibility & required fields verification
     if (!localDb.appFeatures || !Array.isArray(localDb.appFeatures)) {
@@ -2251,6 +2289,37 @@ async function startServer() {
     };
     await saveDb();
     res.json((localDb as any).appSettings);
+  });
+
+  // Database Backup and Safety Routes
+  app.get('/api/admin/database/status', requireAdmin, async (req, res) => {
+    try {
+      const backupDir = path.join(path.dirname(DB_FILE), 'backups');
+      let backups: string[] = [];
+      if (fsSync.existsSync(backupDir)) {
+        backups = (await fs.readdir(backupDir)).filter(f => f.endsWith('.json'));
+      }
+      res.json({
+        dbPath: DB_FILE,
+        isRenderVolume: DB_FILE.startsWith('/data'),
+        exists: fsSync.existsSync(DB_FILE),
+        userCount: localDb.users ? localDb.users.length : 0,
+        propertyCount: localDb.properties ? localDb.properties.length : 0,
+        backupsCount: backups.length,
+        availableBackups: backups
+      });
+    } catch (err: any) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  app.post('/api/admin/database/backup', requireAdmin, async (req, res) => {
+    try {
+      await createDatabaseBackup('manual_admin_request');
+      res.json({ success: true, message: 'On-demand database backup created successfully.' });
+    } catch (err: any) {
+      res.status(500).json({ error: err.message });
+    }
   });
 
   // Reports
