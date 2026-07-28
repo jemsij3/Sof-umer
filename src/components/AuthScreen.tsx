@@ -23,6 +23,10 @@ export default function AuthScreen({ initialMode }: AuthScreenProps) {
   const [success, setSuccess] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
+  // Portal tab mode for login ('user' vs 'staff')
+  const [loginPortal, setLoginPortal] = useState<'user' | 'staff'>('user');
+  const [staffUsername, setStaffUsername] = useState('');
+
   // Security features states
   const [rememberMe, setRememberMe] = useState(false);
   const [requiresCaptcha, setRequiresCaptcha] = useState(false);
@@ -141,7 +145,8 @@ export default function AuthScreen({ initialMode }: AuthScreenProps) {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!email || !password) {
+    const loginIdentifier = loginPortal === 'staff' ? staffUsername : email;
+    if (!loginIdentifier || !password) {
       setError(t('fill_all_fields'));
       return;
     }
@@ -150,10 +155,14 @@ export default function AuthScreen({ initialMode }: AuthScreenProps) {
     setSubmitting(true);
 
     try {
+      const payload = loginPortal === 'staff'
+        ? { username: staffUsername.trim(), password, captchaId, captchaAnswer, rememberMe }
+        : { email: email.trim(), password, captchaId, captchaAnswer, rememberMe };
+
       const res = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, username: email, password, captchaId, captchaAnswer, rememberMe })
+        body: JSON.stringify(payload)
       });
       const data = await res.json();
       if (!res.ok) {
@@ -658,23 +667,69 @@ export default function AuthScreen({ initialMode }: AuthScreenProps) {
             {/* Login Mode */}
             {mode === 'login' && (
               <form className="space-y-5" onSubmit={handleLogin}>
+                {/* Portal Toggle: User vs Staff */}
+                <div className="flex bg-[#121216] p-1 rounded-2xl border border-white/5 mb-4">
+                  <button
+                    type="button"
+                    onClick={() => { setLoginPortal('user'); setError(''); }}
+                    className={`flex-1 py-2.5 rounded-xl text-xs font-semibold transition cursor-pointer flex items-center justify-center gap-2 ${
+                      loginPortal === 'user' ? 'bg-amber-500 text-black shadow-md' : 'text-white/50 hover:text-white'
+                    }`}
+                  >
+                    <Mail className="w-3.5 h-3.5" />
+                    <span>{currentLanguage === 'om' ? 'Fayyadamaa' : currentLanguage === 'am' ? 'ተጠቃሚ' : 'User Sign In'}</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setLoginPortal('staff'); setError(''); }}
+                    className={`flex-1 py-2.5 rounded-xl text-xs font-semibold transition cursor-pointer flex items-center justify-center gap-2 ${
+                      loginPortal === 'staff' ? 'bg-amber-500 text-black shadow-md' : 'text-white/50 hover:text-white'
+                    }`}
+                  >
+                    <ShieldCheck className="w-3.5 h-3.5" />
+                    <span>{currentLanguage === 'om' ? 'Hojjetaa (Staff)' : currentLanguage === 'am' ? 'የሰራተኞች (Staff)' : 'Staff Portal'}</span>
+                  </button>
+                </div>
+
                 <div className="space-y-4">
-                  <div>
-                    <label className="block text-xs font-semibold text-[#F5F5F4]/60 uppercase tracking-widest mb-2">
-                      {currentLanguage === 'om' ? 'Imeelii (ykn Username Hojjetaa)' : currentLanguage === 'am' ? 'ኢሜይል (ወይም የሰራተኛ Username)' : 'Email Address (or Employee Username)'}
-                    </label>
-                    <div className="relative">
-                      <Mail className="absolute left-4 top-4 w-4 h-4 text-[#F5F5F4]/30" />
-                      <input
-                        type="text"
-                        required
-                        value={email}
-                        onChange={e => setEmail(e.target.value)}
-                        className="w-full pl-12 pr-4 py-3.5 bg-[#121216] border border-white/5 rounded-2xl text-[#F5F5F4] placeholder-white/20 text-sm focus:outline-none transition focus:border-amber-500/50"
-                        placeholder="name@domain.com"
-                      />
+                  {loginPortal === 'user' ? (
+                    <div>
+                      <label className="block text-xs font-semibold text-[#F5F5F4]/60 uppercase tracking-widest mb-2">
+                        {t('email')}
+                      </label>
+                      <div className="relative">
+                        <Mail className="absolute left-4 top-4 w-4 h-4 text-[#F5F5F4]/30" />
+                        <input
+                          type="email"
+                          required
+                          value={email}
+                          onChange={e => setEmail(e.target.value)}
+                          className="w-full pl-12 pr-4 py-3.5 bg-[#121216] border border-white/5 rounded-2xl text-[#F5F5F4] placeholder-white/20 text-sm focus:outline-none transition focus:border-amber-500/50"
+                          placeholder="name@domain.com"
+                        />
+                      </div>
                     </div>
-                  </div>
+                  ) : (
+                    <div>
+                      <div className="flex items-center justify-between mb-2">
+                        <label className="block text-xs font-semibold text-amber-500 uppercase tracking-widest">
+                          Employee Username
+                        </label>
+                        <span className="text-[10px] text-white/40">Owner-assigned</span>
+                      </div>
+                      <div className="relative">
+                        <UserIcon className="absolute left-4 top-4 w-4 h-4 text-amber-500/60" />
+                        <input
+                          type="text"
+                          required
+                          value={staffUsername}
+                          onChange={e => setStaffUsername(e.target.value)}
+                          className="w-full pl-12 pr-4 py-3.5 bg-[#121216] border border-amber-500/20 rounded-2xl text-[#F5F5F4] placeholder-white/20 text-sm focus:outline-none transition focus:border-amber-500"
+                          placeholder="e.g. employee_username"
+                        />
+                      </div>
+                    </div>
+                  )}
 
                   <div>
                     <div className="flex justify-between items-center mb-2">
@@ -1027,7 +1082,7 @@ export default function AuthScreen({ initialMode }: AuthScreenProps) {
             )}
 
             {/* Google SignIn Option */}
-            {(mode === 'login' || mode === 'signup') && (
+            {((mode === 'login' && loginPortal === 'user') || mode === 'signup') && (
               <div className="mt-6 border-t border-white/5 pt-6 space-y-4">
                 <button
                   type="button"
