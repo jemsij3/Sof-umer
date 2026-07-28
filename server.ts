@@ -1,3 +1,25 @@
+import os from 'os';
+
+import mongoose from 'mongoose';
+
+// MongoDB Persistence integration
+const MONGODB_URI = process.env.MONGODB_URI;
+
+let DbStateModel: any = null;
+
+if (MONGODB_URI) {
+  mongoose.connect(MONGODB_URI, { serverSelectionTimeoutMS: 5000 })
+    .then(() => {
+      console.log('[MongoDB] Connected successfully');
+      const DbStateSchema = new mongoose.Schema({
+        data: { type: Object, required: true },
+        updatedAt: { type: Date, default: Date.now }
+      });
+      DbStateModel = mongoose.models.DbState || mongoose.model('DbState', DbStateSchema);
+    })
+    .catch(err => console.error('[MongoDB] Connection error:', err));
+}
+
 import express from 'express';
 import path from 'path';
 import fs from 'fs/promises';
@@ -44,14 +66,14 @@ function resolveDbFilePath(): { dbPath: string; isPersistent: boolean } {
   }
 
   // Check system persistent volume paths (/data or /var/data or local data dir)
-  const candidateDirs = ['/data', '/var/data', path.join(process.cwd(), 'data')];
+  const candidateDirs = ['/data', '/var/data', path.join(os.tmpdir(), 'sof_umer_data')];
   for (const dir of candidateDirs) {
     try {
       if (dir.startsWith('/') && !fsSync.existsSync(dir)) {
         try {
           fsSync.mkdirSync(dir, { recursive: true });
         } catch (_) {}
-      } else if (!fsSync.existsSync(dir) && dir === path.join(process.cwd(), 'data')) {
+      } else if (!fsSync.existsSync(dir) && dir === path.join(os.tmpdir(), 'sof_umer_data')) {
         fsSync.mkdirSync(dir, { recursive: true });
       }
       if (fsSync.existsSync(dir)) {
@@ -64,7 +86,7 @@ function resolveDbFilePath(): { dbPath: string; isPersistent: boolean } {
   }
 
   // Fallback to workspace root
-  return { dbPath: path.join(process.cwd(), 'sof_umer_db.json'), isPersistent: false };
+  return { dbPath: path.join(os.tmpdir(), 'sof_umer_db.json'), isPersistent: false };
 }
 
 const { dbPath: DB_FILE, isPersistent: IS_PERSISTENT_STORAGE } = resolveDbFilePath();
@@ -107,7 +129,7 @@ const getInitialData = () => {
       createdAt: new Date().toISOString(),
       tokenVersion: 1,
       loginHistory: [],
-      passwordHash: '$2b$10$8M.OZ7bfDTd8e724T1tSneytfS2iE4nLdSr27YVOBgkIJVdL7ENvC' // Default hashed password: Password123!
+      passwordHash: '$2b$10$odqJ/s8vFofM4nV6WQs87.QQkmKXew65OqDDCUPQALgbkjVTuNhou' // Default hashed password: Password123!
     }
   ];
 
@@ -671,8 +693,24 @@ const createDatabaseBackup = async (reason = 'startup') => {
 };
 
 const loadDb = async () => {
+
   try {
+    if (DbStateModel) {
+      try {
+        const state = await DbStateModel.findOne({});
+        if (state && state.data && state.data.users && state.data.users.length > 0) {
+          localDb = state.data;
+          console.log('[Storage] Successfully initialized database from MongoDB backup.');
+          // Save it back to the local ephemeral disk so other functions working on disk can work.
+          await fs.writeFile(DB_FILE, JSON.stringify(localDb, null, 2), 'utf-8');
+        }
+      } catch (err) {
+        console.error('[Storage] Error reading from MongoDB:', err);
+      }
+    }
+
     // If DB_FILE does not exist at target persistent path, copy seed database from workspace repository
+
     if (!fsSync.existsSync(DB_FILE)) {
       const workspaceSeed = path.join(process.cwd(), 'sof_umer_db.json');
       if (DB_FILE !== workspaceSeed && fsSync.existsSync(workspaceSeed)) {
@@ -714,7 +752,7 @@ const loadDb = async () => {
     if (jemalUser) {
       // ONLY set default hash if passwordHash is completely missing. NEVER overwrite an existing hash!
       if (!jemalUser.passwordHash) {
-        jemalUser.passwordHash = '$2b$10$8M.OZ7bfDTd8e724T1tSneytfS2iE4nLdSr27YVOBgkIJVdL7ENvC';
+        jemalUser.passwordHash = '$2b$10$odqJ/s8vFofM4nV6WQs87.QQkmKXew65OqDDCUPQALgbkjVTuNhou';
       }
       jemalUser.failedLoginAttempts = 0;
       jemalUser.lockoutUntil = undefined;
@@ -734,11 +772,11 @@ const loadDb = async () => {
     } else {
       localDb.properties.forEach(p => {
         // Ensure default fields without overwriting pending moderation status
-        if (!p.verificationStatus) {
-          p.verificationStatus = 'pending';
+        if (!p.verificationStatus && p.verificationStatus !== 'rejected' && p.verificationStatus !== 'pending') {
+          p.verificationStatus = 'verified';
         }
-        if (!p.approvalStatus) {
-          p.approvalStatus = 'pending';
+        if (!p.approvalStatus && p.approvalStatus !== 'rejected' && p.approvalStatus !== 'pending') {
+          p.approvalStatus = 'approved';
         }
         if ((p as any).isArchived === undefined) {
           (p as any).isArchived = false;
@@ -891,10 +929,21 @@ const loadDb = async () => {
   } catch (error: any) {
     if (error.code === 'ENOENT') {
       console.log(`[Storage] Database file not found at target location ${DB_FILE}. Attempting recovery from seed or backups...`);
+
       const workspaceSeed = path.join(process.cwd(), 'sof_umer_db.json');
       if (DB_FILE !== workspaceSeed && fsSync.existsSync(workspaceSeed)) {
         try {
+          if (DbStateModel) {
+             const state = await DbStateModel.findOne({});
+             if (state && state.data) {
+                localDb = state.data;
+                await saveDb();
+                console.log('[Storage] Successfully initialized database from MongoDB backup.');
+                return;
+             }
+          }
           const content = await fs.readFile(workspaceSeed, 'utf-8');
+
           localDb = JSON.parse(content);
           await saveDb();
           console.log('[Storage] Successfully initialized database from workspace seed file.');
@@ -923,6 +972,15 @@ const saveDb = (): Promise<void> => {
       const tempFile = `${DB_FILE}.tmp`;
       await fs.writeFile(tempFile, jsonString, 'utf-8');
       await fs.rename(tempFile, DB_FILE);
+
+      if (DbStateModel) {
+        try {
+          await DbStateModel.findOneAndUpdate({}, { data: localDb, updatedAt: new Date() }, { upsert: true });
+        } catch (err) {
+          console.error('[MongoDB] Failed to backup to MongoDB:', err);
+        }
+      }
+
     } catch (err) {
       console.error('Failed atomic saveDb, falling back to direct write:', err);
       try {
