@@ -1827,16 +1827,46 @@ async function startServer() {
       });
     }
 
+    // Check if free listing campaign is active
+    const fls = (localDb as any).appSettings?.freeListingSettings || {};
+    const isFreeListingEnabled = (() => {
+      if (fls.enabled === false) return false;
+      const now = new Date();
+      if (fls.startDate) {
+        const start = new Date(fls.startDate);
+        if (!isNaN(start.getTime()) && now < start) return false;
+      }
+      if (fls.endDate) {
+        const end = new Date(fls.endDate);
+        end.setHours(23, 59, 59, 999);
+        if (!isNaN(end.getTime()) && now > end) return false;
+      }
+      return true;
+    })();
+
+    const requestedPlan = propertyData.boostPlan || 'free';
+    if (!isFreeListingEnabled && requestedPlan === 'free') {
+      const authUser = (req as any).user;
+      if (!authUser || authUser.role !== 'admin') {
+        return res.status(400).json({
+          error: 'Free listing campaign is currently disabled or expired. Please select a promotion boost package to list your item.'
+        });
+      }
+    }
+
+    const planDays = (requestedPlan === 'starter' || requestedPlan === 'basic') ? 3 : requestedPlan === 'premium' ? 7 : requestedPlan === 'vip' ? 30 : 0;
+    const computedExpiresAt = planDays > 0 ? new Date(Date.now() + planDays * 24 * 60 * 60 * 1000).toISOString() : (propertyData.promotionExpiresAt || undefined);
+
     const newProperty: Property = {
       id: 'prop-' + Date.now(),
       ...propertyData,
       amenities: cleanAmenities,
       brand: propertyData.brand || '',
       condition: propertyData.condition || 'Used - Like New',
-      boostPlan: propertyData.boostPlan || 'free',
-      isTopAd: propertyData.isTopAd === true,
-      isFeatured: propertyData.isFeatured === true || propertyData.boostPlan === 'vip',
-      promotionExpiresAt: propertyData.promotionExpiresAt || undefined,
+      boostPlan: requestedPlan,
+      isTopAd: propertyData.isTopAd === true || requestedPlan === 'starter' || requestedPlan === 'basic' || requestedPlan === 'vip',
+      isFeatured: propertyData.isFeatured === true || requestedPlan === 'premium' || requestedPlan === 'vip',
+      promotionExpiresAt: computedExpiresAt,
       approvalStatus: propertyData.approvalStatus || 'approved',
       verificationStatus: propertyData.verificationStatus || 'verified',
       isVerifiedListing: propertyData.isVerifiedListing !== undefined ? propertyData.isVerifiedListing : true,
@@ -1948,18 +1978,17 @@ async function startServer() {
       const prop = localDb.properties[propIdx];
       propTitle = prop.title;
 
-      const days = Number(durationDays) || 7;
+      const days = Number(durationDays) || (promotionType === 'starter' || promotionType === 'basic' ? 3 : promotionType === 'premium' ? 7 : promotionType === 'vip' ? 30 : 7);
       const expiresAt = new Date(Date.now() + days * 24 * 60 * 60 * 1000).toISOString();
 
-      if (promotionType === 'basic' || promotionType === 'premium' || promotionType === 'vip') {
-        prop.boostPlan = promotionType;
-      }
-      if (promotionType === 'top_ad') {
+      prop.boostPlan = (promotionType === 'starter' || promotionType === 'basic') ? 'starter' : (promotionType === 'premium' ? 'premium' : (promotionType === 'vip' ? 'vip' : promotionType));
+      if (promotionType === 'starter' || promotionType === 'basic' || promotionType === 'top_ad' || promotionType === 'vip') {
         prop.isTopAd = true;
       }
-      if (promotionType === 'featured' || promotionType === 'vip') {
+      if (promotionType === 'premium' || promotionType === 'featured' || promotionType === 'vip') {
         prop.isFeatured = true;
       }
+      (prop as any).promotionStartDate = new Date().toISOString();
       prop.promotionExpiresAt = expiresAt;
     }
 
@@ -2506,18 +2535,74 @@ async function startServer() {
   // System Settings
   app.get('/api/system-settings', async (req, res) => {
     if (!(localDb as any).appSettings) {
-      (localDb as any).appSettings = {
-        appName: 'Sof Umer',
-        appLogoText: 'SOF-UMER',
-        logoUrl: '',
-        themeName: 'cosmic-slate',
-        homepageHeading: 'Discover Premium Verified Listings in East Africa',
-        homepageSubheading: 'Properties, Jobs, Local Businesses, and Community events. Clean, manual-receipt audited, and fully verified.',
-        termsAndPrivacy: 'Sof Umer guarantees user security. All listed properties are audited for legal compliance before publishing. Transactions are processed manually by our finance team.',
-        notificationsEnabled: true,
-        siteStatus: 'Online'
-      };
+      (localDb as any).appSettings = {};
     }
+    const defaults = {
+      appName: 'Sof Umer',
+      appLogoText: 'SOF-UMER',
+      logoUrl: '',
+      themeName: 'cosmic-slate',
+      homepageHeading: 'Discover Premium Verified Listings in East Africa',
+      homepageSubheading: 'Properties, Jobs, Local Businesses, and Community events. Clean, manual-receipt audited, and fully verified.',
+      termsAndPrivacy: 'Sof Umer guarantees user security. All listed properties are audited for legal compliance before publishing. Transactions are processed manually by our finance team.',
+      notificationsEnabled: true,
+      siteStatus: 'Online',
+      freeListingSettings: {
+        enabled: true,
+        startDate: '2026-07-01',
+        endDate: '2026-12-31',
+        maxFreeListingsPerUser: 5,
+        campaignNotice: 'Free Listing Campaign is currently Active! Post your property or product for free.'
+      },
+      adPackages: [
+        {
+          id: 'starter',
+          name: 'Basic Boost',
+          price: 50,
+          currency: 'ETB',
+          duration: '3 days',
+          daysCount: 3,
+          views: 'Category top placement',
+          badge: 'STARTER',
+          desc: 'Category top placement + Basic Verified Badge'
+        },
+        {
+          id: 'premium',
+          name: 'Premium Boost',
+          price: 150,
+          currency: 'ETB',
+          duration: '7 days',
+          daysCount: 7,
+          views: 'Featured hero slider',
+          badge: 'PREMIUM',
+          desc: 'Featured hero slider + High priority ranking'
+        },
+        {
+          id: 'vip',
+          name: 'VIP Elite Boost',
+          price: 500,
+          currency: 'ETB',
+          duration: '30 days',
+          daysCount: 30,
+          views: 'Top search billboard pin',
+          badge: 'VIP ELITE',
+          desc: 'Top search billboard pin + Full site promotion'
+        }
+      ]
+    };
+
+    (localDb as any).appSettings = {
+      ...defaults,
+      ...(localDb as any).appSettings,
+      freeListingSettings: {
+        ...defaults.freeListingSettings,
+        ...((localDb as any).appSettings.freeListingSettings || {})
+      },
+      adPackages: ((localDb as any).appSettings.adPackages && (localDb as any).appSettings.adPackages.length > 0)
+        ? (localDb as any).appSettings.adPackages
+        : defaults.adPackages
+    };
+
     res.json((localDb as any).appSettings);
   });
 

@@ -25,6 +25,13 @@ export interface SystemSettings {
   notificationsEnabled: boolean;
   siteStatus: string;
   adPackages?: AdPackage[];
+  freeListingSettings?: {
+    enabled: boolean;
+    startDate?: string;
+    endDate?: string;
+    maxFreeListingsPerUser?: number;
+    campaignNotice?: string;
+  };
   contactUsSettings?: {
     title: string;
     subtitle: string;

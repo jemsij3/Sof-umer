@@ -254,5 +254,49 @@ export interface FAQItem {
   updatedAt?: string;
 }
 
+export interface FreeListingSettings {
+  enabled: boolean;
+  startDate?: string;
+  endDate?: string;
+  maxFreeListingsPerUser?: number;
+  campaignNotice?: string;
+}
+
+export interface AdPackage {
+  id: string;
+  name: string;
+  price: number;
+  currency: string;
+  duration: string;
+  daysCount?: number;
+  views?: string;
+  badge?: string;
+  desc?: string;
+}
+
+export interface SystemSettings {
+  appName: string;
+  appLogoText: string;
+  logoUrl: string;
+  bannerUrl?: string;
+  themeName: string;
+  homepageHeading: string;
+  homepageSubheading: string;
+  termsAndPrivacy: string;
+  notificationsEnabled: boolean;
+  siteStatus: string;
+  adPackages?: AdPackage[];
+  freeListingSettings?: FreeListingSettings;
+  contactUsSettings?: {
+    title: string;
+    subtitle: string;
+    hqTitle: string;
+    hqAddress: string;
+    location: string;
+    email: string;
+    phone: string;
+  };
+}
+
 
 

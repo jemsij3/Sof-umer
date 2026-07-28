@@ -533,26 +533,25 @@ export default function UserDashboard({
     setPromoteError('');
     setReceiptSuccess('');
 
-    const dynamicPackages = (systemSettings?.adPackages && systemSettings.adPackages.length > 0)
-      ? systemSettings.adPackages
-      : (() => {
-          try {
-            const saved = localStorage.getItem('sof_umer_ad_packages');
-            if (saved) return JSON.parse(saved);
-          } catch (e) {}
-          return [
-            { id: 'pkg-1', name: 'Starter Sidebar Slot', price: 450, currency: 'ETB', duration: '7 days', views: '2.5k target', badge: 'STARTER', desc: 'Category top placement + Basic Verified Badge' },
-            { id: 'pkg-2', name: 'Premium Hero Top Slider', price: 1800, currency: 'ETB', duration: '14 days', views: '15k target', badge: 'HIGH ROI', desc: 'Featured hero slider + High priority ranking' },
-            { id: 'pkg-3', name: 'Dynamic Search Billboard', price: 4500, currency: 'ETB', duration: '30 days', views: '40k target', badge: 'VIP ELITE', desc: 'Top search billboard pin + Full site promotion' }
-          ];
-        })();
+    const DEFAULT_AD_PACKAGES = [
+      { id: 'starter', name: 'Basic Boost', price: 50, currency: 'ETB', duration: '3 days', daysCount: 3, views: 'Category top placement', badge: 'STARTER', desc: 'Category top placement + Basic Verified Badge' },
+      { id: 'premium', name: 'Premium Boost', price: 150, currency: 'ETB', duration: '7 days', daysCount: 7, views: 'Featured hero slider', badge: 'PREMIUM', desc: 'Featured hero slider + High priority ranking' },
+      { id: 'vip', name: 'VIP Elite Boost', price: 500, currency: 'ETB', duration: '30 days', daysCount: 30, views: 'Top search billboard pin', badge: 'VIP ELITE', desc: 'Top search billboard pin + Full site promotion' }
+    ];
+
+    const rawPackages = (systemSettings?.adPackages && systemSettings.adPackages.length > 0)
+      ? systemSettings.adPackages.filter((p: any) => p.name !== 'New Custom Promotion Package' && !p.name.includes('Custom'))
+      : DEFAULT_AD_PACKAGES;
+
+    const dynamicPackages = rawPackages.length > 0 ? rawPackages : DEFAULT_AD_PACKAGES;
 
     const activePlans = dynamicPackages.map((pkg: any) => ({
       id: pkg.id || pkg.name,
       name: pkg.name,
       cost: Number(pkg.price) || 0,
       days: pkg.duration || '7 Days',
-      badge: pkg.badge || (pkg.price >= 3000 ? 'VIP' : pkg.price >= 1000 ? 'POPULAR' : 'PROMO'),
+      daysCount: pkg.daysCount || (pkg.duration?.includes('30') ? 30 : pkg.duration?.includes('3') ? 3 : 7),
+      badge: pkg.badge || 'PROMO',
       desc: pkg.desc || `Promotional ad package on ${pkg.name} (${pkg.duration || '7 days'})`
     }));
 

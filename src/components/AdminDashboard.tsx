@@ -284,16 +284,18 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
 
 
 
+  const DEFAULT_CLEAN_PACKAGES = [
+    { id: 'starter', name: 'Basic Boost', price: 50, currency: 'ETB', duration: '3 days', daysCount: 3, views: 'Category top placement', badge: 'STARTER', desc: 'Category top placement + Basic Verified Badge' },
+    { id: 'premium', name: 'Premium Boost', price: 150, currency: 'ETB', duration: '7 days', daysCount: 7, views: 'Featured hero slider', badge: 'PREMIUM', desc: 'Featured hero slider + High priority ranking' },
+    { id: 'vip', name: 'VIP Elite Boost', price: 500, currency: 'ETB', duration: '30 days', daysCount: 30, views: 'Top search billboard pin', badge: 'VIP ELITE', desc: 'Top search billboard pin + Full site promotion' }
+  ];
+
   const [adPackages, setAdPackages] = useState<any[]>(() => {
     if (globalSystemSettings?.adPackages && Array.isArray(globalSystemSettings.adPackages) && globalSystemSettings.adPackages.length > 0) {
-      return globalSystemSettings.adPackages;
+      const filtered = globalSystemSettings.adPackages.filter((p: any) => p.name !== 'New Custom Promotion Package' && !p.name.includes('Custom'));
+      return filtered.length > 0 ? filtered : DEFAULT_CLEAN_PACKAGES;
     }
-    const saved = localStorage.getItem('sof_umer_ad_packages');
-    return saved ? JSON.parse(saved) : [
-      { id: 'pkg-1', name: 'Starter Sidebar Slot', price: 450, currency: 'ETB', duration: '7 days', views: '2.5k target', badge: 'STARTER', desc: 'Category top placement + Basic Verified Badge' },
-      { id: 'pkg-2', name: 'Premium Hero Top Slider', price: 1800, currency: 'ETB', duration: '14 days', views: '15k target', badge: 'HIGH ROI', desc: 'Featured hero slider + High priority ranking' },
-      { id: 'pkg-3', name: 'Dynamic Search Billboard', price: 4500, currency: 'ETB', duration: '30 days', views: '40k target', badge: 'VIP ELITE', desc: 'Top search billboard pin + Full site promotion' }
-    ];
+    return DEFAULT_CLEAN_PACKAGES;
   });
 
   const [editingPkgId, setEditingPkgId] = useState<string | null>(null);
@@ -2278,6 +2280,123 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
           {/* 5. ADVERTISEMENT MANAGEMENT */}
           {adminTab === 'ads' && (
             <div className="bg-[#0d0d12]/90 border border-white/5 p-6 rounded-3xl space-y-6">
+              {/* FREE LISTING AVAILABILITY CONTROL PANEL */}
+              <div className="p-6 bg-[#12121c] border border-amber-500/20 rounded-3xl space-y-5 shadow-xl">
+                <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 pb-4 border-b border-white/10">
+                  <div className="flex items-center gap-3">
+                    <div className="p-3 bg-amber-500/10 text-amber-400 rounded-2xl border border-amber-500/20">
+                      <Zap className="w-6 h-6" />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-bold font-serif text-white flex items-center gap-2">
+                        <span>Free Listing Availability & Campaign</span>
+                        {(() => {
+                          const fls = systemSettings.freeListingSettings || { enabled: true };
+                          if (fls.enabled === false) return <span className="text-[10px] bg-red-500/20 text-red-400 font-mono font-bold px-2 py-0.5 rounded-full border border-red-500/30">OFF (Disabled)</span>;
+                          const now = new Date();
+                          if (fls.startDate && new Date(fls.startDate) > now) return <span className="text-[10px] bg-blue-500/20 text-blue-400 font-mono font-bold px-2 py-0.5 rounded-full border border-blue-500/30">Scheduled</span>;
+                          if (fls.endDate) {
+                            const end = new Date(fls.endDate);
+                            end.setHours(23, 59, 59, 999);
+                            if (now > end) return <span className="text-[10px] bg-amber-500/20 text-amber-400 font-mono font-bold px-2 py-0.5 rounded-full border border-amber-500/30">Expired</span>;
+                          }
+                          return <span className="text-[10px] bg-emerald-500/20 text-emerald-400 font-mono font-bold px-2 py-0.5 rounded-full border border-emerald-500/30">ON (Active)</span>;
+                        })()}
+                      </h3>
+                      <p className="text-xs text-white/40 mt-0.5">Control whether standard marketplace users can post listings for free or if paid promotion boost is required.</p>
+                    </div>
+                  </div>
+
+                  {/* Toggle Switch */}
+                  <div className="flex items-center gap-3 bg-black/40 px-4 py-2 rounded-2xl border border-white/5">
+                    <span className="text-xs font-bold uppercase text-white/60">Free Listing:</span>
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        const currentFls = systemSettings.freeListingSettings || { enabled: true };
+                        const updatedFls = { ...currentFls, enabled: currentFls.enabled === false ? true : false };
+                        const updatedSys = { ...systemSettings, freeListingSettings: updatedFls };
+                        setSystemSettings(updatedSys);
+                        await updateSystemSettings(updatedSys);
+                      }}
+                      className="cursor-pointer transition hover:scale-105"
+                    >
+                      {systemSettings.freeListingSettings?.enabled !== false ? (
+                        <div className="flex items-center gap-1.5 text-emerald-400 font-bold text-xs bg-emerald-500/10 px-3 py-1 rounded-xl border border-emerald-500/30">
+                          <ToggleRight className="w-6 h-6 text-emerald-400" /> ON
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-1.5 text-red-400 font-bold text-xs bg-red-500/10 px-3 py-1 rounded-xl border border-red-500/30">
+                          <ToggleLeft className="w-6 h-6 text-red-400" /> OFF
+                        </div>
+                      )}
+                    </button>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-[10px] font-bold uppercase text-white/40 mb-1">Campaign Start Date</label>
+                    <input
+                      type="date"
+                      value={systemSettings.freeListingSettings?.startDate || '2026-07-01'}
+                      onChange={async e => {
+                        const updatedFls = { ...(systemSettings.freeListingSettings || { enabled: true }), startDate: e.target.value };
+                        const updatedSys = { ...systemSettings, freeListingSettings: updatedFls };
+                        setSystemSettings(updatedSys);
+                        await updateSystemSettings(updatedSys);
+                      }}
+                      className="w-full p-2.5 bg-black/40 border border-white/10 rounded-xl text-xs text-white focus:outline-none focus:border-amber-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] font-bold uppercase text-white/40 mb-1">Campaign End Date</label>
+                    <input
+                      type="date"
+                      value={systemSettings.freeListingSettings?.endDate || '2026-12-31'}
+                      onChange={async e => {
+                        const updatedFls = { ...(systemSettings.freeListingSettings || { enabled: true }), endDate: e.target.value };
+                        const updatedSys = { ...systemSettings, freeListingSettings: updatedFls };
+                        setSystemSettings(updatedSys);
+                        await updateSystemSettings(updatedSys);
+                      }}
+                      className="w-full p-2.5 bg-black/40 border border-white/10 rounded-xl text-xs text-white focus:outline-none focus:border-amber-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] font-bold uppercase text-white/40 mb-1">Max Free Listings / User</label>
+                    <input
+                      type="number"
+                      value={systemSettings.freeListingSettings?.maxFreeListingsPerUser ?? 5}
+                      onChange={async e => {
+                        const updatedFls = { ...(systemSettings.freeListingSettings || { enabled: true }), maxFreeListingsPerUser: Number(e.target.value) };
+                        const updatedSys = { ...systemSettings, freeListingSettings: updatedFls };
+                        setSystemSettings(updatedSys);
+                        await updateSystemSettings(updatedSys);
+                      }}
+                      className="w-full p-2.5 bg-black/40 border border-white/10 rounded-xl text-xs text-amber-400 font-bold font-mono focus:outline-none focus:border-amber-500"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-[10px] font-bold uppercase text-white/40 mb-1">Free Listing Campaign Notice / Banner Message</label>
+                  <input
+                    type="text"
+                    value={systemSettings.freeListingSettings?.campaignNotice || 'Free Listing Campaign is currently Active! Post your property or product for free.'}
+                    onChange={async e => {
+                      const updatedFls = { ...(systemSettings.freeListingSettings || { enabled: true }), campaignNotice: e.target.value };
+                      const updatedSys = { ...systemSettings, freeListingSettings: updatedFls };
+                      setSystemSettings(updatedSys);
+                      await updateSystemSettings(updatedSys);
+                    }}
+                    className="w-full p-2.5 bg-black/40 border border-white/10 rounded-xl text-xs text-white focus:outline-none focus:border-amber-500"
+                    placeholder="e.g. Free Listing Campaign active for a limited time!"
+                  />
+                </div>
+              </div>
               <div className="flex justify-between items-center pb-4 border-b border-white/5">
                 <div>
                   <h3 className="text-xl font-serif font-bold text-white">Manage Advertisements</h3>

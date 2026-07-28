@@ -1156,38 +1156,58 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
     return d[key] || sub;
   };
 
-  // Calculate pricing & dynamic Admin Ad Packages from Ads & Campaigns
+  // Calculate pricing & dynamic Admin Ad Packages
   const topAdPrice = systemSettings?.marketplaceSettings?.topAdPrice ?? 150;
   const featuredPrice = systemSettings?.marketplaceSettings?.featuredAdPrice ?? 300;
 
-  const dynamicPackages = (systemSettings?.adPackages && systemSettings.adPackages.length > 0)
-    ? systemSettings.adPackages
-    : (() => {
-        try {
-          const saved = localStorage.getItem('sof_umer_ad_packages');
-          if (saved) return JSON.parse(saved);
-        } catch (e) {}
-        return [
-          { id: 'pkg-1', name: 'Starter Sidebar Slot', price: 450, currency: 'ETB', duration: '7 days', views: '2.5k target', badge: 'STARTER', desc: 'Category top placement + Basic Verified Badge' },
-          { id: 'pkg-2', name: 'Premium Hero Top Slider', price: 1800, currency: 'ETB', duration: '14 days', views: '15k target', badge: 'HIGH ROI', desc: 'Featured hero slider + High priority ranking' },
-          { id: 'pkg-3', name: 'Dynamic Search Billboard', price: 4500, currency: 'ETB', duration: '30 days', views: '40k target', badge: 'VIP ELITE', desc: 'Top search billboard pin + Full site promotion' }
-        ];
-      })();
+  const DEFAULT_AD_PACKAGES = [
+    { id: 'starter', name: 'Basic Boost', price: 50, currency: 'ETB', duration: '3 days', daysCount: 3, views: 'Category top placement', badge: 'STARTER', desc: 'Category top placement + Basic Verified Badge' },
+    { id: 'premium', name: 'Premium Boost', price: 150, currency: 'ETB', duration: '7 days', daysCount: 7, views: 'Featured hero slider', badge: 'PREMIUM', desc: 'Featured hero slider + High priority ranking' },
+    { id: 'vip', name: 'VIP Elite Boost', price: 500, currency: 'ETB', duration: '30 days', daysCount: 30, views: 'Top search billboard pin', badge: 'VIP ELITE', desc: 'Top search billboard pin + Full site promotion' }
+  ];
+
+  const checkFreeListingActive = (fls: any) => {
+    if (!fls || fls.enabled === false) return false;
+    const now = new Date();
+    if (fls.startDate) {
+      const start = new Date(fls.startDate);
+      if (!isNaN(start.getTime()) && now < start) return false;
+    }
+    if (fls.endDate) {
+      const end = new Date(fls.endDate);
+      end.setHours(23, 59, 59, 999);
+      if (!isNaN(end.getTime()) && now > end) return false;
+    }
+    return true;
+  };
+
+  const isFreeListingEnabled = checkFreeListingActive(systemSettings?.freeListingSettings);
+
+  const rawPackages = (systemSettings?.adPackages && systemSettings.adPackages.length > 0)
+    ? systemSettings.adPackages.filter((p: any) => p.name !== 'New Custom Promotion Package' && !p.name.includes('Custom'))
+    : DEFAULT_AD_PACKAGES;
+
+  const dynamicPackages = rawPackages.length > 0 ? rawPackages : DEFAULT_AD_PACKAGES;
 
   const allPromotionPlans = [
-    { id: 'free', name: 'Standard Free Listing', cost: 0, days: '30 Days', desc: 'Standard catalog listing with basic visibility', badge: 'FREE' },
+    ...(isFreeListingEnabled ? [{ id: 'free', name: 'Standard Free Listing', cost: 0, days: '30 Days', daysCount: 0, desc: 'Standard catalog listing with basic visibility', badge: 'FREE' }] : []),
     ...dynamicPackages.map((pkg: any) => ({
       id: pkg.id || pkg.name,
       name: pkg.name,
       cost: Number(pkg.price) || 0,
       days: pkg.duration || '7 Days',
-      badge: pkg.badge || (pkg.price >= 3000 ? 'VIP' : pkg.price >= 1000 ? 'POPULAR' : 'PROMO'),
+      daysCount: pkg.daysCount || (pkg.duration?.includes('30') ? 30 : pkg.duration?.includes('3') ? 3 : 7),
+      badge: pkg.badge || 'PROMO',
       desc: pkg.desc || `Promotional ad package: ${pkg.name} (${pkg.duration || '7 days'})`
     }))
   ];
 
-  const selectedPlanObj = allPromotionPlans.find(p => p.id === selectedPlan) || allPromotionPlans[0];
-  const baseCost = selectedPlanObj.cost;
+  const effectiveSelectedPlan = (selectedPlan === 'free' && !isFreeListingEnabled)
+    ? (allPromotionPlans[0]?.id || 'starter')
+    : selectedPlan;
+
+  const selectedPlanObj = allPromotionPlans.find(p => p.id === effectiveSelectedPlan) || allPromotionPlans[0];
+  const baseCost = selectedPlanObj ? selectedPlanObj.cost : 0;
   const addonTopCost = isTopAdAddon ? topAdPrice : 0;
   const addonFeaturedCost = isFeaturedAddon ? featuredPrice : 0;
   const totalCost = baseCost + addonTopCost + addonFeaturedCost;
