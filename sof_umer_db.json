@@ -13,6 +13,12 @@
       "loginHistory": [
         {
           "ip": "127.0.0.1",
+          "userAgent": "Unknown",
+          "timestamp": "2026-07-28T17:03:13.019Z",
+          "deviceType": "Desktop"
+        },
+        {
+          "ip": "127.0.0.1",
           "userAgent": "node",
           "timestamp": "2026-07-28T15:25:52.044Z",
           "deviceType": "Desktop"
@@ -3350,7 +3356,17 @@
     }
   ],
   "reports": [],
-  "notifications": [],
+  "notifications": [
+    {
+      "id": "notif-1785258193019",
+      "userId": "usr-jemal",
+      "title": "New Device Login Detected",
+      "message": "A new login was detected from a Desktop device (Unknown). If this wasn't you, please change your password or log out of all devices immediately.",
+      "type": "security",
+      "isRead": false,
+      "createdAt": "2026-07-28T17:03:13.019Z"
+    }
+  ],
   "categories": [
     {
       "id": "cat-properties",
