@@ -9,8 +9,20 @@
       "isVerified": true,
       "verificationStatus": "verified",
       "createdAt": "2026-07-23T09:48:55.986Z",
-      "tokenVersion": 4,
+      "tokenVersion": 5,
       "loginHistory": [
+        {
+          "ip": "127.0.0.1",
+          "userAgent": "node",
+          "timestamp": "2026-07-28T15:25:52.044Z",
+          "deviceType": "Desktop"
+        },
+        {
+          "ip": "127.0.0.1",
+          "userAgent": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Mobile Safari/537.36",
+          "timestamp": "2026-07-28T15:23:22.209Z",
+          "deviceType": "Mobile"
+        },
         {
           "ip": "127.0.0.1",
           "userAgent": "node",
@@ -118,7 +130,8 @@
       "failedLoginAttempts": 0,
       "walletTransactions": [],
       "passwordHistory": [
-        "$2b$10$NIdSavV/8epYfmvB3U19fegjudeatzclP0p7lCZdDNOZPv8hXNsTm"
+        "$2b$10$NIdSavV/8epYfmvB3U19fegjudeatzclP0p7lCZdDNOZPv8hXNsTm",
+        "$2b$10$8M.OZ7bfDTd8e724T1tSneytfS2iE4nLdSr27YVOBgkIJVdL7ENvC"
       ]
     },
     {
@@ -208,6 +221,36 @@
         "$2b$10$8M.OZ7bfDTd8e724T1tSneytfS2iE4nLdSr27YVOBgkIJVdL7ENvC"
       ],
       "walletTransactions": []
+    },
+    {
+      "id": "usr-1785252346962",
+      "email": "email_e2e_test_1785252346672@sofumer.com",
+      "fullName": "Email Test User",
+      "role": "user",
+      "status": "active",
+      "isVerified": true,
+      "verificationStatus": "verified",
+      "createdAt": "2026-07-28T15:25:46.962Z",
+      "passwordHash": "$2b$10$WpQFUw.YanJegp8ZRmogR.z8mzk.eOBCM8J6yaa6CcDRbNMZy53Ly",
+      "passwordHistory": [
+        "$2b$10$ktTo4/S1y9aZKYBxULeNN.be5emEE8wTE3sDe/Y7oU14SdmRwbf7S"
+      ],
+      "tokenVersion": 2,
+      "loginHistory": [
+        {
+          "ip": "127.0.0.1",
+          "userAgent": "node",
+          "timestamp": "2026-07-28T15:25:51.914Z",
+          "deviceType": "Desktop"
+        },
+        {
+          "ip": "127.0.0.1",
+          "userAgent": "node",
+          "timestamp": "2026-07-28T15:25:49.511Z",
+          "deviceType": "Desktop"
+        }
+      ],
+      "failedLoginAttempts": 0
     }
   ],
   "properties": [
@@ -3560,6 +3603,15 @@
       "type": "system",
       "isRead": true,
       "createdAt": "2026-07-28T06:00:00Z"
+    },
+    {
+      "id": "notif-1785252202209",
+      "userId": "usr-jemal",
+      "title": "New Device Login Detected",
+      "message": "A new login was detected from a Mobile device (Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Mobile Safari/537.36). If this wasn't you, please change your password or log out of all devices immediately.",
+      "type": "security",
+      "isRead": false,
+      "createdAt": "2026-07-28T15:23:22.209Z"
     }
   ],
   "categories": [

@@ -11,7 +11,7 @@ import {
   Folder, ChevronDown, Wallet, Plus
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { REDESIGNED_CATEGORIES, CategoryRedesign, Subcategory, getMatchingSubcategoryId, getEffectiveMajorCategory, isListingActiveAndPublished, getSubcategoryListingCount as calcSubCount, getCategoryListingCount as calcCategoryCount } from '../lib/categoriesData';
+import { REDESIGNED_CATEGORIES, CategoryRedesign, Subcategory, getMatchingSubcategoryId, getEffectiveMajorCategory, isListingActiveAndPublished, getSubcategoryListingCount as calcSubCount, getCategoryListingCount as calcCategoryCount, extractString } from '../lib/categoriesData';
 import { AllCategoriesModal } from './AllCategoriesModal';
 import { LocationSelectorModal } from './LocationSelectorModal';
 import { matchesLocationFilter } from '../lib/locationData';
@@ -328,9 +328,9 @@ export default function Marketplace({
     return properties.filter(prop => {
       // Search text
       const matchesSearch =
-        (prop.title || '').toLowerCase().includes((searchQuery || '').toLowerCase()) ||
-        (prop.description || '').toLowerCase().includes((searchQuery || '').toLowerCase()) ||
-        (prop.location || '').toLowerCase().includes((searchQuery || '').toLowerCase());
+        extractString(prop.title, currentLanguage).toLowerCase().includes((searchQuery || '').toLowerCase()) ||
+        extractString(prop.description, currentLanguage).toLowerCase().includes((searchQuery || '').toLowerCase()) ||
+        extractString(prop.location, currentLanguage).toLowerCase().includes((searchQuery || '').toLowerCase());
 
       // Major category filter
       const matchesMajorCategory =
@@ -437,7 +437,7 @@ export default function Marketplace({
       // If special category like free, trending, etc.
       if (mapping.isSpecial) {
         if (mapping.isSpecial === 'free') {
-          return p.price === 0 || (p.title || '').toLowerCase().includes('free') || (p.description || '').toLowerCase().includes('free');
+          return p.price === 0 || extractString(p.title, currentLanguage).toLowerCase().includes('free') || extractString(p.description, currentLanguage).toLowerCase().includes('free');
         }
         if (mapping.isSpecial === 'trending') {
           return p.isFeatured || p.isRecommended || p.price > 100000;
@@ -462,9 +462,9 @@ export default function Marketplace({
       // Match keywords in propertyType, title or description
       let matchesKeywords = true;
       if (mapping.propertyTypeKeywords && mapping.propertyTypeKeywords.length > 0) {
-        const titleLower = (p.title || '').toLowerCase();
-        const descLower = (p.description || '').toLowerCase();
-        const typeLower = (p.propertyType || '').toLowerCase();
+        const titleLower = extractString(p.title, currentLanguage).toLowerCase();
+        const descLower = extractString(p.description, currentLanguage).toLowerCase();
+        const typeLower = extractString(p.propertyType, currentLanguage).toLowerCase();
         
         matchesKeywords = mapping.propertyTypeKeywords.some(keyword => {
           const kw = (keyword || '').toLowerCase();
@@ -495,9 +495,9 @@ export default function Marketplace({
     if (catSearchQuery) {
       const q = (catSearchQuery || '').toLowerCase();
       list = list.filter(p => 
-        (p.title || '').toLowerCase().includes(q) || 
-        (p.description || '').toLowerCase().includes(q) || 
-        (p.location || '').toLowerCase().includes(q)
+        extractString(p.title, currentLanguage).toLowerCase().includes(q) || 
+        extractString(p.description, currentLanguage).toLowerCase().includes(q) || 
+        extractString(p.location, currentLanguage).toLowerCase().includes(q)
       );
     }
 
@@ -519,11 +519,11 @@ export default function Marketplace({
     // 5. Region / City
     if (filterRegion) {
       const reg = (filterRegion || '').toLowerCase();
-      list = list.filter(p => (p.location || '').toLowerCase().includes(reg));
+      list = list.filter(p => extractString(p.location, currentLanguage).toLowerCase().includes(reg));
     }
     if (filterCity) {
       const city = (filterCity || '').toLowerCase();
-      list = list.filter(p => (p.location || '').toLowerCase().includes(city));
+      list = list.filter(p => extractString(p.location, currentLanguage).toLowerCase().includes(city));
     }
 
     // 6. Bedrooms
@@ -545,12 +545,12 @@ export default function Marketplace({
 
     // 9. Furnished
     if (filterFurnished !== null) {
-      list = list.filter(p => p.amenities && p.amenities.some(a => (a || '').toLowerCase().includes('furnish') === filterFurnished));
+      list = list.filter(p => p.amenities && p.amenities.some(a => extractString(a, currentLanguage).toLowerCase().includes('furnish') === filterFurnished));
     }
 
     // 10. Parking
     if (filterParking !== null) {
-      list = list.filter(p => p.amenities && p.amenities.some(a => (a || '').toLowerCase().includes('parking') === filterParking));
+      list = list.filter(p => p.amenities && p.amenities.some(a => extractString(a, currentLanguage).toLowerCase().includes('parking') === filterParking));
     }
 
     // 11. Verified only
@@ -561,43 +561,43 @@ export default function Marketplace({
     // 12. Vehicles - Brand, Transmission, Fuel, Condition
     if (filterVehBrand) {
       const brand = (filterVehBrand || '').toLowerCase();
-      list = list.filter(p => (p.title || '').toLowerCase().includes(brand) || (p.description || '').toLowerCase().includes(brand));
+      list = list.filter(p => extractString(p.title, currentLanguage).toLowerCase().includes(brand) || extractString(p.description, currentLanguage).toLowerCase().includes(brand));
     }
     if (filterVehTransmission !== 'All') {
       const trans = (filterVehTransmission || '').toLowerCase();
-      list = list.filter(p => (p.description || '').toLowerCase().includes(trans) || (p.title || '').toLowerCase().includes(trans));
+      list = list.filter(p => extractString(p.description, currentLanguage).toLowerCase().includes(trans) || extractString(p.title, currentLanguage).toLowerCase().includes(trans));
     }
     if (filterVehFuel !== 'All') {
       const fuel = (filterVehFuel || '').toLowerCase();
-      list = list.filter(p => (p.description || '').toLowerCase().includes(fuel) || (p.title || '').toLowerCase().includes(fuel));
+      list = list.filter(p => extractString(p.description, currentLanguage).toLowerCase().includes(fuel) || extractString(p.title, currentLanguage).toLowerCase().includes(fuel));
     }
     if (filterVehCondition !== 'All') {
       const cond = (filterVehCondition || '').toLowerCase();
-      list = list.filter(p => (p.description || '').toLowerCase().includes(cond) || (p.title || '').toLowerCase().includes(cond));
+      list = list.filter(p => extractString(p.description, currentLanguage).toLowerCase().includes(cond) || extractString(p.title, currentLanguage).toLowerCase().includes(cond));
     }
 
     // 13. Phones & Electronics - Brand, Condition, Storage
     if (filterElecBrand) {
       const brand = (filterElecBrand || '').toLowerCase();
-      list = list.filter(p => (p.title || '').toLowerCase().includes(brand) || (p.description || '').toLowerCase().includes(brand));
+      list = list.filter(p => extractString(p.title, currentLanguage).toLowerCase().includes(brand) || extractString(p.description, currentLanguage).toLowerCase().includes(brand));
     }
     if (filterElecCondition !== 'All') {
       const cond = (filterElecCondition || '').toLowerCase();
-      list = list.filter(p => (p.description || '').toLowerCase().includes(cond) || (p.title || '').toLowerCase().includes(cond));
+      list = list.filter(p => extractString(p.description, currentLanguage).toLowerCase().includes(cond) || extractString(p.title, currentLanguage).toLowerCase().includes(cond));
     }
     if (filterElecStorage !== 'All') {
       const stor = (filterElecStorage || '').toLowerCase();
-      list = list.filter(p => (p.description || '').toLowerCase().includes(stor) || (p.title || '').toLowerCase().includes(stor));
+      list = list.filter(p => extractString(p.description, currentLanguage).toLowerCase().includes(stor) || extractString(p.title, currentLanguage).toLowerCase().includes(stor));
     }
 
     // 14. Jobs - Type, Industry
     if (filterJobType !== 'All') {
       const jt = (filterJobType || '').toLowerCase();
-      list = list.filter(p => (p.description || '').toLowerCase().includes(jt) || (p.title || '').toLowerCase().includes(jt) || (p.category || '').toLowerCase().includes(jt));
+      list = list.filter(p => extractString(p.description, currentLanguage).toLowerCase().includes(jt) || extractString(p.title, currentLanguage).toLowerCase().includes(jt) || extractString(p.category, currentLanguage).toLowerCase().includes(jt));
     }
     if (filterJobIndustry !== 'All') {
       const ind = (filterJobIndustry || '').toLowerCase();
-      list = list.filter(p => (p.description || '').toLowerCase().includes(ind) || (p.title || '').toLowerCase().includes(ind));
+      list = list.filter(p => extractString(p.description, currentLanguage).toLowerCase().includes(ind) || extractString(p.title, currentLanguage).toLowerCase().includes(ind));
     }
 
     // Sort options: Newest, Oldest, Lowest Price, Highest Price, Most Popular, Best Rated
@@ -1414,7 +1414,7 @@ export default function Marketplace({
                         <div className="md:w-1/3 relative h-56 md:h-auto overflow-hidden group shrink-0">
                           <img
                             src={prop.imageUrl}
-                            alt={prop.title}
+                            alt={extractString(prop.title, currentLanguage)}
                             className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                             referrerPolicy="no-referrer"
                           />
@@ -1429,13 +1429,13 @@ export default function Marketplace({
                             <div className="flex items-center gap-2 text-white/40 text-[10px] uppercase font-bold tracking-wider mb-2">
                               <span className="bg-white/5 px-2 py-1 rounded">{prop.propertyType || 'Item'}</span>
                               <span>•</span>
-                              <span className="flex items-center gap-1"><MapPin className="w-3 h-3 text-amber-500" /> {prop.location}</span>
+                              <span className="flex items-center gap-1"><MapPin className="w-3 h-3 text-amber-500" /> {extractString(prop.location, currentLanguage)}</span>
                             </div>
                             <h4 className="text-lg font-bold font-serif text-white hover:text-amber-400 cursor-pointer transition line-clamp-1" onClick={() => onSelectProperty(prop)}>
-                              {prop.title}
+                              {extractString(prop.title, currentLanguage)}
                             </h4>
                             <p className="text-white/60 text-xs mt-2 line-clamp-2 leading-relaxed font-light">
-                              {prop.description}
+                              {extractString(prop.description, currentLanguage)}
                             </p>
                           </div>
                           <div className="mt-6 pt-4 border-t border-white/5 flex items-center justify-between">
@@ -1954,7 +1954,7 @@ function PropertyCard({ property, onSelect, favorites, onToggleFav, onReport, t,
       <div className="h-56 overflow-hidden relative bg-[#0c0c10] cursor-pointer" onClick={() => onSelect(property)}>
         <img
           src={property.images?.[0] || 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?auto=format&fit=crop&w=800&q=80'}
-          alt={property.title || 'Listing Image'}
+          alt={extractString(property.title, currentLanguage) || 'Listing Image'}
           className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
           referrerPolicy="no-referrer"
         />
@@ -1971,9 +1971,9 @@ function PropertyCard({ property, onSelect, favorites, onToggleFav, onReport, t,
             </p>
             <span className="text-[9px] font-black text-white/50 border border-white/5 bg-white/5 px-2.5 py-1 rounded-full uppercase tracking-wider">
               {property.majorCategory === 'Properties' ? (
-                t(`cat_${(property.propertyType || '').toLowerCase()}`) || property.propertyType || ''
+                t(`cat_${(extractString(property.propertyType, currentLanguage)).toLowerCase()}`) || extractString(property.propertyType, currentLanguage) || ''
               ) : (
-                t(`cat_${(property.majorCategory || '').toLowerCase().replace(/\s+/g, '')}`) || property.majorCategory || ''
+                t(`cat_${(extractString(property.majorCategory, currentLanguage)).toLowerCase().replace(/\s+/g, '')}`) || extractString(property.majorCategory, currentLanguage) || ''
               )}
             </span>
           </div>
@@ -1983,13 +1983,13 @@ function PropertyCard({ property, onSelect, favorites, onToggleFav, onReport, t,
             onClick={() => onSelect(property)}
             className="font-serif text-lg text-[#F5F5F4] hover:text-amber-500 leading-snug mb-2.5 cursor-pointer line-clamp-1 transition duration-300 font-semibold"
           >
-            {property.title}
+            {extractString(property.title, currentLanguage)}
           </h4>
 
           {/* Location */}
           <p className="text-xs text-[#F5F5F4]/50 flex items-center gap-1.5 mb-5 font-light">
             <MapPin className="w-4 h-4 text-amber-500 shrink-0" />
-            <span className="truncate">{property.location}</span>
+            <span className="truncate">{extractString(property.location, currentLanguage)}</span>
           </p>
         </div>
 

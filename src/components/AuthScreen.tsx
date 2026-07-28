@@ -178,6 +178,30 @@ export default function AuthScreen({ initialMode }: AuthScreenProps) {
     }
   }, [mode, initialMode]);
 
+  // Parse direct email link parameters (?mode=reset&email=...&code=...)
+  useEffect(() => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const urlMode = params.get('mode');
+      const urlEmail = params.get('email');
+      const urlCode = params.get('code');
+
+      if (urlMode === 'verify' || urlMode === 'reset') {
+        setMode(urlMode);
+        if (urlEmail) {
+          setEmail(urlEmail);
+          setVerifyEmailAddress(urlEmail);
+        }
+        if (urlCode) {
+          if (urlMode === 'verify') setVerificationCode(urlCode);
+          if (urlMode === 'reset') setResetCode(urlCode);
+        }
+      }
+    } catch (e) {
+      console.warn('Could not parse location search params:', e);
+    }
+  }, []);
+
   // Show session expiration warning
   useEffect(() => {
     if (sessionExpired) {
@@ -323,6 +347,35 @@ export default function AuthScreen({ initialMode }: AuthScreenProps) {
       }, 1500);
     } catch (err: any) {
       setError(err.message || t('invalid_verification_code'));
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleResendVerificationCode = async () => {
+    const targetEmail = verifyEmailAddress || email;
+    if (!targetEmail) {
+      setError(t('enter_registered_email'));
+      return;
+    }
+    setError('');
+    setSuccess('');
+    setSubmitting(true);
+
+    try {
+      const res = await fetch('/api/auth/resend-verification', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: targetEmail })
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || 'Failed to resend verification code.');
+      }
+      setDevVerificationCode(data.devVerificationCode || '');
+      setSuccess(data.message || 'A new verification code has been sent to your email.');
+    } catch (err: any) {
+      setError(err.message || t('server_error'));
     } finally {
       setSubmitting(false);
     }
@@ -1055,6 +1108,17 @@ export default function AuthScreen({ initialMode }: AuthScreenProps) {
                 >
                   {submitting ? t('auth_activating_account') : t('auth_verify_activate_btn')}
                 </button>
+
+                <div className="text-center pt-2">
+                  <button
+                    type="button"
+                    onClick={handleResendVerificationCode}
+                    disabled={submitting}
+                    className="text-xs text-amber-400 hover:text-amber-300 underline font-medium transition cursor-pointer"
+                  >
+                    Didn't receive code? Resend verification email
+                  </button>
+                </div>
               </form>
             )}
 

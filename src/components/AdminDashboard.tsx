@@ -15,6 +15,7 @@ import {
 import { motion, AnimatePresence } from 'motion/react';
 import { EmployeeAdminsModule } from './EmployeeAdminsModule';
 import { APP_THEMES, getThemeCSS } from '../lib/themes';
+import { extractString } from '../lib/categoriesData';
 
 interface AdminDashboardProps {
   onBackToMarketplace: () => void;
@@ -1152,9 +1153,9 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
   // Search and filter listings logic
   const filteredProperties = properties.filter(p => {
     const searchLower = (listingSearch || '').toLowerCase();
-    const matchesSearch = (p.title || '').toLowerCase().includes(searchLower) || 
-                          (p.location || '').toLowerCase().includes(searchLower) ||
-                          (p.ownerName || '').toLowerCase().includes(searchLower);
+    const matchesSearch = extractString(p.title).toLowerCase().includes(searchLower) || 
+                          extractString(p.location).toLowerCase().includes(searchLower) ||
+                          extractString(p.ownerName).toLowerCase().includes(searchLower);
     const matchesCat = listingCatFilter === 'all' || p.majorCategory === listingCatFilter;
     
     const hasPendingSlip = receipts.some(r => r.relatedPropertyId === p.id && r.status === 'Pending');
@@ -1671,7 +1672,7 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
                         })),
                         ...properties.map(p => ({
                           text: `New listing `,
-                          boldText: `"${p.title}"`,
+                          boldText: `"${extractString(p.title)}"`,
                           subText: ` submitted under ${p.majorCategory || 'Properties'}`,
                           time: formatTimeAgo(p.createdAt),
                           statusColor: 'text-white/30',
@@ -1933,7 +1934,7 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
               {editingProp && (
                 <form onSubmit={handleSaveProperty} className="bg-white/5 p-5 border border-white/10 rounded-2xl space-y-4">
                   <h4 className="text-xs font-bold text-amber-500 uppercase tracking-widest flex items-center gap-1">
-                    <Edit2 className="w-3.5 h-3.5" /> Modify Listing Parameters ({editingProp.title})
+                    <Edit2 className="w-3.5 h-3.5" /> Modify Listing Parameters ({extractString(editingProp.title)})
                   </h4>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="sm:col-span-2">
@@ -2072,13 +2073,13 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
                             )}
                             <div>
                               <div className="flex flex-wrap items-center gap-1.5">
-                                <h4 className="font-bold text-white text-sm">{p.title}</h4>
+                                <h4 className="font-bold text-white text-sm">{extractString(p.title)}</h4>
                                 <span className="text-[8px] bg-amber-500/15 text-amber-400 font-extrabold px-1.5 py-0.5 rounded uppercase">{p.majorCategory}</span>
                                 {p.isFeatured && <span className="text-[8px] bg-emerald-500/10 text-emerald-400 font-extrabold px-1.5 py-0.5 rounded border border-emerald-500/10 uppercase">Featured</span>}
                                 {p.isTopAd && <span className="text-[8px] bg-purple-500/20 text-purple-300 font-extrabold px-1.5 py-0.5 rounded border border-purple-500/30 uppercase">Top Ad</span>}
                                 {p.boostPlan && <span className="text-[8px] bg-amber-500 text-black font-black px-1.5 py-0.5 rounded uppercase">BOOST: {p.boostPlan.toUpperCase()}</span>}
                               </div>
-                              <p className="text-xs text-white/50 font-light mt-1 flex items-center gap-1"><MapPin className="w-3.5 h-3.5" /> {p.location} • <span className="text-white/70">{p.ownerName || 'Unknown Owner'}</span> ({p.contactEmail || 'No Email'})</p>
+                              <p className="text-xs text-white/50 font-light mt-1 flex items-center gap-1"><MapPin className="w-3.5 h-3.5" /> {extractString(p.location)} • <span className="text-white/70">{extractString(p.ownerName) || 'Unknown Owner'}</span> ({p.contactEmail || 'No Email'})</p>
                               <p className="text-xs font-mono font-extrabold text-amber-500 mt-1.5">{p.price.toLocaleString()} {p.currency}</p>
                             </div>
                           </div>
@@ -2088,11 +2089,11 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
                               onClick={() => {
                                 setEditingProp(p);
                                 setPropForm({
-                                  title: p.title,
-                                  description: p.description,
+                                  title: extractString(p.title),
+                                  description: extractString(p.description),
                                   price: p.price,
                                   currency: p.currency,
-                                  location: p.location,
+                                  location: extractString(p.location),
                                   propertyType: p.propertyType || '',
                                   majorCategory: p.majorCategory || 'Properties',
                                   ownerName: p.ownerName || '',
@@ -2549,7 +2550,7 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
                         <img src={ad.imageUrl} alt="Promo" className="w-14 h-14 rounded-xl object-cover border border-white/5 shrink-0" referrerPolicy="no-referrer" />
                         <div>
                           <h5 className="font-bold text-xs text-white flex items-center gap-1">
-                            <span>{ad.title}</span>
+                            <span>{extractString(ad.title)}</span>
                             <span className="text-[8px] bg-amber-500/15 text-amber-400 font-extrabold px-1.5 rounded uppercase">{ad.position}</span>
                           </h5>
                           <p className="text-[10px] text-white/50 leading-tight mt-1 line-clamp-2">{ad.description}</p>

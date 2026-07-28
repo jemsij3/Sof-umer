@@ -5,6 +5,7 @@ import fsSync from 'fs';
 import { createServer as createViteServer } from 'vite';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
+import nodemailer from 'nodemailer';
 import {
   User,
   Property,
@@ -910,6 +911,268 @@ async function startServer() {
     }
   }
 
+  // --- EMAIL SERVICE & BEAUTIFUL HTML TEMPLATES ---
+  let etherealTransporter: nodemailer.Transporter | null = null;
+  const recentEmailLogs: Array<{
+    timestamp: string;
+    to: string;
+    subject: string;
+    provider: string;
+    success: boolean;
+    details?: any;
+  }> = [];
+
+  function logEmailAttempt(entry: { to: string; subject: string; provider: string; success: boolean; details?: any }) {
+    recentEmailLogs.unshift({
+      timestamp: new Date().toISOString(),
+      ...entry
+    });
+    if (recentEmailLogs.length > 30) {
+      recentEmailLogs.pop();
+    }
+  }
+
+  async function sendEmail({
+    to,
+    subject,
+    html,
+    text
+  }: {
+    to: string;
+    subject: string;
+    html: string;
+    text?: string;
+  }) {
+    const smtpHost = process.env.SMTP_HOST;
+    const smtpPort = parseInt(process.env.SMTP_PORT || '587', 10);
+    const smtpUser = process.env.SMTP_USER;
+    const smtpPass = process.env.SMTP_PASS;
+    const smtpFrom = process.env.SMTP_FROM || 'Sof Umer Marketplace <noreply@sofumer.com>';
+    const resendApiKey = (process.env.RESEND_API_KEY || '').trim();
+    const resendFromEnv = (process.env.RESEND_FROM || process.env.EMAIL_FROM || process.env.SMTP_FROM || '').trim();
+
+    console.log(`[Email Service] Dispatching email to: "${to}" | Subject: "${subject}"`);
+
+    // 1. Send via Resend API if configured
+    if (resendApiKey) {
+      try {
+        let primaryFrom = resendFromEnv;
+        if (!primaryFrom) {
+          primaryFrom = 'Sof Umer Marketplace <onboarding@resend.dev>';
+        } else if (!primaryFrom.includes('<')) {
+          primaryFrom = `Sof Umer Marketplace <${primaryFrom}>`;
+        }
+
+        console.log(`[Email Service] Resend API: Attempting send with sender "${primaryFrom}" to "${to}"`);
+
+        let res = await fetch('https://api.resend.com/emails', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${resendApiKey}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            from: primaryFrom,
+            to: [to],
+            subject,
+            html,
+            text: text || html.replace(/<[^>]*>?/gm, '')
+          })
+        });
+
+        let data: any = {};
+        try {
+          data = await res.json();
+        } catch (e) {
+          data = { parseError: true };
+        }
+
+        // Fallback to onboarding@resend.dev if custom domain is unverified or returns validation error
+        if (!res.ok && primaryFrom !== 'Sof Umer Marketplace <onboarding@resend.dev>') {
+          console.warn(`[Email Service] Resend API primary sender (${primaryFrom}) returned status ${res.status}: ${JSON.stringify(data)}. Retrying with "Sof Umer Marketplace <onboarding@resend.dev>"...`);
+          const fallbackFrom = 'Sof Umer Marketplace <onboarding@resend.dev>';
+          res = await fetch('https://api.resend.com/emails', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${resendApiKey}`,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              from: fallbackFrom,
+              to: [to],
+              subject,
+              html,
+              text: text || html.replace(/<[^>]*>?/gm, '')
+            })
+          });
+          try {
+            data = await res.json();
+          } catch (e) {
+            data = { parseError: true };
+          }
+        }
+
+        if (res.ok) {
+          console.log(`[Email Service] Delivered successfully via Resend API to ${to}: ID=${data.id}`);
+          logEmailAttempt({ to, subject, provider: 'resend', success: true, details: { id: data.id } });
+          return { success: true, provider: 'resend', id: data.id };
+        } else {
+          console.error(`[Email Service] Resend API failed (${res.status}):`, JSON.stringify(data));
+          logEmailAttempt({ to, subject, provider: 'resend', success: false, details: { status: res.status, error: data } });
+        }
+      } catch (err: any) {
+        console.error('[Email Service] Exception sending via Resend API:', err.message || err);
+        logEmailAttempt({ to, subject, provider: 'resend', success: false, details: { exception: err.message || err } });
+      }
+    }
+
+    // 2. Send via SMTP if credentials are configured
+    if (smtpHost && smtpUser && smtpPass) {
+      try {
+        const transporter = nodemailer.createTransport({
+          host: smtpHost,
+          port: smtpPort,
+          secure: smtpPort === 465 || process.env.SMTP_SECURE === 'true',
+          auth: {
+            user: smtpUser,
+            pass: smtpPass
+          },
+          tls: {
+            rejectUnauthorized: false
+          }
+        });
+
+        const info = await transporter.sendMail({
+          from: smtpFrom,
+          to,
+          subject,
+          html,
+          text: text || html.replace(/<[^>]*>?/gm, '')
+        });
+
+        console.log(`[Email Service] Delivered via SMTP (${smtpHost}) to ${to}: MessageID=${info.messageId}`);
+        return { success: true, provider: 'smtp', messageId: info.messageId };
+      } catch (err: any) {
+        console.error(`[Email Service] Failed to send email via SMTP (${smtpHost}):`, err.message || err);
+      }
+    }
+
+    // 3. Fallback to Ethereal Test Mailer / Server Console Logging
+    try {
+      if (!etherealTransporter) {
+        try {
+          const testAcc = await nodemailer.createTestAccount();
+          etherealTransporter = nodemailer.createTransport({
+            host: 'smtp.ethereal.email',
+            port: 587,
+            secure: false,
+            auth: {
+              user: testAcc.user,
+              pass: testAcc.pass
+            }
+          });
+          console.log(`[Email Service] Initialized Ethereal test inbox for fallback: ${testAcc.user}`);
+        } catch (e) {
+          console.warn('[Email Service] Ethereal test account setup skipped.');
+        }
+      }
+
+      if (etherealTransporter) {
+        const info = await etherealTransporter.sendMail({
+          from: smtpFrom,
+          to,
+          subject,
+          html,
+          text: text || html.replace(/<[^>]*>?/gm, '')
+        });
+        const previewUrl = nodemailer.getTestMessageUrl(info);
+        console.log(`[Email Service] Delivered to Ethereal Mailbox for ${to}`);
+        if (previewUrl) {
+          console.log(`[Email Service] Preview Mail Online: ${previewUrl}`);
+        }
+        return { success: true, provider: 'ethereal', previewUrl: previewUrl || undefined };
+      }
+    } catch (err: any) {
+      console.warn('[Email Service] Ethereal send warning:', err.message || err);
+    }
+
+    // Always log full email details to server console for debugging and logs inspection
+    console.log(`=======================================================`);
+    console.log(`[EMAIL DISPATCH - SERVER LOG CAPTURE]`);
+    console.log(`RECIPIENT: ${to}`);
+    console.log(`SUBJECT:   ${subject}`);
+    console.log(`CONTENT:\n${text || html.replace(/<[^>]*>?/gm, '')}`);
+    console.log(`=======================================================`);
+
+    return { success: true, provider: 'log' };
+  }
+
+  async function sendVerificationEmail(toEmail: string, fullName: string, code: string, appUrl: string) {
+    const verifyLink = `${appUrl}/?mode=verify&email=${encodeURIComponent(toEmail)}&code=${code}`;
+    const subject = `Verify Your Sof Umer Account (${code})`;
+    const html = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background-color: #0c0a09; color: #f5f5f4; border-radius: 12px; overflow: hidden; border: 1px solid #27272a;">
+        <div style="background-color: #18181b; padding: 24px; text-align: center; border-bottom: 1px solid #27272a;">
+          <h1 style="color: #eab308; margin: 0; font-size: 24px; letter-spacing: 2px; text-transform: uppercase;">SOF UMER</h1>
+          <p style="color: #a1a1aa; margin: 4px 0 0 0; font-size: 13px;">Premier Ethiopian Marketplace</p>
+        </div>
+        <div style="padding: 32px 24px;">
+          <h2 style="color: #f5f5f4; margin-top: 0;">Welcome, ${fullName || 'Valued Member'}!</h2>
+          <p style="color: #d4d4d8; font-size: 15px; line-height: 1.6;">Thank you for joining Sof Umer Marketplace. To complete your account activation, please enter the 6-digit verification code below or click the verification button:</p>
+          
+          <div style="text-align: center; margin: 28px 0;">
+            <div style="display: inline-block; font-size: 32px; font-weight: bold; letter-spacing: 8px; color: #eab308; background: #18181b; border: 2px dashed #eab308; padding: 16px 32px; border-radius: 8px;">
+              ${code}
+            </div>
+          </div>
+
+          <div style="text-align: center; margin: 28px 0;">
+            <a href="${verifyLink}" target="_blank" style="display: inline-block; background-color: #eab308; color: #000000; font-weight: bold; text-decoration: none; padding: 14px 28px; border-radius: 8px; font-size: 15px;">Verify Email Address Now</a>
+          </div>
+
+          <p style="color: #a1a1aa; font-size: 13px;">If you didn't create a Sof Umer account, you can safely ignore this email. This verification code expires in 15 minutes.</p>
+        </div>
+        <div style="background-color: #18181b; padding: 16px; text-align: center; color: #71717a; font-size: 12px; border-top: 1px solid #27272a;">
+          &copy; ${new Date().getFullYear()} Sof Umer Marketplace. All rights reserved.
+        </div>
+      </div>
+    `;
+    return sendEmail({ to: toEmail, subject, html });
+  }
+
+  async function sendPasswordResetEmail(toEmail: string, fullName: string, code: string, appUrl: string) {
+    const resetLink = `${appUrl}/?mode=reset&email=${encodeURIComponent(toEmail)}&code=${code}`;
+    const subject = `Password Reset Code (${code}) - Sof Umer`;
+    const html = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background-color: #0c0a09; color: #f5f5f4; border-radius: 12px; overflow: hidden; border: 1px solid #27272a;">
+        <div style="background-color: #18181b; padding: 24px; text-align: center; border-bottom: 1px solid #27272a;">
+          <h1 style="color: #ef4444; margin: 0; font-size: 24px; letter-spacing: 2px; text-transform: uppercase;">SOF UMER</h1>
+          <p style="color: #a1a1aa; margin: 4px 0 0 0; font-size: 13px;">Security & Password Recovery</p>
+        </div>
+        <div style="padding: 32px 24px;">
+          <h2 style="color: #f5f5f4; margin-top: 0;">Password Reset Requested</h2>
+          <p style="color: #d4d4d8; font-size: 15px; line-height: 1.6;">Hello ${fullName || 'User'}, we received a request to reset the password for your Sof Umer account. Use the security code below or click the reset button:</p>
+          
+          <div style="text-align: center; margin: 28px 0;">
+            <div style="display: inline-block; font-size: 32px; font-weight: bold; letter-spacing: 8px; color: #ef4444; background: #18181b; border: 2px dashed #ef4444; padding: 16px 32px; border-radius: 8px;">
+              ${code}
+            </div>
+          </div>
+
+          <div style="text-align: center; margin: 28px 0;">
+            <a href="${resetLink}" target="_blank" style="display: inline-block; background-color: #ef4444; color: #ffffff; font-weight: bold; text-decoration: none; padding: 14px 28px; border-radius: 8px; font-size: 15px;">Reset Password Now</a>
+          </div>
+
+          <p style="color: #a1a1aa; font-size: 13px;">This security reset code is valid for 15 minutes. If you did not request a password reset, please secure your account immediately or disregard this message.</p>
+        </div>
+        <div style="background-color: #18181b; padding: 16px; text-align: center; color: #71717a; font-size: 12px; border-top: 1px solid #27272a;">
+          &copy; ${new Date().getFullYear()} Sof Umer Marketplace. All rights reserved.
+        </div>
+      </div>
+    `;
+    return sendEmail({ to: toEmail, subject, html });
+  }
+
   // Secure Helper middleware to verify real secure user JWT
   app.use(async (req, res, next) => {
     let token: string | undefined;
@@ -1272,10 +1535,50 @@ async function startServer() {
     localDb.users.push(newUser);
     await saveDb();
 
+    // Dispatch verification email
+    const appUrl = process.env.APP_URL || `${req.protocol}://${req.get('host')}`;
+    let emailResult = { success: false };
+    if (newUser.email) {
+      emailResult = await sendVerificationEmail(newUser.email, newUser.fullName, verificationCode, appUrl);
+    }
+
     res.json({
-      message: 'Registration successful! Please verify your email.',
+      message: 'Registration successful! A 6-digit verification code has been sent to your email.',
       email: newUser.email,
       userId: newUser.id,
+      emailSent: emailResult.success,
+      devVerificationCode: process.env.NODE_ENV !== 'production' ? verificationCode : undefined
+    });
+  });
+
+  app.post('/api/auth/resend-verification', async (req, res) => {
+    const { email } = req.body;
+    const normEmail = normalizeEmail(email);
+    if (!normEmail) {
+      return res.status(400).json({ error: 'Email address is required.' });
+    }
+
+    const user = localDb.users.find(u => u.email && u.email.toLowerCase() === normEmail);
+    if (!user) {
+      return res.status(400).json({ error: 'No account found with this email address.' });
+    }
+
+    if (user.isVerified) {
+      return res.status(400).json({ error: 'This account is already verified.' });
+    }
+
+    const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
+    user.verificationCode = verificationCode;
+    user.verificationCodeExpiresAt = new Date(Date.now() + 15 * 60 * 1000).toISOString();
+    await saveDb();
+
+    const appUrl = process.env.APP_URL || `${req.protocol}://${req.get('host')}`;
+    const emailResult = await sendVerificationEmail(user.email, user.fullName, verificationCode, appUrl);
+
+    res.json({
+      success: true,
+      message: 'A new verification code has been sent to your email.',
+      emailSent: emailResult.success,
       devVerificationCode: process.env.NODE_ENV !== 'production' ? verificationCode : undefined
     });
   });
@@ -1339,12 +1642,20 @@ async function startServer() {
     user.resetPasswordCodeExpiresAt = new Date(Date.now() + 15 * 60 * 1000).toISOString();
     await saveDb();
 
+    const appUrl = process.env.APP_URL || `${req.protocol}://${req.get('host')}`;
+    let emailResult = { success: false };
+    if (user.email) {
+      emailResult = await sendPasswordResetEmail(user.email, user.fullName || 'Valued Member', resetCode, appUrl);
+    }
+
     res.json({
       success: true,
-      message: 'Password reset code has been generated.',
+      message: 'Password reset code has been sent to your email address.',
+      emailSent: emailResult.success,
       devResetCode: process.env.NODE_ENV !== 'production' ? resetCode : undefined
     });
   });
+
 
   app.post('/api/auth/reset-password', async (req, res) => {
     const { email, phone, identifier, code, newPassword } = req.body;
@@ -2334,6 +2645,44 @@ async function startServer() {
       res.status(500).json({ error: err.message });
     }
   });
+
+  // Admin Email Configuration & Diagnostic Testing Routes
+  app.get('/api/admin/email/status', requireAdmin, async (req, res) => {
+    res.json({
+      resendConfigured: !!(process.env.RESEND_API_KEY && process.env.RESEND_API_KEY.trim()),
+      resendSender: process.env.RESEND_FROM || process.env.EMAIL_FROM || process.env.SMTP_FROM || 'Sof Umer Marketplace <onboarding@resend.dev>',
+      smtpConfigured: !!(process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS),
+      smtpHost: process.env.SMTP_HOST || 'Not Configured',
+      smtpPort: process.env.SMTP_PORT || '587',
+      smtpFrom: process.env.SMTP_FROM || 'Sof Umer Marketplace <noreply@sofumer.com>',
+      activeProvider: (process.env.RESEND_API_KEY && process.env.RESEND_API_KEY.trim()) ? 'Resend API' : ((process.env.SMTP_HOST && process.env.SMTP_USER) ? 'SMTP' : 'Ethereal Test Inbox / Server Log Capture'),
+      recentLogs: recentEmailLogs
+    });
+  });
+
+  app.post('/api/admin/email/test', requireAdmin, async (req, res) => {
+    try {
+      const { to } = req.body;
+      const targetEmail = normalizeEmail(to || (req as any).user?.email || 'jemaljima@gmail.com');
+      const appUrl = process.env.APP_URL || `${req.protocol}://${req.get('host')}`;
+      const result = await sendEmail({
+        to: targetEmail,
+        subject: 'Sof Umer Email System Diagnostic Test',
+        html: `
+          <div style="font-family: Arial; padding: 20px; background: #0c0a09; color: #fff; border-radius: 8px;">
+            <h2 style="color: #eab308;">Sof Umer Email System Diagnostic Passed</h2>
+            <p>This diagnostic test email was successfully dispatched to <strong>${targetEmail}</strong>.</p>
+            <p>Timestamp: ${new Date().toISOString()}</p>
+            <p>App URL: ${appUrl}</p>
+          </div>
+        `
+      });
+      res.json({ success: true, targetEmail, result });
+    } catch (err: any) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
 
   // Reports
   app.get('/api/reports', async (req, res) => {

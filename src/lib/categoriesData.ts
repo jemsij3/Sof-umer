@@ -1,3 +1,16 @@
+export function extractString(val: any, lang: string = 'en'): string {
+  if (!val) return '';
+  if (typeof val === 'string') return val;
+  if (typeof val === 'object') {
+    if (val[lang]) return String(val[lang]);
+    if (val.en) return String(val.en);
+    if (val.om) return String(val.om);
+    if (val.am) return String(val.am);
+    return Object.values(val).filter(v => typeof v === 'string').join(' ');
+  }
+  return String(val);
+}
+
 export interface Subcategory {
   id: string;
   name: string;
@@ -443,7 +456,7 @@ export function isListingActiveAndPublished(p: any): boolean {
   if (!isApproved) return false;
 
   // 2. Status checks
-  const status = (p.status || '').toLowerCase();
+  const status = extractString(p.status).toLowerCase();
   if (['sold', 'rented', 'unavailable', 'expired', 'deleted', 'rejected', 'pending'].includes(status)) {
     return false;
   }
@@ -452,7 +465,7 @@ export function isListingActiveAndPublished(p: any): boolean {
   }
 
   // 3. Description tags check
-  const desc = p.description || '';
+  const desc = extractString(p.description);
   if (
     desc.includes('**SOLD**') ||
     desc.includes('**RENTED**') ||
@@ -512,10 +525,10 @@ export function getEffectiveMajorCategory(p: {
   }
 
   // Lowercase text fields for inspection
-  const type = (p.propertyType || '').toLowerCase();
-  const cat = (p.category || '').toLowerCase();
-  const title = (p.title || '').toLowerCase();
-  const desc = (p.description || '').toLowerCase();
+  const type = extractString(p.propertyType).toLowerCase();
+  const cat = extractString(p.category).toLowerCase();
+  const title = extractString(p.title).toLowerCase();
+  const desc = extractString(p.description).toLowerCase();
   const fullText = `${type} ${cat} ${title} ${desc}`;
 
   // 3. Keyword matching
@@ -635,10 +648,10 @@ export function getMatchingSubcategoryId(p: {
   }
 
   const effMajor = getEffectiveMajorCategory(p);
-  const type = (p.propertyType || '').toLowerCase();
-  const cat = (p.category || '').toLowerCase();
-  const title = (p.title || '').toLowerCase();
-  const desc = (p.description || '').toLowerCase();
+  const type = extractString(p.propertyType).toLowerCase();
+  const cat = extractString(p.category).toLowerCase();
+  const title = extractString(p.title).toLowerCase();
+  const desc = extractString(p.description).toLowerCase();
   const amenitiesStr = Array.isArray(p.amenities) ? p.amenities.join(' ').toLowerCase() : '';
   const fullText = `${type} ${cat} ${title} ${desc} ${amenitiesStr}`;
 
