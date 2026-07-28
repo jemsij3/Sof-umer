@@ -2649,7 +2649,7 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
                         </div>
                       </div>
                       <div className="p-2.5 bg-black/40 border-t border-white/5 flex justify-between items-center px-4">
-                        <span className="text-[9px] text-white/30 font-mono">Views: {Math.floor(Math.random() * 5000) + 120}</span>
+                        <span className="text-[9px] text-white/30 font-mono">Views: {(ad as any).viewsCount || 0}</span>
                         <div className="flex gap-1">
                           <button onClick={() => handleToggleAd(ad)} className="cursor-pointer">
                             {ad.isActive ? <ToggleRight className="w-5.5 h-5.5 text-amber-500" /> : <ToggleLeft className="w-5.5 h-5.5 text-white/20" />}

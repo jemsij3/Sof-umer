@@ -14,8 +14,30 @@ interface InfoPageProps {
 }
 
 export default function InfoPage({ pageId, onBack, onOpenReportModalFromInfo }: InfoPageProps) {
-  const { currentLanguage, appFeatures, jobOpenings, systemSettings } = useApp();
+  const { currentLanguage, appFeatures, jobOpenings, systemSettings, properties, users } = useApp();
   const [activeTab, setActiveTab] = useState<string>(pageId);
+
+  // Real live metrics from database
+  const verifiedListingsCount = (properties || []).filter(
+    p => p.verificationStatus === 'verified' || p.isVerifiedListing === true || p.approvalStatus === 'approved'
+  ).length;
+
+  const activeProfilesCount = (users || []).filter(
+    u => u.status === 'active' || !u.status
+  ).length;
+
+  const formatStatNumber = (count: number) => {
+    if (!count || count <= 0) return '0+';
+    if (count >= 1000000) {
+      const val = count / 1000000;
+      return `${val % 1 === 0 ? val : val.toFixed(1)}M+`;
+    }
+    if (count >= 1000) {
+      const val = count / 1000;
+      return `${val % 1 === 0 ? val : val.toFixed(1)}k+`;
+    }
+    return `${count}+`;
+  };
 
   const defaultContactUs = {
     title: 'Contact Us',
@@ -582,16 +604,22 @@ export default function InfoPage({ pageId, onBack, onOpenReportModalFromInfo }: 
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 border-t border-white/5">
                 <div className="text-center p-3.5 bg-black/40 rounded-xl border border-white/5">
-                  <h4 className="text-base font-serif text-emerald-400 font-bold">10k+</h4>
-                  <p className="text-[10px] uppercase text-white/40 mt-1">Verified Listings</p>
+                  <h4 className="text-base font-serif text-emerald-400 font-bold">{formatStatNumber(verifiedListingsCount)}</h4>
+                  <p className="text-[10px] uppercase text-white/40 mt-1">
+                    {currentLanguage === 'om' ? 'Beeksisa Mirkanaa\'e' : currentLanguage === 'am' ? 'የተረጋገጡ ማስታወቂያዎች' : 'Verified Listings'}
+                  </p>
                 </div>
                 <div className="text-center p-3.5 bg-black/40 rounded-xl border border-white/5">
-                  <h4 className="text-base font-serif text-amber-500 font-bold">50k+</h4>
-                  <p className="text-[10px] uppercase text-white/40 mt-1">Active Profiles</p>
+                  <h4 className="text-base font-serif text-amber-500 font-bold">{formatStatNumber(activeProfilesCount)}</h4>
+                  <p className="text-[10px] uppercase text-white/40 mt-1">
+                    {currentLanguage === 'om' ? 'Profeelii Socho\'aa' : currentLanguage === 'am' ? 'ንቁ መገለጫዎች' : 'Active Profiles'}
+                  </p>
                 </div>
                 <div className="text-center p-3.5 bg-black/40 rounded-xl border border-white/5">
                   <h4 className="text-base font-serif text-emerald-400 font-bold">3</h4>
-                  <p className="text-[10px] uppercase text-white/40 mt-1">Ethiopian Languages</p>
+                  <p className="text-[10px] uppercase text-white/40 mt-1">
+                    {currentLanguage === 'om' ? 'Afaanota Itoophiyaa' : currentLanguage === 'am' ? 'የኢትዮጵያ ቋንቋዎች' : 'Ethiopian Languages'}
+                  </p>
                 </div>
               </div>
             </div>
