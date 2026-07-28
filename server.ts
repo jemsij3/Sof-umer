@@ -27,14 +27,50 @@ import {
 import { staticTranslations } from './src/lib/translations';
 
 const PORT = 3000;
-let DB_FILE = path.join(process.cwd(), 'sof_umer_db.json');
-if (process.env.RENDER) {
+
+function resolveDbFilePath(): { dbPath: string; isPersistent: boolean } {
+  // Check explicit environment variables first
+  const customDir = process.env.STORAGE_PATH || process.env.DATA_DIR || process.env.PERSISTENT_DIR;
+  if (customDir) {
     try {
-        fsSync.accessSync('/data', fsSync.constants.W_OK);
-        DB_FILE = '/data/sof_umer_db.json';
-    } catch (err) {
-        console.warn('Persistent /data volume is not writable');
+      if (!fsSync.existsSync(customDir)) {
+        fsSync.mkdirSync(customDir, { recursive: true });
+      }
+      fsSync.accessSync(customDir, fsSync.constants.W_OK);
+      return { dbPath: path.join(customDir, 'sof_umer_db.json'), isPersistent: true };
+    } catch (e) {
+      console.warn(`[Storage] Custom directory ${customDir} is not writable:`, e);
     }
+  }
+
+  // Check system persistent volume paths (/data or /var/data or local data dir)
+  const candidateDirs = ['/data', '/var/data', path.join(process.cwd(), 'data')];
+  for (const dir of candidateDirs) {
+    try {
+      if (dir.startsWith('/') && !fsSync.existsSync(dir)) {
+        try {
+          fsSync.mkdirSync(dir, { recursive: true });
+        } catch (_) {}
+      } else if (!fsSync.existsSync(dir) && dir === path.join(process.cwd(), 'data')) {
+        fsSync.mkdirSync(dir, { recursive: true });
+      }
+      if (fsSync.existsSync(dir)) {
+        fsSync.accessSync(dir, fsSync.constants.W_OK);
+        return { dbPath: path.join(dir, 'sof_umer_db.json'), isPersistent: true };
+      }
+    } catch (err) {
+      // Not available or not writable
+    }
+  }
+
+  // Fallback to workspace root
+  return { dbPath: path.join(process.cwd(), 'sof_umer_db.json'), isPersistent: false };
+}
+
+const { dbPath: DB_FILE, isPersistent: IS_PERSISTENT_STORAGE } = resolveDbFilePath();
+console.log(`[Storage] Resolved DB_FILE: ${DB_FILE} (Persistent Storage: ${IS_PERSISTENT_STORAGE ? 'YES' : 'NO - Ephemeral Workspace'})`);
+if (!IS_PERSISTENT_STORAGE) {
+  console.warn('[STORAGE WARNING] Database is running on ephemeral storage. Attach a Render Persistent Disk mounted at /data or set DATA_DIR to ensure user data persists across redeployments.');
 }
 
 export interface ServerUser extends User {
@@ -636,6 +672,19 @@ const createDatabaseBackup = async (reason = 'startup') => {
 
 const loadDb = async () => {
   try {
+    // If DB_FILE does not exist at target persistent path, copy seed database from workspace repository
+    if (!fsSync.existsSync(DB_FILE)) {
+      const workspaceSeed = path.join(process.cwd(), 'sof_umer_db.json');
+      if (DB_FILE !== workspaceSeed && fsSync.existsSync(workspaceSeed)) {
+        console.log(`[Storage] Copying initial seed database to persistent location: ${workspaceSeed} -> ${DB_FILE}`);
+        const targetDir = path.dirname(DB_FILE);
+        if (!fsSync.existsSync(targetDir)) {
+          await fs.mkdir(targetDir, { recursive: true });
+        }
+        await fs.copyFile(workspaceSeed, DB_FILE);
+      }
+    }
+
     const content = await fs.readFile(DB_FILE, 'utf-8');
     
     // Auto backup existing DB before any runtime migrations
@@ -659,9 +708,12 @@ const loadDb = async () => {
     } else if (!localDb.users.some(u => u.email.toLowerCase() === 'jemaljima@gmail.com')) {
       localDb.users.push(getInitialData().users[0]);
     }
+
+    // Ensure Jemal (Owner Admin) remains active & admin without wiping custom password!
     const jemalUser = localDb.users.find(u => u.email && u.email.toLowerCase() === 'jemaljima@gmail.com');
     if (jemalUser) {
-      if (!jemalUser.passwordHash || !bcrypt.compareSync('Password123!', jemalUser.passwordHash)) {
+      // ONLY set default hash if passwordHash is completely missing. NEVER overwrite an existing hash!
+      if (!jemalUser.passwordHash) {
         jemalUser.passwordHash = '$2b$10$8M.OZ7bfDTd8e724T1tSneytfS2iE4nLdSr27YVOBgkIJVdL7ENvC';
       }
       jemalUser.failedLoginAttempts = 0;
@@ -671,6 +723,7 @@ const loadDb = async () => {
       jemalUser.isVerified = true;
       jemalUser.verificationStatus = 'verified';
     }
+
     localDb.users.forEach(u => {
       if (!u.passwordHistory || !Array.isArray(u.passwordHistory)) {
         u.passwordHistory = u.passwordHash ? [u.passwordHash] : [];
@@ -795,12 +848,23 @@ const loadDb = async () => {
     await saveDb();
   } catch (error: any) {
     if (error.code === 'ENOENT') {
-      console.log('Database file not found, initializing brand new database...');
+      console.log(`[Storage] Database file not found at target location ${DB_FILE}. Attempting recovery from seed or backups...`);
+      const workspaceSeed = path.join(process.cwd(), 'sof_umer_db.json');
+      if (DB_FILE !== workspaceSeed && fsSync.existsSync(workspaceSeed)) {
+        try {
+          const content = await fs.readFile(workspaceSeed, 'utf-8');
+          localDb = JSON.parse(content);
+          await saveDb();
+          console.log('[Storage] Successfully initialized database from workspace seed file.');
+          return;
+        } catch (e) {
+          console.error('[Storage] Failed to read workspace seed file:', e);
+        }
+      }
       localDb = getInitialData();
       await saveDb();
     } else {
       console.error('CRITICAL: Error reading database file:', error);
-      // Fallback object to keep system running without wiping corrupted JSON
       if (!localDb) {
         localDb = getInitialData();
       }

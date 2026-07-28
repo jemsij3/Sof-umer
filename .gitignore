@@ -6,3 +6,9 @@ coverage/
 *.log
 .env*
 !.env.example
+sof_umer_db.json
+sof_umer_db.json.tmp
+sof_umer_db.json.bak
+sof_umer_db_*.json
+/data/
+backups/
