@@ -661,17 +661,17 @@ export default function AuthScreen({ initialMode }: AuthScreenProps) {
                 <div className="space-y-4">
                   <div>
                     <label className="block text-xs font-semibold text-[#F5F5F4]/60 uppercase tracking-widest mb-2">
-                      {currentLanguage === 'om' ? 'Maqaa Fayyadamaa ykn Imeelii (Username)' : currentLanguage === 'am' ? 'የተጠቃሚ ስም ወይም ኢሜይል (Username)' : 'Username or Email Address'}
+                      {currentLanguage === 'om' ? 'Imeelii (ykn Username Hojjetaa)' : currentLanguage === 'am' ? 'ኢሜይል (ወይም የሰራተኛ Username)' : 'Email Address (or Employee Username)'}
                     </label>
                     <div className="relative">
-                      <UserIcon className="absolute left-4 top-4 w-4 h-4 text-[#F5F5F4]/30" />
+                      <Mail className="absolute left-4 top-4 w-4 h-4 text-[#F5F5F4]/30" />
                       <input
                         type="text"
                         required
                         value={email}
                         onChange={e => setEmail(e.target.value)}
                         className="w-full pl-12 pr-4 py-3.5 bg-[#121216] border border-white/5 rounded-2xl text-[#F5F5F4] placeholder-white/20 text-sm focus:outline-none transition focus:border-amber-500/50"
-                        placeholder={currentLanguage === 'om' ? 'username ykn email@domain.com' : currentLanguage === 'am' ? 'username ወይም email@domain.com' : 'e.g. username or name@domain.com'}
+                        placeholder="name@domain.com"
                       />
                     </div>
                   </div>
