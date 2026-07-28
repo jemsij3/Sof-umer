@@ -733,9 +733,51 @@ const loadDb = async () => {
       localDb.properties = [];
     } else {
       localDb.properties.forEach(p => {
-        if (!p.verificationStatus || p.verificationStatus === 'pending') {
-          p.verificationStatus = 'verified';
-          p.isVerifiedListing = true;
+        // Ensure default fields without overwriting pending moderation status
+        if (!p.verificationStatus) {
+          p.verificationStatus = 'pending';
+        }
+        if (!p.approvalStatus) {
+          p.approvalStatus = 'pending';
+        }
+        if ((p as any).isArchived === undefined) {
+          (p as any).isArchived = false;
+        }
+
+        // Cross-match property owner with localDb.users
+        let matchedUser = localDb.users.find(u => u.id === p.ownerId);
+        if (!matchedUser && (p as any).ownerEmail) {
+          const pEmail = ((p as any).ownerEmail || '').trim().toLowerCase();
+          if (pEmail) {
+            matchedUser = localDb.users.find(u => u.email && u.email.trim().toLowerCase() === pEmail);
+          }
+        }
+        if (!matchedUser && p.contactEmail) {
+          const cEmail = (p.contactEmail || '').trim().toLowerCase();
+          if (cEmail) {
+            matchedUser = localDb.users.find(u => u.email && u.email.trim().toLowerCase() === cEmail);
+          }
+        }
+        if (!matchedUser && p.contactPhone) {
+          const cPhone = p.contactPhone.trim().replace(/[^\d+]/g, '');
+          if (cPhone && cPhone.length >= 7) {
+            const shortDigits = cPhone.slice(-9);
+            matchedUser = localDb.users.find(u => u.phone && u.phone.trim().replace(/[^\d+]/g, '').endsWith(shortDigits));
+          }
+        }
+
+        if (matchedUser) {
+          p.ownerId = matchedUser.id;
+          (p as any).ownerEmail = matchedUser.email;
+          (p as any).ownerPhone = matchedUser.phone || p.contactPhone || '';
+          if (!p.ownerName) p.ownerName = matchedUser.fullName || 'Property Owner';
+        } else {
+          // If orphaned or missing ownerId, bind to Admin account as fallback owner so listing is never lost
+          if (!p.ownerId) {
+            p.ownerId = 'usr-jemal';
+            (p as any).ownerEmail = 'jemaljima@gmail.com';
+            p.ownerName = 'Jemal jimma';
+          }
         }
       });
     }
@@ -1885,8 +1927,45 @@ async function startServer() {
     res.json(localDb.properties);
   });
 
+  app.get('/api/properties/my-listings', requireAuth, async (req, res) => {
+    const user = (req as any).user;
+    const userEmailLower = user.email ? user.email.toLowerCase() : '';
+    const normPhone = user.phone ? normalizePhone(user.phone) : '';
+
+    const myListings = localDb.properties.filter(p => {
+      if (p.ownerId === user.id) return true;
+      if (userEmailLower && (((p as any).ownerEmail && (p as any).ownerEmail.toLowerCase() === userEmailLower) || (p.contactEmail && p.contactEmail.toLowerCase() === userEmailLower))) return true;
+      if (normPhone && (((p as any).ownerPhone && normalizePhone((p as any).ownerPhone) === normPhone) || (p.contactPhone && normalizePhone(p.contactPhone) === normPhone))) return true;
+      return false;
+    });
+
+    res.json(myListings);
+  });
+
   app.post('/api/properties', async (req, res) => {
     const propertyData = req.body;
+
+    // Optional auth token resolution for seamless creation from client
+    let authUser: ServerUser | undefined = undefined;
+    const authHeader = req.headers.authorization;
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      const token = authHeader.substring(7);
+      try {
+        const decoded = jwt.verify(token, JWT_SECRET) as any;
+        if (decoded && decoded.id) {
+          authUser = localDb.users.find(u => u.id === decoded.id);
+        }
+      } catch (e) {}
+    }
+
+    // Fallback owner matching if no valid token
+    if (!authUser && propertyData.ownerId) {
+      authUser = localDb.users.find(u => u.id === propertyData.ownerId);
+    }
+    if (!authUser && propertyData.contactEmail) {
+      const cEmail = propertyData.contactEmail.trim().toLowerCase();
+      authUser = localDb.users.find(u => u.email && u.email.toLowerCase() === cEmail);
+    }
 
     const categoryAllowedKeys: Record<string, string[]> = {
       Products: ['subcategory', 'brand', 'model', 'size', 'dimensions', 'color', 'material', 'condition', 'quantity', 'negotiable', 'gender', 'clothing type', 'storage / spec'],
@@ -1929,7 +2008,6 @@ async function startServer() {
 
     const requestedPlan = propertyData.boostPlan || 'free';
     if (!isFreeListingEnabled && requestedPlan === 'free') {
-      const authUser = (req as any).user;
       if (!authUser || authUser.role !== 'admin') {
         return res.status(400).json({
           error: 'Free listing campaign is currently disabled or expired. Please select a promotion boost package to list your item.'
@@ -1940,12 +2018,19 @@ async function startServer() {
     const planDays = (requestedPlan === 'starter' || requestedPlan === 'basic') ? 3 : requestedPlan === 'premium' ? 7 : requestedPlan === 'vip' ? 30 : 0;
     const computedExpiresAt = planDays > 0 ? new Date(Date.now() + planDays * 24 * 60 * 60 * 1000).toISOString() : (propertyData.promotionExpiresAt || undefined);
 
-    const authUser = (req as any).user;
     const isAdmin = authUser?.role === 'admin';
+    const ownerId = authUser ? authUser.id : (propertyData.ownerId || 'usr-jemal');
+    const ownerEmail = authUser ? authUser.email : (propertyData.ownerEmail || propertyData.contactEmail || 'jemaljima@gmail.com');
+    const ownerPhone = authUser ? (authUser.phone || propertyData.contactPhone || '') : (propertyData.contactPhone || '');
+    const ownerName = authUser ? (authUser.fullName || propertyData.ownerName || 'Property Owner') : (propertyData.ownerName || 'Property Owner');
 
     const newProperty: Property = {
       id: 'prop-' + Date.now(),
       ...propertyData,
+      ownerId,
+      ownerName,
+      contactEmail: propertyData.contactEmail || ownerEmail,
+      contactPhone: propertyData.contactPhone || ownerPhone,
       amenities: cleanAmenities,
       brand: propertyData.brand || '',
       condition: propertyData.condition || 'Used - Like New',
@@ -1958,6 +2043,11 @@ async function startServer() {
       isVerifiedListing: isAdmin ? (propertyData.isVerifiedListing !== undefined ? propertyData.isVerifiedListing : true) : false,
       createdAt: new Date().toISOString()
     };
+
+    (newProperty as any).ownerEmail = ownerEmail;
+    (newProperty as any).ownerPhone = ownerPhone;
+    (newProperty as any).isArchived = false;
+
     localDb.properties.push(newProperty);
     await saveDb();
     res.json(newProperty);
@@ -1970,15 +2060,29 @@ async function startServer() {
     const idx = localDb.properties.findIndex(p => p.id === id);
     if (idx !== -1) {
       const property = localDb.properties[idx];
-      if (currentUser.role !== 'admin' && property.ownerId !== currentUser.id) {
+      const isOwner = property.ownerId === currentUser.id ||
+        (currentUser.email && (((property as any).ownerEmail && (property as any).ownerEmail.toLowerCase() === currentUser.email.toLowerCase()) || (property.contactEmail && property.contactEmail.toLowerCase() === currentUser.email.toLowerCase()))) ||
+        (currentUser.phone && (((property as any).ownerPhone && normalizePhone((property as any).ownerPhone) === normalizePhone(currentUser.phone)) || (property.contactPhone && normalizePhone(property.contactPhone) === normalizePhone(currentUser.phone))));
+
+      if (currentUser.role !== 'admin' && !isOwner) {
         return res.status(403).json({ error: 'You are not authorized to edit this listing.' });
       }
+
+      // Auto-heal ownerId if matched by email or phone
+      if (isOwner && property.ownerId !== currentUser.id) {
+        property.ownerId = currentUser.id;
+        (property as any).ownerEmail = currentUser.email;
+      }
       
+      const prevApproval = property.approvalStatus;
+      const prevVerification = property.verificationStatus;
+
       // Non-admins cannot alter verification/approval flags
       if (currentUser.role !== 'admin') {
         delete updates.verificationStatus;
         delete updates.approvalStatus;
         delete updates.isVerifiedListing;
+        delete updates.ownerId;
       } else {
         if (updates.verificationStatus !== undefined) {
           updates.isVerifiedListing = updates.verificationStatus === 'verified';
@@ -1986,6 +2090,25 @@ async function startServer() {
       }
 
       localDb.properties[idx] = { ...property, ...updates };
+
+      // Notify listing owner if admin changed verification or approval status
+      if (currentUser.role === 'admin') {
+        const newApproval = localDb.properties[idx].approvalStatus;
+        const newVerification = localDb.properties[idx].verificationStatus;
+
+        if ((newApproval && newApproval !== prevApproval) || (newVerification && newVerification !== prevVerification)) {
+          if (!localDb.notifications) localDb.notifications = [];
+          localDb.notifications.unshift({
+            id: 'notif-' + Date.now(),
+            userId: property.ownerId,
+            title: `Listing Review Update: "${property.title}"`,
+            message: `Your listing "${property.title}" has been updated by the Admin team. Status: ${newApproval || 'Approved'} | Verification: ${newVerification || 'Verified'}.`,
+            isRead: false,
+            createdAt: new Date().toISOString()
+          });
+        }
+      }
+
       await saveDb();
       return res.json(localDb.properties[idx]);
     }
@@ -2158,12 +2281,16 @@ async function startServer() {
     const idx = localDb.properties.findIndex(p => p.id === id);
     if (idx !== -1) {
       const property = localDb.properties[idx];
-      if (currentUser.role !== 'admin' && property.ownerId !== currentUser.id) {
+      const isOwner = property.ownerId === currentUser.id ||
+        (currentUser.email && (((property as any).ownerEmail && (property as any).ownerEmail.toLowerCase() === currentUser.email.toLowerCase()) || (property.contactEmail && property.contactEmail.toLowerCase() === currentUser.email.toLowerCase()))) ||
+        (currentUser.phone && (((property as any).ownerPhone && normalizePhone((property as any).ownerPhone) === normalizePhone(currentUser.phone)) || (property.contactPhone && normalizePhone(property.contactPhone) === normalizePhone(currentUser.phone))));
+
+      if (currentUser.role !== 'admin' && !isOwner) {
         return res.status(403).json({ error: 'You are not authorized to delete this listing.' });
       }
       localDb.properties = localDb.properties.filter(p => p.id !== id);
       await saveDb();
-      return res.json({ success: true });
+      return res.json({ success: true, id });
     }
     res.status(404).json({ error: 'Property not found' });
   });

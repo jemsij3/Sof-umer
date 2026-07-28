@@ -331,14 +331,23 @@ export default function UserDashboard({
     );
   }
 
-  // Data filtering with robust email & user ID cross-matching
+  // Data filtering with robust email, user ID, phone & username cross-matching
   const myListings = properties.filter(p => {
     if (!currentUser) return false;
+    if ((p as any).isArchived) return false;
     if (p.ownerId === currentUser.id) return true;
     if (currentUser.email) {
       const emailLower = (currentUser.email || '').toLowerCase();
       if (p.contactEmail && (p.contactEmail || '').toLowerCase() === emailLower) return true;
       if ((p as any).ownerEmail && ((p as any).ownerEmail || '').toLowerCase() === emailLower) return true;
+    }
+    if (currentUser.phone) {
+      const uPhone = currentUser.phone.trim().replace(/[^\d+]/g, '');
+      if (uPhone && uPhone.length >= 7) {
+        const shortDigits = uPhone.slice(-9);
+        if (p.contactPhone && p.contactPhone.trim().replace(/[^\d+]/g, '').endsWith(shortDigits)) return true;
+        if ((p as any).ownerPhone && (p as any).ownerPhone.trim().replace(/[^\d+]/g, '').endsWith(shortDigits)) return true;
+      }
     }
     return false;
   });
@@ -399,9 +408,13 @@ export default function UserDashboard({
     setProfileSuccess('');
     setProfileError('');
     try {
+      const authToken = localStorage.getItem('sof_umer_token') || token || '';
       const res = await fetch(`/api/users/${currentUser.id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${authToken}`
+        },
         body: JSON.stringify({ fullName, phone: profilePhone, photoUrl: profilePhotoUrl })
       });
       if (res.ok) {
@@ -435,7 +448,7 @@ export default function UserDashboard({
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          'Authorization': `Bearer ${localStorage.getItem('sof_umer_token') || token}`
         },
         body: JSON.stringify({ currPassword, newPassword })
       });
@@ -462,9 +475,13 @@ export default function UserDashboard({
       : `**PAUSED**\n${property.description || ''}`;
     
     try {
+      const authToken = localStorage.getItem('sof_umer_token') || token || '';
       const res = await fetch(`/api/properties/${property.id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${authToken}`
+        },
         body: JSON.stringify({ description: updatedDesc })
       });
       if (res.ok) refreshData();
@@ -483,9 +500,13 @@ export default function UserDashboard({
     }
     
     try {
+      const authToken = localStorage.getItem('sof_umer_token') || token || '';
       const res = await fetch(`/api/properties/${property.id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${authToken}`
+        },
         body: JSON.stringify({ description: updatedDesc })
       });
       if (res.ok) refreshData();
@@ -499,9 +520,13 @@ export default function UserDashboard({
     if (!editingProperty) return;
     setEditSubmitting(true);
     try {
+      const authToken = localStorage.getItem('sof_umer_token') || token || '';
       const res = await fetch(`/api/properties/${editingProperty.id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${authToken}`
+        },
         body: JSON.stringify({ price: Number(editPrice), description: editDesc })
       });
       if (res.ok) {
@@ -518,7 +543,13 @@ export default function UserDashboard({
   const handleDeleteProperty = async (propertyId: string) => {
     if (!window.confirm('Are you sure you want to delete this listing permanently?')) return;
     try {
-      const res = await fetch(`/api/properties/${propertyId}`, { method: 'DELETE' });
+      const authToken = localStorage.getItem('sof_umer_token') || token || '';
+      const res = await fetch(`/api/properties/${propertyId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${authToken}`
+        }
+      });
       if (res.ok) refreshData();
     } catch (e) {
       console.error(e);

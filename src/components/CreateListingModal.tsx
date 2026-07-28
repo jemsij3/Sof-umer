@@ -1321,9 +1321,13 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
         subCategoryId: computedSubcatId || undefined
       };
 
+      const authToken = localStorage.getItem('sof_umer_token') || '';
       const res = await fetch('/api/properties', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${authToken}`
+        },
         body: JSON.stringify(propertyData)
       });
 

@@ -895,6 +895,7 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
         },
         body: JSON.stringify({
           verificationStatus: status,
+          approvalStatus: status === 'verified' ? 'approved' : status === 'rejected' ? 'rejected' : 'pending',
           isVerifiedListing: status === 'verified'
         })
       });

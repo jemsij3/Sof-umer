@@ -326,6 +326,9 @@ export default function Marketplace({
   // Filter properties dynamically
   const filteredProperties = useMemo(() => {
     return properties.filter(prop => {
+      if ((prop as any).isArchived) return false;
+      if (prop.approvalStatus === 'rejected') return false;
+
       // Search text
       const matchesSearch =
         extractString(prop.title, currentLanguage).toLowerCase().includes((searchQuery || '').toLowerCase()) ||
