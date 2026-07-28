@@ -63,7 +63,7 @@ const DICTIONARY: Record<'en' | 'om' | 'am', Record<string, string>> = {
 
     emailLabel: "Contact Email Address",
     emailDesc: "The email address for communications.",
-    emailPlaceholder: "e.g., contact@example.com",
+    emailPlaceholder: "e.g., contact@sofumer.com",
     emailVal: "Please enter a valid email address.",
 
     dealLabel: "Transaction Type",
@@ -153,7 +153,7 @@ const DICTIONARY: Record<'en' | 'om' | 'am', Record<string, string>> = {
     hoursVal: "Please enter opening hours.",
     webLabel: "Website (Optional)",
     webDesc: "Official website URL.",
-    webPlaceholder: "e.g., https://example.com",
+    webPlaceholder: "e.g., https://sofumer.com",
 
     orgLabel: "Organizer",
     orgDesc: "Entity hosting the activity.",
@@ -266,7 +266,7 @@ const DICTIONARY: Record<'en' | 'om' | 'am', Record<string, string>> = {
 
     emailLabel: "Imeelii Quunnamtii",
     emailDesc: "Teessoo imeelii quunnamtiidhaaf gargaaru galchi.",
-    emailPlaceholder: "fkn, contact@example.com",
+    emailPlaceholder: "fkn, contact@sofumer.com",
     emailVal: "Maaloo imeelii sirrii galchi.",
 
     dealLabel: "Gosa Daldalaa",
@@ -469,7 +469,7 @@ const DICTIONARY: Record<'en' | 'om' | 'am', Record<string, string>> = {
 
     emailLabel: "የመገናኛ ኢሜል አድራሻ",
     emailDesc: "የስርዓቱን ግንኙነቶች ለመቀበል የሚጠቅም የኢሜል አድራሻ።",
-    emailPlaceholder: "ምሳሌ: contact@example.com",
+    emailPlaceholder: "ምሳሌ: contact@sofumer.com",
     emailVal: "እባክዎ ትክክለኛ የኢሜል አድራሻ ያስገቡ።",
 
     dealLabel: "የስምምነት አይነት",
@@ -863,7 +863,7 @@ function getFieldsForSelection(majorCategory: string, subcategory: string): Fiel
         { id: 'price', label: 'Price (ETB)', type: 'number', placeholder: 'e.g., 2500000', required: true, colSpan: 'half' },
         { id: 'location', label: 'Location', type: 'text', placeholder: 'e.g., Bole, Addis Ababa', required: true, colSpan: 'full' },
         { id: 'contactPhone', label: 'Phone Number', type: 'text', placeholder: 'e.g., +251911223344', required: true, colSpan: 'half' },
-        { id: 'contactEmail', label: 'Email', type: 'text', placeholder: 'e.g., contact@example.com', required: true, colSpan: 'half' },
+        { id: 'contactEmail', label: 'Email', type: 'text', placeholder: 'e.g., contact@sofumer.com', required: true, colSpan: 'half' },
         { id: 'description', label: 'Description', type: 'textarea', placeholder: 'Describe land features, soil type, location advantages, access road...', required: true, colSpan: 'full' },
         { id: 'images', label: 'Photos', type: 'images', colSpan: 'full' },
         { id: 'video', label: 'Video URL', type: 'text', placeholder: 'e.g., Video tour link (optional)', colSpan: 'full' }
@@ -881,7 +881,7 @@ function getFieldsForSelection(majorCategory: string, subcategory: string): Fiel
         { id: 'price', label: 'Price (ETB)', type: 'number', placeholder: 'e.g., 50000', required: true, colSpan: 'half' },
         { id: 'location', label: 'Location', type: 'text', placeholder: 'e.g., Kazanchis, Addis Ababa', required: true, colSpan: 'full' },
         { id: 'contactPhone', label: 'Phone Number', type: 'text', placeholder: 'e.g., +251911223344', required: true, colSpan: 'half' },
-        { id: 'contactEmail', label: 'Email', type: 'text', placeholder: 'e.g., contact@example.com', required: true, colSpan: 'half' },
+        { id: 'contactEmail', label: 'Email', type: 'text', placeholder: 'e.g., contact@sofumer.com', required: true, colSpan: 'half' },
         { id: 'description', label: 'Description', type: 'textarea', placeholder: 'Describe facility, floor level, parking, security...', required: true, colSpan: 'full' },
         { id: 'images', label: 'Photos', type: 'images', colSpan: 'full' },
         { id: 'video', label: 'Video URL', type: 'text', placeholder: 'e.g., Video tour link (optional)', colSpan: 'full' }
@@ -898,7 +898,7 @@ function getFieldsForSelection(majorCategory: string, subcategory: string): Fiel
       { id: 'price', label: 'Price (ETB)', type: 'number', placeholder: 'e.g., 25000', required: true, colSpan: 'half' },
       { id: 'location', label: 'Location', type: 'text', placeholder: 'e.g., Bole, Addis Ababa', required: true, colSpan: 'full' },
       { id: 'contactPhone', label: 'Phone Number', type: 'text', placeholder: 'e.g., +251911223344', required: true, colSpan: 'half' },
-      { id: 'contactEmail', label: 'Email', type: 'text', placeholder: 'e.g., contact@example.com', required: true, colSpan: 'half' },
+      { id: 'contactEmail', label: 'Email', type: 'text', placeholder: 'e.g., contact@sofumer.com', required: true, colSpan: 'half' },
       { id: 'description', label: 'Description', type: 'textarea', placeholder: 'Describe key features, condition, compound, security...', required: true, colSpan: 'full' },
       { id: 'images', label: 'Photos', type: 'images', colSpan: 'full' },
       { id: 'video', label: 'Video URL', type: 'text', placeholder: 'e.g., Video tour link (optional)', colSpan: 'full' }
@@ -915,7 +915,7 @@ function getFieldsForSelection(majorCategory: string, subcategory: string): Fiel
         { id: 'price', label: 'Price (ETB)', type: 'number', placeholder: 'e.g., 5000', required: true, colSpan: 'half' },
         { id: 'location', label: 'Location', type: 'text', placeholder: 'e.g., Kera, Addis Ababa', required: true, colSpan: 'half' },
         { id: 'contactPhone', label: 'Phone Number', type: 'text', placeholder: 'e.g., +251911223344', required: true, colSpan: 'half' },
-        { id: 'contactEmail', label: 'Email', type: 'text', placeholder: 'e.g., seller@example.com', required: true, colSpan: 'half' },
+        { id: 'contactEmail', label: 'Email', type: 'text', placeholder: 'e.g., seller@sofumer.com', required: true, colSpan: 'half' },
         { id: 'description', label: 'Description', type: 'textarea', placeholder: 'Specify fitment, part numbers, compatibility...', required: true, colSpan: 'full' },
         { id: 'images', label: 'Photos', type: 'images', colSpan: 'full' },
         { id: 'video', label: 'Video URL', type: 'text', placeholder: 'e.g., Video link (optional)', colSpan: 'full' }
@@ -1014,7 +1014,7 @@ function getFieldsForSelection(majorCategory: string, subcategory: string): Fiel
     { id: 'price', label: 'Price (ETB)', type: 'number', placeholder: 'e.g., 500', colSpan: 'half' },
     { id: 'location', label: 'Location', type: 'text', placeholder: 'e.g., Bole, Addis Ababa', required: true, colSpan: 'half' },
     { id: 'contactPhone', label: 'Phone Number', type: 'text', placeholder: 'e.g., +251911223344', required: true, colSpan: 'half' },
-    { id: 'contactEmail', label: 'Email', type: 'text', placeholder: 'e.g., contact@example.com', required: true, colSpan: 'half' },
+    { id: 'contactEmail', label: 'Email', type: 'text', placeholder: 'e.g., contact@sofumer.com', required: true, colSpan: 'half' },
     { id: 'description', label: 'Description', type: 'textarea', placeholder: 'Describe key features, condition, benefits...', required: true, colSpan: 'full' },
     { id: 'images', label: 'Photos', type: 'images', colSpan: 'full' },
     { id: 'video', label: 'Video URL', type: 'text', placeholder: 'e.g., Video link (optional)', colSpan: 'full' }
@@ -1577,7 +1577,7 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
                           type="email"
                           required
                           value={fieldsState.contactEmail || ''}
-                          placeholder="e.g. owner@example.com"
+                          placeholder="e.g. owner@sofumer.com"
                           onChange={e => handleFieldChange('contactEmail', e.target.value)}
                           className="w-full p-2.5 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white focus:outline-none transition"
                         />
@@ -1644,7 +1644,7 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
                               </div>
 
                               <div className="flex items-center justify-between pt-1 border-t border-white/5">
-                                <span className="text-[10px] text-white/40 italic">Need sample photo?</span>
+                                <span className="text-[10px] text-white/40 italic">Need stock photo?</span>
                                 <button
                                   type="button"
                                   onClick={handleQuickAddImagePlaceholder}

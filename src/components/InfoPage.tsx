@@ -28,7 +28,7 @@ export default function InfoPage({ pageId, onBack, onOpenReportModalFromInfo }: 
     fullNameLabel: 'Full Name *',
     fullNamePlaceholder: 'e.g. Jemal Jimma',
     emailLabel: 'Email Address *',
-    emailPlaceholder: 'e.g. jemal@example.com',
+    emailPlaceholder: 'e.g. jemal@sofumer.com',
     messageLabel: 'Message / Inquiry *',
     messagePlaceholder: 'Describe your inquiry, error or collaboration suggestion here...',
     submitBtnText: 'Send Message'
@@ -748,7 +748,7 @@ export default function InfoPage({ pageId, onBack, onOpenReportModalFromInfo }: 
                           required 
                           value={contactEmail} 
                           onChange={e => setContactEmail(e.target.value)} 
-                          placeholder={activeContactUs.emailPlaceholder || 'e.g. jemal@example.com'} 
+                          placeholder={activeContactUs.emailPlaceholder || 'e.g. jemal@sofumer.com'} 
                           className="w-full p-2.5 bg-black border border-white/10 rounded-xl text-xs text-white focus:outline-none focus:border-emerald-400 placeholder-white/20"
                         />
                       </div>
@@ -878,7 +878,7 @@ export default function InfoPage({ pageId, onBack, onOpenReportModalFromInfo }: 
                               required 
                               value={applyEmail} 
                               onChange={e => setApplyEmail(e.target.value)} 
-                              placeholder="jemal@example.com" 
+                              placeholder="jemal@sofumer.com" 
                               className="w-full p-2.5 bg-black border border-white/10 rounded-xl text-xs text-white focus:outline-none focus:border-emerald-400 placeholder-white/20"
                             />
                           </div>

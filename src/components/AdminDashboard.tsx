@@ -416,7 +416,7 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
     fullNameLabel: 'Full Name *',
     fullNamePlaceholder: 'e.g. Jemal Jimma',
     emailLabel: 'Email Address *',
-    emailPlaceholder: 'e.g. jemal@example.com',
+    emailPlaceholder: 'e.g. jemal@sofumer.com',
     messageLabel: 'Message / Inquiry *',
     messagePlaceholder: 'Describe your inquiry, error or collaboration suggestion here...',
     submitBtnText: 'Send Message'
@@ -1552,37 +1552,27 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
                     0: 6  // Sun
                   };
 
-                  if (!demoAnalyticsCleared) {
-                    weeklyData[0] = { day: 'Mon', posts: 12, receipts: 2 };
-                    weeklyData[1] = { day: 'Tue', posts: 19, receipts: 4 };
-                    weeklyData[2] = { day: 'Wed', posts: 15, receipts: 1 };
-                    weeklyData[3] = { day: 'Thu', posts: 28, receipts: 8 };
-                    weeklyData[4] = { day: 'Fri', posts: 32, receipts: 12 };
-                    weeklyData[5] = { day: 'Sat', posts: 45, receipts: 15 };
-                    weeklyData[6] = { day: 'Sun', posts: 38, receipts: 9 };
-                  } else {
-                    properties.forEach(prop => {
-                      try {
-                        const date = new Date(prop.createdAt);
-                        const day = date.getDay();
-                        const idx = dayMap[day];
-                        if (idx !== undefined) {
-                          weeklyData[idx].posts += 1;
-                        }
-                      } catch (e) {}
-                    });
+                  properties.forEach(prop => {
+                    try {
+                      const date = new Date(prop.createdAt);
+                      const day = date.getDay();
+                      const idx = dayMap[day];
+                      if (idx !== undefined) {
+                        weeklyData[idx].posts += 1;
+                      }
+                    } catch (e) {}
+                  });
 
-                    receipts.forEach(rec => {
-                      try {
-                        const date = new Date(rec.submittedAt);
-                        const day = date.getDay();
-                        const idx = dayMap[day];
-                        if (idx !== undefined) {
-                          weeklyData[idx].receipts += 1;
-                        }
-                      } catch (e) {}
-                    });
-                  }
+                  receipts.forEach(rec => {
+                    try {
+                      const date = new Date(rec.submittedAt);
+                      const day = date.getDay();
+                      const idx = dayMap[day];
+                      if (idx !== undefined) {
+                        weeklyData[idx].receipts += 1;
+                      }
+                    } catch (e) {}
+                  });
 
                   const maxPosts = Math.max(...weeklyData.map(d => d.posts), 1);
                   const maxReceipts = Math.max(...weeklyData.map(d => d.receipts), 1);
@@ -1625,23 +1615,7 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
                   <Clock className="w-4 h-4 text-amber-500" /> Administrative Audit & Activity Logs
                 </h4>
                 <div className="divide-y divide-white/5 text-xs text-white/80 font-light space-y-3">
-                  {!demoAnalyticsCleared ? (
-                    <>
-                      <div className="flex justify-between items-center pt-3">
-                        <span className="text-white/60">Seller badge assigned to <strong className="font-semibold text-white">Chala Tolosa</strong></span>
-                        <span className="text-[10px] text-white/30 font-mono">10m ago</span>
-                      </div>
-                      <div className="flex justify-between items-center pt-3">
-                        <span className="text-white/60">Payment slip approved for listing <strong className="font-semibold text-white">Bole Cafe</strong></span>
-                        <span className="text-[10px] text-white/30 font-mono">2h ago</span>
-                      </div>
-                      <div className="flex justify-between items-center pt-3">
-                        <span className="text-white/60">New complaint filed against suspicious product listing #832</span>
-                        <span className="text-[10px] text-rose-400 font-mono">Yesterday</span>
-                      </div>
-                    </>
-                  ) : (
-                    (() => {
+                  {(() => {
                       const formatTimeAgo = (dateString: string) => {
                         try {
                           const now = new Date();
@@ -1714,8 +1688,7 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
                           <span className={`text-[10px] font-mono ${log.statusColor}`}>{log.time}</span>
                         </div>
                       ));
-                    })()
-                  )}
+                    })()}
                 </div>
               </div>
             </div>
@@ -4124,26 +4097,6 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
                     <MapPin className="w-4 h-4 text-amber-500" /> Active Listing Geographic Nodes
                   </h5>
                   
-                  {!demoAnalyticsCleared ? (
-                    <div className="space-y-2.5">
-                      {[
-                        { area: 'Bole Hub, Addis', share: 45, count: '12 Posts' },
-                        { area: 'Meskel Square Center', share: 25, count: '7 Posts' },
-                        { area: 'Yirgacheffe Gedeo cooperatives', share: 15, count: '4 Posts' },
-                        { area: 'Remote / Digital / Online', share: 15, count: '4 Posts' }
-                      ].map((g, idx) => (
-                        <div key={idx} className="text-xs space-y-1 text-white">
-                          <div className="flex justify-between items-center text-[11px]">
-                            <span>{g.area}</span>
-                            <span className="font-bold text-amber-500 font-mono">{g.share}% ({g.count})</span>
-                          </div>
-                          <div className="w-full bg-black/40 h-1.5 rounded-full overflow-hidden">
-                            <div className="bg-gradient-to-r from-amber-500 to-amber-600 h-full rounded-full" style={{ width: `${g.share}%` }} />
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
                     <div className="space-y-2.5">
                       {properties.length === 0 ? (
                         <p className="text-xs text-white/30 italic py-4">No live properties in the database to compile geographic analytics.</p>
@@ -4173,7 +4126,6 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
                         })()
                       )}
                     </div>
-                  )}
                 </div>
 
                 {/* Listing category density */}
@@ -4182,26 +4134,6 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
                     <Grid className="w-4 h-4 text-teal-500" /> Marketplace Category Breakdown
                   </h5>
                   
-                  {!demoAnalyticsCleared ? (
-                    <div className="space-y-2.5">
-                      {[
-                        { label: 'Properties / Offices', count: 12, percentage: 38 },
-                        { label: 'Products & Crafts', count: 8, percentage: 25 },
-                        { label: 'Services & Gigs', count: 6, percentage: 19 },
-                        { label: 'Jobs / Hiring Remote', count: 5, percentage: 18 }
-                      ].map((c, idx) => (
-                        <div key={idx} className="text-xs space-y-1 text-white">
-                          <div className="flex justify-between items-center text-[11px]">
-                            <span>{c.label}</span>
-                            <span className="font-bold text-teal-400 font-mono">{c.percentage}% ({c.count})</span>
-                          </div>
-                          <div className="w-full bg-black/40 h-1.5 rounded-full overflow-hidden">
-                            <div className="bg-gradient-to-r from-teal-500 to-teal-600 h-full rounded-full" style={{ width: `${c.percentage}%` }} />
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
                     <div className="space-y-2.5">
                       {properties.length === 0 ? (
                         <p className="text-xs text-white/30 italic py-4">No live properties in the database to compile category analytics.</p>
@@ -4231,7 +4163,6 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
                         })()
                       )}
                     </div>
-                  )}
                 </div>
 
                 {/* Additional KPI charts */}
@@ -4240,25 +4171,6 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
                     <Users className="w-4 h-4 text-purple-500" /> Platform Registration & Traction Growth Matrix
                   </h5>
                   
-                  {!demoAnalyticsCleared ? (
-                    <div className="grid grid-cols-3 gap-4 text-center">
-                      <div className="bg-black/30 p-3 rounded-xl border border-white/[0.02]">
-                        <p className="text-[10px] text-white/40 uppercase font-bold">MoM Growth</p>
-                        <p className="text-lg font-mono font-extrabold text-amber-500 mt-1">+14.2%</p>
-                        <span className="text-[8px] text-emerald-400">Steady upward slope</span>
-                      </div>
-                      <div className="bg-black/30 p-3 rounded-xl border border-white/[0.02]">
-                        <p className="text-[10px] text-white/40 uppercase font-bold">Conversion Rate</p>
-                        <p className="text-lg font-mono font-extrabold text-amber-500">8.4%</p>
-                        <span className="text-[8px] text-emerald-400">Listing verification conversion</span>
-                      </div>
-                      <div className="bg-black/30 p-3 rounded-xl border border-white/[0.02]">
-                        <p className="text-[10px] text-white/40 uppercase font-bold">Audit SLA</p>
-                        <p className="text-lg font-mono font-extrabold text-amber-500">22m</p>
-                        <span className="text-[8px] text-emerald-400">Mean time to review slips</span>
-                      </div>
-                    </div>
-                  ) : (
                     <div className="grid grid-cols-3 gap-4 text-center">
                       <div className="bg-black/30 p-3 rounded-xl border border-white/[0.02]">
                         <p className="text-[10px] text-white/40 uppercase font-bold">Live Users Node</p>
@@ -4278,7 +4190,6 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
                         <span className="text-[8px] text-emerald-400">Awaiting visual review</span>
                       </div>
                     </div>
-                  )}
                 </div>
 
               </div>

@@ -1400,7 +1400,7 @@ export default function AuthScreen({ initialMode }: AuthScreenProps) {
                     </div>
                     <div>
                       <p className="text-sm font-medium text-white/80">Use another account</p>
-                      <p className="text-xs text-white/30">Type any Gmail address to test duplicate prevention</p>
+                      <p className="text-xs text-white/30">Enter your Google account email address</p>
                     </div>
                   </button>
                 </div>
