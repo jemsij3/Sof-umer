@@ -1315,7 +1315,9 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
         isTopAd: isTopAdAddon,
         isFeatured: isFeaturedAddon || selectedPlan === 'vip',
         promotionExpiresAt: expiresAt,
-        approvalStatus: 'approved',
+        approvalStatus: currentUser?.role === 'admin' ? 'approved' : 'pending',
+        verificationStatus: currentUser?.role === 'admin' ? 'verified' : 'pending',
+        isVerifiedListing: currentUser?.role === 'admin',
         subCategoryId: computedSubcatId || undefined
       };
 

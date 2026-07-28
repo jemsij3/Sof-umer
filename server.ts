@@ -1876,6 +1876,9 @@ async function startServer() {
     const planDays = (requestedPlan === 'starter' || requestedPlan === 'basic') ? 3 : requestedPlan === 'premium' ? 7 : requestedPlan === 'vip' ? 30 : 0;
     const computedExpiresAt = planDays > 0 ? new Date(Date.now() + planDays * 24 * 60 * 60 * 1000).toISOString() : (propertyData.promotionExpiresAt || undefined);
 
+    const authUser = (req as any).user;
+    const isAdmin = authUser?.role === 'admin';
+
     const newProperty: Property = {
       id: 'prop-' + Date.now(),
       ...propertyData,
@@ -1886,9 +1889,9 @@ async function startServer() {
       isTopAd: propertyData.isTopAd === true || requestedPlan === 'starter' || requestedPlan === 'basic' || requestedPlan === 'vip',
       isFeatured: propertyData.isFeatured === true || requestedPlan === 'premium' || requestedPlan === 'vip',
       promotionExpiresAt: computedExpiresAt,
-      approvalStatus: propertyData.approvalStatus || 'approved',
-      verificationStatus: propertyData.verificationStatus || 'verified',
-      isVerifiedListing: propertyData.isVerifiedListing !== undefined ? propertyData.isVerifiedListing : true,
+      approvalStatus: isAdmin ? (propertyData.approvalStatus || 'approved') : 'pending',
+      verificationStatus: isAdmin ? (propertyData.verificationStatus || 'verified') : 'pending',
+      isVerifiedListing: isAdmin ? (propertyData.isVerifiedListing !== undefined ? propertyData.isVerifiedListing : true) : false,
       createdAt: new Date().toISOString()
     };
     localDb.properties.push(newProperty);
@@ -1907,8 +1910,12 @@ async function startServer() {
         return res.status(403).json({ error: 'You are not authorized to edit this listing.' });
       }
       
-      // Admin verification overrides
-      if (currentUser.role === 'admin') {
+      // Non-admins cannot alter verification/approval flags
+      if (currentUser.role !== 'admin') {
+        delete updates.verificationStatus;
+        delete updates.approvalStatus;
+        delete updates.isVerifiedListing;
+      } else {
         if (updates.verificationStatus !== undefined) {
           updates.isVerifiedListing = updates.verificationStatus === 'verified';
         }
@@ -2465,10 +2472,13 @@ async function startServer() {
 
   app.post('/api/advertisements', async (req, res) => {
     const advData = req.body;
+    const authUser = (req as any).user;
+    const isAdmin = authUser?.role === 'admin';
+
     const newAdv: Advertisement = {
       id: 'adv-' + Date.now(),
-      isActive: true,
-      ...advData
+      ...advData,
+      isActive: isAdmin ? (advData.isActive !== undefined ? advData.isActive : true) : false
     };
     localDb.advertisements.push(newAdv);
     await saveDb();
@@ -2478,8 +2488,14 @@ async function startServer() {
   app.put('/api/advertisements/:id', async (req, res) => {
     const { id } = req.params;
     const updates = req.body;
+    const authUser = (req as any).user;
+    const isAdmin = authUser?.role === 'admin';
+
     const idx = localDb.advertisements.findIndex(a => a.id === id);
     if (idx !== -1) {
+      if (!isAdmin) {
+        delete updates.isActive;
+      }
       localDb.advertisements[idx] = { ...localDb.advertisements[idx], ...updates };
       await saveDb();
       return res.json(localDb.advertisements[idx]);
