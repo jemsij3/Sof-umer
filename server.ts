@@ -2216,6 +2216,19 @@ async function startServer() {
     res.json({ success: true });
   });
 
+  // System Version & Metrics Endpoint (Feature Update v2.5.0)
+  app.get('/api/version', (req, res) => {
+    res.json({
+      version: '2.5.0-production',
+      appName: 'Sof Umer Marketplace',
+      dataProtection: 'Persistent Storage Active',
+      backupStrategy: 'Automated Pre-Migration Backups',
+      nodeEnv: process.env.NODE_ENV || 'development',
+      renderVolume: DB_FILE.startsWith('/data'),
+      timestamp: new Date().toISOString()
+    });
+  });
+
   // Languages & Translations
   app.get('/api/languages', async (req, res) => {
     res.json({

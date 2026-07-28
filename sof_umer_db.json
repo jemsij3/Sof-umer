@@ -14,6 +14,12 @@
         {
           "ip": "127.0.0.1",
           "userAgent": "node",
+          "timestamp": "2026-07-28T14:35:11.564Z",
+          "deviceType": "Desktop"
+        },
+        {
+          "ip": "127.0.0.1",
+          "userAgent": "node",
           "timestamp": "2026-07-28T14:10:59.768Z",
           "deviceType": "Desktop"
         },
@@ -131,7 +137,77 @@
       "verificationCode": "709600",
       "verificationCodeExpiresAt": "2026-07-28T14:25:59.930Z",
       "tokenVersion": 1,
-      "loginHistory": []
+      "loginHistory": [],
+      "walletTransactions": []
+    },
+    {
+      "id": "usr-001",
+      "email": "abebe.bikila@sofumer.com",
+      "fullName": "Abebe Bikila",
+      "role": "user",
+      "status": "active",
+      "isVerified": true,
+      "createdAt": "2026-07-20T10:00:00Z",
+      "passwordHash": "$2b$10$8M.OZ7bfDTd8e724T1tSneytfS2iE4nLdSr27YVOBgkIJVdL7ENvC",
+      "failedLoginAttempts": 0,
+      "passwordHistory": [
+        "$2b$10$8M.OZ7bfDTd8e724T1tSneytfS2iE4nLdSr27YVOBgkIJVdL7ENvC"
+      ],
+      "walletTransactions": [],
+      "tokenVersion": 1,
+      "loginHistory": [
+        {
+          "ip": "127.0.0.1",
+          "userAgent": "node",
+          "timestamp": "2026-07-28T14:35:11.743Z",
+          "deviceType": "Desktop"
+        }
+      ]
+    },
+    {
+      "id": "usr-002",
+      "email": "fatuma.roba@sofumer.com",
+      "fullName": "Fatuma Roba",
+      "role": "user",
+      "status": "active",
+      "isVerified": true,
+      "createdAt": "2026-07-21T11:30:00Z",
+      "passwordHash": "$2b$10$8M.OZ7bfDTd8e724T1tSneytfS2iE4nLdSr27YVOBgkIJVdL7ENvC",
+      "failedLoginAttempts": 0,
+      "passwordHistory": [
+        "$2b$10$8M.OZ7bfDTd8e724T1tSneytfS2iE4nLdSr27YVOBgkIJVdL7ENvC"
+      ],
+      "walletTransactions": []
+    },
+    {
+      "id": "usr-003",
+      "email": "derartu.tulu@sofumer.com",
+      "fullName": "Derartu Tulu",
+      "role": "agent",
+      "status": "active",
+      "isVerified": true,
+      "createdAt": "2026-07-22T09:15:00Z",
+      "passwordHash": "$2b$10$8M.OZ7bfDTd8e724T1tSneytfS2iE4nLdSr27YVOBgkIJVdL7ENvC",
+      "failedLoginAttempts": 0,
+      "passwordHistory": [
+        "$2b$10$8M.OZ7bfDTd8e724T1tSneytfS2iE4nLdSr27YVOBgkIJVdL7ENvC"
+      ],
+      "walletTransactions": []
+    },
+    {
+      "id": "usr-004",
+      "email": "haile.gebrselassie@sofumer.com",
+      "fullName": "Haile Gebrselassie",
+      "role": "user",
+      "status": "active",
+      "isVerified": true,
+      "createdAt": "2026-07-24T14:20:00Z",
+      "passwordHash": "$2b$10$8M.OZ7bfDTd8e724T1tSneytfS2iE4nLdSr27YVOBgkIJVdL7ENvC",
+      "failedLoginAttempts": 0,
+      "passwordHistory": [
+        "$2b$10$8M.OZ7bfDTd8e724T1tSneytfS2iE4nLdSr27YVOBgkIJVdL7ENvC"
+      ],
+      "walletTransactions": []
     }
   ],
   "properties": [
@@ -173,6 +249,93 @@
       "verificationStatus": "verified",
       "isVerifiedListing": true,
       "createdAt": "2026-07-28T13:29:34.643Z"
+    },
+    {
+      "id": "prop-bole-001",
+      "title": {
+        "en": "Luxury Villa in Bole Atlas",
+        "om": "Villa Qaqqabaa Boolee Atlas",
+        "am": "በቦሌ አትላስ የሚገኝ ዘመናዊ ቪላ"
+      },
+      "description": {
+        "en": "5 Bedroom modern villa with garden and security.",
+        "om": "Mana jireenyaa fiiree 5 qabu.",
+        "am": "5 የመኝታ ክፍል ያለው የቅንጦት ቪላ።"
+      },
+      "propertyType": "Houses",
+      "listingCategory": "For Sale",
+      "price": 35000000,
+      "currency": "ETB",
+      "location": "Bole Atlas, Addis Ababa",
+      "ownerName": "Derartu Tulu",
+      "ownerEmail": "derartu.tulu@sofumer.com",
+      "ownerPhone": "+251911223344",
+      "images": [
+        "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=800&q=80"
+      ],
+      "isFeatured": true,
+      "status": "active",
+      "createdAt": "2026-07-25T10:00:00Z",
+      "verificationStatus": "verified",
+      "isVerifiedListing": true
+    },
+    {
+      "id": "prod-elec-002",
+      "title": {
+        "en": "MacBook Pro M3 Max 16-inch",
+        "om": "MacBook Pro M3 Max 16-inch",
+        "am": "ማክቡክ ፕሮ M3 Max 16-ኢንች"
+      },
+      "description": {
+        "en": "36GB RAM, 1TB SSD, Brand New Sealed.",
+        "om": "36GB RAM, 1TB SSD, Haaraa.",
+        "am": "36GB RAM፣ 1TB SSD፣ ሙሉ በሙሉ አዲስ።"
+      },
+      "propertyType": "Products",
+      "listingCategory": "Electronics",
+      "price": 240000,
+      "currency": "ETB",
+      "location": "Kazanchis, Addis Ababa",
+      "ownerName": "Abebe Bikila",
+      "ownerEmail": "abebe.bikila@sofumer.com",
+      "ownerPhone": "+251922334455",
+      "images": [
+        "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?auto=format&fit=crop&w=800&q=80"
+      ],
+      "isFeatured": true,
+      "status": "active",
+      "createdAt": "2026-07-26T12:00:00Z",
+      "verificationStatus": "verified",
+      "isVerifiedListing": true
+    },
+    {
+      "id": "serv-tech-003",
+      "title": {
+        "en": "Full Stack Web & Mobile App Development",
+        "om": "Tajaajila Misooma Weebsaitii fi Mobaayilaa",
+        "am": "የዌብሳይት እና ሞባይል አፕሊኬሽን ልማት አገልግሎት"
+      },
+      "description": {
+        "en": "Professional React, Node.js, and Mobile development services.",
+        "om": "Tajaajila misooma teeknoolojii saayinsii.",
+        "am": "የተሟላ የሶፍትዌር ልማት አገልግሎት።"
+      },
+      "propertyType": "Services",
+      "listingCategory": "IT & Tech",
+      "price": 50000,
+      "currency": "ETB",
+      "location": "Bole Medhanialem, Addis Ababa",
+      "ownerName": "Jemal Jimma",
+      "ownerEmail": "jemaljima@gmail.com",
+      "ownerPhone": "+251911000000",
+      "images": [
+        "https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&w=800&q=80"
+      ],
+      "isFeatured": true,
+      "status": "active",
+      "createdAt": "2026-07-27T08:30:00Z",
+      "verificationStatus": "verified",
+      "isVerifiedListing": true
     }
   ],
   "paymentMethods": [
@@ -205,7 +368,28 @@
     }
   ],
   "receipts": [],
-  "inquiries": [],
+  "inquiries": [
+    {
+      "id": "inq-001",
+      "propertyId": "prop-bole-001",
+      "senderName": "Fatuma Roba",
+      "senderEmail": "fatuma.roba@sofumer.com",
+      "senderPhone": "+251933445566",
+      "message": "Hello Derartu, I am interested in viewing this villa in Bole. Is it still available?",
+      "createdAt": "2026-07-27T15:00:00Z",
+      "status": "unread"
+    },
+    {
+      "id": "inq-002",
+      "propertyId": "prod-elec-002",
+      "senderName": "Haile Gebrselassie",
+      "senderEmail": "haile.gebrselassie@sofumer.com",
+      "senderPhone": "+251944556677",
+      "message": "Hi Abebe, what is the final price for the MacBook Pro M3?",
+      "createdAt": "2026-07-28T09:12:00Z",
+      "status": "replied"
+    }
+  ],
   "advertisements": [],
   "languages": [
     {
@@ -3358,6 +3542,24 @@
       "type": "security",
       "isRead": true,
       "createdAt": "2026-07-28T13:27:52.961Z"
+    },
+    {
+      "id": "notif-001",
+      "userId": "usr-jemal",
+      "title": "New Inquiry Received",
+      "message": "Fatuma Roba sent an inquiry regarding Luxury Villa in Bole Atlas.",
+      "type": "inquiry",
+      "isRead": false,
+      "createdAt": "2026-07-27T15:01:00Z"
+    },
+    {
+      "id": "notif-002",
+      "userId": "usr-jemal",
+      "title": "System Update Complete",
+      "message": "Sof Umer core database protection system is active.",
+      "type": "system",
+      "isRead": true,
+      "createdAt": "2026-07-28T06:00:00Z"
     }
   ],
   "categories": [
