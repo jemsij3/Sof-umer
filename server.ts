@@ -7,17 +7,26 @@ const MONGODB_URI = process.env.MONGODB_URI;
 
 let DbStateModel: any = null;
 
-if (MONGODB_URI) {
-  mongoose.connect(MONGODB_URI, { serverSelectionTimeoutMS: 5000 })
-    .then(() => {
+let isMongoConnected = false;
+
+async function connectMongo() {
+  if (MONGODB_URI) {
+    try {
+      await mongoose.connect(MONGODB_URI, { serverSelectionTimeoutMS: 5000 });
       console.log('[MongoDB] Connected successfully');
+      isMongoConnected = true;
       const DbStateSchema = new mongoose.Schema({
-        data: { type: Object, required: true },
+        data: { type: mongoose.Schema.Types.Mixed, required: true },
         updatedAt: { type: Date, default: Date.now }
       });
       DbStateModel = mongoose.models.DbState || mongoose.model('DbState', DbStateSchema);
-    })
-    .catch(err => console.error('[MongoDB] Connection error:', err));
+    } catch (err) {
+      console.error('[MongoDB] Connection error:', err);
+      isMongoConnected = false;
+    }
+  } else {
+    console.log('[Storage] MONGODB_URI not provided. MongoDB integration is disabled.');
+  }
 }
 
 import express from 'express';
@@ -696,17 +705,36 @@ const loadDb = async () => {
 
   try {
     let loadedFromMongo = false;
-    if (DbStateModel) {
-      try {
-        const state = await DbStateModel.findOne({});
-        if (state && state.data && state.data.users && state.data.users.length > 0) {
-          localDb = state.data;
-          loadedFromMongo = true;
-          console.log('[Storage] Successfully initialized database from MongoDB.');
+
+    // If MONGODB_URI is provided, we MUST load from it. If it fails, we shouldn't silently fallback to JSON.
+    if (process.env.MONGODB_URI) {
+      if (isMongoConnected && DbStateModel) {
+        try {
+          const state = await DbStateModel.findOne({});
+          if (state && state.data && state.data.users && state.data.users.length > 0) {
+            localDb = state.data;
+            loadedFromMongo = true;
+            console.log('[Storage] Successfully initialized database from MongoDB production database.');
+          } else {
+             console.log('[Storage] MongoDB database is empty. Proceeding to seed default data.');
+             // Proceed to seed data, since it's empty
+             loadedFromMongo = true;
+             // We set loadedFromMongo = true so it doesn't try to load from the JSON file
+             localDb = getInitialData();
+             await saveDb();
+          }
+        } catch (err) {
+          console.error('[Storage] Error reading from MongoDB:', err);
+          // If we fail to read from MongoDB due to network error, it's safer to crash or wait than to overwrite with empty JSON.
+          console.error('CRITICAL: Cannot read from MongoDB. Aborting startup to prevent data corruption.');
+          process.exit(1);
         }
-      } catch (err) {
-        console.error('[Storage] Error reading from MongoDB:', err);
+      } else {
+         console.error('CRITICAL: MONGODB_URI is configured but MongoDB failed to connect. Aborting startup to prevent data corruption.');
+         process.exit(1);
       }
+    } else {
+      console.log('[Storage] Using JSON fallback database (no MONGODB_URI provided).');
     }
 
     if (!loadedFromMongo) {
@@ -969,24 +997,32 @@ let savePromise: Promise<void> = Promise.resolve();
 const saveDb = (): Promise<void> => {
   savePromise = savePromise.then(async () => {
     try {
-      if (DbStateModel) {
-        try {
-          await DbStateModel.findOneAndUpdate({}, { data: localDb, updatedAt: new Date() }, { upsert: true });
-          return; // Skip JSON file write if MongoDB is successful
-        } catch (err) {
-          console.error('[MongoDB] Failed to backup to MongoDB, falling back to JSON:', err);
+      if (process.env.MONGODB_URI) {
+        if (DbStateModel) {
+          try {
+            await DbStateModel.findOneAndUpdate({}, { data: localDb, updatedAt: new Date() }, { upsert: true });
+            return; // Skip JSON file write if MongoDB is successful
+          } catch (err) {
+            console.error('[MongoDB] Failed to backup to MongoDB:', err);
+            // DO NOT fallback to JSON if MongoDB fails, this corrupts data.
+            throw err;
+          }
         }
+        return; // If MONGODB_URI is provided, we never write to JSON
       }
 
-      const jsonString = JSON.stringify(localDb, null, 2);
-      const tempFile = `${DB_FILE}.tmp`;
-      await fs.writeFile(tempFile, jsonString, 'utf-8');
-      await fs.rename(tempFile, DB_FILE);
-
+      if (IS_PERSISTENT_STORAGE) {
+        const jsonString = JSON.stringify(localDb, null, 2);
+        const tempFile = `${DB_FILE}.tmp`;
+        await fs.writeFile(tempFile, jsonString, 'utf-8');
+        await fs.rename(tempFile, DB_FILE);
+      }
     } catch (err) {
       console.error('Failed atomic saveDb, falling back to direct write:', err);
       try {
-        await fs.writeFile(DB_FILE, JSON.stringify(localDb, null, 2), 'utf-8');
+        if (!process.env.MONGODB_URI && IS_PERSISTENT_STORAGE) {
+          await fs.writeFile(DB_FILE, JSON.stringify(localDb, null, 2), 'utf-8');
+        }
       } catch (e2) {
         console.error('CRITICAL: Fallback saveDb failed:', e2);
       }
@@ -1000,6 +1036,7 @@ const saveDb = (): Promise<void> => {
 startServer();
 
 async function startServer() {
+  await connectMongo();
   await loadDb();
   const app = express();
 
