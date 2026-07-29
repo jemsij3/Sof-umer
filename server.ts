@@ -8,6 +8,12 @@ import bcrypt from 'bcryptjs';
 import nodemailer from 'nodemailer';
 import mongoose from 'mongoose';
 import { v2 as cloudinary } from 'cloudinary';
+import { authenticator } from 'otplib';
+import QRCode from 'qrcode';
+import crypto from 'crypto';
+
+// Configure authenticator options (window: 1 allows 30-sec clock drift tolerance)
+authenticator.options = { window: 1 };
 
 // Cloudinary File Storage Configuration
 const CLOUDINARY_CLOUD_NAME = process.env.CLOUDINARY_CLOUD_NAME;
@@ -192,6 +198,13 @@ export interface ServerUser extends User {
   phoneOtpExpiresAt?: string;
   failedLoginAttempts?: number;
   lockoutUntil?: string;
+  twoFactorEnabled?: boolean;
+  encryptedTwoFactorSecret?: string;
+  tempTwoFactorSecret?: string;
+  backupRecoveryCodes?: string[];
+  failed2FAAttempts?: number;
+  lockout2FAUntil?: string;
+  lastTwoFactorVerification?: string;
   loginHistory?: {
     ip: string;
     userAgent: string;
@@ -1230,6 +1243,42 @@ async function startServer() {
 
   const JWT_SECRET = process.env.JWT_SECRET || 'secure-sof-umer-default-secret-2026-xyz';
 
+  const ENCRYPTION_KEY = crypto.createHash('sha256').update(JWT_SECRET).digest();
+
+  function encryptSecret(text: string): string {
+    if (!text) return '';
+    const iv = crypto.randomBytes(16);
+    const cipher = crypto.createCipheriv('aes-256-cbc', ENCRYPTION_KEY, iv);
+    let encrypted = cipher.update(text, 'utf8', 'hex');
+    encrypted += cipher.final('hex');
+    return iv.toString('hex') + ':' + encrypted;
+  }
+
+  function decryptSecret(encryptedText: string): string {
+    if (!encryptedText) return '';
+    const parts = encryptedText.split(':');
+    if (parts.length !== 2) return encryptedText;
+    try {
+      const iv = Buffer.from(parts[0], 'hex');
+      const encrypted = parts[1];
+      const decipher = crypto.createDecipheriv('aes-256-cbc', ENCRYPTION_KEY, iv);
+      let decrypted = decipher.update(encrypted, 'hex', 'utf8');
+      decrypted += decipher.final('utf8');
+      return decrypted;
+    } catch (e) {
+      return encryptedText;
+    }
+  }
+
+  function generateBackupCodes(count = 8): string[] {
+    const codes: string[] = [];
+    for (let i = 0; i < count; i++) {
+      const code = crypto.randomBytes(4).toString('hex').toUpperCase();
+      codes.push(`${code.slice(0, 4)}-${code.slice(4)}`);
+    }
+    return codes;
+  }
+
   function stripSecrets(user: ServerUser): User {
     const {
       passwordHash,
@@ -1240,9 +1289,18 @@ async function startServer() {
       resetPasswordCodeExpiresAt,
       phoneOtp,
       phoneOtpExpiresAt,
+      encryptedTwoFactorSecret,
+      tempTwoFactorSecret,
+      backupRecoveryCodes,
+      failed2FAAttempts,
+      lockout2FAUntil,
       ...rest
     } = user;
-    return rest as User;
+    return {
+      ...rest,
+      twoFactorEnabled: Boolean(user.twoFactorEnabled),
+      backupRecoveryCodesCount: backupRecoveryCodes ? backupRecoveryCodes.length : 0,
+    } as User;
   }
 
   // Temporary store for unassigned phone OTPs
@@ -1725,6 +1783,47 @@ async function startServer() {
       localDb.notifications.push(newNotif as any);
     }
 
+    // 2FA Security Check (Mandatory for Admin accounts, or accounts with twoFactorEnabled: true)
+    const isAdmin = user.role === 'admin' || Boolean(user.isEmployee);
+    const has2FA = Boolean(user.twoFactorEnabled);
+
+    if (has2FA || isAdmin) {
+      const temp2faToken = jwt.sign(
+        { userId: user.id, purpose: '2fa_login', rememberMe: Boolean(rememberMe) },
+        JWT_SECRET,
+        { expiresIn: '10m' }
+      );
+
+      let setupData = null;
+      if (isAdmin && !has2FA) {
+        let rawSecret = decryptSecret(user.tempTwoFactorSecret || '');
+        if (!rawSecret) {
+          rawSecret = authenticator.generateSecret();
+          user.tempTwoFactorSecret = encryptSecret(rawSecret);
+        }
+        const otpauth = authenticator.keyuri(user.email, 'Sof Umer Admin', rawSecret);
+        const qrCodeUrl = await QRCode.toDataURL(otpauth);
+        setupData = {
+          secret: rawSecret,
+          qrCodeUrl,
+          otpauthUri: otpauth
+        };
+      }
+
+      await saveDb();
+
+      return res.json({
+        requires2FA: true,
+        requires2FASetup: isAdmin && !has2FA,
+        tempToken: temp2faToken,
+        email: user.email,
+        setupData,
+        message: isAdmin && !has2FA
+          ? 'Two-Factor Authentication (2FA) is mandatory for Administrator accounts. Please scan the QR code and enter the 6-digit code to complete sign-in.'
+          : 'Google Authenticator 2FA verification is required.'
+      });
+    }
+
     await saveDb();
 
     const token = jwt.sign({
@@ -1736,6 +1835,382 @@ async function startServer() {
     }, JWT_SECRET, { expiresIn: '365d' });
 
     res.json({ token, user: stripSecrets(user) });
+  });
+
+  // --- GOOGLE AUTHENTICATOR (2FA) API ENDPOINTS ---
+
+  // 1. Generate 2FA Secret & QR Code Data URL
+  app.post('/api/auth/2fa/generate', requireAuth, async (req, res) => {
+    try {
+      const user = (req as any).user as ServerUser;
+      const dbUser = localDb.users.find(u => u.id === user.id);
+      if (!dbUser) return res.status(404).json({ error: 'User not found.' });
+
+      const secret = authenticator.generateSecret();
+      dbUser.tempTwoFactorSecret = encryptSecret(secret);
+      await saveDb();
+
+      const otpauth = authenticator.keyuri(dbUser.email, 'Sof Umer Marketplace', secret);
+      const qrCodeUrl = await QRCode.toDataURL(otpauth);
+
+      res.json({
+        secret,
+        qrCodeUrl,
+        otpauthUri: otpauth,
+        email: dbUser.email
+      });
+    } catch (err: any) {
+      console.error('[2FA] Error generating secret:', err);
+      res.status(500).json({ error: 'Failed to generate 2FA setup details.' });
+    }
+  });
+
+  // 2. Enable Two-Factor Authentication
+  app.post('/api/auth/2fa/enable', requireAuth, async (req, res) => {
+    try {
+      const user = (req as any).user as ServerUser;
+      const { token, secret } = req.body;
+      const dbUser = localDb.users.find(u => u.id === user.id);
+      if (!dbUser) return res.status(404).json({ error: 'User not found.' });
+
+      const secretToVerify = secret || decryptSecret(dbUser.tempTwoFactorSecret || '');
+      if (!secretToVerify) {
+        return res.status(400).json({ error: 'No pending 2FA setup found. Please generate a new setup QR code.' });
+      }
+
+      const inputCode = String(token || '').trim();
+      if (inputCode.length !== 6) {
+        return res.status(400).json({ error: 'Please enter a valid 6-digit Google Authenticator code.' });
+      }
+
+      authenticator.options = { window: 1 };
+      const isValid = authenticator.verify({ token: inputCode, secret: secretToVerify });
+
+      if (!isValid) {
+        return res.status(400).json({ error: 'Invalid 6-digit verification code. Please check your Google Authenticator app and device time.' });
+      }
+
+      // Enable 2FA
+      dbUser.twoFactorEnabled = true;
+      dbUser.encryptedTwoFactorSecret = encryptSecret(secretToVerify);
+      dbUser.tempTwoFactorSecret = undefined;
+
+      // Generate 8 Single-use Backup Recovery Codes
+      const rawBackupCodes = generateBackupCodes(8);
+      dbUser.backupRecoveryCodes = await Promise.all(
+        rawBackupCodes.map(c => bcrypt.hash(c.replace('-', '').toUpperCase(), 10))
+      );
+
+      // Record Security Event
+      if (!dbUser.securityLogs) dbUser.securityLogs = [];
+      const ip = req.ip || req.socket.remoteAddress || '127.0.0.1';
+      dbUser.securityLogs.unshift({
+        id: 'sec-' + Date.now(),
+        action: '2FA Activated',
+        timestamp: new Date().toISOString(),
+        ip,
+        device: req.headers['user-agent'] || 'Unknown',
+        details: 'Google Authenticator TOTP enabled successfully'
+      });
+
+      await saveDb();
+
+      res.json({
+        success: true,
+        backupCodes: rawBackupCodes,
+        user: stripSecrets(dbUser),
+        message: 'Two-Factor Authentication (2FA) enabled successfully!'
+      });
+    } catch (err: any) {
+      console.error('[2FA] Error enabling 2FA:', err);
+      res.status(500).json({ error: 'Failed to enable Two-Factor Authentication.' });
+    }
+  });
+
+  // 3. Verify 2FA Code during Login Step
+  app.post('/api/auth/2fa/verify-login', async (req, res) => {
+    try {
+      const { tempToken, code, isBackupCode } = req.body;
+
+      if (!tempToken || !code) {
+        return res.status(400).json({ error: 'Session token and 2FA code are required.' });
+      }
+
+      let decoded: any;
+      try {
+        decoded = jwt.verify(tempToken, JWT_SECRET);
+        if (decoded.purpose !== '2fa_login') throw new Error('Invalid token purpose');
+      } catch (e) {
+        return res.status(401).json({ error: '2FA session expired. Please sign in with your email and password again.' });
+      }
+
+      const user = localDb.users.find(u => u.id === decoded.userId);
+      if (!user) return res.status(404).json({ error: 'User profile not found.' });
+
+      // Check 2FA lockout
+      if (user.lockout2FAUntil && new Date(user.lockout2FAUntil) > new Date()) {
+        const remaining = Math.ceil((new Date(user.lockout2FAUntil).getTime() - Date.now()) / 60000);
+        return res.status(403).json({ error: `Too many failed 2FA attempts. Account locked for 2FA verification. Please try again in ${remaining} minutes.` });
+      }
+
+      const inputCode = String(code).trim();
+      let verified = false;
+      let usedBackupCode = false;
+      let generatedBackupCodes: string[] | undefined = undefined;
+
+      if (isBackupCode) {
+        const cleanBackupCode = inputCode.replace('-', '').toUpperCase();
+        if (user.backupRecoveryCodes && user.backupRecoveryCodes.length > 0) {
+          for (let i = 0; i < user.backupRecoveryCodes.length; i++) {
+            const isMatch = await bcrypt.compare(cleanBackupCode, user.backupRecoveryCodes[i]);
+            if (isMatch) {
+              verified = true;
+              usedBackupCode = true;
+              user.backupRecoveryCodes.splice(i, 1);
+              break;
+            }
+          }
+        }
+      } else {
+        const rawSecret = decryptSecret(user.encryptedTwoFactorSecret || user.tempTwoFactorSecret || '');
+        if (!rawSecret) {
+          return res.status(400).json({ error: '2FA secret not found on account. Please contact support.' });
+        }
+
+        authenticator.options = { window: 1 };
+        verified = authenticator.verify({ token: inputCode, secret: rawSecret });
+
+        // If this was mandatory admin setup during login, activate 2FA now
+        if (verified && user.tempTwoFactorSecret && !user.twoFactorEnabled) {
+          user.twoFactorEnabled = true;
+          user.encryptedTwoFactorSecret = user.tempTwoFactorSecret;
+          user.tempTwoFactorSecret = undefined;
+          if (!user.backupRecoveryCodes || user.backupRecoveryCodes.length === 0) {
+            generatedBackupCodes = generateBackupCodes(8);
+            user.backupRecoveryCodes = await Promise.all(
+              generatedBackupCodes.map(c => bcrypt.hash(c.replace('-', '').toUpperCase(), 10))
+            );
+          }
+        }
+      }
+
+      if (!verified) {
+        user.failed2FAAttempts = (user.failed2FAAttempts || 0) + 1;
+        if (user.failed2FAAttempts >= 5) {
+          user.lockout2FAUntil = new Date(Date.now() + 15 * 60 * 1000).toISOString();
+        }
+        await saveDb();
+        return res.status(401).json({
+          error: isBackupCode
+            ? 'Invalid or already used backup recovery code.'
+            : 'Invalid 6-digit Google Authenticator code. Please check your app and try again.'
+        });
+      }
+
+      // Verification Success
+      user.failed2FAAttempts = 0;
+      user.lockout2FAUntil = undefined;
+      user.lastTwoFactorVerification = new Date().toISOString();
+
+      const ip = req.ip || req.socket.remoteAddress || '127.0.0.1';
+      const userAgent = req.headers['user-agent'] || 'Unknown';
+      const deviceType = /mobile/i.test(userAgent) ? 'Mobile' : 'Desktop';
+
+      if (!user.securityLogs) user.securityLogs = [];
+      user.securityLogs.unshift({
+        id: 'sec-' + Date.now(),
+        action: usedBackupCode ? '2FA Backup Code Login' : '2FA Login Verified',
+        timestamp: new Date().toISOString(),
+        ip,
+        device: userAgent,
+        details: usedBackupCode ? 'LoggedIn using single-use backup code' : 'Google Authenticator TOTP verified'
+      });
+
+      if (!user.loginHistory) user.loginHistory = [];
+      user.loginHistory.unshift({ ip, userAgent, timestamp: new Date().toISOString(), deviceType });
+
+      await saveDb();
+
+      const token = jwt.sign({
+        userId: user.id,
+        id: user.id,
+        email: user.email,
+        role: user.role,
+        tokenVersion: user.tokenVersion || 1
+      }, JWT_SECRET, { expiresIn: decoded.rememberMe ? '30d' : '7d' });
+
+      res.json({
+        token,
+        user: stripSecrets(user),
+        backupCodes: generatedBackupCodes,
+        message: 'Two-Factor Authentication verified successfully!'
+      });
+    } catch (err: any) {
+      console.error('[2FA] Error verifying 2FA login:', err);
+      res.status(500).json({ error: 'Internal server error during 2FA verification.' });
+    }
+  });
+
+  // 4. Disable Two-Factor Authentication (User optional, blocked for Admin)
+  app.post('/api/auth/2fa/disable', requireAuth, async (req, res) => {
+    try {
+      const user = (req as any).user as ServerUser;
+      const { password, code } = req.body;
+
+      const dbUser = localDb.users.find(u => u.id === user.id);
+      if (!dbUser) return res.status(404).json({ error: 'User not found.' });
+
+      // Admin 2FA mandatory rule
+      if (dbUser.role === 'admin' || dbUser.isEmployee) {
+        return res.status(403).json({ error: 'Two-Factor Authentication is mandatory for Administrators and cannot be disabled.' });
+      }
+
+      if (!password) {
+        return res.status(400).json({ error: 'Account password is required to disable 2FA.' });
+      }
+
+      const isPassMatch = await bcrypt.compare(password, dbUser.passwordHash || '');
+      if (!isPassMatch) {
+        return res.status(400).json({ error: 'Incorrect password entered.' });
+      }
+
+      if (code) {
+        const inputCode = String(code).trim();
+        const rawSecret = decryptSecret(dbUser.encryptedTwoFactorSecret || '');
+        authenticator.options = { window: 1 };
+        const isCodeValid = authenticator.verify({ token: inputCode, secret: rawSecret });
+        if (!isCodeValid) {
+          return res.status(400).json({ error: 'Invalid 6-digit Google Authenticator code.' });
+        }
+      }
+
+      dbUser.twoFactorEnabled = false;
+      dbUser.encryptedTwoFactorSecret = undefined;
+      dbUser.tempTwoFactorSecret = undefined;
+      dbUser.backupRecoveryCodes = [];
+
+      if (!dbUser.securityLogs) dbUser.securityLogs = [];
+      dbUser.securityLogs.unshift({
+        id: 'sec-' + Date.now(),
+        action: '2FA Disabled',
+        timestamp: new Date().toISOString(),
+        ip: req.ip || '127.0.0.1',
+        device: req.headers['user-agent'] || 'Unknown',
+        details: 'Two-Factor Authentication disabled'
+      });
+
+      await saveDb();
+
+      res.json({
+        success: true,
+        user: stripSecrets(dbUser),
+        message: 'Two-Factor Authentication disabled.'
+      });
+    } catch (err: any) {
+      console.error('[2FA] Error disabling 2FA:', err);
+      res.status(500).json({ error: 'Failed to disable 2FA.' });
+    }
+  });
+
+  // 5. Verify 2FA for Sensitive Actions
+  app.post('/api/auth/2fa/verify-action', requireAuth, async (req, res) => {
+    try {
+      const user = (req as any).user as ServerUser;
+      const { code, isBackupCode } = req.body;
+      const dbUser = localDb.users.find(u => u.id === user.id);
+      if (!dbUser) return res.status(404).json({ error: 'User not found.' });
+
+      if (!dbUser.twoFactorEnabled) {
+        return res.json({ verified: true, message: '2FA is not enabled on this account.' });
+      }
+
+      if (!code) {
+        return res.status(400).json({ error: '2FA 6-digit verification code is required for sensitive operations.' });
+      }
+
+      const inputCode = String(code).trim();
+      let verified = false;
+
+      if (isBackupCode) {
+        const cleanBackupCode = inputCode.replace('-', '').toUpperCase();
+        if (dbUser.backupRecoveryCodes && dbUser.backupRecoveryCodes.length > 0) {
+          for (let i = 0; i < dbUser.backupRecoveryCodes.length; i++) {
+            const isMatch = await bcrypt.compare(cleanBackupCode, dbUser.backupRecoveryCodes[i]);
+            if (isMatch) {
+              verified = true;
+              dbUser.backupRecoveryCodes.splice(i, 1);
+              break;
+            }
+          }
+        }
+      } else {
+        const rawSecret = decryptSecret(dbUser.encryptedTwoFactorSecret || '');
+        authenticator.options = { window: 1 };
+        verified = authenticator.verify({ token: inputCode, secret: rawSecret });
+      }
+
+      if (!verified) {
+        return res.status(400).json({ error: 'Invalid 2FA verification code. Action blocked.' });
+      }
+
+      dbUser.lastTwoFactorVerification = new Date().toISOString();
+      await saveDb();
+
+      res.json({ verified: true, message: '2FA verification successful.' });
+    } catch (err: any) {
+      console.error('[2FA] Error verifying sensitive action:', err);
+      res.status(500).json({ error: 'Failed to verify 2FA code.' });
+    }
+  });
+
+  // 6. Regenerate Backup Recovery Codes
+  app.post('/api/auth/2fa/regenerate-backup-codes', requireAuth, async (req, res) => {
+    try {
+      const user = (req as any).user as ServerUser;
+      const { password, code } = req.body;
+      const dbUser = localDb.users.find(u => u.id === user.id);
+      if (!dbUser || !dbUser.twoFactorEnabled) {
+        return res.status(400).json({ error: '2FA must be enabled to regenerate backup codes.' });
+      }
+
+      const isPassMatch = await bcrypt.compare(password, dbUser.passwordHash || '');
+      if (!isPassMatch) {
+        return res.status(400).json({ error: 'Incorrect password entered.' });
+      }
+
+      const rawSecret = decryptSecret(dbUser.encryptedTwoFactorSecret || '');
+      authenticator.options = { window: 1 };
+      const isCodeValid = authenticator.verify({ token: String(code).trim(), secret: rawSecret });
+      if (!isCodeValid) {
+        return res.status(400).json({ error: 'Invalid 6-digit Google Authenticator code.' });
+      }
+
+      const rawBackupCodes = generateBackupCodes(8);
+      dbUser.backupRecoveryCodes = await Promise.all(
+        rawBackupCodes.map(c => bcrypt.hash(c.replace('-', '').toUpperCase(), 10))
+      );
+
+      if (!dbUser.securityLogs) dbUser.securityLogs = [];
+      dbUser.securityLogs.unshift({
+        id: 'sec-' + Date.now(),
+        action: 'Backup Codes Regenerated',
+        timestamp: new Date().toISOString(),
+        ip: req.ip || '127.0.0.1',
+        details: 'Old recovery codes invalidated, 8 new codes issued'
+      });
+
+      await saveDb();
+
+      res.json({
+        success: true,
+        backupCodes: rawBackupCodes,
+        user: stripSecrets(dbUser),
+        message: 'New backup recovery codes generated successfully.'
+      });
+    } catch (err: any) {
+      console.error('[2FA] Error regenerating backup codes:', err);
+      res.status(500).json({ error: 'Failed to regenerate backup codes.' });
+    }
   });
 
   // Phone OTP Routes (Disabled)

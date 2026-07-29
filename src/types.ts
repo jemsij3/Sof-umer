@@ -45,6 +45,25 @@ export interface User {
   photoUrl?: string;
   temporaryPassword?: string;
   lastLogin?: string;
+
+  // Two-Factor Authentication (2FA) & Security
+  twoFactorEnabled?: boolean;
+  backupRecoveryCodesCount?: number;
+  lastTwoFactorVerification?: string;
+  securityLogs?: Array<{
+    id: string;
+    action: string;
+    timestamp: string;
+    ip?: string;
+    device?: string;
+    details?: string;
+  }>;
+  loginHistory?: Array<{
+    ip: string;
+    userAgent: string;
+    timestamp: string;
+    deviceType?: string;
+  }>;
 }
 
 export interface Property {

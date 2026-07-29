@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../lib/AppContext';
-import { Building2, Eye, EyeOff, Lock, Mail, User as UserIcon, ArrowLeft, ArrowRight, ShieldCheck, Sparkles, Compass, RefreshCw } from 'lucide-react';
+import { Building2, Eye, EyeOff, Lock, Mail, User as UserIcon, ArrowLeft, ArrowRight, ShieldCheck, Sparkles, Compass, RefreshCw, Key, Copy, Check, QrCode, Smartphone, Download, AlertTriangle } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
 interface AuthScreenProps {
@@ -11,7 +11,7 @@ export default function AuthScreen({ initialMode }: AuthScreenProps) {
   const { setCurrentUser, setToken, t, sessionExpired, setSessionExpired, currentLanguage, systemSettings } = useApp();
   
   // Use 'splash' as default if no initial mode is provided
-  const [mode, setMode] = useState<'splash' | 'welcome' | 'login' | 'signup' | 'forgot' | 'verify' | 'reset'>(
+  const [mode, setMode] = useState<'splash' | 'welcome' | 'login' | 'signup' | 'forgot' | 'verify' | 'reset' | 'twoFactor'>(
     initialMode || 'splash'
   );
   
@@ -22,6 +22,16 @@ export default function AuthScreen({ initialMode }: AuthScreenProps) {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [submitting, setSubmitting] = useState(false);
+
+  // 2FA Authentication states
+  const [twoFactorTempToken, setTwoFactorTempToken] = useState('');
+  const [twoFactorCode, setTwoFactorCode] = useState('');
+  const [isBackupCodeMode, setIsBackupCodeMode] = useState(false);
+  const [requires2FASetup, setRequires2FASetup] = useState(false);
+  const [adminSetupData, setAdminSetupData] = useState<{ secret: string; qrCodeUrl: string; otpauthUri: string } | null>(null);
+  const [showManualSecretKey, setShowManualSecretKey] = useState(false);
+  const [generatedBackupCodes, setGeneratedBackupCodes] = useState<string[] | null>(null);
+  const [copiedKey, setCopiedKey] = useState(false);
 
   // Security features states
   const [rememberMe, setRememberMe] = useState(false);
@@ -174,11 +184,66 @@ export default function AuthScreen({ initialMode }: AuthScreenProps) {
         throw new Error(data.error || t('login_failed'));
       }
       
+      if (data.requires2FA) {
+        setTwoFactorTempToken(data.tempToken);
+        setRequires2FASetup(Boolean(data.requires2FASetup));
+        setAdminSetupData(data.setupData || null);
+        setTwoFactorCode('');
+        setIsBackupCodeMode(false);
+        setShowManualSecretKey(false);
+        setMode('twoFactor');
+        if (data.message) {
+          setSuccess(data.message);
+        } else {
+          setSuccess('');
+        }
+        return;
+      }
+
       setToken(data.token);
       setCurrentUser(data.user);
       setSessionExpired(false);
     } catch (err: any) {
       setError(err.message || t('server_error_retry'));
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleVerifyTwoFactorLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!twoFactorCode.trim()) {
+      setError(isBackupCodeMode ? 'Please enter a backup recovery code.' : 'Please enter the 6-digit Google Authenticator code.');
+      return;
+    }
+    setError('');
+    setSuccess('');
+    setSubmitting(true);
+
+    try {
+      const res = await fetch('/api/auth/2fa/verify-login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          tempToken: twoFactorTempToken,
+          code: twoFactorCode.trim(),
+          isBackupCode: isBackupCodeMode
+        })
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || '2FA verification failed.');
+      }
+
+      if (data.backupCodes && data.backupCodes.length > 0) {
+        setGeneratedBackupCodes(data.backupCodes);
+      }
+
+      setToken(data.token);
+      setCurrentUser(data.user);
+      setSessionExpired(false);
+    } catch (err: any) {
+      setError(err.message || 'Verification failed. Please try again.');
     } finally {
       setSubmitting(false);
     }
@@ -1021,6 +1086,149 @@ export default function AuthScreen({ initialMode }: AuthScreenProps) {
                     className="flex-1 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black font-semibold py-3.5 px-4 rounded-2xl shadow-xl text-center transition cursor-pointer text-sm uppercase tracking-wider disabled:opacity-50"
                   >
                     {submitting ? t('auth_saving_btn') : t('auth_reset_password_btn')}
+                  </button>
+                </div>
+              </form>
+            )}
+
+            {/* Two-Factor Authentication (2FA) Verification Mode */}
+            {mode === 'twoFactor' && (
+              <form className="space-y-5" onSubmit={handleVerifyTwoFactorLogin}>
+                {requires2FASetup && adminSetupData ? (
+                  /* Admin Mandatory 2FA Initial Setup Flow */
+                  <div className="space-y-4 p-4 bg-amber-500/10 border border-amber-500/20 rounded-2xl text-left">
+                    <div className="flex items-center gap-2 text-amber-500 font-bold text-xs uppercase tracking-wider">
+                      <ShieldCheck className="w-4 h-4" />
+                      <span>Admin Mandatory 2FA Setup Required</span>
+                    </div>
+                    <p className="text-xs text-white/70">
+                      All administrator and staff accounts must enable Google Authenticator 2FA before accessing Sof Umer system tools.
+                    </p>
+
+                    {!showManualSecretKey ? (
+                      <div className="space-y-3">
+                        <div className="p-3 bg-white rounded-xl flex items-center justify-center max-w-[200px] mx-auto border border-amber-500/30">
+                          <img src={adminSetupData.qrCodeUrl} alt="2FA QR Code" className="w-40 h-40 object-contain" />
+                        </div>
+                        <p className="text-center text-[11px] text-white/60">
+                          Scan this QR code using the <strong className="text-white">Google Authenticator</strong> app on your smartphone.
+                        </p>
+                        <div className="text-center">
+                          <button
+                            type="button"
+                            onClick={() => setShowManualSecretKey(true)}
+                            className="text-xs text-amber-500 hover:underline font-semibold cursor-pointer"
+                          >
+                            Can't scan QR code? View Manual Setup Key
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="space-y-3 p-3 bg-black/60 rounded-xl border border-white/10">
+                        <div className="flex justify-between items-center text-xs">
+                          <span className="text-amber-500 font-bold uppercase">Manual Setup Key</span>
+                          <button
+                            type="button"
+                            onClick={() => setShowManualSecretKey(false)}
+                            className="text-white/50 hover:text-white"
+                          >
+                            Show QR Code
+                          </button>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <code className="text-amber-400 font-mono text-xs tracking-wider flex-1 break-all">
+                            {adminSetupData.secret}
+                          </code>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              navigator.clipboard.writeText(adminSetupData.secret);
+                              setCopiedKey(true);
+                              setTimeout(() => setCopiedKey(false), 2000);
+                            }}
+                            className="px-2.5 py-1 bg-amber-500/20 text-amber-400 text-xs font-bold rounded-lg flex items-center gap-1"
+                          >
+                            {copiedKey ? <Check className="w-3.5 h-3.5 text-green-400" /> : <Copy className="w-3.5 h-3.5" />}
+                            <span>{copiedKey ? 'Copied' : 'Copy'}</span>
+                          </button>
+                        </div>
+                        <p className="text-[10px] text-white/50 leading-relaxed">
+                          Open Google Authenticator → Tap (+) → Enter setup key → Account: Sof Umer ({email}) → Paste key.
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                ) : null}
+
+                {/* Verification Code Input */}
+                <div className="space-y-4">
+                  <div>
+                    <div className="flex justify-between items-center mb-2">
+                      <label className="block text-xs font-semibold text-[#F5F5F4]/70 uppercase tracking-widest">
+                        {isBackupCodeMode ? 'Backup Recovery Code' : 'Google Authenticator 6-Digit Code'}
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsBackupCodeMode(!isBackupCodeMode);
+                          setTwoFactorCode('');
+                          setError('');
+                        }}
+                        className="text-xs text-amber-500 hover:text-amber-400 font-medium transition cursor-pointer"
+                      >
+                        {isBackupCodeMode ? 'Use Google Authenticator' : 'Use Backup Code'}
+                      </button>
+                    </div>
+
+                    <div className="relative">
+                      {isBackupCodeMode ? (
+                        <Key className="absolute left-4 top-4 w-4 h-4 text-[#F5F5F4]/30" />
+                      ) : (
+                        <Smartphone className="absolute left-4 top-4 w-4 h-4 text-[#F5F5F4]/30" />
+                      )}
+                      
+                      <input
+                        type="text"
+                        required
+                        autoFocus
+                        maxLength={isBackupCodeMode ? 10 : 6}
+                        value={twoFactorCode}
+                        onChange={e => {
+                          const val = isBackupCodeMode ? e.target.value.toUpperCase().replace(/[^A-Z0-9-]/g, '') : e.target.value.replace(/\D/g, '');
+                          setTwoFactorCode(val);
+                        }}
+                        className="w-full pl-12 pr-4 py-3.5 bg-[#121216] border border-amber-500/30 rounded-2xl text-amber-400 font-mono text-xl tracking-[0.4em] text-center focus:outline-none focus:border-amber-500 font-bold"
+                        placeholder={isBackupCodeMode ? 'A1B2C3D4' : '123456'}
+                      />
+                    </div>
+                  </div>
+
+                  <p className="text-xs text-white/50 text-center font-light">
+                    {isBackupCodeMode 
+                      ? 'Enter one of your 8-character single-use recovery backup codes.' 
+                      : 'Open the Google Authenticator app on your smartphone to view your current 6-digit verification code.'}
+                  </p>
+                </div>
+
+                <div className="flex gap-3 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMode('login');
+                      setTwoFactorCode('');
+                      setTwoFactorTempToken('');
+                    }}
+                    className="flex-1 bg-white/5 hover:bg-white/10 text-white font-medium py-3.5 px-4 rounded-2xl border border-white/10 text-center transition cursor-pointer text-sm uppercase tracking-wider"
+                  >
+                    Back to Login
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={submitting}
+                    className="flex-1 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black font-semibold py-3.5 px-4 rounded-2xl shadow-xl text-center transition cursor-pointer text-sm uppercase tracking-wider disabled:opacity-50 flex items-center justify-center gap-2"
+                  >
+                    {submitting ? <RefreshCw className="w-4 h-4 animate-spin" /> : <ShieldCheck className="w-4 h-4" />}
+                    <span>Verify & Sign In</span>
                   </button>
                 </div>
               </form>

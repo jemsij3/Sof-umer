@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useApp } from '../lib/AppContext';
 import { formatTimeAgo } from '../lib/utils';
 import { Property, Inquiry, AppNotification } from '../types';
+import { TwoFactorSecurityModule } from './TwoFactorSecurityModule';
 import { 
   User, MessageSquare, Bell, CreditCard, Settings, LogOut, CheckCircle2, 
   ChevronRight, UploadCloud, HelpCircle, FileText, AlertTriangle, Send, 
