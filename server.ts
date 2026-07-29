@@ -7,6 +7,55 @@ import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import nodemailer from 'nodemailer';
 import mongoose from 'mongoose';
+import { v2 as cloudinary } from 'cloudinary';
+
+// Cloudinary File Storage Configuration
+const CLOUDINARY_CLOUD_NAME = process.env.CLOUDINARY_CLOUD_NAME;
+const CLOUDINARY_API_KEY = process.env.CLOUDINARY_API_KEY;
+const CLOUDINARY_API_SECRET = process.env.CLOUDINARY_API_SECRET;
+
+const isCloudinaryConfigured = Boolean(
+  CLOUDINARY_CLOUD_NAME && CLOUDINARY_API_KEY && CLOUDINARY_API_SECRET
+);
+
+if (isCloudinaryConfigured) {
+  cloudinary.config({
+    cloud_name: CLOUDINARY_CLOUD_NAME,
+    api_key: CLOUDINARY_API_KEY,
+    api_secret: CLOUDINARY_API_SECRET,
+    secure: true,
+  });
+  console.log('[Storage] Cloudinary file storage initialized successfully! Remote media assets will be uploaded directly to Cloudinary.');
+} else {
+  console.log('[Storage] Cloudinary environment variables (CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET) not set. System running with direct URI fallback.');
+}
+
+// Utility to upload base64 images to Cloudinary and return secure URL
+async function uploadToCloudinaryIfConfigured(imageStr: string, folder: string = 'sof_umer'): Promise<string> {
+  if (!imageStr || typeof imageStr !== 'string') return imageStr;
+
+  // Preserve existing remote HTTP/HTTPS URLs
+  if (imageStr.startsWith('http://') || imageStr.startsWith('https://')) {
+    return imageStr;
+  }
+
+  // Upload base64 image data to Cloudinary if configured
+  if (isCloudinaryConfigured && imageStr.startsWith('data:image/')) {
+    try {
+      const uploadRes = await cloudinary.uploader.upload(imageStr, {
+        folder: folder,
+        resource_type: 'image',
+      });
+      console.log(`[Cloudinary] Image uploaded successfully: ${uploadRes.secure_url}`);
+      return uploadRes.secure_url;
+    } catch (err) {
+      console.error('[Cloudinary] Image upload failed, preserving original input:', err);
+      return imageStr;
+    }
+  }
+
+  return imageStr;
+}
 import {
   User,
   Property,
@@ -2089,6 +2138,23 @@ async function startServer() {
     res.json({ token, user: stripSecrets(user), isNew });
   });
 
+  app.post('/api/upload', async (req, res) => {
+    try {
+      const { image, folder } = req.body;
+      if (!image) {
+        return res.status(400).json({ error: 'Image data is required.' });
+      }
+      const imageUrl = await uploadToCloudinaryIfConfigured(image, folder || 'sof_umer_uploads');
+      return res.json({
+        url: imageUrl,
+        isCloudinary: isCloudinaryConfigured && imageUrl.startsWith('http')
+      });
+    } catch (err: any) {
+      console.error('[Upload] Error processing image upload:', err);
+      return res.status(500).json({ error: err.message || 'Image upload failed' });
+    }
+  });
+
   app.put('/api/users/:id', requireAuth, async (req, res) => {
     const { id } = req.params;
     const updates = req.body;
@@ -2106,6 +2172,11 @@ async function startServer() {
         if (existingUser) {
           return res.status(400).json({ error: 'This username is already taken by another user.' });
         }
+      }
+
+      // If profile picture is being uploaded/updated as base64, process through Cloudinary
+      if (updates.photoUrl && typeof updates.photoUrl === 'string') {
+        updates.photoUrl = await uploadToCloudinaryIfConfigured(updates.photoUrl, 'sof_umer/avatars');
       }
 
       // Prevent non-admins from changing their role or status
@@ -2237,6 +2308,16 @@ async function startServer() {
       }
     }
 
+    // Process listing images through Cloudinary if base64 images are submitted
+    if (propertyData.images && Array.isArray(propertyData.images)) {
+      propertyData.images = await Promise.all(
+        propertyData.images.map((img: string) => uploadToCloudinaryIfConfigured(img, 'sof_umer/properties'))
+      );
+    }
+    if (propertyData.coverImage && typeof propertyData.coverImage === 'string') {
+      propertyData.coverImage = await uploadToCloudinaryIfConfigured(propertyData.coverImage, 'sof_umer/properties');
+    }
+
     const planDays = (requestedPlan === 'starter' || requestedPlan === 'basic') ? 3 : requestedPlan === 'premium' ? 7 : requestedPlan === 'vip' ? 30 : 0;
     const computedExpiresAt = planDays > 0 ? new Date(Date.now() + planDays * 24 * 60 * 60 * 1000).toISOString() : (propertyData.promotionExpiresAt || undefined);
 
@@ -2309,6 +2390,16 @@ async function startServer() {
         if (updates.verificationStatus !== undefined) {
           updates.isVerifiedListing = updates.verificationStatus === 'verified';
         }
+      }
+
+      // Process updated listing images through Cloudinary if base64 images are submitted
+      if (updates.images && Array.isArray(updates.images)) {
+        updates.images = await Promise.all(
+          updates.images.map((img: string) => uploadToCloudinaryIfConfigured(img, 'sof_umer/properties'))
+        );
+      }
+      if (updates.coverImage && typeof updates.coverImage === 'string') {
+        updates.coverImage = await uploadToCloudinaryIfConfigured(updates.coverImage, 'sof_umer/properties');
       }
 
       localDb.properties[idx] = { ...property, ...updates };
