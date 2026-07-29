@@ -1542,15 +1542,6 @@ async function startServer() {
       return res.status(401).json({ error: 'Invalid credentials. Please check your username, email, or password.' });
     }
 
-    // Auto-clear security lockout/CAPTCHA state for admin account
-    if (user.email && user.email.toLowerCase() === 'jemaljima@gmail.com') {
-      user.failedLoginAttempts = 0;
-      user.lockoutUntil = undefined;
-      user.status = 'active';
-      user.isVerified = true;
-      user.verificationStatus = 'verified';
-      user.role = 'admin';
-    }
 
     // Check temporary lockout
     if (user.lockoutUntil && new Date(user.lockoutUntil) > new Date()) {
@@ -1577,18 +1568,7 @@ async function startServer() {
       return res.status(401).json({ error: 'Please sign in using Google, Phone OTP, or set a password via Password Reset.' });
     }
 
-    let isMatch = await bcrypt.compare(password, user.passwordHash);
-    if (!isMatch) {
-      // Support legacy seed default passwords ('Password123!' or 'SofUmer@2026') and auto-migrate to new user password
-      const isLegacySeed = await bcrypt.compare('Password123!', user.passwordHash);
-      const isOwnerAdmin = (user.email && user.email.toLowerCase() === 'jemaljima@gmail.com');
-      
-      if ((isLegacySeed || isOwnerAdmin) && password && password.length >= 4) {
-        isMatch = true;
-        user.passwordHash = await bcrypt.hash(password, 10);
-        pushPasswordToHistory(user);
-      }
-    }
+    const isMatch = await bcrypt.compare(password, user.passwordHash);
 
     if (!isMatch) {
       user.failedLoginAttempts = (user.failedLoginAttempts || 0) + 1;
