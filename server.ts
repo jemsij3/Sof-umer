@@ -932,6 +932,19 @@ const loadFromFileSeed = async () => {
   }
 };
 
+function normalizeEmail(email: string): string {
+  return email ? email.trim().toLowerCase() : '';
+}
+
+function normalizePhone(phone: string): string {
+  if (!phone) return '';
+  let cleaned = phone.trim().replace(/[^\d+]/g, '');
+  if (/^0[79]\d{8}$/.test(cleaned)) {
+    cleaned = '+251' + cleaned.substring(1);
+  }
+  return cleaned;
+}
+
 const applyDataSanityAndMigrations = () => {
   if (!localDb.appFeatures || !Array.isArray(localDb.appFeatures)) {
     localDb.appFeatures = getInitialData().appFeatures;
@@ -946,12 +959,61 @@ const applyDataSanityAndMigrations = () => {
   }
   if (!localDb.users || !Array.isArray(localDb.users)) {
     localDb.users = getInitialData().users;
-  } else if (!localDb.users.some(u => u.email.toLowerCase() === 'jemaljima@gmail.com')) {
-    localDb.users.push(getInitialData().users[0]);
   }
 
-  // Ensure Jemal (Owner Admin) remains active & admin without wiping custom password!
-  const jemalUser = localDb.users.find(u => u.email && u.email.toLowerCase() === 'jemaljima@gmail.com');
+  // 1. Normalize user fields
+  localDb.users.forEach(u => {
+    if (u.email) u.email = normalizeEmail(u.email);
+    if (u.phone) u.phone = normalizePhone(u.phone);
+    if (u.username) u.username = u.username.trim();
+    if (!u.passwordHistory || !Array.isArray(u.passwordHistory)) {
+      u.passwordHistory = u.passwordHash ? [u.passwordHash] : [];
+    }
+  });
+
+  // 2. Safely deduplicate users by normalized email, merging fields to preserve updated passwords and verification status
+  const uniqueUsersMap = new Map<string, ServerUser>();
+  const usersWithoutEmail: ServerUser[] = [];
+
+  for (const u of localDb.users) {
+    if (u.email) {
+      const existing = uniqueUsersMap.get(u.email);
+      if (!existing) {
+        uniqueUsersMap.set(u.email, u);
+      } else {
+        // Merge user details: preserve passwordHash if present in either
+        if (!existing.passwordHash && u.passwordHash) {
+          existing.passwordHash = u.passwordHash;
+        }
+        if (u.passwordHistory && u.passwordHistory.length > 0) {
+          existing.passwordHistory = Array.from(new Set([...(existing.passwordHistory || []), ...u.passwordHistory]));
+        }
+        if (u.isVerified && !existing.isVerified) {
+          existing.isVerified = true;
+          existing.verificationStatus = 'verified';
+        }
+        if (u.role === 'admin') existing.role = 'admin';
+        if (u.tokenVersion && u.tokenVersion > (existing.tokenVersion || 1)) {
+          existing.tokenVersion = u.tokenVersion;
+        }
+        if (u.loginHistory && u.loginHistory.length > 0) {
+          existing.loginHistory = [...(u.loginHistory || []), ...(existing.loginHistory || [])].slice(0, 20);
+        }
+      }
+    } else {
+      usersWithoutEmail.push(u);
+    }
+  }
+
+  localDb.users = [...Array.from(uniqueUsersMap.values()), ...usersWithoutEmail];
+
+  // 3. Ensure Jemal (Owner Admin) remains active & admin without wiping custom password!
+  const jemalEmail = 'jemaljima@gmail.com';
+  let jemalUser = localDb.users.find(u => u.email && u.email === jemalEmail);
+  if (!jemalUser) {
+    jemalUser = getInitialData().users[0];
+    localDb.users.unshift(jemalUser);
+  }
   if (jemalUser) {
     if (!jemalUser.passwordHash) {
       jemalUser.passwordHash = '$2b$10$8M.OZ7bfDTd8e724T1tSneytfS2iE4nLdSr27YVOBgkIJVdL7ENvC';
@@ -963,12 +1025,6 @@ const applyDataSanityAndMigrations = () => {
     jemalUser.isVerified = true;
     jemalUser.verificationStatus = 'verified';
   }
-
-  localDb.users.forEach(u => {
-    if (!u.passwordHistory || !Array.isArray(u.passwordHistory)) {
-      u.passwordHistory = u.passwordHash ? [u.passwordHash] : [];
-    }
-  });
 
   if (!localDb.properties || !Array.isArray(localDb.properties)) {
     localDb.properties = [];
@@ -1143,25 +1199,17 @@ async function startServer() {
   // Temporary store for unassigned phone OTPs
   const phoneOtpStore: Record<string, { otp: string; expiresAt: number }> = {};
 
-  function normalizeEmail(email: string): string {
-    return email ? email.trim().toLowerCase() : '';
-  }
-
-  function normalizePhone(phone: string): string {
-    if (!phone) return '';
-    let cleaned = phone.trim().replace(/[^\d+]/g, '');
-    if (/^0[79]\d{8}$/.test(cleaned)) {
-      cleaned = '+251' + cleaned.substring(1);
-    }
-    return cleaned;
-  }
-
   function isValidEmail(email: string): boolean {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   }
 
   function isValidPassword(pass: string): boolean {
-    return /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/.test(pass);
+    if (!pass || pass.length < 8) return false;
+    const hasLower = /[a-z]/.test(pass);
+    const hasUpper = /[A-Z]/.test(pass);
+    const hasNumber = /\d/.test(pass);
+    const hasSpecial = /[^A-Za-z0-9]/.test(pass);
+    return hasLower && hasUpper && hasNumber && hasSpecial;
   }
 
   async function isPasswordReused(user: ServerUser, newPassword: string): Promise<boolean> {
@@ -1953,14 +2001,15 @@ async function startServer() {
     }
     
     // Check if the user already exists by email (case-insensitive)
-    let user = localDb.users.find(u => u.email.toLowerCase() === email.toLowerCase());
+    const normAuthEmail = normalizeEmail(email);
+    let user = localDb.users.find(u => u.email && normalizeEmail(u.email) === normAuthEmail);
     let isNew = false;
     
     if (user) {
       if (user.status === 'suspended') {
         return res.status(403).json({ error: 'This account has been suspended by the administrator.' });
       }
-      if (email.toLowerCase() === 'jemaljima@gmail.com') {
+      if (normAuthEmail === 'jemaljima@gmail.com') {
         let updated = false;
         if (user.role !== 'admin') {
           user.role = 'admin';
@@ -3389,7 +3438,8 @@ async function startServer() {
   app.post('/api/auth/logout', async (req, res) => {
     const { email } = req.body;
     if (email) {
-      const user = localDb.users.find(u => u.email.toLowerCase() === email.toLowerCase());
+      const normLogoutEmail = normalizeEmail(email);
+      const user = localDb.users.find(u => u.email && normalizeEmail(u.email) === normLogoutEmail);
       if (user && user.isEmployee) {
         if (!(localDb as any).loginHistory) (localDb as any).loginHistory = [];
         const lastEntry = (localDb as any).loginHistory.find((h: any) => h.email === user.email && h.logoutTime === null);

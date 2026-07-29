@@ -63,7 +63,7 @@ export default function AuthScreen({ initialMode }: AuthScreenProps) {
     if (/[A-Z]/.test(pass)) score += 1;
     if (/[a-z]/.test(pass)) score += 1;
     if (/\d/.test(pass)) score += 1;
-    if (/[@$!%*?&]/.test(pass)) score += 1;
+    if (/[^A-Za-z0-9]/.test(pass)) score += 1;
     
     if (score <= 2) return { score, text: t('weak_password'), color: 'bg-red-500', barWidth: 'w-1/3' };
     if (score <= 4) return { score, text: t('medium_password'), color: 'bg-amber-500', barWidth: 'w-2/3' };
