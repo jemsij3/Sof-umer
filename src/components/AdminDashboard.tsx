@@ -4,18 +4,19 @@ import { User, Property, PaymentMethod, PaymentReceipt, Advertisement, Translati
 import { 
   Shield, Users, Languages, Volume2, Grid, HelpCircle, ShieldCheck, 
   AlertOctagon, CreditCard, ClipboardCheck, Trash2, Edit2, ToggleLeft, 
-  ToggleRight, Check, X, PlusCircle, AlertCircle, Eye, RefreshCw, 
+  ToggleRight, Check, X, PlusCircle, AlertCircle, Eye, EyeOff, Lock, RefreshCw, 
   CheckCircle2, Briefcase, Wrench, ShoppingBag, Store, Building, 
   TrendingUp, Settings, FileText, Landmark, ShieldAlert, BarChart3, 
   Activity, DollarSign, Percent, Clock, FileCheck, Info, Plus, 
   Calendar, MapPin, ChevronRight, HelpCircle as HelpIcon, BellRing,
   Camera, Image as ImageIcon, Folder, FolderKanban, ChevronDown,
-  Mail, Phone, RotateCcw, Zap, LogOut
+  Mail, Phone, RotateCcw, Zap, LogOut, Gift
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { EmployeeAdminsModule } from './EmployeeAdminsModule';
 import { APP_THEMES, getThemeCSS } from '../lib/themes';
 import { extractString } from '../lib/categoriesData';
+import { maskName, maskEmail } from '../lib/utils';
 
 interface AdminDashboardProps {
   onBackToMarketplace: () => void;
@@ -52,6 +53,7 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
     supportTickets,
     faqs,
     addFaq,
+    updateFaq,
     deleteFaq
   } = useApp();
 
@@ -61,6 +63,10 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
     'verification' | 'reports' | 'support' | 'languages' | 
     'payments' | 'settings' | 'analytics' | 'employeeAdmins'
   >('overview');
+
+  // Admin Privacy Control: Hide admin personal details by default
+  const [showAdminDetails, setShowAdminDetails] = useState<boolean>(false);
+  const isAuthorizedAdmin = currentUser?.role === 'admin' && currentUser?.isEmployee !== true;
 
   const isTabAllowed = (tab: string) => {
     if (!currentUser) return false;
@@ -304,9 +310,9 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
 
 
   const DEFAULT_CLEAN_PACKAGES = [
-    { id: 'starter', name: 'Basic Boost', price: 50, currency: 'ETB', duration: '3 days', daysCount: 3, views: 'Category top placement', badge: 'STARTER', desc: 'Category top placement + Basic Verified Badge' },
-    { id: 'premium', name: 'Premium Boost', price: 150, currency: 'ETB', duration: '7 days', daysCount: 7, views: 'Featured hero slider', badge: 'PREMIUM', desc: 'Featured hero slider + High priority ranking' },
-    { id: 'vip', name: 'VIP Elite Boost', price: 500, currency: 'ETB', duration: '30 days', daysCount: 30, views: 'Top search billboard pin', badge: 'VIP ELITE', desc: 'Top search billboard pin + Full site promotion' }
+    { id: 'starter', name: 'STARTER', price: 100, currency: 'ETB', duration: '3 days', daysCount: 3, views: 'Category top placement', badge: 'STARTER', desc: 'Category top placement + Basic Verified Badge' },
+    { id: 'premium', name: 'PREMIUM', price: 150, currency: 'ETB', duration: '7 days', daysCount: 7, views: 'Featured hero slider', badge: 'PREMIUM', desc: 'Featured hero slider + High priority ranking' },
+    { id: 'vip', name: 'VIP ELITE', price: 500, currency: 'ETB', duration: '30 days', daysCount: 30, views: 'Top search billboard pin', badge: 'VIP ELITE', desc: 'Top search billboard pin + Full site promotion' }
   ];
 
   const [adPackages, setAdPackages] = useState<any[]>(() => {
@@ -422,6 +428,14 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
 
   const [newFaqQuestion, setNewFaqQuestion] = useState('');
   const [newFaqAnswer, setNewFaqAnswer] = useState('');
+  const [newFaqCategory, setNewFaqCategory] = useState('general');
+
+  const [editingFaqId, setEditingFaqId] = useState<string | null>(null);
+  const [editFaqQuestion, setEditFaqQuestion] = useState('');
+  const [editFaqAnswer, setEditFaqAnswer] = useState('');
+  const [editFaqCategory, setEditFaqCategory] = useState('general');
+  const [editFaqIsPopular, setEditFaqIsPopular] = useState(false);
+  const [editFaqSubmitting, setEditFaqSubmitting] = useState(false);
   const [ticketReplyId, setTicketReplyId] = useState<string | null>(null);
   const [ticketReplyText, setTicketReplyText] = useState('');
 
@@ -1094,7 +1108,7 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
     }
   };
 
-  // FAQ Add
+  // FAQ Management Handlers
   const handleAddFaq = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newFaqQuestion || !newFaqAnswer) return;
@@ -1102,13 +1116,42 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
       await addFaq({
         question: { en: newFaqQuestion, om: newFaqQuestion, am: newFaqQuestion },
         answer: { en: newFaqAnswer, om: newFaqAnswer, am: newFaqAnswer },
-        category: 'general',
+        category: newFaqCategory || 'general',
         status: 'published'
       });
       setNewFaqQuestion('');
       setNewFaqAnswer('');
     } catch (err: any) {
       alert('Failed to create FAQ: ' + err.message);
+    }
+  };
+
+  const startEditFaq = (f: any) => {
+    setEditingFaqId(f.id);
+    setEditFaqQuestion(getFaqText(f.question));
+    setEditFaqAnswer(getFaqText(f.answer));
+    setEditFaqCategory(f.category || 'general');
+    setEditFaqIsPopular(Boolean(f.isPopular));
+  };
+
+  const handleSaveFaq = async (id: string) => {
+    if (!editFaqQuestion.trim() || !editFaqAnswer.trim()) {
+      alert('Question and Answer cannot be empty.');
+      return;
+    }
+    setEditFaqSubmitting(true);
+    try {
+      await updateFaq(id, {
+        question: { en: editFaqQuestion, om: editFaqQuestion, am: editFaqQuestion },
+        answer: { en: editFaqAnswer, om: editFaqAnswer, am: editFaqAnswer },
+        category: editFaqCategory,
+        isPopular: editFaqIsPopular
+      });
+      setEditingFaqId(null);
+    } catch (err: any) {
+      alert('Failed to update FAQ: ' + (err.message || 'Unknown error'));
+    } finally {
+      setEditFaqSubmitting(false);
     }
   };
 
@@ -1214,7 +1257,28 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
           </h2>
         </div>
 
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-2 items-center">
+          {/* Admin Privacy Control Button */}
+          {isAuthorizedAdmin ? (
+            <button
+              onClick={() => setShowAdminDetails(!showAdminDetails)}
+              className={`px-3.5 py-2.5 rounded-xl text-xs font-bold border transition flex items-center gap-2 cursor-pointer ${
+                showAdminDetails 
+                  ? 'bg-amber-500/20 text-amber-400 border-amber-500/40 hover:bg-amber-500/30' 
+                  : 'bg-white/5 text-white/80 border-white/10 hover:bg-white/10'
+              }`}
+              title={showAdminDetails ? "Hide private admin personal details" : "Show private admin personal details"}
+            >
+              {showAdminDetails ? <EyeOff className="w-4 h-4 text-amber-400" /> : <Eye className="w-4 h-4 text-amber-400" />}
+              <span>{showAdminDetails ? 'Hide Admin Info' : 'Show Admin Info'}</span>
+            </button>
+          ) : (
+            <div className="px-3.5 py-2.5 bg-white/5 border border-white/10 rounded-xl text-xs text-white/40 flex items-center gap-2 font-mono" title="Only authorized Super Admin can reveal personal info">
+              <Lock className="w-4 h-4 text-amber-500/60" />
+              <span>Admin Info Masked</span>
+            </div>
+          )}
+
           <button
             onClick={onBackToMarketplace}
             className="px-4 py-2.5 bg-white/5 border border-white/10 hover:bg-white/10 text-white font-bold text-xs rounded-xl shadow transition duration-300 cursor-pointer"
@@ -1814,15 +1878,30 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-white/5">
-                    {filteredUsers.map(u => (
-                      <tr key={u.id} className="hover:bg-white/[0.01] transition">
-                        <td className="py-4 px-4">
-                          <p className="font-bold text-white flex items-center gap-1.5">
-                            <span>{u.fullName}</span>
-                            {u.isVerified && <CheckCircle2 className="w-3.5 h-3.5 text-amber-500" title="Verified Seller" />}
-                          </p>
-                          <span className="text-[10px] text-white/40">{u.email}</span>
-                        </td>
+                    {filteredUsers.map(u => {
+                      const isUserAdmin = u.role === 'admin' || u.isEmployee === true || u.email?.toLowerCase().includes('admin') || u.email === 'jemaljima@gmail.com';
+                      const displayName = isUserAdmin ? ((showAdminDetails && isAuthorizedAdmin) ? u.fullName : maskName(u.fullName)) : u.fullName;
+                      const displayEmail = isUserAdmin ? ((showAdminDetails && isAuthorizedAdmin) ? u.email : maskEmail(u.email)) : u.email;
+
+                      return (
+                        <tr key={u.id} className="hover:bg-white/[0.01] transition">
+                          <td className="py-4 px-4">
+                            <p className="font-bold text-white flex items-center gap-1.5">
+                              <span>{displayName}</span>
+                              {u.isVerified && <CheckCircle2 className="w-3.5 h-3.5 text-amber-500" title="Verified Seller" />}
+                              {isUserAdmin && isAuthorizedAdmin && (
+                                <button
+                                  type="button"
+                                  onClick={() => setShowAdminDetails(!showAdminDetails)}
+                                  className="p-1 hover:bg-white/10 rounded text-amber-500/80 hover:text-amber-400 transition cursor-pointer"
+                                  title={showAdminDetails ? "Hide private admin details" : "Show private admin details"}
+                                >
+                                  {showAdminDetails ? <EyeOff className="w-3 h-3 text-amber-400" /> : <Eye className="w-3 h-3 text-amber-400" />}
+                                </button>
+                              )}
+                            </p>
+                            <span className="text-[10px] text-white/40">{displayEmail}</span>
+                          </td>
                         <td className="py-4 px-4 capitalize">
                           <span className={`px-2 py-0.5 rounded font-extrabold text-[9px] uppercase ${u.role === 'admin' ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20' : 'bg-white/5 text-white/60'}`}>
                             {u.role}
@@ -1864,7 +1943,8 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
                           </div>
                         </td>
                       </tr>
-                    ))}
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
@@ -2873,14 +2953,14 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
 
                 {/* FAQ Add Form */}
                 <form onSubmit={handleAddFaq} className="bg-black/40 border border-white/5 p-4.5 rounded-2xl space-y-3">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     <input
                       type="text"
                       required
                       placeholder="Frequently Asked Question..."
                       value={newFaqQuestion}
                       onChange={e => setNewFaqQuestion(e.target.value)}
-                      className="px-3.5 py-2 bg-black/40 border border-white/5 rounded-xl text-xs"
+                      className="px-3.5 py-2 bg-black/40 border border-white/5 rounded-xl text-xs text-white"
                     />
                     <input
                       type="text"
@@ -2888,8 +2968,19 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
                       placeholder="Knowledge Answer..."
                       value={newFaqAnswer}
                       onChange={e => setNewFaqAnswer(e.target.value)}
-                      className="px-3.5 py-2 bg-black/40 border border-white/5 rounded-xl text-xs"
+                      className="px-3.5 py-2 bg-black/40 border border-white/5 rounded-xl text-xs text-white"
                     />
+                    <select
+                      value={newFaqCategory}
+                      onChange={e => setNewFaqCategory(e.target.value)}
+                      className="px-3.5 py-2 bg-black/40 border border-white/5 rounded-xl text-xs text-white"
+                    >
+                      <option value="general">Category: General</option>
+                      <option value="account">Category: Account & Profile</option>
+                      <option value="listings">Category: Listings & Boosting</option>
+                      <option value="payments">Category: Payments & Wallet</option>
+                      <option value="safety">Category: Safety & Verification</option>
+                    </select>
                   </div>
                   <button type="submit" className="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-black font-bold text-xs rounded-xl flex items-center gap-1 cursor-pointer">
                     <Plus className="w-4 h-4" /> Add FAQ Item
@@ -2897,20 +2988,138 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
                 </form>
 
                 <div className="space-y-3">
-                  {faqs && faqs.map(f => (
-                    <div key={f.id} className="bg-[#12121a] border border-white/5 p-4 rounded-xl flex justify-between items-start gap-4">
-                      <div>
-                        <p className="font-bold text-white text-xs">Q: {getFaqText(f.question)}</p>
-                        <p className="text-[11px] text-white/50 leading-relaxed font-light mt-1.5">A: {getFaqText(f.answer)}</p>
-                        {f.category && (
-                          <span className="inline-block mt-2 text-[9px] bg-amber-500/10 border border-amber-500/20 text-amber-400 font-mono px-2 py-0.5 rounded uppercase">
-                            Category: {f.category}
-                          </span>
-                        )}
+                  {faqs && faqs.map(f => {
+                    const isEditing = editingFaqId === f.id;
+                    if (isEditing) {
+                      return (
+                        <div key={f.id} className="bg-[#181824] border border-amber-500/40 p-4.5 rounded-2xl space-y-3 shadow-xl">
+                          <div className="flex items-center justify-between border-b border-white/10 pb-2">
+                            <span className="text-xs font-bold text-amber-500 uppercase tracking-wider flex items-center gap-1.5">
+                              <Edit2 className="w-3.5 h-3.5" /> Edit FAQ Item
+                            </span>
+                            <span className="text-[10px] font-mono text-white/40">ID: {f.id}</span>
+                          </div>
+
+                          <div className="space-y-3">
+                            <div>
+                              <label className="block text-[10px] font-bold text-white/50 uppercase mb-1 font-mono">Question</label>
+                              <input 
+                                type="text"
+                                required
+                                value={editFaqQuestion}
+                                onChange={e => setEditFaqQuestion(e.target.value)}
+                                className="w-full px-3.5 py-2 bg-black/60 border border-white/10 focus:border-amber-500/50 rounded-xl text-xs text-white focus:outline-none"
+                              />
+                            </div>
+
+                            <div>
+                              <label className="block text-[10px] font-bold text-white/50 uppercase mb-1 font-mono">Answer</label>
+                              <textarea 
+                                required
+                                rows={3}
+                                value={editFaqAnswer}
+                                onChange={e => setEditFaqAnswer(e.target.value)}
+                                className="w-full px-3.5 py-2 bg-black/60 border border-white/10 focus:border-amber-500/50 rounded-xl text-xs text-white focus:outline-none font-sans"
+                              />
+                            </div>
+
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 items-center">
+                              <div>
+                                <label className="block text-[10px] font-bold text-white/50 uppercase mb-1 font-mono">Category</label>
+                                <select 
+                                  value={editFaqCategory}
+                                  onChange={e => setEditFaqCategory(e.target.value)}
+                                  className="w-full px-3.5 py-2 bg-black/60 border border-white/10 focus:border-amber-500/50 rounded-xl text-xs text-white focus:outline-none"
+                                >
+                                  <option value="general">General Inquiries</option>
+                                  <option value="account">Account & Profile</option>
+                                  <option value="listings">Listings & Boosting</option>
+                                  <option value="payments">Payments & Wallet</option>
+                                  <option value="safety">Safety & Verification</option>
+                                </select>
+                              </div>
+
+                              <div className="pt-2 sm:pt-4 flex items-center gap-2">
+                                <label className="flex items-center gap-2 cursor-pointer text-xs text-white/80">
+                                  <input 
+                                    type="checkbox"
+                                    checked={editFaqIsPopular}
+                                    onChange={e => setEditFaqIsPopular(e.target.checked)}
+                                    className="w-4 h-4 accent-amber-500 rounded cursor-pointer"
+                                  />
+                                  <span>Mark as Popular FAQ</span>
+                                </label>
+                              </div>
+                            </div>
+
+                            <div className="flex items-center gap-2 pt-2 border-t border-white/5">
+                              <button 
+                                type="button"
+                                onClick={() => handleSaveFaq(f.id)}
+                                disabled={editFaqSubmitting}
+                                className="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-black font-extrabold text-xs rounded-xl flex items-center gap-1.5 cursor-pointer shadow transition uppercase tracking-wider disabled:opacity-50"
+                              >
+                                <Check className="w-4 h-4" />
+                                <span>{editFaqSubmitting ? 'Saving...' : 'Save'}</span>
+                              </button>
+
+                              <button 
+                                type="button"
+                                onClick={() => setEditingFaqId(null)}
+                                disabled={editFaqSubmitting}
+                                className="px-3.5 py-2 bg-white/10 hover:bg-white/20 text-white font-bold text-xs rounded-xl flex items-center gap-1.5 cursor-pointer transition"
+                              >
+                                <X className="w-4 h-4" />
+                                <span>Cancel</span>
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    }
+
+                    return (
+                      <div key={f.id} className="bg-[#12121a] border border-white/5 p-4 rounded-xl flex justify-between items-start gap-4 hover:border-white/10 transition">
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <p className="font-bold text-white text-xs">Q: {getFaqText(f.question)}</p>
+                            {f.isPopular && (
+                              <span className="text-[9px] bg-amber-500/20 border border-amber-500/40 text-amber-400 px-1.5 py-0.5 rounded font-mono font-bold">
+                                Popular
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-[11px] text-white/60 leading-relaxed font-light">A: {getFaqText(f.answer)}</p>
+                          {f.category && (
+                            <span className="inline-block mt-2 text-[9px] bg-white/5 border border-white/10 text-amber-400 font-mono px-2 py-0.5 rounded uppercase">
+                              Category: {f.category}
+                            </span>
+                          )}
+                        </div>
+
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          <button 
+                            type="button"
+                            onClick={() => startEditFaq(f)} 
+                            className="px-2.5 py-1.5 bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/30 rounded-lg text-xs font-semibold flex items-center gap-1 cursor-pointer transition"
+                            title="Edit FAQ Item"
+                          >
+                            <Edit2 className="w-3.5 h-3.5" />
+                            <span>Edit</span>
+                          </button>
+
+                          <button 
+                            type="button"
+                            onClick={() => handleDeleteFaq(f.id)} 
+                            className="p-1.5 text-white/30 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg cursor-pointer transition"
+                            title="Delete FAQ Item"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
                       </div>
-                      <button onClick={() => handleDeleteFaq(f.id)} className="p-1.5 text-white/30 hover:text-rose-500 rounded cursor-pointer"><Trash2 className="w-4 h-4" /></button>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             </div>

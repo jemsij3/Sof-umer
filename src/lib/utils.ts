@@ -26,3 +26,20 @@ export function formatTimeAgo(dateInput?: string | Date | number): string {
     return 'Just now';
   }
 }
+
+export function maskName(name?: string): string {
+  if (!name || !name.trim()) return 'J***** J****';
+  const parts = name.trim().split(/\s+/);
+  return parts.map(part => {
+    if (part.length <= 1) return part;
+    return part[0] + '*'.repeat(Math.max(part.length - 1, 4));
+  }).join(' ');
+}
+
+export function maskEmail(email?: string): string {
+  if (!email || !email.includes('@')) return 'j*****@gmail.com';
+  const [local, domain] = email.split('@');
+  const maskedLocal = local.length > 1 ? local[0] + '*'.repeat(Math.max(local.length - 1, 5)) : 'j*****';
+  return `${maskedLocal}@${domain}`;
+}
+

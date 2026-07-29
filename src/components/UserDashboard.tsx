@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useApp } from '../lib/AppContext';
 import { formatTimeAgo } from '../lib/utils';
 import { Property, Inquiry, AppNotification } from '../types';
@@ -7,7 +7,7 @@ import {
   ChevronRight, UploadCloud, HelpCircle, FileText, AlertTriangle, Send, 
   ShieldCheck, Camera, Heart, Eye, Trash2, Edit2, Play, Pause, TrendingUp, 
   Info, List, Clock, Zap, DollarSign, Languages, Smartphone, Globe, ShieldAlert, Check, Plus, Lock, EyeOff, CheckSquare,
-  ChevronDown, Search, ArrowRight, Shield, ToggleLeft, ToggleRight, X, Folder, FolderOpen, Building
+  ChevronDown, Search, ArrowRight, Shield, ToggleLeft, ToggleRight, X, Folder, FolderOpen, Building, Gift
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -271,6 +271,16 @@ export default function UserDashboard({
   const [profilePhotoUrl, setProfilePhotoUrl] = useState(currentUser?.photoUrl || '');
   const [profileSuccess, setProfileSuccess] = useState('');
   const [profileError, setProfileError] = useState('');
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const avatarInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (currentUser) {
+      setFullName(currentUser.fullName || '');
+      setProfilePhone(currentUser.phone || '');
+      setProfilePhotoUrl(currentUser.photoUrl || '');
+    }
+  }, [currentUser]);
 
   const [currPassword, setCurrPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -400,6 +410,108 @@ export default function UserDashboard({
     }
   };
   const recentListings = getRecentlyViewedProperties();
+
+  // Handle Profile Picture File Selection & Secure Save
+  const handleAvatarFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setProfileError('');
+    setProfileSuccess('');
+
+    // Format validation (Allowed image formats)
+    const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp', 'image/gif'];
+    if (!allowedTypes.includes(file.type.toLowerCase())) {
+      setProfileError('Invalid image format. Please select a PNG, JPG, WEBP, or GIF image.');
+      e.target.value = '';
+      return;
+    }
+
+    // Size limit validation (Max 5MB)
+    const maxBytes = 5 * 1024 * 1024;
+    if (file.size > maxBytes) {
+      setProfileError('File size exceeds 5MB limit. Please upload a smaller image.');
+      e.target.value = '';
+      return;
+    }
+
+    setUploadingAvatar(true);
+    const reader = new FileReader();
+    reader.onloadend = async () => {
+      const base64Url = reader.result as string;
+      if (!base64Url) {
+        setUploadingAvatar(false);
+        return;
+      }
+
+      setProfilePhotoUrl(base64Url);
+
+      // Save securely to backend
+      try {
+        const authToken = localStorage.getItem('sof_umer_token') || token || '';
+        const res = await fetch(`/api/users/${currentUser.id}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${authToken}`
+          },
+          body: JSON.stringify({ fullName, phone: profilePhone, photoUrl: base64Url })
+        });
+
+        if (res.ok) {
+          const updated = await res.json();
+          setCurrentUser(updated);
+          setProfileSuccess(
+            currentLanguage === 'am' ? 'የመገለጫ ፎቶ በተሳካ ሁኔታ ተቀይሯል!' : 
+            currentLanguage === 'om' ? 'Suuraan profaayilii milkiidhaan jijjiirameera!' : 
+            'Profile picture updated and saved securely!'
+          );
+          setTimeout(() => setProfileSuccess(''), 4000);
+        } else {
+          setProfileError('Failed to save updated profile picture.');
+        }
+      } catch (err) {
+        setProfileError('Network error while saving profile picture.');
+      } finally {
+        setUploadingAvatar(false);
+      }
+    };
+    reader.readAsDataURL(file);
+    e.target.value = '';
+  };
+
+  const handleRemoveAvatar = async () => {
+    if (!window.confirm('Are you sure you want to remove your profile picture?')) return;
+    setProfileError('');
+    setProfileSuccess('');
+    setUploadingAvatar(true);
+
+    try {
+      const authToken = localStorage.getItem('sof_umer_token') || token || '';
+      const res = await fetch(`/api/users/${currentUser.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${authToken}`
+        },
+        body: JSON.stringify({ fullName, phone: profilePhone, photoUrl: '' })
+      });
+
+      if (res.ok) {
+        const updated = await res.json();
+        setProfilePhotoUrl('');
+        setCurrentUser(updated);
+        setProfileSuccess('Profile picture removed.');
+        setTimeout(() => setProfileSuccess(''), 3000);
+      } else {
+        setProfileError('Failed to remove profile picture.');
+      }
+    } catch (err) {
+      setProfileError('Network error occurred.');
+    } finally {
+      setUploadingAvatar(false);
+    }
+  };
 
   // Handle Profile Update
   const handleUpdateProfile = async (e: React.FormEvent) => {
@@ -565,9 +677,9 @@ export default function UserDashboard({
     setReceiptSuccess('');
 
     const DEFAULT_AD_PACKAGES = [
-      { id: 'starter', name: 'Basic Boost', price: 50, currency: 'ETB', duration: '3 days', daysCount: 3, views: 'Category top placement', badge: 'STARTER', desc: 'Category top placement + Basic Verified Badge' },
-      { id: 'premium', name: 'Premium Boost', price: 150, currency: 'ETB', duration: '7 days', daysCount: 7, views: 'Featured hero slider', badge: 'PREMIUM', desc: 'Featured hero slider + High priority ranking' },
-      { id: 'vip', name: 'VIP Elite Boost', price: 500, currency: 'ETB', duration: '30 days', daysCount: 30, views: 'Top search billboard pin', badge: 'VIP ELITE', desc: 'Top search billboard pin + Full site promotion' }
+      { id: 'starter', name: 'STARTER', price: 100, currency: 'ETB', duration: '3 days', daysCount: 3, views: 'Category top placement', badge: 'STARTER', desc: 'Category top placement + Basic Verified Badge' },
+      { id: 'premium', name: 'PREMIUM', price: 150, currency: 'ETB', duration: '7 days', daysCount: 7, views: 'Featured hero slider', badge: 'PREMIUM', desc: 'Featured hero slider + High priority ranking' },
+      { id: 'vip', name: 'VIP ELITE', price: 500, currency: 'ETB', duration: '30 days', daysCount: 30, views: 'Top search billboard pin', badge: 'VIP ELITE', desc: 'Top search billboard pin + Full site promotion' }
     ];
 
     const rawPackages = (systemSettings?.adPackages && systemSettings.adPackages.length > 0)
@@ -830,19 +942,22 @@ export default function UserDashboard({
         <div className="absolute top-0 right-0 w-80 h-80 bg-amber-500/5 rounded-full blur-3xl pointer-events-none" />
         
         <div className="flex items-center gap-5 relative z-10">
-          <div className="relative">
+          <div className="relative group cursor-pointer" onClick={() => avatarInputRef.current?.click()} title="Click to upload profile picture">
             {profilePhotoUrl ? (
               <img 
                 src={profilePhotoUrl} 
                 alt={currentUser.fullName} 
                 referrerPolicy="no-referrer"
-                className="w-16 h-16 md:w-20 md:h-20 rounded-full object-cover border-2 border-amber-500/20 shadow-xl" 
+                className="w-16 h-16 md:w-20 md:h-20 rounded-full object-cover border-2 border-amber-500/20 shadow-xl group-hover:opacity-80 transition" 
               />
             ) : (
-              <div className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-gradient-to-tr from-amber-400 to-amber-600 text-black font-black flex items-center justify-center text-xl md:text-2xl shadow-xl border border-amber-500/20">
+              <div className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-gradient-to-tr from-amber-400 to-amber-600 text-black font-black flex items-center justify-center text-xl md:text-2xl shadow-xl border border-amber-500/20 group-hover:opacity-80 transition">
                 {currentUser.fullName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
               </div>
             )}
+            <div className="absolute inset-0 rounded-full bg-black/60 opacity-0 group-hover:opacity-100 transition flex items-center justify-center text-amber-400">
+              <Camera className="w-5 h-5" />
+            </div>
             <span className={`absolute bottom-0.5 right-0.5 w-4 h-4 rounded-full border-2 border-black ${currentUser.isVerified ? 'bg-emerald-500' : 'bg-amber-500 animate-pulse'}`} />
           </div>
 
@@ -982,6 +1097,78 @@ export default function UserDashboard({
                     </div>
                   </div>
 
+                  {/* Profile Picture Upload & Management Card */}
+                  <div className="bg-gradient-to-r from-[#12121a] to-black/80 border border-white/10 p-5 rounded-2xl shadow-xl">
+                    <div className="flex flex-col sm:flex-row items-center gap-5">
+                      <div className="relative shrink-0">
+                        {profilePhotoUrl ? (
+                          <img 
+                            src={profilePhotoUrl} 
+                            alt={currentUser.fullName} 
+                            referrerPolicy="no-referrer"
+                            className="w-20 h-20 rounded-2xl object-cover border-2 border-amber-500/40 shadow-xl" 
+                          />
+                        ) : (
+                          <div className="w-20 h-20 rounded-2xl bg-gradient-to-tr from-amber-400 to-amber-600 text-black font-black flex items-center justify-center text-2xl shadow-xl border border-amber-500/30">
+                            {currentUser.fullName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="space-y-2 text-center sm:text-left flex-1">
+                        <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2">
+                          <h4 className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-1.5">
+                            <Camera className="w-4 h-4 text-amber-500" />
+                            <span>User Profile Picture</span>
+                          </h4>
+                          <span className="text-[9px] bg-amber-500/10 text-amber-400 border border-amber-500/20 px-2 py-0.5 rounded font-mono">
+                            Saved to Account
+                          </span>
+                        </div>
+
+                        <p className="text-xs text-white/70">
+                          Upload a photo from your device gallery or files to personalize your account across the marketplace.
+                        </p>
+                        <p className="text-[10px] text-white/40 font-mono">
+                          Allowed formats: PNG, JPG, JPEG, WEBP, GIF • Max size: 5 MB
+                        </p>
+
+                        {/* Hidden File Input */}
+                        <input 
+                          type="file" 
+                          ref={avatarInputRef}
+                          accept="image/png, image/jpeg, image/jpg, image/webp, image/gif"
+                          onChange={handleAvatarFileChange}
+                          className="hidden" 
+                        />
+
+                        <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 pt-1">
+                          <button 
+                            type="button"
+                            onClick={() => avatarInputRef.current?.click()}
+                            disabled={uploadingAvatar}
+                            className="px-4 py-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black font-extrabold text-xs rounded-xl flex items-center gap-2 transition shadow-lg cursor-pointer uppercase tracking-wider disabled:opacity-50"
+                          >
+                            <UploadCloud className="w-4 h-4" />
+                            <span>{uploadingAvatar ? 'Uploading...' : profilePhotoUrl ? 'Change Profile Picture' : 'Add Profile Picture'}</span>
+                          </button>
+
+                          {profilePhotoUrl && (
+                            <button 
+                              type="button"
+                              onClick={handleRemoveAvatar}
+                              disabled={uploadingAvatar}
+                              className="px-3.5 py-2 bg-white/5 hover:bg-rose-500/20 text-rose-400 border border-white/10 hover:border-rose-500/30 font-bold text-xs rounded-xl flex items-center gap-1.5 transition cursor-pointer"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                              <span>Remove Photo</span>
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
                   {/* Edit Profile Sub-Section */}
                   <div className="border-t border-white/5 pt-6">
                     <h4 className="text-xs font-black uppercase text-amber-500 tracking-wider mb-4">Edit Profile Information</h4>
@@ -1051,6 +1238,72 @@ export default function UserDashboard({
                       </button>
                     )}
                   </div>
+
+                  {/* Dynamic Free Listing Campaign Status & Quota Banner */}
+                  {(() => {
+                    const fls = systemSettings?.freeListingSettings || { enabled: true, maxFreeListingsPerUser: 5 };
+                    const checkFreeListingActive = (f: any) => {
+                      if (!f || f.enabled === false) return false;
+                      const now = new Date();
+                      if (f.startDate) {
+                        const start = new Date(f.startDate);
+                        if (!isNaN(start.getTime()) && now < start) return false;
+                      }
+                      if (f.endDate) {
+                        const end = new Date(f.endDate);
+                        end.setHours(23, 59, 59, 999);
+                        if (!isNaN(end.getTime()) && now > end) return false;
+                      }
+                      return true;
+                    };
+
+                    const isCampaignActive = checkFreeListingActive(fls);
+                    const maxFree = fls.maxFreeListingsPerUser ?? 5;
+                    const userFreeUsed = myListings.filter(p => !p.description?.includes('**PAUSED**')).length;
+                    const remainingFree = Math.max(0, maxFree - userFreeUsed);
+
+                    return (
+                      <div className="bg-gradient-to-r from-amber-500/10 via-black/40 to-emerald-500/10 border border-amber-500/30 p-5 rounded-3xl shadow-xl relative overflow-hidden">
+                        <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 relative z-10">
+                          <div className="space-y-1 text-left">
+                            <div className="flex items-center gap-2">
+                              <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-extrabold font-mono uppercase border ${
+                                isCampaignActive 
+                                  ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' 
+                                  : 'bg-rose-500/20 text-rose-400 border-rose-500/30'
+                              }`}>
+                                {isCampaignActive ? 'Free Listing Campaign Active' : 'Campaign Inactive'}
+                              </span>
+                              {fls.showDuration && fls.endDate && (
+                                <span className="text-[10px] text-white/50 font-mono">
+                                  Valid until {fls.endDate}
+                                </span>
+                              )}
+                            </div>
+                            <h4 className="text-sm font-bold text-white flex items-center gap-2">
+                              <Gift className="w-4 h-4 text-amber-400 shrink-0" />
+                              <span>{fls.campaignNotice || 'Free Listing Campaign Available'}</span>
+                            </h4>
+                            <p className="text-xs text-white/60">
+                              {isCampaignActive ? (
+                                <>Admin configured limit: <strong className="text-amber-400">{maxFree} free listings</strong> per account.</>
+                              ) : (
+                                <>Standard listing postings require paid ad promotion package.</>
+                              )}
+                            </p>
+                          </div>
+
+                          <div className="bg-black/60 border border-white/10 p-3.5 rounded-2xl text-center shrink-0 min-w-[180px]">
+                            <span className="text-[10px] uppercase font-bold text-white/40 block mb-0.5">Campaign Quota</span>
+                            <p className="text-sm font-extrabold text-amber-400 font-mono">
+                              Free listings available: <span className="text-white text-base">{remainingFree}</span>
+                            </p>
+                            <span className="text-[9px] text-white/40 font-mono">Used {userFreeUsed} of {maxFree} limit</span>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })()}
 
                   {/* Listings Grid */}
                   {myListings.length === 0 ? (
@@ -1168,9 +1421,9 @@ export default function UserDashboard({
                             if (saved) return JSON.parse(saved);
                           } catch (e) {}
                           return [
-                            { id: 'pkg-1', name: 'Starter Sidebar Slot', price: 450, currency: 'ETB', duration: '7 days', views: '2.5k target', badge: 'STARTER', desc: 'Category top placement + Basic Verified Badge' },
-                            { id: 'pkg-2', name: 'Premium Hero Top Slider', price: 1800, currency: 'ETB', duration: '14 days', views: '15k target', badge: 'HIGH ROI', desc: 'Featured hero slider + High priority ranking' },
-                            { id: 'pkg-3', name: 'Dynamic Search Billboard', price: 4500, currency: 'ETB', duration: '30 days', views: '40k target', badge: 'VIP ELITE', desc: 'Top search billboard pin + Full site promotion' }
+                            { id: 'starter', name: 'STARTER', price: 100, currency: 'ETB', duration: '3 days', views: 'Category top placement', badge: 'STARTER', desc: 'Category top placement + Basic Verified Badge' },
+                            { id: 'premium', name: 'PREMIUM', price: 150, currency: 'ETB', duration: '7 days', views: 'Featured hero slider', badge: 'PREMIUM', desc: 'Featured hero slider + High priority ranking' },
+                            { id: 'vip', name: 'VIP ELITE', price: 500, currency: 'ETB', duration: '30 days', views: 'Top search billboard pin', badge: 'VIP ELITE', desc: 'Top search billboard pin + Full site promotion' }
                           ];
                         })();
 

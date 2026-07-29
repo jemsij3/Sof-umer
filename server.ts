@@ -1236,7 +1236,7 @@ async function startServer() {
       if (!user.passwordHistory.includes(user.passwordHash)) {
         user.passwordHistory.push(user.passwordHash);
       }
-      if (user.passwordHistory.length > 10) {
+      if (user.passwordHistory.length > 5) {
         user.passwordHistory.shift();
       }
     }
@@ -1731,7 +1731,7 @@ async function startServer() {
     if (existing) {
       if (!existing.passwordHash) {
         if (await isPasswordReused(existing, password)) {
-          return res.status(400).json({ error: 'You cannot reuse a previous password. Please create a new password.' });
+          return res.status(400).json({ error: 'You cannot reuse a previous password. Please choose a new password.' });
         }
         const passwordHash = await bcrypt.hash(password, 10);
         existing.passwordHash = passwordHash;
@@ -1931,7 +1931,7 @@ async function startServer() {
 
     // Check Password History Re-use Protection
     if (await isPasswordReused(user, newPassword)) {
-      return res.status(400).json({ error: 'You cannot reuse a previous password. Please create a new password.' });
+      return res.status(400).json({ error: 'You cannot reuse a previous password. Please choose a new password.' });
     }
 
     pushPasswordToHistory(user);
@@ -1970,7 +1970,7 @@ async function startServer() {
     }
 
     if (await isPasswordReused(dbUser, newPassword)) {
-      return res.status(400).json({ error: 'You cannot reuse a previous password. Please create a new password.' });
+      return res.status(400).json({ error: 'You cannot reuse a previous password. Please choose a new password.' });
     }
 
     pushPasswordToHistory(dbUser);
@@ -2116,10 +2116,19 @@ async function startServer() {
         delete updates.verificationStatus;
         delete updates.passwordHash;
       } else {
-        // If password is updated by admin, hash it
-        if (updates.password) {
-          updates.passwordHash = await bcrypt.hash(updates.password, 10);
+        // If password is updated by admin, check history and hash it
+        if (updates.password || updates.temporaryPassword) {
+          const newPass = updates.password || updates.temporaryPassword;
+          if (!isValidPassword(newPass)) {
+            return res.status(400).json({ error: 'Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, one number, and one special character.' });
+          }
+          if (await isPasswordReused(localDb.users[idx], newPass)) {
+            return res.status(400).json({ error: 'You cannot reuse a previous password. Please choose a new password.' });
+          }
+          pushPasswordToHistory(localDb.users[idx]);
+          updates.passwordHash = await bcrypt.hash(newPass, 10);
           delete updates.password;
+          delete updates.temporaryPassword;
         }
       }
 

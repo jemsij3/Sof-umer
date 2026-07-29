@@ -1,12 +1,13 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { 
   Users, ShieldCheck, CheckCircle2, AlertOctagon, RefreshCw, Key, Power, Trash2, 
-  Edit, Eye, UserPlus, Search, Filter, Plus, Settings, BarChart3, Clock, 
+  Edit, Eye, EyeOff, UserPlus, Search, Filter, Plus, Settings, BarChart3, Clock, 
   HelpCircle, Volume2, CreditCard, DollarSign, Activity, Lock, Check, ChevronLeft, 
   ChevronRight, User, MoreVertical, X, CheckSquare, Square, ClipboardList, Info,
   ArrowLeft, LayoutGrid, List, Building2, Phone, Mail, Calendar, FileText, Camera, Upload
 } from 'lucide-react';
 import { User as UserType } from '../types';
+import { maskName, maskEmail } from '../lib/utils';
 
 interface EmployeeAdminsModuleProps {
   currentUser: UserType | null;
@@ -139,6 +140,10 @@ export const EmployeeAdminsModule: React.FC<EmployeeAdminsModuleProps> = ({
 }) => {
   // Navigation Tabs for Employee Admins Module
   const [subTab, setSubTab] = useState<'dashboard' | 'staff_management' | 'roles_permissions' | 'login_history' | 'activity_logs' | 'settings'>('dashboard');
+
+  // Privacy Control: Mask admin personal details by default
+  const [showAdminDetails, setShowAdminDetails] = useState<boolean>(false);
+  const isAuthorizedAdmin = currentUser?.role === 'admin' && currentUser?.isEmployee !== true;
 
   // Employee list derived from users where isEmployee is true
   const employees = useMemo(() => {
@@ -869,6 +874,27 @@ export const EmployeeAdminsModule: React.FC<EmployeeAdminsModuleProps> = ({
                   <p className="text-[11px] text-white/40">Search, filter, and view detailed metrics for administrative staff.</p>
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
+                  {/* Privacy Toggle Button */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (!isAuthorizedAdmin) {
+                        alert('Permission Denied: Only authorized Super Admin can reveal private admin details.');
+                        return;
+                      }
+                      setShowAdminDetails(!showAdminDetails);
+                    }}
+                    className={`px-3 py-1.5 rounded-2xl text-xs font-bold border transition flex items-center gap-1.5 cursor-pointer ${
+                      showAdminDetails && isAuthorizedAdmin
+                        ? 'bg-amber-500/20 text-amber-400 border-amber-500/40 hover:bg-amber-500/30'
+                        : 'bg-white/5 text-white/70 border-white/10 hover:bg-white/10'
+                    }`}
+                    title={showAdminDetails ? "Hide private admin personal details" : "Show private admin personal details"}
+                  >
+                    {showAdminDetails && isAuthorizedAdmin ? <EyeOff className="w-3.5 h-3.5 text-amber-400" /> : <Eye className="w-3.5 h-3.5 text-amber-400" />}
+                    <span>{showAdminDetails && isAuthorizedAdmin ? 'Hide Info' : 'Show Admin Info'}</span>
+                  </button>
+
                   {/* View Mode Toggle */}
                   <div className="bg-[#12121a] border border-white/5 rounded-2xl p-1 flex items-center gap-1">
                     <button
@@ -976,7 +1002,9 @@ export const EmployeeAdminsModule: React.FC<EmployeeAdminsModuleProps> = ({
                                 className="w-11 h-11 rounded-full border border-white/10 shrink-0 object-cover"
                               />
                               <div>
-                                <p className="font-extrabold text-white text-xs group-hover:text-amber-400 transition">{emp.fullName}</p>
+                                <p className="font-extrabold text-white text-xs group-hover:text-amber-400 transition">
+                                  {(showAdminDetails && isAuthorizedAdmin) ? emp.fullName : maskName(emp.fullName)}
+                                </p>
                                 <p className="text-[10px] text-white/40">@{emp.username || 'username'}</p>
                               </div>
                             </div>
@@ -999,7 +1027,7 @@ export const EmployeeAdminsModule: React.FC<EmployeeAdminsModuleProps> = ({
                             </div>
                             <div className="flex items-center gap-2">
                               <Mail className="w-3.5 h-3.5 text-white/30 shrink-0" />
-                              <span className="truncate">{emp.email}</span>
+                              <span className="truncate">{(showAdminDetails && isAuthorizedAdmin) ? emp.email : maskEmail(emp.email)}</span>
                             </div>
                             {emp.phone && (
                               <div className="flex items-center gap-2">
@@ -1080,7 +1108,9 @@ export const EmployeeAdminsModule: React.FC<EmployeeAdminsModuleProps> = ({
                                   className="w-8 h-8 rounded-full border border-white/10 shrink-0 object-cover"
                                 />
                                 <div>
-                                  <p className="font-bold text-white text-xs group-hover:text-amber-400 transition">{emp.fullName}</p>
+                                  <p className="font-bold text-white text-xs group-hover:text-amber-400 transition">
+                                    {(showAdminDetails && isAuthorizedAdmin) ? emp.fullName : maskName(emp.fullName)}
+                                  </p>
                                   <p className="text-[10px] text-white/30">@{emp.username || 'username'}</p>
                                 </div>
                               </td>
@@ -1089,7 +1119,7 @@ export const EmployeeAdminsModule: React.FC<EmployeeAdminsModuleProps> = ({
                                 <p className="text-[10px] text-emerald-400 font-medium">{emp.department || 'Operations'}</p>
                               </td>
                               <td className="px-4 py-3">
-                                <p className="text-white/80">{emp.email}</p>
+                                <p className="text-white/80">{(showAdminDetails && isAuthorizedAdmin) ? emp.email : maskEmail(emp.email)}</p>
                                 <p className="text-[10px] text-white/30">{emp.phone || 'No Phone'}</p>
                               </td>
                               <td className="px-4 py-3">
@@ -2037,7 +2067,9 @@ export const EmployeeAdminsModule: React.FC<EmployeeAdminsModuleProps> = ({
               </div>
 
               <div>
-                <h4 className="font-extrabold text-white text-lg">{activeProfileEmployee.fullName}</h4>
+                <h4 className="font-extrabold text-white text-lg">
+                  {(showAdminDetails && isAuthorizedAdmin) ? activeProfileEmployee.fullName : maskName(activeProfileEmployee.fullName)}
+                </h4>
                 <p className="text-xs text-white/40">@{activeProfileEmployee.username || 'username'}</p>
                 <div className="mt-2.5 flex flex-wrap justify-center gap-1.5">
                   <span className="px-2.5 py-0.5 rounded bg-amber-500/15 text-amber-400 border border-amber-500/20 text-[9px] uppercase font-bold tracking-wider">
@@ -2057,7 +2089,9 @@ export const EmployeeAdminsModule: React.FC<EmployeeAdminsModuleProps> = ({
                 </div>
                 <div className="flex justify-between py-1 border-b border-white/[0.02]">
                   <span className="text-white/40 flex items-center gap-1"><Mail className="w-3.5 h-3.5" /> Email:</span>
-                  <span className="text-white truncate max-w-[150px]" title={activeProfileEmployee.email}>{activeProfileEmployee.email}</span>
+                  <span className="text-white truncate max-w-[150px]" title={activeProfileEmployee.email}>
+                    {(showAdminDetails && isAuthorizedAdmin) ? activeProfileEmployee.email : maskEmail(activeProfileEmployee.email)}
+                  </span>
                 </div>
                 <div className="flex justify-between py-1 border-b border-white/[0.02]">
                   <span className="text-white/40 flex items-center gap-1"><Phone className="w-3.5 h-3.5" /> Phone:</span>

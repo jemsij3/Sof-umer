@@ -1161,9 +1161,9 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
   const featuredPrice = systemSettings?.marketplaceSettings?.featuredAdPrice ?? 300;
 
   const DEFAULT_AD_PACKAGES = [
-    { id: 'starter', name: 'Basic Boost', price: 50, currency: 'ETB', duration: '3 days', daysCount: 3, views: 'Category top placement', badge: 'STARTER', desc: 'Category top placement + Basic Verified Badge' },
-    { id: 'premium', name: 'Premium Boost', price: 150, currency: 'ETB', duration: '7 days', daysCount: 7, views: 'Featured hero slider', badge: 'PREMIUM', desc: 'Featured hero slider + High priority ranking' },
-    { id: 'vip', name: 'VIP Elite Boost', price: 500, currency: 'ETB', duration: '30 days', daysCount: 30, views: 'Top search billboard pin', badge: 'VIP ELITE', desc: 'Top search billboard pin + Full site promotion' }
+    { id: 'starter', name: 'STARTER', price: 100, currency: 'ETB', duration: '3 days', daysCount: 3, views: 'Category top placement', badge: 'STARTER', desc: 'Category top placement + Basic Verified Badge' },
+    { id: 'premium', name: 'PREMIUM', price: 150, currency: 'ETB', duration: '7 days', daysCount: 7, views: 'Featured hero slider', badge: 'PREMIUM', desc: 'Featured hero slider + High priority ranking' },
+    { id: 'vip', name: 'VIP ELITE', price: 500, currency: 'ETB', duration: '30 days', daysCount: 30, views: 'Top search billboard pin', badge: 'VIP ELITE', desc: 'Top search billboard pin + Full site promotion' }
   ];
 
   const checkFreeListingActive = (fls: any) => {
@@ -1189,8 +1189,20 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
 
   const dynamicPackages = rawPackages.length > 0 ? rawPackages : DEFAULT_AD_PACKAGES;
 
+  const flsConfig = systemSettings?.freeListingSettings;
+  const maxFree = flsConfig?.maxFreeListingsPerUser ?? 5;
+  const freeDurationText = (flsConfig?.showDuration && flsConfig?.endDate) ? `Until ${flsConfig.endDate}` : 'Standard';
+
   const allPromotionPlans = [
-    ...(isFreeListingEnabled ? [{ id: 'free', name: 'Standard Free Listing', cost: 0, days: '30 Days', daysCount: 0, desc: 'Standard catalog listing with basic visibility', badge: 'FREE' }] : []),
+    ...(isFreeListingEnabled ? [{ 
+      id: 'free', 
+      name: 'Standard Free Listing', 
+      cost: 0, 
+      days: freeDurationText, 
+      daysCount: 0, 
+      desc: `Standard catalog listing (Campaign limit: ${maxFree} free listings per user)`, 
+      badge: 'FREE' 
+    }] : []),
     ...dynamicPackages.map((pkg: any) => ({
       id: pkg.id || pkg.name,
       name: pkg.name,

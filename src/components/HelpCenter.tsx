@@ -301,9 +301,9 @@ const faqData: FAQItem[] = [
       am: 'የተለጠፈው ማስታወቂያ ለስንት ጊዜ ይቆያል?'
     },
     answer: {
-      en: 'Standard listings stay active for 30 days. You can renew them for free from your dashboard before they expire.',
-      om: 'Beeksisonni iddoo guyyoota 30f turu. Ottuu hin dhumatin dura dashboard irraa deebisanii haaromsuun ni danda\'ama.',
-      am: 'መደበኛ ማስታወቂያዎች ለ 30 ቀናት ንቁ ሆነው ይቆያሉ። ሳይጠናቀቁ በፊት በነፃ ማደስ ይችላሉ።'
+      en: 'Standard listings stay active based on active Free Listing Campaign limits set by admin. You can renew or boost them directly from your dashboard.',
+      om: 'Beeksisonni akka seera beeksisa tolaa bulchaan murteessetti turu. Dashboard keessan irraa haaromsuu dandeessu.',
+      am: 'መደበኛ ማስታወቂያዎች በአስተዳዳሪው በተዘጋጀው በነፃ ማስታወቂያ ዘመቻ ደንብ መሰረት ንቁ ሆነው ይቆያሉ። ከዳሽቦርድዎ ላይ ማደስ ወይም ማሳደግ ይችላሉ።'
     }
   },
   {
