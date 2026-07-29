@@ -1,25 +1,3 @@
-import os from 'os';
-
-import mongoose from 'mongoose';
-
-// MongoDB Persistence integration
-const MONGODB_URI = process.env.MONGODB_URI;
-
-let DbStateModel: any = null;
-
-if (MONGODB_URI) {
-  mongoose.connect(MONGODB_URI, { serverSelectionTimeoutMS: 5000 })
-    .then(() => {
-      console.log('[MongoDB] Connected successfully');
-      const DbStateSchema = new mongoose.Schema({
-        data: { type: Object, required: true },
-        updatedAt: { type: Date, default: Date.now }
-      });
-      DbStateModel = mongoose.models.DbState || mongoose.model('DbState', DbStateSchema);
-    })
-    .catch(err => console.error('[MongoDB] Connection error:', err));
-}
-
 import express from 'express';
 import path from 'path';
 import fs from 'fs/promises';
@@ -28,6 +6,7 @@ import { createServer as createViteServer } from 'vite';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import nodemailer from 'nodemailer';
+import mongoose from 'mongoose';
 import {
   User,
   Property,
@@ -66,14 +45,14 @@ function resolveDbFilePath(): { dbPath: string; isPersistent: boolean } {
   }
 
   // Check system persistent volume paths (/data or /var/data or local data dir)
-  const candidateDirs = ['/data', '/var/data', path.join(os.tmpdir(), 'sof_umer_data')];
+  const candidateDirs = ['/data', '/var/data', path.join(process.cwd(), 'data')];
   for (const dir of candidateDirs) {
     try {
       if (dir.startsWith('/') && !fsSync.existsSync(dir)) {
         try {
           fsSync.mkdirSync(dir, { recursive: true });
         } catch (_) {}
-      } else if (!fsSync.existsSync(dir) && dir === path.join(os.tmpdir(), 'sof_umer_data')) {
+      } else if (!fsSync.existsSync(dir) && dir === path.join(process.cwd(), 'data')) {
         fsSync.mkdirSync(dir, { recursive: true });
       }
       if (fsSync.existsSync(dir)) {
@@ -86,13 +65,71 @@ function resolveDbFilePath(): { dbPath: string; isPersistent: boolean } {
   }
 
   // Fallback to workspace root
-  return { dbPath: path.join(os.tmpdir(), 'sof_umer_db.json'), isPersistent: false };
+  return { dbPath: path.join(process.cwd(), 'sof_umer_db.json'), isPersistent: false };
 }
 
 const { dbPath: DB_FILE, isPersistent: IS_PERSISTENT_STORAGE } = resolveDbFilePath();
 console.log(`[Storage] Resolved DB_FILE: ${DB_FILE} (Persistent Storage: ${IS_PERSISTENT_STORAGE ? 'YES' : 'NO - Ephemeral Workspace'})`);
-if (!IS_PERSISTENT_STORAGE) {
-  console.warn('[STORAGE WARNING] Database is running on ephemeral storage. Attach a Render Persistent Disk mounted at /data or set DATA_DIR to ensure user data persists across redeployments.');
+
+// --- MONGODB PERSISTENCE LAYER ---
+const MONGODB_URI = process.env.MONGODB_URI || process.env.MONGO_URL || process.env.DATABASE_URL;
+let isMongoConnected = false;
+
+// Mongoose Schemas (strict: false allows dynamic properties while using MongoDB as persistent single source of truth)
+const userSchema = new mongoose.Schema({ id: { type: String, required: true, unique: true } }, { strict: false });
+const propertySchema = new mongoose.Schema({ id: { type: String, required: true, unique: true } }, { strict: false });
+const paymentMethodSchema = new mongoose.Schema({ id: { type: String, required: true, unique: true } }, { strict: false });
+const receiptSchema = new mongoose.Schema({ id: { type: String, required: true, unique: true } }, { strict: false });
+const inquirySchema = new mongoose.Schema({ id: { type: String, required: true, unique: true } }, { strict: false });
+const advertisementSchema = new mongoose.Schema({ id: { type: String, required: true, unique: true } }, { strict: false });
+const reportSchema = new mongoose.Schema({ id: { type: String, required: true, unique: true } }, { strict: false });
+const notificationSchema = new mongoose.Schema({ id: { type: String, required: true, unique: true } }, { strict: false });
+const categorySchema = new mongoose.Schema({ id: { type: String, required: true, unique: true } }, { strict: false });
+const appFeatureSchema = new mongoose.Schema({ id: { type: String, required: true, unique: true } }, { strict: false });
+const jobOpeningSchema = new mongoose.Schema({ id: { type: String, required: true, unique: true } }, { strict: false });
+const supportTicketSchema = new mongoose.Schema({ id: { type: String, required: true, unique: true } }, { strict: false });
+const offerSchema = new mongoose.Schema({ id: { type: String, required: true, unique: true } }, { strict: false });
+const languageSchema = new mongoose.Schema({ code: { type: String, required: true, unique: true } }, { strict: false });
+const translationSchema = new mongoose.Schema({ key: { type: String, required: true, unique: true } }, { strict: false });
+const faqSchema = new mongoose.Schema({ id: { type: String, required: true, unique: true } }, { strict: false });
+const appSettingsSchema = new mongoose.Schema({ key: { type: String, required: true, unique: true } }, { strict: false });
+
+export const UserModel = mongoose.models.User || mongoose.model('User', userSchema);
+export const PropertyModel = mongoose.models.Property || mongoose.model('Property', propertySchema);
+export const PaymentMethodModel = mongoose.models.PaymentMethod || mongoose.model('PaymentMethod', paymentMethodSchema);
+export const ReceiptModel = mongoose.models.Receipt || mongoose.model('Receipt', receiptSchema);
+export const InquiryModel = mongoose.models.Inquiry || mongoose.model('Inquiry', inquirySchema);
+export const AdvertisementModel = mongoose.models.Advertisement || mongoose.model('Advertisement', advertisementSchema);
+export const ReportModel = mongoose.models.Report || mongoose.model('Report', reportSchema);
+export const NotificationModel = mongoose.models.Notification || mongoose.model('Notification', notificationSchema);
+export const CategoryModel = mongoose.models.Category || mongoose.model('Category', categorySchema);
+export const AppFeatureModel = mongoose.models.AppFeature || mongoose.model('AppFeature', appFeatureSchema);
+export const JobOpeningModel = mongoose.models.JobOpening || mongoose.model('JobOpening', jobOpeningSchema);
+export const SupportTicketModel = mongoose.models.SupportTicket || mongoose.model('SupportTicket', supportTicketSchema);
+export const OfferModel = mongoose.models.Offer || mongoose.model('Offer', offerSchema);
+export const LanguageModel = mongoose.models.Language || mongoose.model('Language', languageSchema);
+export const TranslationModel = mongoose.models.Translation || mongoose.model('Translation', translationSchema);
+export const FaqModel = mongoose.models.Faq || mongoose.model('Faq', faqSchema);
+export const AppSettingsModel = mongoose.models.AppSettings || mongoose.model('AppSettings', appSettingsSchema);
+
+async function connectMongo(): Promise<boolean> {
+  if (!MONGODB_URI) {
+    console.log('[Storage] MONGODB_URI is not set. Using persistent disk file storage fallback.');
+    return false;
+  }
+  try {
+    console.log('[Storage] Connecting to MongoDB instance...');
+    await mongoose.connect(MONGODB_URI, {
+      serverSelectionTimeoutMS: 5000,
+    });
+    isMongoConnected = true;
+    console.log('[Storage] Successfully connected to MongoDB database as primary source of truth!');
+    return true;
+  } catch (err) {
+    console.error('[Storage] Error connecting to MongoDB:', err);
+    isMongoConnected = false;
+    return false;
+  }
 }
 
 export interface ServerUser extends User {
@@ -129,7 +166,7 @@ const getInitialData = () => {
       createdAt: new Date().toISOString(),
       tokenVersion: 1,
       loginHistory: [],
-      passwordHash: '$2b$10$odqJ/s8vFofM4nV6WQs87.QQkmKXew65OqDDCUPQALgbkjVTuNhou' // Default hashed password: Password123!
+      passwordHash: '$2b$10$8M.OZ7bfDTd8e724T1tSneytfS2iE4nLdSr27YVOBgkIJVdL7ENvC' // Default hashed password: Password123!
     }
   ];
 
@@ -692,269 +729,200 @@ const createDatabaseBackup = async (reason = 'startup') => {
   }
 };
 
-const loadDb = async () => {
-
+async function syncCollectionToMongo<T extends Record<string, any>>(
+  model: mongoose.Model<any>,
+  items: T[],
+  idKey: string = 'id'
+) {
+  if (!isMongoConnected || !items) return;
   try {
-    let loadedFromMongo = false;
-    if (DbStateModel) {
-      try {
-        const state = await DbStateModel.findOne({});
-        if (state && state.data && state.data.users && state.data.users.length > 0) {
-          localDb = state.data;
-          loadedFromMongo = true;
-          console.log('[Storage] Successfully initialized database from MongoDB.');
-        }
-      } catch (err) {
-        console.error('[Storage] Error reading from MongoDB:', err);
-      }
-    }
-
-    if (!loadedFromMongo) {
-      // If DB_FILE does not exist at target persistent path, copy seed database from workspace repository
-      if (!fsSync.existsSync(DB_FILE)) {
-        const workspaceSeed = path.join(process.cwd(), 'sof_umer_db.json');
-        if (DB_FILE !== workspaceSeed && fsSync.existsSync(workspaceSeed)) {
-          console.log(`[Storage] Copying initial seed database to persistent location: ${workspaceSeed} -> ${DB_FILE}`);
-          const targetDir = path.dirname(DB_FILE);
-          if (!fsSync.existsSync(targetDir)) {
-            await fs.mkdir(targetDir, { recursive: true });
+    if (items.length > 0) {
+      const bulkOps = items.map(item => {
+        const filter: Record<string, any> = {};
+        filter[idKey] = item[idKey];
+        return {
+          updateOne: {
+            filter,
+            update: { $set: item },
+            upsert: true
           }
-          await fs.copyFile(workspaceSeed, DB_FILE);
-        }
-      }
+        };
+      });
+      await model.bulkWrite(bulkOps as any);
 
-      const content = await fs.readFile(DB_FILE, 'utf-8');
-
-      // Auto backup existing DB before any runtime migrations
-      await createDatabaseBackup('premigration');
-
-      localDb = JSON.parse(content);
-    }
-    // Backward compatibility & required fields verification
-    if (!localDb.appFeatures || !Array.isArray(localDb.appFeatures)) {
-      localDb.appFeatures = getInitialData().appFeatures;
-    }
-    if (!localDb.jobOpenings || !Array.isArray(localDb.jobOpenings)) {
-      localDb.jobOpenings = [];
+      const validKeys = items.map(i => i[idKey]).filter(Boolean);
+      const deleteFilter: Record<string, any> = {};
+      deleteFilter[idKey] = { $nin: validKeys };
+      await model.deleteMany(deleteFilter);
     } else {
-      localDb.jobOpenings = localDb.jobOpenings.filter(j => !['job-1', 'job-2', 'job-3'].includes(j.id));
+      await model.deleteMany({});
     }
-    if (!localDb.categories || !Array.isArray(localDb.categories)) {
-      localDb.categories = getInitialData().categories;
-    }
-    if (!localDb.users || !Array.isArray(localDb.users)) {
-      localDb.users = getInitialData().users;
-    } else if (!localDb.users.some(u => u.email.toLowerCase() === 'jemaljima@gmail.com')) {
-      localDb.users.push(getInitialData().users[0]);
+  } catch (err) {
+    console.error(`[Storage] Error syncing collection ${model.modelName} to MongoDB:`, err);
+  }
+}
+
+async function saveToMongo() {
+  if (!isMongoConnected) return;
+  try {
+    await Promise.all([
+      syncCollectionToMongo(UserModel, localDb.users || [], 'id'),
+      syncCollectionToMongo(PropertyModel, localDb.properties || [], 'id'),
+      syncCollectionToMongo(PaymentMethodModel, localDb.paymentMethods || [], 'id'),
+      syncCollectionToMongo(ReceiptModel, localDb.receipts || [], 'id'),
+      syncCollectionToMongo(InquiryModel, localDb.inquiries || [], 'id'),
+      syncCollectionToMongo(AdvertisementModel, localDb.advertisements || [], 'id'),
+      syncCollectionToMongo(ReportModel, localDb.reports || [], 'id'),
+      syncCollectionToMongo(NotificationModel, localDb.notifications || [], 'id'),
+      syncCollectionToMongo(CategoryModel, localDb.categories || [], 'id'),
+      syncCollectionToMongo(AppFeatureModel, localDb.appFeatures || [], 'id'),
+      syncCollectionToMongo(JobOpeningModel, localDb.jobOpenings || [], 'id'),
+      syncCollectionToMongo(SupportTicketModel, localDb.supportTickets || [], 'id'),
+      syncCollectionToMongo(OfferModel, (localDb as any).offers || [], 'id'),
+      syncCollectionToMongo(LanguageModel, localDb.languages || [], 'code'),
+      syncCollectionToMongo(TranslationModel, localDb.translations || [], 'key'),
+      syncCollectionToMongo(FaqModel, (localDb as any).faqs || [], 'id'),
+      (async () => {
+        if ((localDb as any).appSettings) {
+          await AppSettingsModel.updateOne(
+            { key: 'appSettings' },
+            { $set: { key: 'appSettings', data: (localDb as any).appSettings } },
+            { upsert: true }
+          );
+        }
+      })()
+    ]);
+  } catch (err) {
+    console.error('[Storage] CRITICAL Error during saveToMongo:', err);
+  }
+}
+
+async function fetchCollection<T = any>(model: mongoose.Model<any>): Promise<T[]> {
+  const docs = await model.find({}).lean().exec();
+  return docs.map((doc: any) => {
+    delete doc._id;
+    delete doc.__v;
+    return doc;
+  }) as T[];
+}
+
+async function fetchAppSettings(): Promise<any> {
+  const doc: any = await AppSettingsModel.findOne({ key: 'appSettings' } as any).lean().exec();
+  if (doc) {
+    delete doc._id;
+    delete doc.__v;
+  }
+  return doc;
+}
+
+async function loadFromMongo(): Promise<boolean> {
+  if (!isMongoConnected) return false;
+  try {
+    const userCount = await UserModel.countDocuments();
+    if (userCount === 0) {
+      console.log('[Storage] MongoDB database is empty. Initializing and seeding MongoDB from baseline seed...');
+      await loadFromFileSeed();
+      await saveToMongo();
+      console.log('[Storage] MongoDB initial seed completed successfully.');
+      return true;
     }
 
-    // Ensure Jemal (Owner Admin) remains active & admin without wiping custom password!
-    const jemalUser = localDb.users.find(u => u.email && u.email.toLowerCase() === 'jemaljima@gmail.com');
-    if (jemalUser) {
-      // ONLY set default hash if passwordHash is completely missing. NEVER overwrite an existing hash!
-      if (!jemalUser.passwordHash) {
-        jemalUser.passwordHash = '$2b$10$odqJ/s8vFofM4nV6WQs87.QQkmKXew65OqDDCUPQALgbkjVTuNhou';
-      }
-      jemalUser.failedLoginAttempts = 0;
-      jemalUser.lockoutUntil = undefined;
-      jemalUser.role = 'admin';
-      jemalUser.status = 'active';
-      jemalUser.isVerified = true;
-      jemalUser.verificationStatus = 'verified';
-    }
+    console.log('[Storage] Loading database records directly from MongoDB...');
+    const [
+      users,
+      properties,
+      paymentMethods,
+      receipts,
+      inquiries,
+      advertisements,
+      reports,
+      notifications,
+      categories,
+      appFeatures,
+      jobOpenings,
+      supportTickets,
+      offers,
+      languages,
+      translations,
+      faqs,
+      appSettingsDoc
+    ] = await Promise.all([
+      fetchCollection(UserModel),
+      fetchCollection(PropertyModel),
+      fetchCollection(PaymentMethodModel),
+      fetchCollection(ReceiptModel),
+      fetchCollection(InquiryModel),
+      fetchCollection(AdvertisementModel),
+      fetchCollection(ReportModel),
+      fetchCollection(NotificationModel),
+      fetchCollection(CategoryModel),
+      fetchCollection(AppFeatureModel),
+      fetchCollection(JobOpeningModel),
+      fetchCollection(SupportTicketModel),
+      fetchCollection(OfferModel),
+      fetchCollection(LanguageModel),
+      fetchCollection(TranslationModel),
+      fetchCollection(FaqModel),
+      fetchAppSettings()
+    ]);
 
-    localDb.users.forEach(u => {
-      if (!u.passwordHistory || !Array.isArray(u.passwordHistory)) {
-        u.passwordHistory = u.passwordHash ? [u.passwordHash] : [];
-      }
-    });
-    if (!localDb.properties || !Array.isArray(localDb.properties)) {
-      localDb.properties = [];
-    } else {
-      localDb.properties.forEach(p => {
-        // Ensure default fields without overwriting pending moderation status
-        if (!p.verificationStatus && p.verificationStatus !== 'rejected' && p.verificationStatus !== 'pending') {
-          p.verificationStatus = 'verified';
-        }
-        if (!p.approvalStatus && p.approvalStatus !== 'rejected' && p.approvalStatus !== 'pending') {
-          p.approvalStatus = 'approved';
-        }
-        if ((p as any).isArchived === undefined) {
-          (p as any).isArchived = false;
-        }
+    localDb = {
+      users: users as any,
+      properties: properties as any,
+      paymentMethods: paymentMethods as any,
+      receipts: receipts as any,
+      inquiries: inquiries as any,
+      advertisements: advertisements as any,
+      reports: reports as any,
+      notifications: notifications as any,
+      categories: categories as any,
+      appFeatures: appFeatures as any,
+      jobOpenings: jobOpenings as any,
+      supportTickets: supportTickets as any,
+      offers: offers as any,
+      languages: languages as any,
+      translations: translations as any,
+      faqs: faqs as any,
+      appSettings: appSettingsDoc ? (appSettingsDoc as any).data : (getInitialData() as any).appSettings
+    } as any;
 
-        // Cross-match property owner with localDb.users
-        let matchedUser = localDb.users.find(u => u.id === p.ownerId);
-        if (!matchedUser && (p as any).ownerEmail) {
-          const pEmail = ((p as any).ownerEmail || '').trim().toLowerCase();
-          if (pEmail) {
-            matchedUser = localDb.users.find(u => u.email && u.email.trim().toLowerCase() === pEmail);
-          }
-        }
-        if (!matchedUser && p.contactEmail) {
-          const cEmail = (p.contactEmail || '').trim().toLowerCase();
-          if (cEmail) {
-            matchedUser = localDb.users.find(u => u.email && u.email.trim().toLowerCase() === cEmail);
-          }
-        }
-        if (!matchedUser && p.contactPhone) {
-          const cPhone = p.contactPhone.trim().replace(/[^\d+]/g, '');
-          if (cPhone && cPhone.length >= 7) {
-            const shortDigits = cPhone.slice(-9);
-            matchedUser = localDb.users.find(u => u.phone && u.phone.trim().replace(/[^\d+]/g, '').endsWith(shortDigits));
-          }
-        }
+    console.log(`[Storage] Successfully loaded from MongoDB: ${localDb.users.length} users, ${localDb.properties.length} properties.`);
+    return true;
+  } catch (err) {
+    console.error('[Storage] Error loading from MongoDB:', err);
+    return false;
+  }
+}
 
-        if (matchedUser) {
-          p.ownerId = matchedUser.id;
-          (p as any).ownerEmail = matchedUser.email;
-          (p as any).ownerPhone = matchedUser.phone || p.contactPhone || '';
-          if (!p.ownerName) p.ownerName = matchedUser.fullName || 'Property Owner';
-        } else {
-          // If orphaned or missing ownerId, bind to Admin account as fallback owner so listing is never lost
-          if (!p.ownerId) {
-            p.ownerId = 'usr-jemal';
-            (p as any).ownerEmail = 'jemaljima@gmail.com';
-            p.ownerName = 'Jemal jimma';
-          }
+const loadFromFileSeed = async () => {
+  try {
+    if (!fsSync.existsSync(DB_FILE)) {
+      const workspaceSeed = path.join(process.cwd(), 'sof_umer_db.json');
+      if (DB_FILE !== workspaceSeed && fsSync.existsSync(workspaceSeed)) {
+        console.log(`[Storage] Copying initial seed database to persistent location: ${workspaceSeed} -> ${DB_FILE}`);
+        const targetDir = path.dirname(DB_FILE);
+        if (!fsSync.existsSync(targetDir)) {
+          await fs.mkdir(targetDir, { recursive: true });
         }
-      });
-    }
-    if (!localDb.paymentMethods || !Array.isArray(localDb.paymentMethods)) {
-      localDb.paymentMethods = getInitialData().paymentMethods;
-    }
-    if (!localDb.receipts || !Array.isArray(localDb.receipts)) localDb.receipts = [];
-    if (!localDb.inquiries || !Array.isArray(localDb.inquiries)) localDb.inquiries = [];
-    if (!localDb.advertisements || !Array.isArray(localDb.advertisements)) localDb.advertisements = [];
-    if (!localDb.supportTickets || !Array.isArray(localDb.supportTickets)) localDb.supportTickets = [];
-    if (!(localDb as any).offers || !Array.isArray((localDb as any).offers)) (localDb as any).offers = [];
-    if (!localDb.languages || !Array.isArray(localDb.languages)) {
-      localDb.languages = getInitialData().languages;
-    }
-    
-    // Merge missing default translation keys without overwriting user custom edits
-    const defaultData = getInitialData();
-    if (!localDb.translations || !Array.isArray(localDb.translations) || localDb.translations.length === 0) {
-      localDb.translations = defaultData.translations;
-    } else {
-      const existingKeys = new Set(localDb.translations.map(t => t.key));
-      for (const t of defaultData.translations) {
-        if (!existingKeys.has(t.key)) {
-          localDb.translations.push(t);
-        }
-      }
-    }
-    if (!localDb.reports || !Array.isArray(localDb.reports)) localDb.reports = [];
-    if (!localDb.notifications || !Array.isArray(localDb.notifications)) localDb.notifications = [];
-    if (!(localDb as any).faqs || !Array.isArray((localDb as any).faqs) || (localDb as any).faqs.length === 0) {
-      (localDb as any).faqs = defaultData.faqs;
-    }
-    if (!(localDb as any).customRoles || !Array.isArray((localDb as any).customRoles)) (localDb as any).customRoles = [];
-    if (!(localDb as any).activityLogs || !Array.isArray((localDb as any).activityLogs)) (localDb as any).activityLogs = [];
-    if (!(localDb as any).loginHistory || !Array.isArray((localDb as any).loginHistory)) (localDb as any).loginHistory = [];
-    if (!(localDb as any).appSettings) {
-      (localDb as any).appSettings = {
-        appName: 'Sof Umer',
-        appLogoText: 'SOF-UMER',
-        logoUrl: '',
-        themeName: 'cosmic-slate',
-        homepageHeading: 'Discover Premium Verified Listings in East Africa',
-        homepageSubheading: 'Properties, Jobs, Local Businesses, and Community events. Clean, manual-receipt audited, and fully verified.',
-        termsAndPrivacy: 'Sof Umer guarantees user security. All listed properties are audited for legal compliance before publishing. Transactions are processed manually by our finance team.',
-        notificationsEnabled: true,
-        siteStatus: 'Online'
-      };
-    }
-
-    // Migration: Purge test/curl notifications and test/curl loginHistory logs
-    let dbChanged = false;
-    if (localDb.notifications && Array.isArray(localDb.notifications)) {
-      const prevNotifCount = localDb.notifications.length;
-      localDb.notifications = localDb.notifications.filter(n => {
-        const msg = (n.message || '').toLowerCase();
-        const title = (n.title || '').toLowerCase();
-        return !msg.includes('curl/') && !title.includes('curl/') && !msg.includes('curl');
-      });
-      if (localDb.notifications.length !== prevNotifCount) {
-        dbChanged = true;
-      }
-    }
-
-    if (localDb.users && Array.isArray(localDb.users)) {
-      localDb.users.forEach(u => {
-        if (u.loginHistory && Array.isArray(u.loginHistory)) {
-          const origLen = u.loginHistory.length;
-          u.loginHistory = u.loginHistory.filter(h => !(h.userAgent || '').toLowerCase().includes('curl'));
-          if (u.loginHistory.length !== origLen) {
-            dbChanged = true;
-          }
-        }
-      });
-    }
-
-    if ((localDb as any).loginHistory && Array.isArray((localDb as any).loginHistory)) {
-      const origLen = (localDb as any).loginHistory.length;
-      (localDb as any).loginHistory = (localDb as any).loginHistory.filter((h: any) => !(h.userAgent || h.deviceInfo || '').toLowerCase().includes('curl'));
-      if ((localDb as any).loginHistory.length !== origLen) {
-        dbChanged = true;
+        await fs.copyFile(workspaceSeed, DB_FILE);
       }
     }
 
-    // Auto-repair migration for registered staff missing isEmployee fields
-    if (localDb.users && localDb.users.length > 0) {
-      localDb.users = localDb.users.map(u => {
-        if (u.role === 'admin' && u.email.toLowerCase() !== 'jemaljima@gmail.com' && !u.isEmployee) {
-          dbChanged = true;
-          return {
-            ...u,
-            isEmployee: true,
-            employeeId: u.employeeId || 'EMP-' + Math.floor(100000 + Math.random() * 900000),
-            isVerified: true,
-            verificationStatus: 'verified',
-            employeeRole: u.employeeRole || 'Supervisor',
-            department: u.department || 'Operations',
-            status: 'active'
-          };
-        }
-        return u;
-      });
-    }
-
-    if (dbChanged) {
-      await saveDb();
-    }
-
-    // Sync all approved receipts and wallet balances
-    syncAllWalletBalances();
-    await saveDb();
+    const content = await fs.readFile(DB_FILE, 'utf-8');
+    await createDatabaseBackup('premigration');
+    localDb = JSON.parse(content);
   } catch (error: any) {
     if (error.code === 'ENOENT') {
-      console.log(`[Storage] Database file not found at target location ${DB_FILE}. Attempting recovery from seed or backups...`);
-
+      console.log(`[Storage] Database file not found at target location ${DB_FILE}. Initializing with default initial data.`);
       const workspaceSeed = path.join(process.cwd(), 'sof_umer_db.json');
       if (DB_FILE !== workspaceSeed && fsSync.existsSync(workspaceSeed)) {
         try {
-          if (DbStateModel) {
-             const state = await DbStateModel.findOne({});
-             if (state && state.data) {
-                localDb = state.data;
-                await saveDb();
-                console.log('[Storage] Successfully initialized database from MongoDB backup.');
-                return;
-             }
-          }
           const content = await fs.readFile(workspaceSeed, 'utf-8');
-
           localDb = JSON.parse(content);
-          await saveDb();
-          console.log('[Storage] Successfully initialized database from workspace seed file.');
           return;
-        } catch (e) {
-          console.error('[Storage] Failed to read workspace seed file:', e);
-        }
+        } catch (e) {}
       }
       localDb = getInitialData();
-      await saveDb();
     } else {
       console.error('CRITICAL: Error reading database file:', error);
       if (!localDb) {
@@ -964,25 +932,174 @@ const loadDb = async () => {
   }
 };
 
+const applyDataSanityAndMigrations = () => {
+  if (!localDb.appFeatures || !Array.isArray(localDb.appFeatures)) {
+    localDb.appFeatures = getInitialData().appFeatures;
+  }
+  if (!localDb.jobOpenings || !Array.isArray(localDb.jobOpenings)) {
+    localDb.jobOpenings = [];
+  } else {
+    localDb.jobOpenings = localDb.jobOpenings.filter(j => !['job-1', 'job-2', 'job-3'].includes(j.id));
+  }
+  if (!localDb.categories || !Array.isArray(localDb.categories)) {
+    localDb.categories = getInitialData().categories;
+  }
+  if (!localDb.users || !Array.isArray(localDb.users)) {
+    localDb.users = getInitialData().users;
+  } else if (!localDb.users.some(u => u.email.toLowerCase() === 'jemaljima@gmail.com')) {
+    localDb.users.push(getInitialData().users[0]);
+  }
+
+  // Ensure Jemal (Owner Admin) remains active & admin without wiping custom password!
+  const jemalUser = localDb.users.find(u => u.email && u.email.toLowerCase() === 'jemaljima@gmail.com');
+  if (jemalUser) {
+    if (!jemalUser.passwordHash) {
+      jemalUser.passwordHash = '$2b$10$8M.OZ7bfDTd8e724T1tSneytfS2iE4nLdSr27YVOBgkIJVdL7ENvC';
+    }
+    jemalUser.failedLoginAttempts = 0;
+    jemalUser.lockoutUntil = undefined;
+    jemalUser.role = 'admin';
+    jemalUser.status = 'active';
+    jemalUser.isVerified = true;
+    jemalUser.verificationStatus = 'verified';
+  }
+
+  localDb.users.forEach(u => {
+    if (!u.passwordHistory || !Array.isArray(u.passwordHistory)) {
+      u.passwordHistory = u.passwordHash ? [u.passwordHash] : [];
+    }
+  });
+
+  if (!localDb.properties || !Array.isArray(localDb.properties)) {
+    localDb.properties = [];
+  } else {
+    localDb.properties.forEach(p => {
+      if (!p.verificationStatus) {
+        p.verificationStatus = 'pending';
+      }
+      if (!p.approvalStatus) {
+        p.approvalStatus = 'pending';
+      }
+      if ((p as any).isArchived === undefined) {
+        (p as any).isArchived = false;
+      }
+
+      let matchedUser = localDb.users.find(u => u.id === p.ownerId);
+      if (!matchedUser && (p as any).ownerEmail) {
+        const pEmail = ((p as any).ownerEmail || '').trim().toLowerCase();
+        if (pEmail) {
+          matchedUser = localDb.users.find(u => u.email && u.email.trim().toLowerCase() === pEmail);
+        }
+      }
+      if (!matchedUser && p.contactEmail) {
+        const cEmail = (p.contactEmail || '').trim().toLowerCase();
+        if (cEmail) {
+          matchedUser = localDb.users.find(u => u.email && u.email.trim().toLowerCase() === cEmail);
+        }
+      }
+      if (!matchedUser && p.contactPhone) {
+        const cPhone = p.contactPhone.trim().replace(/[^\d+]/g, '');
+        if (cPhone && cPhone.length >= 7) {
+          const shortDigits = cPhone.slice(-9);
+          matchedUser = localDb.users.find(u => u.phone && u.phone.trim().replace(/[^\d+]/g, '').endsWith(shortDigits));
+        }
+      }
+
+      if (matchedUser) {
+        p.ownerId = matchedUser.id;
+        (p as any).ownerEmail = matchedUser.email;
+        (p as any).ownerPhone = matchedUser.phone || p.contactPhone || '';
+        if (!p.ownerName) p.ownerName = matchedUser.fullName || 'Property Owner';
+      } else {
+        if (!p.ownerId) {
+          p.ownerId = 'usr-jemal';
+          (p as any).ownerEmail = 'jemaljima@gmail.com';
+          p.ownerName = 'Jemal jimma';
+        }
+      }
+    });
+  }
+
+  if (!localDb.paymentMethods || !Array.isArray(localDb.paymentMethods)) {
+    localDb.paymentMethods = getInitialData().paymentMethods;
+  }
+  if (!localDb.receipts || !Array.isArray(localDb.receipts)) localDb.receipts = [];
+  if (!localDb.inquiries || !Array.isArray(localDb.inquiries)) localDb.inquiries = [];
+  if (!localDb.advertisements || !Array.isArray(localDb.advertisements)) localDb.advertisements = [];
+  if (!localDb.supportTickets || !Array.isArray(localDb.supportTickets)) localDb.supportTickets = [];
+  if (!(localDb as any).offers || !Array.isArray((localDb as any).offers)) (localDb as any).offers = [];
+  if (!localDb.languages || !Array.isArray(localDb.languages)) {
+    localDb.languages = getInitialData().languages;
+  }
+
+  const defaultData = getInitialData();
+  if (!localDb.translations || !Array.isArray(localDb.translations) || localDb.translations.length === 0) {
+    localDb.translations = defaultData.translations;
+  } else {
+    const existingKeys = new Set(localDb.translations.map(t => t.key));
+    for (const t of defaultData.translations) {
+      if (!existingKeys.has(t.key)) {
+        localDb.translations.push(t);
+      }
+    }
+  }
+  if (!localDb.reports || !Array.isArray(localDb.reports)) localDb.reports = [];
+  if (!localDb.notifications || !Array.isArray(localDb.notifications)) localDb.notifications = [];
+  if (!(localDb as any).faqs || !Array.isArray((localDb as any).faqs) || (localDb as any).faqs.length === 0) {
+    (localDb as any).faqs = defaultData.faqs;
+  }
+  if (!(localDb as any).customRoles || !Array.isArray((localDb as any).customRoles)) (localDb as any).customRoles = [];
+  if (!(localDb as any).activityLogs || !Array.isArray((localDb as any).activityLogs)) (localDb as any).activityLogs = [];
+  if (!(localDb as any).loginHistory || !Array.isArray((localDb as any).loginHistory)) (localDb as any).loginHistory = [];
+  if (!(localDb as any).appSettings) {
+    (localDb as any).appSettings = {
+      appName: 'Sof Umer',
+      appLogoText: 'SOF-UMER',
+      logoUrl: '',
+      themeName: 'cosmic-slate',
+      homepageHeading: 'Discover Premium Verified Listings in East Africa',
+      homepageSubheading: 'Properties, Jobs, Local Businesses, and Community events. Clean, manual-receipt audited, and fully verified.',
+      termsAndPrivacy: 'Sof Umer guarantees user security. All listed properties are audited for legal compliance before publishing. Transactions are processed manually by our finance team.',
+      notificationsEnabled: true,
+      siteStatus: 'Online'
+    };
+  }
+
+  syncAllWalletBalances();
+};
+
+const loadDb = async () => {
+  const mongoConnected = await connectMongo();
+  if (mongoConnected) {
+    const loaded = await loadFromMongo();
+    if (loaded) {
+      applyDataSanityAndMigrations();
+      await saveDb();
+      return;
+    }
+  }
+
+  console.log('[Storage] Operating on persistent file database source.');
+  await loadFromFileSeed();
+  applyDataSanityAndMigrations();
+  await saveDb();
+};
+
 let savePromise: Promise<void> = Promise.resolve();
 
 const saveDb = (): Promise<void> => {
   savePromise = savePromise.then(async () => {
-    try {
-      if (DbStateModel) {
-        try {
-          await DbStateModel.findOneAndUpdate({}, { data: localDb, updatedAt: new Date() }, { upsert: true });
-          return; // Skip JSON file write if MongoDB is successful
-        } catch (err) {
-          console.error('[MongoDB] Failed to backup to MongoDB, falling back to JSON:', err);
-        }
-      }
+    if (isMongoConnected) {
+      await saveToMongo();
+      // sof_umer_db.json is NEVER read or written when MongoDB is connected!
+      return;
+    }
 
+    try {
       const jsonString = JSON.stringify(localDb, null, 2);
       const tempFile = `${DB_FILE}.tmp`;
       await fs.writeFile(tempFile, jsonString, 'utf-8');
       await fs.rename(tempFile, DB_FILE);
-
     } catch (err) {
       console.error('Failed atomic saveDb, falling back to direct write:', err);
       try {
@@ -1350,7 +1467,8 @@ async function startServer() {
     if (token) {
       try {
         const decoded = jwt.verify(token, JWT_SECRET) as any;
-        const user = localDb.users.find(u => u.id === decoded.userId);
+        const targetUserId = decoded.userId || decoded.id;
+        const user = localDb.users.find(u => u.id === targetUserId);
         if (user) {
           if (user.status === 'suspended') {
             return res.status(403).json({ error: 'This account has been suspended by the administrator.' });
@@ -1532,6 +1650,7 @@ async function startServer() {
 
     const token = jwt.sign({
       userId: user.id,
+      id: user.id,
       email: user.email,
       role: user.role,
       tokenVersion: user.tokenVersion
@@ -1595,6 +1714,7 @@ async function startServer() {
         await saveDb();
         const token = jwt.sign({
           userId: existing.id,
+          id: existing.id,
           email: existing.email,
           role: existing.role,
           tokenVersion: existing.tokenVersion
@@ -1705,6 +1825,7 @@ async function startServer() {
 
     const token = jwt.sign({
       userId: user.id,
+      id: user.id,
       email: user.email,
       role: user.role,
       tokenVersion: user.tokenVersion
@@ -2012,8 +2133,9 @@ async function startServer() {
       const token = authHeader.substring(7);
       try {
         const decoded = jwt.verify(token, JWT_SECRET) as any;
-        if (decoded && decoded.id) {
-          authUser = localDb.users.find(u => u.id === decoded.id);
+        const targetUserId = decoded ? (decoded.userId || decoded.id) : undefined;
+        if (targetUserId) {
+          authUser = localDb.users.find(u => u.id === targetUserId);
         }
       } catch (e) {}
     }
