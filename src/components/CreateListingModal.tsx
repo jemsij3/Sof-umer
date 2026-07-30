@@ -1253,7 +1253,25 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
   const { currentUser, refreshData, t, currentLanguage, paymentMethods, spendWallet, topUpWallet, systemSettings } = useApp();
 
   const lang: 'en' | 'om' | 'am' = (currentLanguage === 'om' || currentLanguage === 'am') ? currentLanguage : 'en';
-  const d = DICTIONARY[lang];
+  const rawD = DICTIONARY[lang];
+
+  // Proxy to prioritize dynamic Admin Translation Dictionary values via t()
+  const d = new Proxy(rawD, {
+    get(target, prop: string) {
+      if (typeof prop === 'string') {
+        const defaultVal = target[prop as keyof typeof target];
+        if (typeof defaultVal === 'string') {
+          const dynamicVal = t(defaultVal);
+          if (dynamicVal && dynamicVal !== defaultVal) return dynamicVal;
+          const keyVal = t(prop);
+          if (keyVal && keyVal !== prop) return keyVal;
+          return defaultVal;
+        }
+        return defaultVal;
+      }
+      return (target as any)[prop];
+    }
+  });
 
   // 5-Step Flow State: 1 = Category, 2 = Subcategory, 3 = Details, 4 = Preview, 5 = Choose Plan
   const [currentStep, setCurrentStep] = useState<1 | 2 | 3 | 4 | 5>(1);

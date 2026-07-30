@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { User, Property, PaymentMethod, PaymentReceipt, Inquiry, Advertisement, Language, TranslationKey, AppNotification, SafetyReport, Category, AppFeature, JobOpening, SupportTicket, PropertyOffer, FAQItem } from '../types';
 import { staticTranslations } from './translations';
+import { setGlobalTranslations, getTranslatedCategoryName, getTranslatedSubcategoryName, getTranslatedFieldLabel, getTranslatedOption } from './categoriesData';
 
 export interface AdPackage {
   id: string;
@@ -348,6 +349,13 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  // Sync global dynamic translation store whenever backend translations update
+  useEffect(() => {
+    if (translations && Array.isArray(translations) && translations.length > 0) {
+      setGlobalTranslations(translations);
+    }
+  }, [translations]);
+
   // Re-fetch when user changes
   useEffect(() => {
     refreshData();
@@ -358,21 +366,51 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     return () => clearInterval(interval);
   }, [currentUser]);
 
-  // Translate helper
+  // Translate helper - Single Source of Truth: Admin Translation Dictionary -> staticTranslations -> Categories / Fields Fallback
   const t = (key: string): string => {
-    // 1. Try to find in backend translations state
-    const translation = translations.find(item => item.key === key);
+    if (!key) return '';
+    const cleanKey = key.trim();
+    const lowerKey = cleanKey.toLowerCase();
+
+    // 1. Try to find in backend translations state (Admin Dictionary)
+    const translation = translations.find(
+      item => item.key === cleanKey ||
+              item.key.toLowerCase() === lowerKey ||
+              (item.en && item.en.toLowerCase() === lowerKey)
+    );
     if (translation) {
       const val = translation[currentLanguage as keyof TranslationKey] as string;
-      if (val) return val;
+      if (val && val.trim()) return val;
     }
+
     // 2. Try to find in client-side static translations list
-    const staticTrans = staticTranslations.find(item => item.key === key);
+    const staticTrans = staticTranslations.find(
+      item => item.key === cleanKey ||
+              item.key.toLowerCase() === lowerKey ||
+              (item.en && item.en.toLowerCase() === lowerKey)
+    );
     if (staticTrans) {
       const val = staticTrans[currentLanguage as keyof typeof staticTrans] as string;
-      return val || staticTrans.en || key;
+      if (val && val.trim()) return val;
     }
-    return key;
+
+    // 3. Category Name fallback
+    const catName = getTranslatedCategoryName(cleanKey, currentLanguage, translations);
+    if (catName && catName !== cleanKey) return catName;
+
+    // 4. Subcategory Name fallback
+    const subName = getTranslatedSubcategoryName(cleanKey, currentLanguage, translations);
+    if (subName && subName !== cleanKey) return subName;
+
+    // 5. Field Label fallback
+    const fieldLbl = getTranslatedFieldLabel(cleanKey, currentLanguage);
+    if (fieldLbl && fieldLbl !== cleanKey) return fieldLbl;
+
+    // 6. Option Value fallback
+    const optVal = getTranslatedOption(cleanKey, currentLanguage);
+    if (optVal && optVal !== cleanKey) return optVal;
+
+    return cleanKey;
   };
 
   const addAppFeature = async (feature: Omit<AppFeature, 'id' | 'isSystem'> & { id?: string }): Promise<AppFeature> => {

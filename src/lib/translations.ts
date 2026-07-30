@@ -7,6 +7,51 @@ export interface TranslationKey {
 }
 
 export const staticTranslations: TranslationKey[] = [
+  // Core Marketplace Categories
+  { key: "Product", en: "Product", om: "Oomishaalee", am: "ምርቶች", category: "Categories" },
+  { key: "Products", en: "Products", om: "Oomishaalee", am: "ምርቶች", category: "Categories" },
+  { key: "Property", en: "Property", om: "Qabeenya", am: "ንብረት", category: "Categories" },
+  { key: "Properties", en: "Properties", om: "Qabeenya", am: "ንብረት", category: "Categories" },
+  { key: "Vehicle", en: "Vehicle", om: "Konkolaattota", am: "ተሽከርካሪዎች", category: "Categories" },
+  { key: "Vehicles", en: "Vehicles", om: "Konkolaattota", am: "ተሽከርካሪዎች", category: "Categories" },
+  { key: "Job", en: "Job", om: "Carraa Hojii", am: "ስራዎች", category: "Categories" },
+  { key: "Jobs", en: "Jobs", om: "Carraa Hojii", am: "ስራዎች", category: "Categories" },
+  { key: "Service", en: "Service", om: "Tajaajila", am: "አገልግሎቶች", category: "Categories" },
+  { key: "Services", en: "Services", om: "Tajaajila", am: "አገልግሎቶች", category: "Categories" },
+  { key: "Local Businesses", en: "Local Businesses", om: "Daldala Naannoo", am: "የአካባቢ ንግዶች", category: "Categories" },
+  { key: "Community", en: "Community", om: "Hawaasa", am: "ማህበረሰብ", category: "Categories" },
+
+  // Create Listing Wizard Navigation & Step Headers
+  { key: "Category", en: "Category", om: "Garee Guddaa", am: "ምድብ", category: "CreateListing" },
+  { key: "Subcategory", en: "Subcategory", om: "Garee Xiqqaa", am: "ንዑስ ምድብ", category: "CreateListing" },
+  { key: "Details & Photos", en: "Details & Photos", om: "Tarreeffama & Fakkii", am: "ዝርዝሮች እና ፎቶዎች", category: "CreateListing" },
+  { key: "Preview Ad", en: "Preview Ad", om: "Beeksisa Ilaali", am: "ማስታወቂያ ቅድመ እይታ", category: "CreateListing" },
+  { key: "Boost & Pay", en: "Boost & Pay", om: "Beeksisa Guddisi & Kaffali", am: "ያሳድጉ እና ይክፈሉ", category: "CreateListing" },
+  { key: "Specifications & Listing Details", en: "Specifications & Listing Details", om: "Tarreeffama & Ibsa Beeksisaa", am: "ዝርዝሮች እና የማስታወቂያ መረጃ", category: "CreateListing" },
+  { key: "Property Owner Contact Details", en: "Property Owner Contact Details", om: "Odeeffannoo Quunnamtii Abbaa Qabeenyaa", am: "የንብረት ባለቤት የመገናኛ መረጃ", category: "CreateListing" },
+
+  // Attributes & Field Labels
+  { key: "Item Title", en: "Item Title", om: "Mata Duree Meeshichaa", am: "የእቃው ርዕስ", category: "Fields" },
+  { key: "Brand", en: "Brand", om: "Gosa Oomishaa (Brand)", am: "ብራንድ", category: "Fields" },
+  { key: "Size", en: "Size", om: "Hanga / Hammangaa", am: "መጠን", category: "Fields" },
+  { key: "Color", en: "Color", om: "Bifa / Halluu", am: "ቀለም", category: "Fields" },
+  { key: "Material", en: "Material", om: "Gosa Meeshaa", am: "ቁሳቁስ", category: "Fields" },
+  { key: "Gender", en: "Gender", om: "Saala", am: "ጾታ", category: "Fields" },
+  { key: "Condition", en: "Condition", om: "Haala Meeshichaa", am: "ሁኔታ", category: "Fields" },
+  { key: "Quantity", en: "Quantity", om: "Baay'ina", am: "ብዛት", category: "Fields" },
+  { key: "Price", en: "Price", om: "Gatii", am: "ዋጋ", category: "Fields" },
+  { key: "Location", en: "Location", om: "Bakka / Iddoo", am: "አድራሻ / ቦታ", category: "Fields" },
+  { key: "Description", en: "Description", om: "Ibsa Guutuu", am: "ማብራሪያ", category: "Fields" },
+
+  // Uploads & Action Buttons
+  { key: "Upload photos", en: "Upload photos", om: "Fakkoota Fe'i", am: "ፎቶዎችን ይስቀሉ", category: "Actions" },
+  { key: "Upload video", en: "Upload video", om: "Viidiyoo Fe'i", am: "ቪዲዮ ይስቀሉ", category: "Actions" },
+  { key: "Publish Listing", en: "Publish Listing", om: "Beeksisa Maxxansi", am: "ማስታወቂያ ይለጥፉ", category: "Actions" },
+  { key: "Save Changes", en: "Save Changes", om: "Jijjiirama Galmeessi", am: "ለዉጦችን ያስቀምጡ", category: "Actions" },
+  { key: "Next", en: "Next", om: "Kan Itti Aanu", am: "ቀጣይ", category: "Actions" },
+  { key: "Back", en: "Back", om: "Deebi'i", am: "ተመለስ", category: "Actions" },
+  { key: "Cancel", en: "Cancel", om: "Haqui", am: "ሰርዝ", category: "Actions" },
+
   // Welcome & Auth Screen
   {
     key: "welcome_title",

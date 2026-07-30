@@ -277,6 +277,9 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
 
   const [editingTranslationKey, setEditingTranslationKey] = useState<string | null>(null);
   const [translationEdits, setTranslationEdits] = useState({ en: '', om: '', am: '' });
+  const [transSearch, setTransSearch] = useState('');
+  const [newKeyForm, setNewKeyForm] = useState({ key: '', en: '', om: '', am: '', category: 'General' });
+  const [showAddKeyForm, setShowAddKeyForm] = useState(false);
 
   const [editingCategory, setEditingCategory] = useState<any | null>(null);
   const [categoryForm, setCategoryForm] = useState({ name: '', description: '', iconName: 'Grid' });
@@ -1016,6 +1019,28 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
       }
     } catch (e) {
       console.error(e);
+    }
+  };
+
+  const handleAddNewKey = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newKeyForm.key || !newKeyForm.en) return;
+    try {
+      const res = await fetch('/api/languages/translation-key', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('sof_umer_token')}`
+        },
+        body: JSON.stringify(newKeyForm)
+      });
+      if (res.ok) {
+        setNewKeyForm({ key: '', en: '', om: '', am: '', category: 'General' });
+        setShowAddKeyForm(false);
+        refreshData();
+      }
+    } catch (err) {
+      console.error(err);
     }
   };
 
@@ -3178,11 +3203,86 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
               </div>
 
               {/* Dictionary Table */}
-              <div className="space-y-3 pt-4 border-t border-white/5">
-                <h4 className="text-xs font-bold uppercase tracking-wider text-white/40">Translation Lexicon</h4>
-                <div className="overflow-x-auto">
+              <div className="space-y-4 pt-4 border-t border-white/5">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                  <div>
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-white/40">Translation Lexicon ({translations.length} Keys)</h4>
+                    <p className="text-[11px] text-white/50 mt-0.5">Admin dictionary is the single source of truth across all marketplace interfaces.</p>
+                  </div>
+                  <div className="flex items-center gap-3 w-full sm:w-auto">
+                    <input
+                      type="text"
+                      placeholder="Search key, English, Afaan Oromoo, Amharic..."
+                      value={transSearch}
+                      onChange={e => setTransSearch(e.target.value)}
+                      className="p-2 bg-black/40 border border-white/10 text-xs rounded-xl focus:outline-none text-white w-full sm:w-64"
+                    />
+                    <button
+                      onClick={() => setShowAddKeyForm(!showAddKeyForm)}
+                      className="bg-amber-500 hover:bg-amber-400 text-black font-bold text-xs py-2 px-3 rounded-xl cursor-pointer transition shrink-0"
+                    >
+                      {showAddKeyForm ? 'Cancel' : '+ Add Key'}
+                    </button>
+                  </div>
+                </div>
+
+                {showAddKeyForm && (
+                  <form onSubmit={handleAddNewKey} className="bg-amber-500/10 border border-amber-500/30 p-4 rounded-2xl space-y-3">
+                    <h5 className="text-xs font-bold text-amber-400 uppercase tracking-wider">Add New Term / Translation Key</h5>
+                    <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
+                      <div>
+                        <label className="block text-[10px] text-white/50 uppercase font-bold mb-1">Key / System ID</label>
+                        <input
+                          type="text"
+                          required
+                          placeholder="e.g. Product"
+                          value={newKeyForm.key}
+                          onChange={e => setNewKeyForm({ ...newKeyForm, key: e.target.value })}
+                          className="p-2 bg-black border border-white/10 text-xs rounded-lg w-full text-white"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] text-white/50 uppercase font-bold mb-1">English (en)</label>
+                        <input
+                          type="text"
+                          required
+                          placeholder="e.g. Product"
+                          value={newKeyForm.en}
+                          onChange={e => setNewKeyForm({ ...newKeyForm, en: e.target.value })}
+                          className="p-2 bg-black border border-white/10 text-xs rounded-lg w-full text-white"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] text-white/50 uppercase font-bold mb-1">Afaan Oromoo (om)</label>
+                        <input
+                          type="text"
+                          placeholder="e.g. Oomishaalee"
+                          value={newKeyForm.om}
+                          onChange={e => setNewKeyForm({ ...newKeyForm, om: e.target.value })}
+                          className="p-2 bg-black border border-white/10 text-xs rounded-lg w-full text-white"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] text-white/50 uppercase font-bold mb-1">Amharic (am)</label>
+                        <input
+                          type="text"
+                          placeholder="e.g. ምርቶች"
+                          value={newKeyForm.am}
+                          onChange={e => setNewKeyForm({ ...newKeyForm, am: e.target.value })}
+                          className="p-2 bg-black border border-white/10 text-xs rounded-lg w-full text-white"
+                        />
+                      </div>
+                    </div>
+                    <div className="flex justify-end gap-2 pt-1">
+                      <button type="button" onClick={() => setShowAddKeyForm(false)} className="px-3 py-1.5 bg-white/5 text-white/60 text-xs rounded-lg cursor-pointer">Cancel</button>
+                      <button type="submit" className="px-4 py-1.5 bg-amber-500 text-black font-bold text-xs rounded-lg cursor-pointer hover:bg-amber-400">Save Translation Key</button>
+                    </div>
+                  </form>
+                )}
+
+                <div className="overflow-x-auto max-h-[600px]">
                   <table className="w-full text-xs text-white">
-                    <thead>
+                    <thead className="sticky top-0 bg-[#0d0d12] z-10">
                       <tr className="border-b border-white/5 bg-[#12121a] text-[9px] text-white/40 font-bold uppercase tracking-wider">
                         <th className="py-3 px-3 text-left">Translation Key</th>
                         <th className="py-3 px-3 text-left">English (en)</th>
@@ -3192,9 +3292,20 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-white/5">
-                      {translations.map(tk => {
-                        const isEditing = editingTranslationKey === tk.key;
-                        return (
+                      {translations
+                        .filter(tk => {
+                          if (!transSearch.trim()) return true;
+                          const q = transSearch.toLowerCase().trim();
+                          return (
+                            tk.key.toLowerCase().includes(q) ||
+                            (tk.en && tk.en.toLowerCase().includes(q)) ||
+                            (tk.om && tk.om.toLowerCase().includes(q)) ||
+                            (tk.am && tk.am.toLowerCase().includes(q))
+                          );
+                        })
+                        .map(tk => {
+                          const isEditing = editingTranslationKey === tk.key;
+                          return (
                           <tr key={tk.key} className="hover:bg-white/[0.01]">
                             <td className="py-3 px-3 font-mono font-bold text-amber-500/85">{tk.key}</td>
                             <td className="py-3 px-3">

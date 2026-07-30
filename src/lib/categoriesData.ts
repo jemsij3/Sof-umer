@@ -932,13 +932,73 @@ export function getCategoryListingCount(
 }
 
 // ==========================================
-// DYNAMIC MULTILINGUAL TRANSLATION HELPERS
-// ==========================================
+// DYNAMIC MULTILINGUAL TRANSLATION HELPERS & ADMIN DICTIONARY CONNECTION
+// ======================================================================
+import { TranslationKey } from '../types';
 
-export function getTranslatedCategoryName(catOrName: any, lang: string = 'en'): string {
+let globalTranslationsStore: TranslationKey[] = [];
+
+export function setGlobalTranslations(translations: TranslationKey[]) {
+  if (Array.isArray(translations)) {
+    globalTranslationsStore = translations;
+  }
+}
+
+export function getGlobalTranslations(): TranslationKey[] {
+  return globalTranslationsStore;
+}
+
+function checkDynamicDictionary(term: string, lang: string): string | null {
+  if (!term) return null;
+  const langKey = (lang === 'om' || lang === 'am') ? lang : 'en';
+  const cleanTerm = term.replace(/\s*\*$/, '').trim();
+  const lowerTerm = cleanTerm.toLowerCase();
+
+  const dict = getGlobalTranslations();
+  if (dict && dict.length > 0) {
+    const match = dict.find(
+      item => item.key === cleanTerm ||
+              item.key.toLowerCase() === lowerTerm ||
+              (item.en && item.en.toLowerCase() === lowerTerm)
+    );
+
+    if (match) {
+      const val = match[langKey as keyof TranslationKey] as string;
+      if (val && val.trim()) return val;
+    }
+  }
+  return null;
+}
+
+export function getTranslatedCategoryName(catOrName: any, lang: string = 'en', dynamicDict?: TranslationKey[]): string {
   if (!catOrName) return '';
   const langKey = (lang === 'om' || lang === 'am') ? lang : 'en';
 
+  let strName = '';
+  if (typeof catOrName === 'object') {
+    if (catOrName.name) strName = extractString(catOrName.name, 'en');
+    else if (catOrName.id) strName = String(catOrName.id);
+  } else {
+    strName = String(catOrName).trim();
+  }
+
+  // 1. Check Admin dynamic translation dictionary FIRST
+  if (strName) {
+    const dict = dynamicDict || getGlobalTranslations();
+    if (dict && dict.length > 0) {
+      const match = dict.find(
+        t => t.key === strName ||
+             t.key.toLowerCase() === strName.toLowerCase() ||
+             (t.en && t.en.toLowerCase() === strName.toLowerCase())
+      );
+      if (match) {
+        const val = match[langKey as keyof TranslationKey] as string;
+        if (val && val.trim()) return val;
+      }
+    }
+  }
+
+  // 2. Direct object translation property check
   if (typeof catOrName === 'object') {
     if (catOrName.translations && catOrName.translations[langKey]) {
       return catOrName.translations[langKey];
@@ -948,12 +1008,11 @@ export function getTranslatedCategoryName(catOrName: any, lang: string = 'en'): 
     if (catOrName.name) return extractString(catOrName.name, langKey);
   }
 
-  const strName = String(catOrName).trim();
+  // 3. Match REDESIGNED_CATEGORIES strictly by ID, name, or translations.en (NO dbMapping matching)
   const matched = REDESIGNED_CATEGORIES.find(
     c => c.id.toLowerCase() === strName.toLowerCase() ||
          c.name.toLowerCase() === strName.toLowerCase() ||
-         (c.translations?.en && c.translations.en.toLowerCase() === strName.toLowerCase()) ||
-         (c.dbMapping?.majorCategory && c.dbMapping.majorCategory.toLowerCase() === strName.toLowerCase())
+         (c.translations?.en && c.translations.en.toLowerCase() === strName.toLowerCase())
   );
   if (matched && matched.translations && matched.translations[langKey]) {
     return matched.translations[langKey];
@@ -996,9 +1055,33 @@ export function getTranslatedCategoryName(catOrName: any, lang: string = 'en'): 
   return strName;
 }
 
-export function getTranslatedSubcategoryName(subOrName: any, lang: string = 'en'): string {
+export function getTranslatedSubcategoryName(subOrName: any, lang: string = 'en', dynamicDict?: TranslationKey[]): string {
   if (!subOrName) return '';
   const langKey = (lang === 'om' || lang === 'am') ? lang : 'en';
+
+  let strName = '';
+  if (typeof subOrName === 'object') {
+    if (subOrName.name) strName = extractString(subOrName.name, 'en');
+    else if (subOrName.id) strName = String(subOrName.id);
+  } else {
+    strName = String(subOrName).trim();
+  }
+
+  // 1. Check Admin dynamic dictionary FIRST
+  if (strName) {
+    const dict = dynamicDict || getGlobalTranslations();
+    if (dict && dict.length > 0) {
+      const match = dict.find(
+        t => t.key === strName ||
+             t.key.toLowerCase() === strName.toLowerCase() ||
+             (t.en && t.en.toLowerCase() === strName.toLowerCase())
+      );
+      if (match) {
+        const val = match[langKey as keyof TranslationKey] as string;
+        if (val && val.trim()) return val;
+      }
+    }
+  }
 
   if (typeof subOrName === 'object') {
     if (subOrName.translations && subOrName.translations[langKey]) {
@@ -1009,7 +1092,6 @@ export function getTranslatedSubcategoryName(subOrName: any, lang: string = 'en'
     if (subOrName.name) return extractString(subOrName.name, langKey);
   }
 
-  const strName = String(subOrName).trim();
   for (const cat of REDESIGNED_CATEGORIES) {
     const sub = cat.subcategories.find(
       s => s.id.toLowerCase() === strName.toLowerCase() ||
@@ -1026,6 +1108,9 @@ export function getTranslatedSubcategoryName(subOrName: any, lang: string = 'en'
 
 export function getTranslatedPropertyType(type: string, lang: string = 'en'): string {
   if (!type) return '';
+  const dyn = checkDynamicDictionary(type, lang);
+  if (dyn) return dyn;
+
   const langKey = (lang === 'om' || lang === 'am') ? lang : 'en';
   const key = type.toLowerCase().trim();
 
@@ -1057,6 +1142,9 @@ export function getTranslatedPropertyType(type: string, lang: string = 'en'): st
 
 export function getTranslatedDealType(dealType: string, lang: string = 'en'): string {
   if (!dealType) return '';
+  const dyn = checkDynamicDictionary(dealType, lang);
+  if (dyn) return dyn;
+
   const langKey = (lang === 'om' || lang === 'am') ? lang : 'en';
   const key = dealType.toLowerCase().trim();
 
@@ -1075,6 +1163,9 @@ export function getTranslatedDealType(dealType: string, lang: string = 'en'): st
 
 export function getTranslatedCondition(cond: string, lang: string = 'en'): string {
   if (!cond) return '';
+  const dyn = checkDynamicDictionary(cond, lang);
+  if (dyn) return dyn;
+
   const langKey = (lang === 'om' || lang === 'am') ? lang : 'en';
   const key = cond.toLowerCase().trim();
 
@@ -1095,6 +1186,9 @@ export function getTranslatedCondition(cond: string, lang: string = 'en'): strin
 
 export function getTranslatedFuelType(fuel: string, lang: string = 'en'): string {
   if (!fuel) return '';
+  const dyn = checkDynamicDictionary(fuel, lang);
+  if (dyn) return dyn;
+
   const langKey = (lang === 'om' || lang === 'am') ? lang : 'en';
   const key = fuel.toLowerCase().trim();
 
@@ -1205,6 +1299,9 @@ export function getTranslatedLocation(loc: string, lang: string = 'en'): string 
 
 export function getTranslatedOption(opt: string, lang: string = 'en'): string {
   if (!opt) return '';
+  const dyn = checkDynamicDictionary(opt, lang);
+  if (dyn) return dyn;
+
   const langKey = (lang === 'om' || lang === 'am') ? lang : 'en';
   const key = opt.toLowerCase().trim();
 
@@ -1254,9 +1351,13 @@ export function getTranslatedOption(opt: string, lang: string = 'en'): string {
 
 export function getTranslatedFieldLabel(label: string, lang: string = 'en'): string {
   if (!label) return '';
-  const langKey = (lang === 'om' || lang === 'am') ? lang : 'en';
   const cleanLabel = label.replace(/\s*\*$/, '').trim();
   const hasAsterisk = label.includes('*');
+
+  const dyn = checkDynamicDictionary(cleanLabel, lang);
+  if (dyn) return hasAsterisk ? `${dyn} *` : dyn;
+
+  const langKey = (lang === 'om' || lang === 'am') ? lang : 'en';
   const key = cleanLabel.toLowerCase();
 
   const map: Record<string, { en: string; om: string; am: string }> = {

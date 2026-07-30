@@ -3685,6 +3685,29 @@ async function startServer() {
     res.json({ success: true, translations: localDb.translations });
   });
 
+  app.post('/api/languages/translation-key', requireAdmin, async (req, res) => {
+    const { key, en, om, am, category } = req.body;
+    if (!key || !en) {
+      return res.status(400).json({ error: 'Key and English translation are required.' });
+    }
+    const cleanKey = key.trim();
+    const existingIdx = localDb.translations.findIndex(t => t.key.toLowerCase() === cleanKey.toLowerCase());
+    const newEntry = {
+      key: cleanKey,
+      en: en.trim(),
+      om: (om || en).trim(),
+      am: (am || en).trim(),
+      category: category || 'Custom'
+    };
+    if (existingIdx !== -1) {
+      localDb.translations[existingIdx] = { ...localDb.translations[existingIdx], ...newEntry };
+    } else {
+      localDb.translations.unshift(newEntry);
+    }
+    await saveDb();
+    res.json({ success: true, translation: newEntry, translations: localDb.translations });
+  });
+
   app.put('/api/languages/:code', async (req, res) => {
     const { code } = req.params;
     const { isActive } = req.body;
