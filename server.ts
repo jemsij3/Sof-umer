@@ -82,7 +82,7 @@ import {
 } from './src/types';
 import { staticTranslations } from './src/lib/translations';
 
-const PORT = 3000;
+const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
 
 function resolveDbFilePath(): { dbPath: string; isPersistent: boolean } {
   // Check explicit environment variables first
@@ -1237,6 +1237,25 @@ startServer();
 async function startServer() {
   await loadDb();
   const app = express();
+
+  // Trust proxy for Render / Cloudflare reverse proxies
+  app.set('trust proxy', 1);
+
+  // Global CORS Middleware
+  app.use((req, res, next) => {
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+    if (req.method === 'OPTIONS') {
+      return res.sendStatus(200);
+    }
+    next();
+  });
+
+  // Health check routes for Render load balancer
+  app.get(['/healthz', '/health'], (req, res) => {
+    res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
+  });
 
   // Support JSON payloads
   app.use(express.json({ limit: '10mb' }));
