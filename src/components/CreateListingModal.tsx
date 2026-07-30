@@ -4,7 +4,8 @@ import {
   getMatchingSubcategoryId, 
   getTranslatedCategoryName, 
   getTranslatedSubcategoryName, 
-  getTranslatedOption 
+  getTranslatedOption,
+  getTranslatedFieldLabel
 } from '../lib/categoriesData';
 import { 
   X, Building, DollarSign, Plus, Trash2, Camera, Upload, Car, ShoppingBag, 
@@ -32,6 +33,80 @@ const DICTIONARY: Record<'en' | 'om' | 'am', Record<string, string>> = {
     srvGuide: "Advertise professional or local services offered by individuals or businesses.",
     bizGuide: "Register and promote verified businesses, shops, restaurants, hotels, and companies.",
     commGuide: "Share community announcements, local events, educational activities, charity programs, and public notices.",
+
+    step1: "1. Category",
+    step2: "2. Subcategory",
+    step3: "3. Details & Photos",
+    step4: "4. Preview Ad",
+    step5: "5. Boost & Pay",
+
+    subcatLabel: "Subcategory Type *",
+    subcatDesc: "Choose the exact classification for your listing.",
+
+    specHeader: "Specifications & Listing Details",
+    specSubtext: "Please fill out all required attributes accurately to attract buyers.",
+
+    adminOwnerTitle: "Property Owner Contact Details (Admin Entry)",
+    adminOwnerDesc: "Enter the property owner's phone number and email so buyers contact the owner directly instead of admin.",
+    ownerNameLabel: "Property Owner Name *",
+    ownerPhoneLabel: "Property Owner Phone *",
+    ownerEmailLabel: "Property Owner Email *",
+
+    deviceUpload: "Device File Upload",
+    deviceUploadSub: "Select JPEG/PNG photographs.",
+    needStock: "Need stock photo?",
+    addedPhotos: "Added Photos",
+
+    previewHeader: "Live Ad Card Preview",
+    previewSubtext: "Verify how buyers will view your listing.",
+    untitled: "Untitled Listing",
+    noLocation: "Location Not Specified",
+    contactPrice: "Contact for Price",
+    photosCount: "Photos",
+    noDesc: "No description provided.",
+    verifiedPublisher: "Verified Publisher",
+    propOwnerRole: "Property Owner",
+
+    boostTitle: "Select Promotion Boost Plan",
+    boostSubtext: "Boost your ad visibility to sell or rent 5x faster on Sof Umer Marketplace.",
+
+    addonsTitle: "Optional Visibility Add-ons",
+    topAd: "Top Ad Placement",
+    topAdDesc: "Pin to top of search results",
+    spotlight: "Homepage Spotlight",
+    spotlightDesc: "Featured on main home banner",
+
+    totalInvestment: "Total Promotion Investment",
+    totalInvestmentSub: "Includes plan duration and active add-ons.",
+
+    payMethodLabel: "Select Payment Method *",
+    accWallet: "Account Wallet",
+    walletBal: "Balance:",
+    directBank: "Direct Bank Transfer / Telebirr",
+    directSub: "Upload transaction reference",
+    yourBal: "Your Wallet Balance:",
+    deduction: "Deduction Amount:",
+    insufficientBal: "Insufficient wallet balance! Please switch to Direct Bank Transfer or Top Up your wallet.",
+    sufficientBal: "Sufficient wallet balance. Payment will be processed instantly upon posting.",
+    payChannel: "Select Payment Channel",
+    payChannelPlaceholder: "Select Bank / Mobile Money Account...",
+    txnRefLabel: "Transaction Reference Number / Receipt Ref *",
+    txnRefPlaceholder: "e.g. TXN-89410294 or Telebirr Ref",
+    txnRefSub: "Provide your mobile banking or Telebirr reference code for instant verification.",
+
+    backBtn: "Back",
+    chooseSubBtn: "Choose Subcategory",
+    fillSpecsBtn: "Fill Specifications",
+    previewAdBtn: "Preview Ad Card",
+    selectPromoBtn: "Select Promotion & Post",
+    pubFreeBtn: "Publish Ad For Free",
+    payAndPostBtn: "Pay {cost} ETB & Post Ad",
+    pubProgress: "Publishing Ad...",
+
+    ownerNameVal: "Please enter the Property Owner's full name.",
+    ownerPhoneVal: "Please enter the Property Owner's contact phone number.",
+    ownerEmailVal: "Please enter the Property Owner's email address.",
+    fieldReqVal: "Please fill in the required field:",
 
     titleLabel: "Listing Title",
     titleDesc: "Enter a short, clear, and descriptive title for your listing.",
@@ -236,6 +311,80 @@ const DICTIONARY: Record<'en' | 'om' | 'am', Record<string, string>> = {
     bizGuide: "Daldala, suuqota, nyaataa, hoteelota fi dhaabbata mirkanaa'an galmeessi.",
     commGuide: "Beeksisa hawaasaa, qophii, barumsaa fi gargaarsa hawaasaa ergi.",
 
+    step1: "1. Garee Guddaa",
+    step2: "2. Garee Xiqqaa",
+    step3: "3. Tarreeffama & Fakkii",
+    step4: "4. Beeksisa Ilaali",
+    step5: "5. Beeksisa Guddisi & Kaffali",
+
+    subcatLabel: "Gosa Garee Xiqqaa *",
+    subcatDesc: "Akaakuu beeksisa keetii sirrii ta'e filadhu.",
+
+    specHeader: "Tarreeffama & Ibsa Beeksisaa",
+    specSubtext: "Bitoota harkisuudhaaf ulaagaalee barbaachisan guutuu galchi.",
+
+    adminOwnerTitle: "Odeeffannoo Abbaa Qabeenyaa (Admin)",
+    adminOwnerDesc: "Bitoonni abbaa qabeenyaa dhiyootti akka quunnamaniif lakk. bilbilaa fi imeelii galchi.",
+    ownerNameLabel: "Maqaa Abbaa Qabeenyaa *",
+    ownerPhoneLabel: "Bilbila Abbaa Qabeenyaa *",
+    ownerEmailLabel: "Imeelii Abbaa Qabeenyaa *",
+
+    deviceUpload: "Fakkii Moobaayilaa irraa Fe'i",
+    deviceUploadSub: "Fakkoota JPEG/PNG filadhu.",
+    needStock: "Fakkii naamuunaa barbaadaa?",
+    addedPhotos: "Fakkoota Dabalaman",
+
+    previewHeader: "Gargarsa Beeksisaa Qulqulluu",
+    previewSubtext: "Bitoonni akkamitti beeksisa kee akka argan mirkaneeffadhu.",
+    untitled: "Mata duree Malee",
+    noLocation: "Iddoon Hin Murtaa'in",
+    contactPrice: "Gatiidhaaf Quunnamii",
+    photosCount: "Fakkoota",
+    noDesc: "Ibsi Hin Kennamne.",
+    verifiedPublisher: "Galmeessaa Mirkanaa'e",
+    propOwnerRole: "Abbaa Qabeenyaa",
+
+    boostTitle: "Karoora Beeksisa Guddisuu Filadhu",
+    boostSubtext: "Argaamuu beeksisa keetii guddisuun dafee akka gurguramu ykn kireeffamu godhi.",
+
+    addonsTitle: "Filannoo Dabaltaa Mul'inaa",
+    topAd: "Gubaarra Maxxansuu",
+    topAdDesc: "Barbaacha gubaarratti rarraasi",
+    spotlight: "Fuula Jalqabaarratti Agarsiisi",
+    spotlightDesc: "Banner fuula guddaarratti agarsiisi",
+
+    totalInvestment: "Ida'ama Kaffaltii Beeksisaa",
+    totalInvestmentSub: "Yeroo karooraa fi dabalata mul'inaa dabalata.",
+
+    payMethodLabel: "Mala Kaffaltii Filadhu *",
+    accWallet: "Kaffaltii Waletii",
+    walletBal: "Hafee:",
+    directBank: "Baankii ykn Telebirr Direct",
+    directSub: "Koodii kaffaltii galchuun",
+    yourBal: "Hafee Waletii Keetii:",
+    deduction: "Hanga Hir'ifamu:",
+    insufficientBal: "Hafteen saanduqa maallaqaa gahaa miti! Maaloo kaffaltii Baankii filadhu ykn Waletii kee gutadhu.",
+    sufficientBal: "Hafteen saanduqa maallaqaa gahaadha. Kaffaltiin yeruma sana raawwatama.",
+    payChannel: "Sarara Kaffaltii Filadhu",
+    payChannelPlaceholder: "Akkaantaa Baankii ykn Mobile Money filadhu...",
+    txnRefLabel: "Lakk. Koodii Kaffaltii / Telebirr Ref *",
+    txnRefPlaceholder: "fkn TXN-89410294 ykn Telebirr Ref",
+    txnRefSub: "Koodii kaffaltii baankii ykn Telebirr kee mirkaneessaaf galchi.",
+
+    backBtn: "Deebi'i",
+    chooseSubBtn: "Garee Xiqqaa Filadhu",
+    fillSpecsBtn: "Tarreeffama Galchi",
+    previewAdBtn: "Beeksisa Ilaali",
+    selectPromoBtn: "Beeksisa Guddisi & Maxxansi",
+    pubFreeBtn: "Beeksisa Bilisaan Maxxansi",
+    payAndPostBtn: "{cost} ETB Kaffali & Maxxansi",
+    pubProgress: "Maxxansaa Jira...",
+
+    ownerNameVal: "Maaloo maqaa guutuu abbaa qabeenyaa galchi.",
+    ownerPhoneVal: "Maaloo lakk. bilbila abbaa qabeenyaa galchi.",
+    ownerEmailVal: "Maaloo imeelii abbaa qabeenyaa galchi.",
+    fieldReqVal: "Maaloo dirree dirqamaa galchi:",
+
     titleLabel: "Mata duree Beeksisaa",
     titleDesc: "Mata duree gabaabaa, ifa ta'e fi ibsu galchi.",
     titlePlaceholder: "fkn, Mana Kireessu Kutta 3 qabu Boleetti",
@@ -438,6 +587,80 @@ const DICTIONARY: Record<'en' | 'om' | 'am', Record<string, string>> = {
     srvGuide: "በግለሰቦች ወይም በድርጅቶች የሚቀርቡ ሙያዊ ወይም የአካባቢ አገልግሎቶችን ያስተዋውቁ።",
     bizGuide: "የተረጋገጡ የንግድ ድርጅቶችን፣ ሱቆችን፣ ምግብ ቤቶችን፣ ሆቴሎችን እና ኩባንያዎችን ይመዝግቡ እና ያስተዋውቁ።",
     commGuide: "የማህበረሰብ ማስታወቂያዎችን፣ የአካባቢ ዝግጅቶችን፣ የትምህርት እንቅስቃሴዎችን፣ የበጎ አድራጎት ፕሮግራሞችን እና የህዝብ ማስታወቂያዎችን ያጋሩ።",
+
+    step1: "1. ዋና ምድብ",
+    step2: "2. ንዑስ ምድብ",
+    step3: "3. ዝርዝር እና ፎቶ",
+    step4: "4. ቅድመ እይታ",
+    step5: "5. ማስተዋወቅ እና ክፍያ",
+
+    subcatLabel: "የንዑስ ምድብ አይነት *",
+    subcatDesc: "ለማስታወቂያዎ ትክክለኛውን ምድብ ይምረጡ።",
+
+    specHeader: "ዝርዝሮች እና የማስታወቂያ መረጃ",
+    specSubtext: "ገዢዎችን ለመሳብ ሁሉንም አስፈላጊ መረጃዎች በትክክል ይሙሉ::",
+
+    adminOwnerTitle: "የንብረቱ ባለቤት መረጃ (የአድሚን መመዝገቢያ)",
+    adminOwnerDesc: "ገዢዎች ባለቤቱን በቀጥታ እንዲያገኙት የባለቤቱን ስልክ እና ኢሜል ያስገቡ።",
+    ownerNameLabel: "የባለቤቱ ሙሉ ስም *",
+    ownerPhoneLabel: "የባለቤቱ ስልክ ቁጥር *",
+    ownerEmailLabel: "የባለቤቱ ኢሜል አድራሻ *",
+
+    deviceUpload: "ምስሎችን ከስልክዎ ይጫኑ",
+    deviceUploadSub: "የJPEG/PNG ምስሎችን ይምረጡ።",
+    needStock: "ናሙና ፎቶ ይፈልጋሉ?",
+    addedPhotos: "የተጨመሩ ፎቶዎች",
+
+    previewHeader: "የማስታወቂያው ቅድመ እይታ",
+    previewSubtext: "ገዢዎች ማስታወቂያዎን እንዴት እንደሚያዩ ያረጋግጡ።",
+    untitled: "ርዕስ የሌለው",
+    noLocation: "ቦታ አልተጠቀሰም",
+    contactPrice: "ለዋጋ ያነጋግሩ",
+    photosCount: "ፎቶዎች",
+    noDesc: "መግለጫ አልተሰጠም።",
+    verifiedPublisher: "የተረጋገጠ አውጪ",
+    propOwnerRole: "የንብረቱ ባለቤት",
+
+    boostTitle: "የማስታወቂያ ማስተዋወቂያ ፕላን ይምረጡ",
+    boostSubtext: "ማስታወቂያዎ በፍጥነት እንዲሸጥ ወይም እንዲከራይ እይታውን ያሳድጉ።",
+
+    addonsTitle: "ተጨማሪ የመታየት አማራጮች",
+    topAd: "በአናት ላይ የሚቀመጥ",
+    topAdDesc: "በፍለጋ ውጤቶች አናት ላይ ያስቀምጡ",
+    spotlight: "በመነሻ ገጽ ላይ አሳይ",
+    spotlightDesc: "በዋናው መነሻ ባነር ላይ አሳይ",
+
+    totalInvestment: "ጠቅላላ የማስተዋወቂያ ክፍያ",
+    totalInvestmentSub: "የፕላኑን ጊዜ እና ተጨማሪ አማራጮችን ያካትታል።",
+
+    payMethodLabel: "የክፍያ ዘዴ ይምረጡ *",
+    accWallet: "የመለያ ቦርሳ (Wallet)",
+    walletBal: "ቀሪ ሂሳብ:",
+    directBank: "በቀጥታ በባንክ / በቴሌብር",
+    directSub: "የክፍያ ማረጋገጫ ቁጥር ያስገቡ",
+    yourBal: "የቦርሳዎ ቀሪ ሂሳብ:",
+    deduction: "የሚቀነሰው መጠን:",
+    insufficientBal: "በቂ የቦርሳ ሂሳብ የለም! እባክዎ በቀጥታ በባንክ ይክፈሉ::",
+    sufficientBal: "በቂ ሂሳብ አለዎት። ክፍያው ወዲያውኑ ይፈጸማል።",
+    payChannel: "የክፍያ መስመር ይምረጡ",
+    payChannelPlaceholder: "የባንክ ወይም ሞባይል ባንኪንግ መለያ ይምረጡ...",
+    txnRefLabel: "የክፍያ ማረጋገጫ ቁጥር (Reference) *",
+    txnRefPlaceholder: "ምሳሌ: TXN-89410294 ወይም የቴሌብር ቁጥር",
+    txnRefSub: "የሞባይል ባንኪንግ ወይም የቴሌብር ማረጋገጫ ቁጥር ያስገቡ።",
+
+    backBtn: "ተመለስ",
+    chooseSubBtn: "ንዑስ ምድብ ይምረጡ",
+    fillSpecsBtn: "ዝርዝሮችን ያስገቡ",
+    previewAdBtn: "ማስታወቂያውን ይመልከቱ",
+    selectPromoBtn: "ማስተዋወቂያ ይምረጡ & ይለጥፉ",
+    pubFreeBtn: "ማስታወቂያውን በነጻ ይለጥፉ",
+    payAndPostBtn: "{cost} ብር ከፍለው ይለጥፉ",
+    pubProgress: "በመለጠፍ ላይ...",
+
+    ownerNameVal: "እባክዎ የንብረቱን ባለቤት ሙሉ ስም ያስገቡ።",
+    ownerPhoneVal: "እባክዎ የንብረቱን ባለቤት ስልክ ቁጥር ያስገቡ።",
+    ownerEmailVal: "እባክዎ የንብረቱን ባለቤት ኢሜል ያስገቡ።",
+    fieldReqVal: "እባክዎ የሚፈለገውን ቦታ ይሙሉ:",
 
     titleLabel: "የማስታወቂያው ርዕስ",
     titleDesc: "አጭር፣ ግልጽ እና ገላጭ የሆነ የማስታወቂያ ርዕስ ያስገቡ።",
@@ -1236,15 +1459,15 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
     e.preventDefault();
     if (currentUser?.role === 'admin') {
       if (!fieldsState.ownerName || String(fieldsState.ownerName).trim() === '') {
-        setError('Please enter the Property Owner\'s full name.');
+        setError(d.ownerNameVal);
         return;
       }
       if (!fieldsState.contactPhone || String(fieldsState.contactPhone).trim() === '') {
-        setError('Please enter the Property Owner\'s contact phone number.');
+        setError(d.ownerPhoneVal);
         return;
       }
       if (!fieldsState.contactEmail || String(fieldsState.contactEmail).trim() === '') {
-        setError('Please enter the Property Owner\'s email address.');
+        setError(d.ownerEmailVal);
         return;
       }
     }
@@ -1256,7 +1479,8 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
         }
         const val = fieldsState[field.id];
         if (field.required && (!val || String(val).trim() === '')) {
-          setError(`Please fill in the required field: ${field.label}`);
+          const translatedLabel = getTranslatedFieldLabel(field.label, currentLanguage);
+          setError(`${d.fieldReqVal} ${translatedLabel}`);
           return;
         }
       }
@@ -1519,9 +1743,9 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                   <div className="space-y-2">
                     <label className="block text-xs font-bold text-amber-500 uppercase tracking-widest">
-                      Subcategory Type *
+                      {d.subcatLabel}
                     </label>
-                    <p className="text-[11px] text-[#F5F5F4]/40 font-light">Choose the exact classification for your listing.</p>
+                    <p className="text-[11px] text-[#F5F5F4]/40 font-light">{d.subcatDesc}</p>
                     <select
                       value={subcategory}
                       onChange={e => setSubcategory(e.target.value)}
@@ -1568,9 +1792,9 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
               <form id="listing-details-form" onSubmit={handleValidateStep3} className="space-y-5 animate-in fade-in duration-300">
                 <div className="border-l-2 border-amber-500 pl-3">
                   <h4 className="text-xs font-bold text-white tracking-wider uppercase">
-                    Specifications & Listing Details ({majorCategory} &rarr; {subcategory})
+                    {d.specHeader} ({getTranslatedCategoryName(majorCategory, currentLanguage)} &rarr; {getTranslatedSubcategoryName(subcategory, currentLanguage)})
                   </h4>
-                  <p className="text-[10px] text-white/40 font-light">Please fill out all required attributes accurately to attract buyers.</p>
+                  <p className="text-[10px] text-white/40 font-light">{d.specSubtext}</p>
                 </div>
 
                 {/* Admin-only Property Owner Contact Details */}
@@ -1579,16 +1803,16 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
                     <div className="flex items-center gap-2">
                       <UserIcon className="w-4 h-4 text-amber-500" />
                       <h4 className="text-xs font-bold text-amber-400 uppercase tracking-wider">
-                        Property Owner Contact Details (Admin Entry)
+                        {d.adminOwnerTitle}
                       </h4>
                     </div>
                     <p className="text-[11px] text-white/60">
-                      Enter the property owner's phone number and email so buyers contact the owner directly instead of admin.
+                      {d.adminOwnerDesc}
                     </p>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-1">
                       <div>
                         <label className="block text-[10px] font-bold text-white/80 uppercase mb-1">
-                          Property Owner Name *
+                          {d.ownerNameLabel}
                         </label>
                         <input
                           type="text"
@@ -1601,7 +1825,7 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
                       </div>
                       <div>
                         <label className="block text-[10px] font-bold text-white/80 uppercase mb-1">
-                          Property Owner Phone *
+                          {d.ownerPhoneLabel}
                         </label>
                         <input
                           type="text"
@@ -1614,7 +1838,7 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
                       </div>
                       <div>
                         <label className="block text-[10px] font-bold text-white/80 uppercase mb-1">
-                          Property Owner Email *
+                          {d.ownerEmailLabel}
                         </label>
                         <input
                           type="email"
@@ -1648,8 +1872,8 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div className="bg-zinc-900/60 border border-white/10 rounded-2xl p-5 flex flex-col justify-center items-center text-center group hover:border-amber-500/30 transition duration-300">
                               <Camera className="w-8 h-8 text-amber-500/50 group-hover:text-amber-500 transition mb-2" />
-                              <span className="text-xs font-bold text-white/90 block mb-1">Device File Upload</span>
-                              <span className="text-[10px] text-white/40 block mb-3">Select JPEG/PNG photographs.</span>
+                              <span className="text-xs font-bold text-white/90 block mb-1">{d.deviceUpload}</span>
+                              <span className="text-[10px] text-white/40 block mb-3">{d.deviceUploadSub}</span>
                               
                               <label className="px-4 py-2 bg-zinc-800 text-white hover:bg-zinc-700 rounded-xl text-xs font-bold transition duration-200 cursor-pointer inline-flex items-center gap-2 border border-white/10">
                                 <Upload className="w-3.5 h-3.5 text-amber-400" />
@@ -1687,7 +1911,7 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
                               </div>
 
                               <div className="flex items-center justify-between pt-1 border-t border-white/5">
-                                <span className="text-[10px] text-white/40 italic">Need stock photo?</span>
+                                <span className="text-[10px] text-white/40 italic">{d.needStock}</span>
                                 <button
                                   type="button"
                                   onClick={handleQuickAddImagePlaceholder}
@@ -1703,7 +1927,7 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
                           {imagesList.length > 0 && (
                             <div className="pt-2">
                               <label className="block text-[10px] font-bold text-white/50 uppercase tracking-widest mb-2">
-                                Added Photos ({imagesList.length})
+                                {d.addedPhotos} ({imagesList.length})
                               </label>
                               <div className="flex flex-wrap gap-3">
                                 {imagesList.map((img, i) => (
@@ -1730,7 +1954,7 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
                       return (
                         <div key={field.id} className={spanClass}>
                           <label className="block text-[11px] font-bold text-[#F5F5F4]/70 uppercase tracking-wider mb-1">
-                            {field.label} {field.required && '*'}
+                            {getTranslatedFieldLabel(field.label, currentLanguage)} {field.required && '*'}
                           </label>
                           <select
                             value={val}
@@ -1753,7 +1977,7 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
                       return (
                         <div key={field.id} className={spanClass}>
                           <label className="block text-[11px] font-bold text-[#F5F5F4]/70 uppercase tracking-wider mb-1">
-                            {field.label} {field.required && '*'}
+                            {getTranslatedFieldLabel(field.label, currentLanguage)} {field.required && '*'}
                           </label>
                           <textarea
                             rows={3}
@@ -1771,7 +1995,7 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
                     return (
                       <div key={field.id} className={spanClass}>
                         <label className="block text-[11px] font-bold text-[#F5F5F4]/70 uppercase tracking-wider mb-1">
-                          {field.label} {field.required && '*'}
+                          {getTranslatedFieldLabel(field.label, currentLanguage)} {field.required && '*'}
                         </label>
                         <input
                           type={field.type}
@@ -1794,9 +2018,9 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
                 <div className="bg-amber-500/10 border border-amber-500/20 p-3.5 rounded-xl flex items-center justify-between">
                   <div className="flex items-center gap-2 text-amber-400 font-bold text-xs">
                     <Eye className="w-4 h-4" />
-                    <span>Live Ad Card Preview</span>
+                    <span>{d.previewHeader}</span>
                   </div>
-                  <span className="text-[10px] text-amber-300/70">Verify how buyers will view your listing.</span>
+                  <span className="text-[10px] text-amber-300/70">{d.previewSubtext}</span>
                 </div>
 
                 <div className="bg-zinc-900/60 rounded-2xl border border-white/10 overflow-hidden shadow-xl max-w-xl mx-auto">
@@ -1808,12 +2032,12 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
                       referrerPolicy="no-referrer"
                     />
                     <div className="absolute top-3 left-3 bg-black/70 backdrop-blur-md px-3 py-1 rounded-full text-[10px] font-bold text-amber-400 uppercase tracking-wider border border-white/10">
-                      {majorCategory} &bull; {subcategory}
+                      {getTranslatedCategoryName(majorCategory, currentLanguage)} &bull; {getTranslatedSubcategoryName(subcategory, currentLanguage)}
                     </div>
                     {imagesList.length > 1 && (
                       <div className="absolute bottom-3 right-3 bg-black/80 px-2.5 py-1 rounded-md text-[10px] font-bold text-white flex items-center gap-1">
                         <Camera className="w-3 h-3 text-amber-400" />
-                        <span>{imagesList.length} Photos</span>
+                        <span>{imagesList.length} {d.photosCount}</span>
                       </div>
                     )}
                   </div>
@@ -1822,16 +2046,16 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
                     <div className="flex justify-between items-start gap-4">
                       <div>
                         <h3 className="font-serif text-lg font-bold text-white line-clamp-1">
-                          {fieldsState.title || 'Untitled Listing'}
+                          {fieldsState.title || d.untitled}
                         </h3>
                         <p className="text-xs text-white/50 flex items-center gap-1 mt-1">
                           <MapPin className="w-3.5 h-3.5 text-amber-500 shrink-0" />
-                          <span>{fieldsState.location || 'Location Not Specified'}</span>
+                          <span>{fieldsState.location || d.noLocation}</span>
                         </p>
                       </div>
                       <div className="text-right">
                         <span className="text-lg font-extrabold text-amber-400 font-mono block">
-                          {fieldsState.price ? `${Number(fieldsState.price).toLocaleString()} ${currency}` : 'Contact for Price'}
+                          {fieldsState.price ? `${Number(fieldsState.price).toLocaleString()} ${currency}` : d.contactPrice}
                         </span>
                       </div>
                     </div>
@@ -1847,7 +2071,7 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
 
                     {/* Description Snippet */}
                     <div className="text-xs text-white/60 line-clamp-2 pt-1 border-t border-white/5">
-                      {fieldsState.description || 'No description provided.'}
+                      {fieldsState.description || d.noDesc}
                     </div>
 
                     {/* Seller Contact Info Preview */}
@@ -1856,10 +2080,10 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
                         <UserIcon className="w-4 h-4 text-amber-500" />
                         <div>
                           <span className="font-bold text-white block text-[11px]">
-                            {fieldsState.ownerName || (currentUser?.role === 'admin' ? 'Property Owner' : currentUser?.fullName)}
+                            {fieldsState.ownerName || (currentUser?.role === 'admin' ? d.propOwnerRole : currentUser?.fullName)}
                           </span>
                           <span className="text-[10px] text-white/40">
-                            {currentUser?.role === 'admin' ? 'Property Owner' : 'Verified Publisher'}
+                            {currentUser?.role === 'admin' ? d.propOwnerRole : d.verifiedPublisher}
                           </span>
                         </div>
                       </div>
@@ -1881,9 +2105,9 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
                 <div className="space-y-1">
                   <h4 className="text-xs font-bold text-amber-500 uppercase tracking-widest flex items-center gap-1.5">
                     <Zap className="w-4 h-4" />
-                    <span>Select Promotion Boost Plan</span>
+                    <span>{d.boostTitle}</span>
                   </h4>
-                  <p className="text-[11px] text-[#F5F5F4]/50 font-light">Boost your ad visibility to sell or rent 5x faster on Sof Umer Marketplace.</p>
+                  <p className="text-[11px] text-[#F5F5F4]/50 font-light">{d.boostSubtext}</p>
                 </div>
 
                 {/* Plans Grid */}
@@ -1920,7 +2144,7 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
 
                 {/* Add-ons Selection */}
                 <div className="bg-zinc-900/40 p-4 rounded-2xl border border-white/5 space-y-3">
-                  <span className="text-xs font-bold text-white uppercase tracking-wider block">Optional Visibility Add-ons</span>
+                  <span className="text-xs font-bold text-white uppercase tracking-wider block">{d.addonsTitle}</span>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <label className={`p-3 rounded-xl border flex items-center justify-between transition cursor-pointer ${isTopAdAddon ? 'bg-amber-500/10 border-amber-500 text-white' : 'bg-black/20 border-white/5 text-white/60'}`}>
                       <div className="flex items-center gap-2.5 text-xs">
@@ -1931,8 +2155,8 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
                           className="accent-amber-500 w-4 h-4 rounded cursor-pointer"
                         />
                         <div>
-                          <span className="font-bold block">Top Ad Placement</span>
-                          <span className="text-[10px] text-white/40">Pin to top of search results</span>
+                          <span className="font-bold block">{d.topAd}</span>
+                          <span className="text-[10px] text-white/40">{d.topAdDesc}</span>
                         </div>
                       </div>
                       <span className="font-mono text-xs font-bold text-amber-400">+{topAdPrice} ETB</span>
@@ -1947,8 +2171,8 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
                           className="accent-amber-500 w-4 h-4 rounded cursor-pointer"
                         />
                         <div>
-                          <span className="font-bold block">Homepage Spotlight</span>
-                          <span className="text-[10px] text-white/40">Featured on main home banner</span>
+                          <span className="font-bold block">{d.spotlight}</span>
+                          <span className="text-[10px] text-white/40">{d.spotlightDesc}</span>
                         </div>
                       </div>
                       <span className="font-mono text-xs font-bold text-amber-400">+{featuredPrice} ETB</span>
@@ -1959,8 +2183,8 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
                 {/* Price Breakdown Summary */}
                 <div className="bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-transparent p-4 rounded-2xl border border-amber-500/20 flex items-center justify-between">
                   <div>
-                    <span className="text-xs font-bold text-white uppercase block">Total Promotion Investment</span>
-                    <span className="text-[10px] text-amber-300/70">Includes plan duration and active add-ons.</span>
+                    <span className="text-xs font-bold text-white uppercase block">{d.totalInvestment}</span>
+                    <span className="text-[10px] text-amber-300/70">{d.totalInvestmentSub}</span>
                   </div>
                   <div className="text-right">
                     <span className="text-2xl font-black text-amber-400 font-mono">{totalCost} ETB</span>
@@ -1971,7 +2195,7 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
                 {totalCost > 0 && (
                   <div className="space-y-4 pt-2 border-t border-white/5">
                     <label className="block text-xs font-bold text-amber-500 uppercase tracking-widest">
-                      Select Payment Method *
+                      {d.payMethodLabel}
                     </label>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -1986,9 +2210,9 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
                       >
                         <CreditCard className="w-6 h-6 text-amber-400 shrink-0" />
                         <div>
-                          <span className="font-bold text-xs block">Account Wallet</span>
+                          <span className="font-bold text-xs block">{d.accWallet}</span>
                           <span className="text-[10px] text-white/50 block font-mono">
-                            Balance: {walletBalance.toLocaleString()} ETB
+                            {d.walletBal} {walletBalance.toLocaleString()} ETB
                           </span>
                         </div>
                       </button>
@@ -2004,8 +2228,8 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
                       >
                         <Building className="w-6 h-6 text-amber-400 shrink-0" />
                         <div>
-                          <span className="font-bold text-xs block">Direct Bank Transfer / Telebirr</span>
-                          <span className="text-[10px] text-white/50 block">Upload transaction reference</span>
+                          <span className="font-bold text-xs block">{d.directBank}</span>
+                          <span className="text-[10px] text-white/50 block">{d.directSub}</span>
                         </div>
                       </button>
                     </div>
@@ -2014,20 +2238,20 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
                     {paymentMethod === 'wallet' && (
                       <div className="p-4 bg-zinc-900/60 rounded-xl border border-white/5 space-y-2 text-xs">
                         <div className="flex justify-between items-center">
-                          <span className="text-white/60">Your Wallet Balance:</span>
+                          <span className="text-white/60">{d.yourBal}</span>
                           <span className="font-mono font-bold text-white">{walletBalance.toLocaleString()} ETB</span>
                         </div>
                         <div className="flex justify-between items-center">
-                          <span className="text-white/60">Deduction Amount:</span>
+                          <span className="text-white/60">{d.deduction}</span>
                           <span className="font-mono font-bold text-amber-400">-{totalCost} ETB</span>
                         </div>
                         {walletBalance < totalCost ? (
                           <div className="p-2.5 bg-rose-500/10 border border-rose-500/20 text-rose-400 text-[11px] rounded-lg mt-2 font-medium">
-                            ⚠️ Insufficient wallet balance! Please switch to Direct Bank Transfer or Top Up your wallet from the dashboard.
+                            ⚠️ {d.insufficientBal}
                           </div>
                         ) : (
                           <div className="p-2.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[11px] rounded-lg mt-2 font-medium">
-                            ✅ Sufficient wallet balance. Payment will be processed instantly upon posting.
+                            ✅ {d.sufficientBal}
                           </div>
                         )}
                       </div>
@@ -2038,14 +2262,14 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
                       <div className="p-4 bg-zinc-900/60 rounded-2xl border border-white/10 space-y-4 text-xs">
                         <div>
                           <label className="block text-[11px] font-bold text-white/70 uppercase mb-1.5">
-                            Select Payment Channel
+                            {d.payChannel}
                           </label>
                           <select
                             value={selectedDirectMethodId}
                             onChange={e => setSelectedDirectMethodId(e.target.value)}
                             className="w-full p-3 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white focus:outline-none transition"
                           >
-                            <option value="">Select Bank / Mobile Money Account...</option>
+                            <option value="">{d.payChannelPlaceholder}</option>
                             {paymentMethods.map(m => (
                               <option key={m.id} value={m.id} className="bg-[#0c0c0c]">
                                 {m.name} ({m.accountNumber})
@@ -2056,17 +2280,17 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
 
                         <div>
                           <label className="block text-[11px] font-bold text-white/70 uppercase mb-1.5">
-                            Transaction Reference Number / Receipt Ref *
+                            {d.txnRefLabel}
                           </label>
                           <input
                             type="text"
                             required
                             value={receiptRefNumber}
                             onChange={e => setReceiptRefNumber(e.target.value)}
-                            placeholder="e.g. TXN-89410294 or Telebirr Ref"
+                            placeholder={d.txnRefPlaceholder}
                             className="w-full p-3 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white font-mono placeholder-zinc-600 focus:outline-none transition"
                           />
-                          <p className="text-[10px] text-white/40 mt-1">Provide your mobile banking or Telebirr reference code for instant verification.</p>
+                          <p className="text-[10px] text-white/40 mt-1">{d.txnRefSub}</p>
                         </div>
                       </div>
                     )}
@@ -2087,7 +2311,7 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
                   className="px-4 py-2.5 rounded-xl border border-white/10 hover:bg-white/5 text-white/70 hover:text-white text-xs font-bold transition duration-200 cursor-pointer inline-flex items-center gap-1.5"
                 >
                   <ArrowLeft className="w-3.5 h-3.5" />
-                  <span>Back</span>
+                  <span>{d.backBtn}</span>
                 </button>
               )}
             </div>
@@ -2108,7 +2332,7 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
                   onClick={() => setCurrentStep(2)}
                   className="px-5 py-2.5 bg-amber-500 text-black font-extrabold text-xs rounded-xl hover:bg-amber-400 transition duration-200 cursor-pointer inline-flex items-center gap-1.5"
                 >
-                  <span>Choose Subcategory</span>
+                  <span>{d.chooseSubBtn}</span>
                   <ArrowRight className="w-3.5 h-3.5 stroke-[3px]" />
                 </button>
               )}
@@ -2119,7 +2343,7 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
                   onClick={() => setCurrentStep(3)}
                   className="px-5 py-2.5 bg-amber-500 text-black font-extrabold text-xs rounded-xl hover:bg-amber-400 transition duration-200 cursor-pointer inline-flex items-center gap-1.5"
                 >
-                  <span>Fill Specifications</span>
+                  <span>{d.fillSpecsBtn}</span>
                   <ArrowRight className="w-3.5 h-3.5 stroke-[3px]" />
                 </button>
               )}
@@ -2131,7 +2355,7 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
                   className="px-5 py-2.5 bg-amber-500 text-black font-extrabold text-xs rounded-xl hover:bg-amber-400 transition duration-200 cursor-pointer inline-flex items-center gap-1.5"
                 >
                   <Eye className="w-3.5 h-3.5" />
-                  <span>Preview Ad Card</span>
+                  <span>{d.previewAdBtn}</span>
                   <ArrowRight className="w-3.5 h-3.5 stroke-[3px]" />
                 </button>
               )}
@@ -2143,7 +2367,7 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
                   className="px-5 py-2.5 bg-amber-500 text-black font-extrabold text-xs rounded-xl hover:bg-amber-400 transition duration-200 cursor-pointer inline-flex items-center gap-1.5"
                 >
                   <Zap className="w-3.5 h-3.5 fill-black" />
-                  <span>Select Promotion & Post</span>
+                  <span>{d.selectPromoBtn}</span>
                   <ArrowRight className="w-3.5 h-3.5 stroke-[3px]" />
                 </button>
               )}
@@ -2156,11 +2380,11 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
                   className="px-6 py-2.5 bg-amber-500 text-black font-extrabold text-xs rounded-xl hover:bg-amber-400 disabled:opacity-50 transition duration-200 cursor-pointer shadow-lg inline-flex items-center gap-2"
                 >
                   {submitting ? (
-                    <span>Publishing Ad...</span>
+                    <span>{d.pubProgress}</span>
                   ) : (
                     <>
                       <Sparkles className="w-4 h-4 fill-black" />
-                      <span>{totalCost === 0 ? 'Publish Ad For Free' : `Pay ${totalCost} ETB & Post Ad`}</span>
+                      <span>{totalCost === 0 ? d.pubFreeBtn : d.payAndPostBtn.replace('{cost}', String(totalCost))}</span>
                     </>
                   )}
                 </button>

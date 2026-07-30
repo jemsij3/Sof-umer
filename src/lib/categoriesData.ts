@@ -1234,12 +1234,113 @@ export function getTranslatedOption(opt: string, lang: string = 'en'): string {
     'part-time': { en: 'Part-time', om: 'Yeroo Gabaabaa', am: 'ትርፍ ጊዜ' },
     'freelance': { en: 'Freelance / Contract', om: 'Hojii Dhuunfaa', am: 'ፍሪላንስ' },
     'remote': { en: 'Remote', om: 'Fagoo Irraa', am: 'የሩቅ ስራ' },
-    'internship': { en: 'Internship', om: 'Shaakala Hojii', am: 'ልምምድ' }
+    'internship': { en: 'Internship', om: 'Shaakala Hojii', am: 'ልምምድ' },
+    'unisex': { en: 'Unisex', om: 'Waligalaa', am: 'ለሁሉም' },
+    'men': { en: 'Men', om: 'Dhiira', am: 'ወንድ' },
+    'women': { en: 'Women', om: 'Dubartii', am: 'ሴት' },
+    'kids': { en: 'Kids', om: 'Daa\'imman', am: 'ልጆች' },
+    'title deed (carta)': { en: 'Title Deed (Carta)', om: 'Waraqaa Abbummaa (Karta)', am: 'ካርታ ያለው' },
+    'map (karta)': { en: 'Map (Karta)', om: 'Kaartaa Lafa', am: 'ፕላን/ካርታ' },
+    'leasehold': { en: 'Leasehold', om: 'Liizii', am: 'ሊዝ' },
+    'fixed rate': { en: 'Fixed Rate', om: 'Gatii Murtaa\'aa', am: 'መደበኛ ዋጋ' },
+    'hourly rate': { en: 'Hourly Rate', om: 'Kaffaltii Sa\'aatii', am: 'የሰዓት ክፍያ' },
+    'daily rate': { en: 'Daily Rate', om: 'Kaffaltii Guyyaa', am: 'የቀን ክፍያ' },
+    'per job / negotiable': { en: 'Per Job / Negotiable', om: 'Kaffaltii Hojiin / Waliigalteen', am: 'በስራው ብዛት / በስምምነት' }
   };
 
   if (map[key]) return map[key][langKey];
   return opt;
 }
+
+export function getTranslatedFieldLabel(label: string, lang: string = 'en'): string {
+  if (!label) return '';
+  const langKey = (lang === 'om' || lang === 'am') ? lang : 'en';
+  const cleanLabel = label.replace(/\s*\*$/, '').trim();
+  const hasAsterisk = label.includes('*');
+  const key = cleanLabel.toLowerCase();
+
+  const map: Record<string, { en: string; om: string; am: string }> = {
+    'item title': { en: 'Item Title', om: 'Mata Duree Meeshichaa', am: 'የእቃው ርዕስ' },
+    'brand': { en: 'Brand', om: 'Gosa Oomishaa (Brand)', am: 'ብራንድ' },
+    'brand / manufacturer': { en: 'Brand / Manufacturer', om: 'Gosa / Oomisahaa', am: 'አምራች/ብራንድ' },
+    'make / brand': { en: 'Make / Brand', om: 'Gosa / Oomisahaa', am: 'አምራች/ብራንድ' },
+    'model': { en: 'Model', om: 'Moodela', am: 'ሞዴል' },
+    'size': { en: 'Size', om: 'Hanga / Hammangaa', am: 'መጠን' },
+    'storage / spec': { en: 'Storage / Spec', om: 'Hanga Kuusaa / Akkaata', am: 'የማከማቻ መጠን/ስፔስ' },
+    'color': { en: 'Color', om: 'Bifa', am: 'ቀለም' },
+    'material': { en: 'Material', om: 'Gosa Meeshaa Ijaarsaa', am: 'ማቴሪያል' },
+    'gender': { en: 'Gender', om: 'Saala', am: 'ፆታ' },
+    'condition': { en: 'Condition', om: 'Haala Meeshichaa', am: 'ሁኔታ (ኮንዲሽን)' },
+    'quantity': { en: 'Quantity', om: 'Baay\'ina', am: 'ብዛት' },
+    'price (etb)': { en: 'Price (ETB)', om: 'Gatii (ETB)', am: 'ዋጋ (ብር)' },
+    'price / rate (etb)': { en: 'Price / Rate (ETB)', om: 'Gatii / Kaffaltii (ETB)', am: 'ዋጋ / ክፍያ (ብር)' },
+    'negotiable': { en: 'Negotiable', om: 'Waliigalteen', am: 'በስምምነት' },
+    'location': { en: 'Location', om: 'Bakka / Iddoo', am: 'አድራሻ/ቦታ' },
+    'description': { en: 'Description', om: 'Ibsa Guutuu', am: 'ማብራሪያ' },
+    'photos': { en: 'Photos', om: 'Fakkoota', am: 'ፎቶዎች' },
+    'video url': { en: 'Video URL', om: 'Linkii Viidiyoo', am: 'የቪዲዮ ሊንክ' },
+    'furniture title': { en: 'Furniture Title', om: 'Mata Duree Meeshaa Manaa', am: 'የቤት እቃው ርዕስ' },
+    'product title': { en: 'Product Title', om: 'Mata Duree Oomishaa', am: 'የምርቱ ርዕስ' },
+    'property title': { en: 'Property Title', om: 'Mata Duree Qabeenyaa', am: 'የንብረቱ ርዕስ' },
+    'purpose': { en: 'Purpose', om: 'Kaayyoo Daldalaa', am: 'ዓላማ' },
+    'area (m²)': { en: 'Area (m²)', om: 'Bal\'ina (m²)', am: 'ስፋት (በካሬ ሜትር)' },
+    'ownership / title deed': { en: 'Ownership / Title Deed', om: 'Waraqaa Abbummaa', am: 'የባለቤትነት ማረጋገጫ' },
+    'phone number': { en: 'Phone Number', om: 'Lakk. Bilbilaa', am: 'ስልክ ቁጥር' },
+    'contact phone': { en: 'Contact Phone', om: 'Bilbila Quunnamtii', am: 'የመገናኛ ስልክ' },
+    'email': { en: 'Email', om: 'Teessoo Imeelii', am: 'ኢሜል' },
+    'contact email': { en: 'Contact Email', om: 'Imeelii Quunnamtii', am: 'የመገናኛ ኢሜል' },
+    'property type': { en: 'Property Type', om: 'Gosa Qabeenyaa', am: 'የንብረት አይነት' },
+    'toilets': { en: 'Toilets', om: 'Baay\'ina Fincaanii', am: 'የመታጠቢያ ክፍሎች' },
+    'parking available': { en: 'Parking Available', om: 'Iddoo Konkolaataa', am: 'የመኪና ማቆሚያ' },
+    'floor Level': { en: 'Floor Level', om: 'Sadarkaa Abbaa Gamoo', am: 'ፎቅ' },
+    'bedrooms': { en: 'Bedrooms', om: 'Kutaa Ciisichaa', am: 'የመኝታ ክፍሎች' },
+    'bathrooms': { en: 'Bathrooms', om: 'Kutaa Fincaanii', am: 'የመታጠቢያ ክፍሎች' },
+    'furnished status': { en: 'Furnished Status', om: 'Mi\'aan Guutamuu', am: 'የቤት እቃ ያለው' },
+    'part / accessory title': { en: 'Part / Accessory Title', om: 'Mata Duree Meeshaa Dabalataa', am: 'የመጋቢ እቃው ርዕስ' },
+    'vehicle title': { en: 'Vehicle Title', om: 'Mata Duree Konkolaataa', am: 'የተሽከርካሪው ርዕስ' },
+    'vehicle type': { en: 'Vehicle Type', om: 'Gosa Konkolaataa', am: 'የተሽከርካሪ አይነት' },
+    'transmission': { en: 'Transmission', om: 'Giraasii (Transmission)', am: 'ትራንስሚሽን' },
+    'fuel type': { en: 'Fuel Type', om: 'Gosa Boba\'aa', am: 'የነዳጅ አይነት' },
+    'engine capacity': { en: 'Engine Capacity', om: 'Hafata Mootoraa', am: 'የሞተር መጠን' },
+    'year': { en: 'Year', om: 'Bara Oomishame', am: 'የተመረተበት አመት' },
+    'mileage (km)': { en: 'Mileage (km)', om: 'Kilomeetira Deeme', am: 'የተጓዘው ርቀት (ኪ.ሜ)' },
+    'job title': { en: 'Job Title', om: 'Mata Duree Hojii', am: 'የስራው ርዕስ' },
+    'employment type': { en: 'Employment Type', om: 'Haala Hojii', am: 'የቀጥር ሁኔታ' },
+    'sector / industry': { en: 'Sector / Industry', om: 'Kutaawwan Hojii', am: 'የስራው ዘርፍ' },
+    'salary range': { en: 'Salary Range', om: 'Hanga Mindaadha', am: 'የደሞዝ መጠን' },
+    'education required': { en: 'Education Required', om: 'Barnoota Barbaadamu', am: 'የትምህርት ደረጃ' },
+    'experience required': { en: 'Experience Required', om: 'Muuxannoo Barbaadamu', am: 'የስራ ልምድ' },
+    'application deadline': { en: 'Application Deadline', om: 'Guyyaa Xumura Iyyannoo', am: 'የማመልከቻ ማብቂያ ቀን' },
+    'description & requirements': { en: 'Description & Requirements', om: 'Ibsa & Ulaagaa Hojii', am: 'መግለጫ እና መስፈርቶች' },
+    'company logo url': { en: 'Company Logo URL', om: 'URL Mallattoo Dhaabbataa', am: 'የድርጅቱ ሎጎ ሊንክ' },
+    'service title': { en: 'Service Title', om: 'Mata Duree Tajaajilaa', am: 'የአገልግሎቱ ርዕስ' },
+    'service category': { en: 'Service Category', om: 'Garee Tajaajilaa', am: 'የአገልግሎት ምድብ' },
+    'pricing unit': { en: 'Pricing Unit', om: 'Safartuu Gatii', am: 'የክፍያ መስፈርት' },
+    'years of experience': { en: 'Years of Experience', om: 'Waggaa Muuxannoo', am: 'የልምድ አመታት' },
+    'coverage area': { en: 'Coverage Area', om: 'Iddoo Tajaajilaa', am: 'አገልግሎት የሚሸፍነው ቦታ' },
+    'base location': { en: 'Base Location', om: 'Teessoo Guddaa', am: 'ዋና ቦታ' },
+    'business name': { en: 'Business Name', om: 'Maqaa Daldalaa', am: 'የድርጅቱ ስም' },
+    'business type': { en: 'Business Type', om: 'Gosa Daldalaa', am: 'የንግድ አይነት' },
+    'opening hours': { en: 'Opening Hours', om: 'Sa\'aatii Hojii', am: 'የስራ ሰዓት' },
+    'website / social link': { en: 'Website / Social Link', om: 'Website / Toora Hawaasaa', am: 'ድረ-ገጽ / ሶሻል ሚዲያ' },
+    'business address / area': { en: 'Business Address / Area', om: 'Teessoo Daldalaa', am: 'የድርጅቱ አድራሻ' },
+    'business email': { en: 'Business Email', om: 'Imeelii Daldalaa', am: 'የድርጅቱ ኢሜል' },
+    'business description': { en: 'Business Description', om: 'Ibsa Daldalaa', am: 'የድርጅቱ መግለጫ' },
+    'store & product photos': { en: 'Store & Product Photos', om: 'Fakkii Suuqii & Meeshaa', am: 'የሱቅ እና የምርት ፎቶዎች' },
+    'video tour url': { en: 'Video Tour URL', om: 'URL Viidiyoo Daawwanna', am: 'የቪዲዮ ዳሰሳ ሊንክ' },
+    'post / announcement title': { en: 'Post / Announcement Title', om: 'Mata Duree Beeksisaa', am: 'የማስታወቂያው ርዕስ' },
+    'organizer name / group': { en: 'Organizer Name / Group', om: 'Maqaa Qopheessaa', am: 'የአዘጋጁ ስም' },
+    'venue / address': { en: 'Venue / Address', om: 'Iddoo Qophii / Teessoo', am: 'የዝግጅቱ ቦታ/አድራሻ' },
+    'event date & time': { en: 'Event Date & Time', om: 'Guyyaa & Sa\'aatii Qophii', am: 'የዝግጅቱ ቀን እና ሰዓት' },
+    'city / region': { en: 'City / Region', om: 'Magaalaa / Naannoo', am: 'ከተማ / ክልል' },
+    'full description': { en: 'Full Description', om: 'Ibsa Guutuu', am: 'ሙሉ መግለጫ' },
+    'photos / banner': { en: 'Photos / Banner', om: 'Fakkoota / Baanara', am: 'ፎቶዎች / ባነር' }
+  };
+
+  const translated = map[key] ? map[key][langKey] : cleanLabel;
+  return hasAsterisk ? `${translated} *` : translated;
+}
+
 
 
 
