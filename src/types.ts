@@ -74,7 +74,7 @@ export interface Property {
   location: string;
   propertyType: string; // Sub-category/type, e.g. Apartments, Houses, Full-time, Tech, Electronics
   category: string; // e.g. Buy, Rent, Full-time, Remote, For Sale, Hourly
-  majorCategory?: 'Properties' | 'Jobs' | 'Services' | 'Products' | 'Local Businesses' | 'Community';
+  majorCategory?: 'Properties' | 'Vehicles' | 'Jobs' | 'Services' | 'Products' | 'Local Businesses' | 'Community';
   price: number;
   currency: 'ETB' | 'USD' | 'SAR' | 'EUR' | 'AED';
   bedrooms?: number;

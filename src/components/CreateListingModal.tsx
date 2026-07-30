@@ -1,6 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../lib/AppContext';
-import { getMatchingSubcategoryId } from '../lib/categoriesData';
+import { 
+  getMatchingSubcategoryId, 
+  getTranslatedCategoryName, 
+  getTranslatedSubcategoryName, 
+  getTranslatedOption 
+} from '../lib/categoriesData';
 import { 
   X, Building, DollarSign, Plus, Trash2, Camera, Upload, Car, ShoppingBag, 
   Briefcase, Wrench, Calendar, Info, Check, ArrowRight, ArrowLeft, Eye, 
@@ -1483,7 +1488,7 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
                       >
                         <Icon className="w-5 h-5 text-amber-400" />
                         <span className="text-[11px] truncate w-full text-center font-medium">
-                          {currentLanguage === 'om' ? DICTIONARY.om[cat.id.toLowerCase() + 'Label'] || cat.name : currentLanguage === 'am' ? DICTIONARY.am[cat.id.toLowerCase() + 'Label'] || cat.name : cat.name}
+                          {getTranslatedCategoryName(cat.name, currentLanguage)}
                         </span>
                       </button>
                     );
@@ -1524,7 +1529,7 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
                     >
                       {SUBCATEGORIES[majorCategory]?.map(sub => (
                         <option key={sub.id} value={sub.id} className="bg-[#0c0c0c]">
-                          {sub.name}
+                          {getTranslatedSubcategoryName(sub.name, currentLanguage)}
                         </option>
                       ))}
                     </select>
@@ -1735,7 +1740,7 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
                           >
                             {field.options?.map(opt => (
                               <option key={opt} value={opt} className="bg-[#0c0c0c]">
-                                {opt}
+                                {getTranslatedOption(opt, currentLanguage)}
                               </option>
                             ))}
                           </select>

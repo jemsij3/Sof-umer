@@ -11,7 +11,21 @@ import {
   Folder, ChevronDown, Wallet, Plus
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { REDESIGNED_CATEGORIES, CategoryRedesign, Subcategory, getMatchingSubcategoryId, getEffectiveMajorCategory, isListingActiveAndPublished, getSubcategoryListingCount as calcSubCount, getCategoryListingCount as calcCategoryCount, extractString } from '../lib/categoriesData';
+import { 
+  REDESIGNED_CATEGORIES, 
+  CategoryRedesign, 
+  Subcategory, 
+  getMatchingSubcategoryId, 
+  getEffectiveMajorCategory, 
+  isListingActiveAndPublished, 
+  getSubcategoryListingCount as calcSubCount, 
+  getCategoryListingCount as calcCategoryCount, 
+  extractString,
+  getTranslatedCategoryName,
+  getTranslatedSubcategoryName,
+  getTranslatedPropertyType,
+  getTranslatedOption
+} from '../lib/categoriesData';
 import { AllCategoriesModal } from './AllCategoriesModal';
 import { LocationSelectorModal } from './LocationSelectorModal';
 import { matchesLocationFilter } from '../lib/locationData';
@@ -1973,11 +1987,9 @@ function PropertyCard({ property, onSelect, favorites, onToggleFav, onReport, t,
               {(property.price || 0).toLocaleString()} <span className="text-amber-500/80 text-xs font-bold uppercase tracking-wider ml-1">{property.currency || 'ETB'}</span>
             </p>
             <span className="text-[9px] font-black text-white/50 border border-white/5 bg-white/5 px-2.5 py-1 rounded-full uppercase tracking-wider">
-              {property.majorCategory === 'Properties' ? (
-                t(`cat_${(extractString(property.propertyType, currentLanguage)).toLowerCase()}`) || extractString(property.propertyType, currentLanguage) || ''
-              ) : (
-                t(`cat_${(extractString(property.majorCategory, currentLanguage)).toLowerCase().replace(/\s+/g, '')}`) || extractString(property.majorCategory, currentLanguage) || ''
-              )}
+              {property.propertyType 
+                ? getTranslatedPropertyType(extractString(property.propertyType, currentLanguage), currentLanguage) 
+                : getTranslatedCategoryName(extractString(property.majorCategory, currentLanguage), currentLanguage)}
             </span>
           </div>
 
@@ -2028,7 +2040,7 @@ function PropertyCard({ property, onSelect, favorites, onToggleFav, onReport, t,
                 } else {
                   return (
                     <span className="text-[10px] uppercase font-bold tracking-wider text-amber-500 bg-amber-500/10 px-2.5 py-1 rounded-full">
-                      {property.propertyType || effMajor}
+                      {getTranslatedPropertyType(property.propertyType || effMajor, currentLanguage)}
                     </span>
                   );
                 }

@@ -931,3 +931,315 @@ export function getCategoryListingCount(
   }).length;
 }
 
+// ==========================================
+// DYNAMIC MULTILINGUAL TRANSLATION HELPERS
+// ==========================================
+
+export function getTranslatedCategoryName(catOrName: any, lang: string = 'en'): string {
+  if (!catOrName) return '';
+  const langKey = (lang === 'om' || lang === 'am') ? lang : 'en';
+
+  if (typeof catOrName === 'object') {
+    if (catOrName.translations && catOrName.translations[langKey]) {
+      return catOrName.translations[langKey];
+    }
+    if (langKey === 'om' && catOrName.nameOm) return catOrName.nameOm;
+    if (langKey === 'am' && catOrName.nameAm) return catOrName.nameAm;
+    if (catOrName.name) return extractString(catOrName.name, langKey);
+  }
+
+  const strName = String(catOrName).trim();
+  const matched = REDESIGNED_CATEGORIES.find(
+    c => c.id.toLowerCase() === strName.toLowerCase() ||
+         c.name.toLowerCase() === strName.toLowerCase() ||
+         (c.translations?.en && c.translations.en.toLowerCase() === strName.toLowerCase()) ||
+         (c.dbMapping?.majorCategory && c.dbMapping.majorCategory.toLowerCase() === strName.toLowerCase())
+  );
+  if (matched && matched.translations && matched.translations[langKey]) {
+    return matched.translations[langKey];
+  }
+
+  const catMap: Record<string, { en: string; om: string; am: string }> = {
+    'properties': { en: 'Properties', om: 'Qabeenya', am: 'ንብረት' },
+    'property': { en: 'Properties', om: 'Qabeenya', am: 'ንብረት' },
+    'real estate': { en: 'Properties', om: 'Qabeenya', am: 'ንብረት' },
+    'vehicles': { en: 'Vehicles', om: 'Konkolaattota', am: 'ተሽከርካሪዎች' },
+    'vehicle': { en: 'Vehicles', om: 'Konkolaattota', am: 'ተሽከርካሪዎች' },
+    'cars': { en: 'Vehicles', om: 'Konkolaattota', am: 'ተሽከርካሪዎች' },
+    'jobs': { en: 'Jobs', om: 'Carraa Hojii', am: 'ስራዎች' },
+    'job': { en: 'Jobs', om: 'Carraa Hojii', am: 'ስራዎች' },
+    'employment': { en: 'Jobs', om: 'Carraa Hojii', am: 'ስራዎች' },
+    'services': { en: 'Services', om: 'Tajaajila', am: 'አገልግሎቶች' },
+    'service': { en: 'Services', om: 'Tajaajila', am: 'አገልግሎቶች' },
+    'products': { en: 'Products', om: 'Oomishaalee', am: 'ምርቶች' },
+    'product': { en: 'Products', om: 'Oomishaalee', am: 'ምርቶች' },
+    'electronics': { en: 'Electronics', om: 'Ilektirooniksii', am: 'ኤሌክትሮኒክስ' },
+    'fashion': { en: 'Fashion & Clothing', om: 'Uffata fi Faaya', am: 'ፋሽን እና አልባሳት' },
+    'home-furniture-garden': { en: 'Home & Furniture', om: 'Mi\'a Manaa', am: 'ፈርኒቸር እና የቤት እቃዎች' },
+    'babies-kids': { en: 'Babies & Kids', om: 'Daa\'imman', am: 'የህጻናት እና የልጆች' },
+    'health-beauty': { en: 'Health & Beauty', om: 'Fayyaa fi Miidhagina', am: 'ጤና እና ውበት' },
+    'agriculture-food': { en: 'Agriculture & Food', om: 'Qonnaa fi Nyaata', am: 'እርሻ እና ምግብ' },
+    'animals-pets': { en: 'Animals & Pets', om: 'Beeyladaa fi Bineensota', am: 'እንስሳት እና የቤት እንስሳት' },
+    'sports-outdoors': { en: 'Sports & Outdoors', om: 'Ispoortii', am: 'ስፖርት እና ውጪ' },
+    'education': { en: 'Education & Books', om: 'Barumsa fi Kitaaba', am: 'ትምህርት እና መጻሕፍት' },
+    'commercial-equipment': { en: 'Commercial Equipment', om: 'Meeshaalee Daldalaa', am: 'የንግድ እቃዎች' },
+    'community': { en: 'Community', om: 'Hawaasa', am: 'ማህበረሰብ' },
+    'local businesses': { en: 'Local Businesses', om: 'Daldala Naannoo', am: 'የአካባቢ ንግዶች' },
+    'local-businesses': { en: 'Local Businesses', om: 'Daldala Naannoo', am: 'የአካባቢ ንግዶች' }
+  };
+
+  const key = strName.toLowerCase();
+  if (catMap[key]) {
+    return catMap[key][langKey];
+  }
+
+  return strName;
+}
+
+export function getTranslatedSubcategoryName(subOrName: any, lang: string = 'en'): string {
+  if (!subOrName) return '';
+  const langKey = (lang === 'om' || lang === 'am') ? lang : 'en';
+
+  if (typeof subOrName === 'object') {
+    if (subOrName.translations && subOrName.translations[langKey]) {
+      return subOrName.translations[langKey];
+    }
+    if (langKey === 'om' && subOrName.nameOm) return subOrName.nameOm;
+    if (langKey === 'am' && subOrName.nameAm) return subOrName.nameAm;
+    if (subOrName.name) return extractString(subOrName.name, langKey);
+  }
+
+  const strName = String(subOrName).trim();
+  for (const cat of REDESIGNED_CATEGORIES) {
+    const sub = cat.subcategories.find(
+      s => s.id.toLowerCase() === strName.toLowerCase() ||
+           s.name.toLowerCase() === strName.toLowerCase() ||
+           (s.translations?.en && s.translations.en.toLowerCase() === strName.toLowerCase())
+    );
+    if (sub && sub.translations && sub.translations[langKey]) {
+      return sub.translations[langKey];
+    }
+  }
+
+  return strName;
+}
+
+export function getTranslatedPropertyType(type: string, lang: string = 'en'): string {
+  if (!type) return '';
+  const langKey = (lang === 'om' || lang === 'am') ? lang : 'en';
+  const key = type.toLowerCase().trim();
+
+  const map: Record<string, { en: string; om: string; am: string }> = {
+    'house': { en: 'House', om: 'Mana', am: 'ቤት' },
+    'houses': { en: 'Houses', om: 'Manneen', am: 'ቤቶች' },
+    'apartment': { en: 'Apartment', om: 'Aparotamaa', am: 'አፓርትመንት' },
+    'apartments': { en: 'Apartments', om: 'Aparotamoota', am: 'አፓርትመንቶች' },
+    'villa': { en: 'Villa', om: 'Viillaa', am: 'ቪላ' },
+    'villas': { en: 'Villas', om: 'Viillaawwan', am: 'ቪላዎች' },
+    'land': { en: 'Land & Plot', om: 'Lafa', am: 'መሬት' },
+    'land & plot': { en: 'Land & Plot', om: 'Lafa', am: 'መሬት' },
+    'plot': { en: 'Plot', om: 'Lafa Ijaarsaa', am: 'የቦታ መሬት' },
+    'office': { en: 'Office', om: 'Biiroo', am: 'ቢሮ' },
+    'offices': { en: 'Offices', om: 'Biiroowwan', am: 'ቢሮዎች' },
+    'shop': { en: 'Shop', om: 'Suuqii', am: 'ሱቅ' },
+    'shops': { en: 'Shops', om: 'Suuqota', am: 'ሱቆች' },
+    'warehouse': { en: 'Warehouse', om: 'Goofta', am: 'መጋዘን' },
+    'hotel': { en: 'Hotel / Resort', om: 'Hoteela', am: 'ሆቴል' },
+    'farm': { en: 'Farm / Land', om: 'Farmaa', am: 'እርሻ' },
+    'commercial': { en: 'Commercial Building', om: 'Gamoo Daldalaa', am: 'የንግድ ህንፃ' },
+    'commercial building': { en: 'Commercial Building', om: 'Gamoo Daldalaa', am: 'የንግድ ህንፃ' },
+    'residential': { en: 'Residential', om: 'Jireenyaa', am: 'መኖሪያ' }
+  };
+
+  if (map[key]) return map[key][langKey];
+  return type;
+}
+
+export function getTranslatedDealType(dealType: string, lang: string = 'en'): string {
+  if (!dealType) return '';
+  const langKey = (lang === 'om' || lang === 'am') ? lang : 'en';
+  const key = dealType.toLowerCase().trim();
+
+  const map: Record<string, { en: string; om: string; am: string }> = {
+    'sale': { en: 'For Sale', om: 'Gurgurtaaf', am: 'ለሽያጭ' },
+    'for sale': { en: 'For Sale', om: 'Gurgurtaaf', am: 'ለሽያጭ' },
+    'rent': { en: 'For Rent', om: 'Kiraaf', am: 'ለኪራይ' },
+    'for rent': { en: 'For Rent', om: 'Kiraaf', am: 'ለኪራይ' },
+    'lease': { en: 'Lease', om: 'Kiraa Yeroo Dheeraa', am: 'የረጅም ጊዜ ኪራይ' },
+    'buy': { en: 'Buy', om: 'Biti', am: 'ግዛ' }
+  };
+
+  if (map[key]) return map[key][langKey];
+  return dealType;
+}
+
+export function getTranslatedCondition(cond: string, lang: string = 'en'): string {
+  if (!cond) return '';
+  const langKey = (lang === 'om' || lang === 'am') ? lang : 'en';
+  const key = cond.toLowerCase().trim();
+
+  const map: Record<string, { en: string; om: string; am: string }> = {
+    'new': { en: 'Brand New', om: 'Haaraa Guutuu', am: 'አዲስ' },
+    'brand new': { en: 'Brand New', om: 'Haaraa Guutuu', am: 'አዲስ' },
+    'like new': { en: 'Like New', om: 'Haaraa Fakkaata', am: 'እንደ አዲስ' },
+    'refurbished': { en: 'Refurbished', om: 'Haromfame', am: 'የታደሰ' },
+    'fair': { en: 'Fair Condition', om: 'Gahassa', am: 'መካከለኛ' },
+    'used': { en: 'Used', om: 'Fayyadamaa', am: 'ያገለገለ' },
+    'good': { en: 'Good Condition', om: 'Gaarii', am: 'ጥሩ' },
+    'excellent': { en: 'Excellent', om: 'Baay\'ee Gaarii', am: 'በጣም ጥሩ' }
+  };
+
+  if (map[key]) return map[key][langKey];
+  return cond;
+}
+
+export function getTranslatedFuelType(fuel: string, lang: string = 'en'): string {
+  if (!fuel) return '';
+  const langKey = (lang === 'om' || lang === 'am') ? lang : 'en';
+  const key = fuel.toLowerCase().trim();
+
+  const map: Record<string, { en: string; om: string; am: string }> = {
+    'petrol': { en: 'Benzine / Petrol', om: 'Beenzinii', am: 'ቤንዚን' },
+    'benzine': { en: 'Benzine / Petrol', om: 'Beenzinii', am: 'ቤንዚን' },
+    'diesel': { en: 'Diesel', om: 'Diizela', am: 'ዲዚል' },
+    'electric': { en: 'Electric', om: 'Elektiriikii', am: 'ኤሌክትሪክ' },
+    'hybrid': { en: 'Hybrid', om: 'Haayibriidii', am: 'ሀይብሪድ' }
+  };
+
+  if (map[key]) return map[key][langKey];
+  return fuel;
+}
+
+export function getTranslatedTransmission(trans: string, lang: string = 'en'): string {
+  if (!trans) return '';
+  const langKey = (lang === 'om' || lang === 'am') ? lang : 'en';
+  const key = trans.toLowerCase().trim();
+
+  const map: Record<string, { en: string; om: string; am: string }> = {
+    'automatic': { en: 'Automatic', om: 'Ootomaatiikii', am: 'አውቶማቲክ' },
+    'manual': { en: 'Manual', om: 'Manuwaalii', am: 'ማኑዋል' }
+  };
+
+  if (map[key]) return map[key][langKey];
+  return trans;
+}
+
+export function getTranslatedJobType(jobType: string, lang: string = 'en'): string {
+  if (!jobType) return '';
+  const langKey = (lang === 'om' || lang === 'am') ? lang : 'en';
+  const key = jobType.toLowerCase().trim();
+
+  const map: Record<string, { en: string; om: string; am: string }> = {
+    'full time': { en: 'Full Time', om: 'Guutuu Yeroo', am: 'ሙሉ ጊዜ' },
+    'full-time': { en: 'Full Time', om: 'Guutuu Yeroo', am: 'ሙሉ ጊዜ' },
+    'part time': { en: 'Part Time', om: 'Hir\'uu Yeroo', am: 'ትርፍ ጊዜ' },
+    'part-time': { en: 'Part Time', om: 'Hir\'uu Yeroo', am: 'ትርፍ ጊዜ' },
+    'freelance': { en: 'Freelance / Contract', om: 'Hojii Dhuunfaa', am: 'ፍሪላንስ' },
+    'remote': { en: 'Remote Work', om: 'Fagoo Irraa', am: 'የሩቅ ስራ' },
+    'internship': { en: 'Internship', om: 'Shaakala Hojii', am: 'ልምምድ' },
+    'contract': { en: 'Contract', om: 'Waliigaltee', am: 'ኮንትራት' }
+  };
+
+  if (map[key]) return map[key][langKey];
+  return jobType;
+}
+
+export function getTranslatedFurnished(fur: string, lang: string = 'en'): string {
+  if (!fur) return '';
+  const langKey = (lang === 'om' || lang === 'am') ? lang : 'en';
+  const key = fur.toLowerCase().trim();
+
+  const map: Record<string, { en: string; om: string; am: string }> = {
+    'furnished': { en: 'Fully Furnished', om: 'Mi\'aa Guutuu', am: 'ሙሉ የቤት እቃ ያለው' },
+    'fully furnished': { en: 'Fully Furnished', om: 'Mi\'aa Guutuu', am: 'ሙሉ የቤት እቃ ያለው' },
+    'unfurnished': { en: 'Unfurnished', om: 'Mi\'aa Malee', am: 'የቤት እቃ የሌለው' },
+    'semi-furnished': { en: 'Semi-Furnished', om: 'Gartokkee Mi\'aa', am: 'በከፊል የተሟላ' }
+  };
+
+  if (map[key]) return map[key][langKey];
+  return fur;
+}
+
+export function getTranslatedLocation(loc: string, lang: string = 'en'): string {
+  if (!loc) return '';
+  const langKey = (lang === 'om' || lang === 'am') ? lang : 'en';
+
+  const locMap: Record<string, { en: string; om: string; am: string }> = {
+    'addis ababa': { en: 'Addis Ababa', om: 'Finfinnee', am: 'አዲስ አበባ' },
+    'finfinnee': { en: 'Addis Ababa', om: 'Finfinnee', am: 'አዲስ አበባ' },
+    'oromia': { en: 'Oromia', om: 'Oromiyaa', am: 'ኦሮሚያ' },
+    'amhara': { en: 'Amhara', om: 'Amaaraa', am: 'አማራ' },
+    'sidama': { en: 'Sidama', om: 'Sidaamaa', am: 'ሲዳማ' },
+    'somali': { en: 'Somali', om: 'Sumaalee', am: 'ሱማሌ' },
+    'tigray': { en: 'Tigray', om: 'Tigraay', am: 'ትግራይ' },
+    'bole': { en: 'Bole, Addis Ababa', om: 'Bolee, Finfinnee', am: 'ቦሌ፣ አዲስ አበባ' },
+    'adama': { en: 'Adama', om: 'Adaamaa', am: 'አዳማ' },
+    'jimma': { en: 'Jimma', om: 'Jimmaa', am: 'ጅማ' },
+    'bishoftu': { en: 'Bishoftu', om: 'Bishooftuu', am: 'ቢሾፍቱ' },
+    'hawassa': { en: 'Hawassa', om: 'Hawaasaa', am: 'ሀዋሳ' },
+    'bahir dar': { en: 'Bahir Dar', om: 'Baahir Daar', am: 'ባሕር ዳር' },
+    'gonder': { en: 'Gonder', om: 'Gondar', am: 'ጎንደር' },
+    'mekelle': { en: 'Mekelle', om: 'Maqalee', am: 'መቐለ' },
+    'dire dawa': { en: 'Dire Dawa', om: 'Diri Dhabaa', am: 'ድሬዳዋ' },
+    'harar': { en: 'Harar', om: 'Harar', am: 'ሐረር' },
+    'shashamane': { en: 'Shashamane', om: 'Shaashamannee', am: 'ሻሸመኔ' },
+    'bale robe': { en: 'Bale Robe', om: 'Roobee Balee', am: 'ባሌ ሮቤ' },
+    'robe': { en: 'Bale Robe', om: 'Roobee', am: 'ሮቤ' },
+    'nekemte': { en: 'Nekemte', om: 'Naqamte', am: 'ነቀምቴ' },
+    'asella': { en: 'Asella', om: 'Asallaa', am: 'አሰላ' },
+    'ambo': { en: 'Ambo', om: 'Ambo', am: 'አምቦ' }
+  };
+
+  const key = loc.toLowerCase().trim();
+  if (locMap[key]) return locMap[key][langKey];
+
+  // Partial matches
+  for (const [k, v] of Object.entries(locMap)) {
+    if (key.includes(k)) {
+      return loc.replace(new RegExp(k, 'gi'), v[langKey]);
+    }
+  }
+
+  return loc;
+}
+
+export function getTranslatedOption(opt: string, lang: string = 'en'): string {
+  if (!opt) return '';
+  const langKey = (lang === 'om' || lang === 'am') ? lang : 'en';
+  const key = opt.toLowerCase().trim();
+
+  const map: Record<string, { en: string; om: string; am: string }> = {
+    'yes': { en: 'Yes', om: 'Eeyyee', am: 'አዎ' },
+    'no': { en: 'No', om: 'Lakkii', am: 'አይደለም' },
+    'new': { en: 'New', om: 'Haaraa', am: 'አዲስ' },
+    'used': { en: 'Used', om: 'Kan Tajaajile', am: 'ያገለገለ' },
+    'used - like new': { en: 'Used - Like New', om: 'Kan Tajaajile - Akkuma Haaraa', am: 'ያገለገለ - እንደ አዲስ' },
+    'used - good': { en: 'Used - Good', om: 'Kan Tajaajile - Gaarii', am: 'ያገለገለ - በጥሩ ሁኔታ ላይ' },
+    'used - foreign': { en: 'Used - Foreign', om: 'Bara Biyya Alaa', am: 'ከባህር ማዶ የመጣ' },
+    'used - local': { en: 'Used - Local', om: 'Bara Biyya Keessaa', am: 'የአገር ውስጥ ያገለገለ' },
+    'refurbished': { en: 'Refurbished', om: 'Haareffame', am: 'የታደሰ / ሪፈርቢሽድ' },
+    'rent': { en: 'For Rent', om: 'Kiraaf', am: 'ለኪራይ' },
+    'sale': { en: 'For Sale', om: 'Gurgurtaaf', am: 'ለሽያጭ' },
+    'buy': { en: 'Want to Buy', om: 'Bitachuuf', am: 'ለመግዛት' },
+    'automatic': { en: 'Automatic', om: 'Ootomaatiikii', am: 'አውቶማቲክ' },
+    'manual': { en: 'Manual', om: 'Manuwaalii', am: 'ማኑዋል' },
+    'gasoline': { en: 'Gasoline / Benzine', om: 'Beenzinii', am: 'ቤንዚን' },
+    'diesel': { en: 'Diesel', om: 'Diizela', am: 'ዲዚል' },
+    'electric': { en: 'Electric', om: 'Elektiriikii', am: 'ኤሌክትሪክ' },
+    'hybrid': { en: 'Hybrid', om: 'Haayibriidii', am: 'ሀይብሪድ' },
+    'unfurnished': { en: 'Unfurnished', om: 'Mi\'aa Malee', am: 'የቤት እቃ የሌለው' },
+    'furnished': { en: 'Furnished', om: 'Mi\'aa Guutuu', am: 'ሙሉ የቤት እቃ ያለው' },
+    'semi-furnished': { en: 'Semi-Furnished', om: 'Gartokkee Mi\'aa', am: 'በከፊል የተሟላ' },
+    'full-time': { en: 'Full-time', om: 'Yeroo Guutuu', am: 'ሙሉ ጊዜ' },
+    'part-time': { en: 'Part-time', om: 'Yeroo Gabaabaa', am: 'ትርፍ ጊዜ' },
+    'freelance': { en: 'Freelance / Contract', om: 'Hojii Dhuunfaa', am: 'ፍሪላንስ' },
+    'remote': { en: 'Remote', om: 'Fagoo Irraa', am: 'የሩቅ ስራ' },
+    'internship': { en: 'Internship', om: 'Shaakala Hojii', am: 'ልምምድ' }
+  };
+
+  if (map[key]) return map[key][langKey];
+  return opt;
+}
+
+
+
