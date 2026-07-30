@@ -1,6 +1,21 @@
 export function extractString(val: any, lang: string = 'en'): string {
   if (!val) return '';
-  if (typeof val === 'string') return val;
+  if (typeof val === 'string') {
+    const trimmed = val.trim();
+    if ((trimmed.startsWith('{') && trimmed.endsWith('}')) || (trimmed.startsWith('[') && trimmed.endsWith(']'))) {
+      try {
+        const parsed = JSON.parse(trimmed);
+        if (typeof parsed === 'object' && parsed !== null) {
+          if (parsed[lang]) return String(parsed[lang]);
+          if (parsed.en) return String(parsed.en);
+          if (parsed.om) return String(parsed.om);
+          if (parsed.am) return String(parsed.am);
+          return Object.values(parsed).filter(v => typeof v === 'string').join(' ');
+        }
+      } catch (_) {}
+    }
+    return val;
+  }
   if (typeof val === 'object') {
     if (val[lang]) return String(val[lang]);
     if (val.en) return String(val.en);

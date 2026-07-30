@@ -1,7 +1,17 @@
 import React, { useState, useMemo } from 'react';
 import { Property, PropertyOffer } from '../types';
 import { useApp } from '../lib/AppContext';
-import { getEffectiveMajorCategory } from '../lib/categoriesData';
+import { 
+  getEffectiveMajorCategory,
+  getTranslatedCategoryName,
+  getTranslatedSubcategoryName,
+  getTranslatedFieldLabel,
+  getTranslatedOption,
+  getTranslatedCondition,
+  getTranslatedLocation,
+  getTranslatedPropertyType,
+  extractString
+} from '../lib/categoriesData';
 import { 
   ArrowLeft, 
   Heart, 
@@ -396,20 +406,20 @@ export default function PropertyDetails({
             <div className="flex flex-wrap items-center justify-between gap-3">
               <span className="text-[10px] font-bold uppercase bg-amber-500/15 text-amber-500 px-3.5 py-1 rounded-full inline-block border border-amber-500/10">
                 {property.majorCategory === 'Properties' ? (
-                  t(`cat_${(property.propertyType || '').toLowerCase()}`) || property.propertyType || ''
+                  getTranslatedPropertyType(property.propertyType, currentLanguage) || t(`cat_${(property.propertyType || '').toLowerCase()}`) || property.propertyType || ''
                 ) : (
-                  t(`cat_${(property.majorCategory || '').toLowerCase().replace(/\s+/g, '')}`) || property.majorCategory || ''
+                  getTranslatedCategoryName(property.majorCategory, currentLanguage) || t(`cat_${(property.majorCategory || '').toLowerCase().replace(/\s+/g, '')}`) || property.majorCategory || ''
                 )}
               </span>
             </div>
 
             <h1 className="text-2xl sm:text-3xl md:text-4xl font-serif font-bold text-white tracking-wide leading-tight">
-              {property.title}
+              {extractString(property.title, currentLanguage)}
             </h1>
 
             <p className="text-sm text-[#F5F5F4]/60 flex items-center gap-1.5 pt-1">
               <MapPin className="w-4 h-4 text-amber-500 shrink-0" />
-              <span>{property.location}</span>
+              <span>{getTranslatedLocation(property.location, currentLanguage)}</span>
             </p>
           </div>
 
@@ -417,7 +427,7 @@ export default function PropertyDetails({
           <div className="bg-gradient-to-r from-[#0d0d12] via-[#12121a] to-[#0d0d12] rounded-3xl p-6 md:p-8 border border-amber-500/20 shadow-xl flex flex-wrap items-center justify-between gap-4">
             <div>
               <span className="text-xs font-bold text-amber-500 uppercase tracking-widest block font-mono">
-                {t('price')}
+                {getTranslatedFieldLabel('Price', currentLanguage) || t('price')}
               </span>
               <p className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight mt-1 font-mono">
                 {property.price.toLocaleString()}{' '}
@@ -428,7 +438,7 @@ export default function PropertyDetails({
             <div className="flex items-center gap-2">
               <span className="px-3.5 py-1.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-xs font-bold uppercase tracking-wider flex items-center gap-1.5">
                 <Handshake className="w-4 h-4" />
-                <span>Negotiable</span>
+                <span>{getTranslatedOption('Negotiable', currentLanguage) || t('negotiable')}</span>
               </span>
               {property.area > 0 && (
                 <span className="px-3 py-1.5 rounded-full bg-white/5 text-white/60 border border-white/5 text-xs font-mono">
@@ -444,12 +454,12 @@ export default function PropertyDetails({
               <h3 className="text-lg font-serif font-bold text-white mb-5 flex items-center gap-2.5">
                 <Sparkles className="w-5 h-5 text-amber-500" />
                 <span>
-                  {currentCategory === 'Products' ? 'Product Specifications' :
-                   currentCategory === 'Vehicles' ? 'Vehicle Specifications' :
-                   currentCategory === 'Jobs' ? 'Job Details' :
-                   currentCategory === 'Services' ? 'Service Information' :
-                   currentCategory === 'Community' ? 'Post Information' :
-                   'Property Information & Specifications'}
+                  {currentCategory === 'Products' ? (t('product_specifications') || getTranslatedFieldLabel('Product Specifications', currentLanguage)) :
+                   currentCategory === 'Vehicles' ? (t('vehicle_specifications') || getTranslatedFieldLabel('Vehicle Specifications', currentLanguage)) :
+                   currentCategory === 'Jobs' ? (t('job_details') || getTranslatedFieldLabel('Job Details', currentLanguage)) :
+                   currentCategory === 'Services' ? (t('service_information') || getTranslatedFieldLabel('Service Information', currentLanguage)) :
+                   currentCategory === 'Community' ? (t('post_information') || getTranslatedFieldLabel('Post Information', currentLanguage)) :
+                   (t('property_specifications') || getTranslatedFieldLabel('Property Information & Specifications', currentLanguage))}
                 </span>
               </h3>
 
@@ -461,7 +471,7 @@ export default function PropertyDetails({
                       <BedDouble className="w-5 h-5 text-amber-500/80 mx-auto mb-2" />
                       <span className="text-base font-bold text-[#F5F5F4] block">{property.bedrooms}</span>
                       <span className="text-[10px] font-bold text-white/40 uppercase tracking-wider">
-                        {t('bedrooms')}
+                        {getTranslatedFieldLabel('Bedrooms', currentLanguage) || t('bedrooms')}
                       </span>
                     </div>
                   )}
@@ -470,7 +480,7 @@ export default function PropertyDetails({
                       <Bath className="w-5 h-5 text-amber-500/80 mx-auto mb-2" />
                       <span className="text-base font-bold text-[#F5F5F4] block">{property.bathrooms}</span>
                       <span className="text-[10px] font-bold text-white/40 uppercase tracking-wider">
-                        {t('bathrooms')}
+                        {getTranslatedFieldLabel('Bathrooms', currentLanguage) || t('bathrooms')}
                       </span>
                     </div>
                   )}
@@ -479,7 +489,7 @@ export default function PropertyDetails({
                       <Maximize className="w-5 h-5 text-amber-500/80 mx-auto mb-2" />
                       <span className="text-base font-bold text-[#F5F5F4] block">{property.area} m²</span>
                       <span className="text-[10px] font-bold text-white/40 uppercase tracking-wider">
-                        {t('total_area')}
+                        {getTranslatedFieldLabel('Area (m²)', currentLanguage) || t('total_area')}
                       </span>
                     </div>
                   )}
@@ -488,12 +498,39 @@ export default function PropertyDetails({
 
               {/* Specification Grid */}
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-                {parsedSpecs.map((spec, idx) => (
-                  <div key={idx} className="bg-[#12121a] p-3.5 rounded-2xl border border-white/5 flex flex-col justify-between">
-                    <span className="text-[10px] font-bold text-amber-500/80 uppercase tracking-wider block font-mono">{spec.label}</span>
-                    <span className="text-xs font-bold text-white mt-1.5 break-words">{spec.value}</span>
-                  </div>
-                ))}
+                {parsedSpecs.map((spec, idx) => {
+                  const translatedLabel = getTranslatedFieldLabel(spec.label, currentLanguage) || t(spec.label) || spec.label;
+
+                  let translatedValue = spec.value;
+                  const normKey = spec.label.toLowerCase().trim();
+
+                  if (normKey === 'subcategory') {
+                    translatedValue = getTranslatedSubcategoryName(spec.value, currentLanguage);
+                  } else if (normKey === 'condition') {
+                    translatedValue = getTranslatedCondition(spec.value, currentLanguage);
+                  } else if (normKey === 'negotiable') {
+                    translatedValue = getTranslatedOption(spec.value, currentLanguage);
+                  } else {
+                    const optVal = getTranslatedOption(spec.value, currentLanguage);
+                    if (optVal && optVal !== spec.value) {
+                      translatedValue = optVal;
+                    } else {
+                      const catVal = getTranslatedCategoryName(spec.value, currentLanguage);
+                      if (catVal && catVal !== spec.value) {
+                        translatedValue = catVal;
+                      } else {
+                        translatedValue = extractString(t(spec.value) || spec.value, currentLanguage);
+                      }
+                    }
+                  }
+
+                  return (
+                    <div key={idx} className="bg-[#12121a] p-3.5 rounded-2xl border border-white/5 flex flex-col justify-between">
+                      <span className="text-[10px] font-bold text-amber-500/80 uppercase tracking-wider block font-mono">{translatedLabel}</span>
+                      <span className="text-xs font-bold text-white mt-1.5 break-words">{translatedValue}</span>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           ) : null}
@@ -501,15 +538,15 @@ export default function PropertyDetails({
           {/* ORDER 5: Description */}
           <div className="bg-[#0d0d12]/90 rounded-3xl p-6 md:p-8 border border-white/5 shadow-lg text-left text-[#F5F5F4]">
             <h3 className="text-lg font-serif font-bold text-white mb-3.5">
-              {currentCategory === 'Products' ? 'About this product' :
-               currentCategory === 'Vehicles' ? 'About this vehicle' :
-               currentCategory === 'Jobs' ? 'About this job' :
-               currentCategory === 'Services' ? 'About this service' :
-               currentCategory === 'Local Businesses' ? 'About this business' :
-               currentCategory === 'Community' ? 'About this post' :
+              {currentCategory === 'Products' ? (t('about_product') || 'About this product') :
+               currentCategory === 'Vehicles' ? (t('about_vehicle') || 'About this vehicle') :
+               currentCategory === 'Jobs' ? (t('about_job') || 'About this job') :
+               currentCategory === 'Services' ? (t('about_service') || 'About this service') :
+               currentCategory === 'Local Businesses' ? (t('about_business') || 'About this business') :
+               currentCategory === 'Community' ? (t('about_post') || 'About this post') :
                (t('about_property') || 'About this property')}
             </h3>
-            <p className="text-sm text-[#F5F5F4]/70 leading-relaxed whitespace-pre-line font-light">{property.description}</p>
+            <p className="text-sm text-[#F5F5F4]/70 leading-relaxed whitespace-pre-line font-light">{extractString(property.description, currentLanguage)}</p>
           </div>
 
           {/* ORDER 6: Property Features */}
@@ -522,7 +559,7 @@ export default function PropertyDetails({
                 {generalFeatures.map((amenity, idx) => (
                   <div key={idx} className="flex items-center gap-2.5 text-white/80 text-xs font-semibold bg-[#12121a] px-3.5 py-2.5 rounded-xl border border-white/5">
                     <CheckCircle2 className="w-4 h-4 text-amber-500 shrink-0" />
-                    <span className="font-light">{amenity}</span>
+                    <span className="font-light">{getTranslatedOption(amenity, currentLanguage) || t(amenity) || amenity}</span>
                   </div>
                 ))}
               </div>
@@ -544,11 +581,11 @@ export default function PropertyDetails({
                   <MapPin className="w-5 h-5 text-black" />
                 </div>
                 <span className="bg-black text-amber-500 font-bold text-[10px] uppercase tracking-wider px-3 py-1.5 rounded-full border border-white/10 shadow mt-2.5 whitespace-nowrap">
-                  {property.location}
+                  {getTranslatedLocation(property.location, currentLanguage)}
                 </span>
               </div>
             </div>
-          </div>
+          </div>/div>
 
         </div>
 
