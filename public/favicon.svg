@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <rect width="512" height="512" rx="128" fill="#0d0d12"/>
+  <rect x="16" y="16" width="480" height="480" rx="112" fill="none" stroke="#d97706" stroke-width="8" stroke-opacity="0.3"/>
+  <!-- Gold Shield / Property Symbol -->
+  <path d="M256 64 L384 128 V240 C384 340 256 432 256 432 C256 432 128 340 128 240 V128 Z" fill="none" stroke="#f59e0b" stroke-width="24" stroke-linejoin="round"/>
+  <!-- Building Outline inside Shield -->
+  <path d="M200 340 V200 L256 160 L312 200 V340 Z" fill="#f59e0b" fill-opacity="0.15" stroke="#fbbf24" stroke-width="16" stroke-linejoin="round"/>
+  <!-- Windows -->
+  <rect x="224" y="220" width="24" height="28" rx="4" fill="#fbbf24"/>
+  <rect x="264" y="220" width="24" height="28" rx="4" fill="#fbbf24"/>
+  <rect x="224" y="264" width="24" height="28" rx="4" fill="#fbbf24"/>
+  <rect x="264" y="264" width="24" height="28" rx="4" fill="#fbbf24"/>
+  <!-- Door -->
+  <rect x="240" y="304" width="32" height="36" rx="4" fill="#f59e0b"/>
+</svg>

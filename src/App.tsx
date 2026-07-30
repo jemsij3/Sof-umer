@@ -33,6 +33,18 @@ function MainAppLayout() {
   
   React.useEffect(() => {
     if (selectedProperty) {
+      document.title = `${selectedProperty.title} | SOF-UMER`;
+    } else if (view === 'admin') {
+      document.title = `Admin Management Dashboard | SOF-UMER`;
+    } else if (view === 'profile' || view === 'settings' || view === 'messages' || view === 'notifications' || view === 'payments') {
+      document.title = `User Dashboard | SOF-UMER`;
+    } else {
+      document.title = `SOF-UMER | Real Estate & Property Marketplace`;
+    }
+  }, [view, selectedProperty]);
+
+  React.useEffect(() => {
+    if (selectedProperty) {
       const stored = localStorage.getItem('sof_umer_recently_viewed_properties');
       let list: string[] = [];
       if (stored) {

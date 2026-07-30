@@ -1,0 +1,17 @@
+{
+  "name": "SOF-UMER Real Estate Marketplace",
+  "short_name": "SOF-UMER",
+  "description": "Professional Property Listing Platform - discover, search, and manage properties in English, Afaan Oromoo, and Amharic.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0d0d12",
+  "theme_color": "#d97706",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
