@@ -78,7 +78,7 @@ export const staticTranslations: TranslationKey[] = [
   { key: "make_offer", en: "Make Offer", om: "Gatii Dhiyeessi", am: "ዋጋ ያቅርቡ", category: "ListingDetails" },
   { key: "show_contact", en: "Show Contact", om: "Quunnamtii Mul'isi", am: "መገናኛ አሳይ", category: "ListingDetails" },
   { key: "safety_tips_buyers", en: "Safety Tips for Buyers", om: "Gorsa Nageenya Bitattootaaf", am: "ለገዢዎች የደህንነት ምክሮች", category: "ListingDetails" },
-  { key: "similar_properties", en: "Similar Properties & Listings", om: "Qabeenya & Beeksisa Wal-fakkaatan", am: "ተመሳሳይ ንብረቶች እና ማስታወቂያዎች", category: "ListingDetails" },ntity", en: "Quantity", om: "Baay'ina", am: "ብዛት", category: "Fields" },
+  { key: "similar_properties", en: "Similar Properties & Listings", om: "Qabeenya & Beeksisa Wal-fakkaatan", am: "ተመሳሳይ ንብረቶች እና ማስታወቂያዎች", category: "ListingDetails" },
   { key: "Price", en: "Price", om: "Gatii", am: "ዋጋ", category: "Fields" },
   { key: "Location", en: "Location", om: "Bakka / Iddoo", am: "አድራሻ / ቦታ", category: "Fields" },
   { key: "Description", en: "Description", om: "Ibsa Guutuu", am: "ማብራሪያ", category: "Fields" },

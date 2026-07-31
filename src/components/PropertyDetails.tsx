@@ -585,7 +585,7 @@ export default function PropertyDetails({
                 </span>
               </div>
             </div>
-          </div>/div>
+          </div>
 
         </div>
 
