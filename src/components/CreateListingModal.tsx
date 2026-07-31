@@ -1661,11 +1661,11 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
         {/* Stepper Navigation Bar */}
         <div className="bg-zinc-900/80 border-b border-white/5 px-6 py-3 flex items-center justify-between overflow-x-auto text-[11px] shrink-0 scrollbar-none">
           {[
-            { step: 1, label: '1. Category' },
-            { step: 2, label: '2. Subcategory' },
-            { step: 3, label: '3. Details & Photos' },
-            { step: 4, label: '4. Preview Ad' },
-            { step: 5, label: '5. Boost & Pay' }
+            { step: 1, label: `1. ${t('wizard.step_category')}` },
+            { step: 2, label: `2. ${t('wizard.step_subcategory')}` },
+            { step: 3, label: `3. ${t('wizard.step_details_photos')}` },
+            { step: 4, label: `4. ${t('wizard.step_preview_ad')}` },
+            { step: 5, label: `5. ${t('wizard.step_boost_pay')}` }
           ].map((s) => {
             const isActive = currentStep === s.step;
             const isCompleted = currentStep > s.step;

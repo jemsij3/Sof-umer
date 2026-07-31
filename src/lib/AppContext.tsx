@@ -371,12 +371,17 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     if (!key) return '';
     const cleanKey = key.trim();
     const lowerKey = cleanKey.toLowerCase();
+    const subKey = cleanKey.includes('.') ? cleanKey.split('.').pop() || cleanKey : cleanKey;
+    const lowerSubKey = subKey.toLowerCase();
 
     // 1. Try to find in backend translations state (Admin Dictionary)
-    const translation = translations.find(
+    let translation = translations.find(
       item => item.key === cleanKey ||
               item.key.toLowerCase() === lowerKey ||
-              (item.en && item.en.toLowerCase() === lowerKey)
+              item.key === subKey ||
+              item.key.toLowerCase() === lowerSubKey ||
+              (item.en && item.en.toLowerCase() === lowerKey) ||
+              (item.en && item.en.toLowerCase() === lowerSubKey)
     );
     if (translation) {
       const val = translation[currentLanguage as keyof TranslationKey] as string;
@@ -384,10 +389,13 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     }
 
     // 2. Try to find in client-side static translations list
-    const staticTrans = staticTranslations.find(
+    let staticTrans = staticTranslations.find(
       item => item.key === cleanKey ||
               item.key.toLowerCase() === lowerKey ||
-              (item.en && item.en.toLowerCase() === lowerKey)
+              item.key === subKey ||
+              item.key.toLowerCase() === lowerSubKey ||
+              (item.en && item.en.toLowerCase() === lowerKey) ||
+              (item.en && item.en.toLowerCase() === lowerSubKey)
     );
     if (staticTrans) {
       const val = staticTrans[currentLanguage as keyof typeof staticTrans] as string;
@@ -395,20 +403,24 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     }
 
     // 3. Category Name fallback
-    const catName = getTranslatedCategoryName(cleanKey, currentLanguage, translations);
-    if (catName && catName !== cleanKey) return catName;
+    const catName = getTranslatedCategoryName(subKey, currentLanguage, translations);
+    if (catName && catName !== subKey) return catName;
+    const catNameFull = getTranslatedCategoryName(cleanKey, currentLanguage, translations);
+    if (catNameFull && catNameFull !== cleanKey) return catNameFull;
 
     // 4. Subcategory Name fallback
-    const subName = getTranslatedSubcategoryName(cleanKey, currentLanguage, translations);
-    if (subName && subName !== cleanKey) return subName;
+    const subName = getTranslatedSubcategoryName(subKey, currentLanguage, translations);
+    if (subName && subName !== subKey) return subName;
+    const subNameFull = getTranslatedSubcategoryName(cleanKey, currentLanguage, translations);
+    if (subNameFull && subNameFull !== cleanKey) return subNameFull;
 
     // 5. Field Label fallback
-    const fieldLbl = getTranslatedFieldLabel(cleanKey, currentLanguage);
-    if (fieldLbl && fieldLbl !== cleanKey) return fieldLbl;
+    const fieldLbl = getTranslatedFieldLabel(subKey, currentLanguage);
+    if (fieldLbl && fieldLbl !== subKey) return fieldLbl;
 
     // 6. Option Value fallback
-    const optVal = getTranslatedOption(cleanKey, currentLanguage);
-    if (optVal && optVal !== cleanKey) return optVal;
+    const optVal = getTranslatedOption(subKey, currentLanguage);
+    if (optVal && optVal !== subKey) return optVal;
 
     return cleanKey;
   };
