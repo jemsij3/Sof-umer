@@ -2185,7 +2185,22 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
                                   </span>
                                 )}
                               </div>
-                              <p className="text-xs text-white/50 font-light mt-1 flex items-center gap-1"><MapPin className="w-3.5 h-3.5" /> {extractString(p.location)} • <span className="text-white/70">{extractString(p.ownerName) || 'Unknown Owner'}</span> ({p.contactEmail || 'No Email'})</p>
+                              <p className="text-xs text-white/50 font-light mt-1 flex flex-wrap items-center gap-1.5">
+                                <span className="flex items-center gap-1"><MapPin className="w-3.5 h-3.5 text-amber-500" /> {extractString(p.location)}</span>
+                                <span>•</span>
+                                <span className="text-white/90 font-semibold">Owner: {extractString(p.ownerName) || 'Unknown Owner'}</span>
+                                <span className="text-white/40">({p.contactEmail || 'No Email'}, {p.contactPhone || 'No Phone'})</span>
+                                {p.createdBy && (
+                                  <span className="text-[10px] bg-white/5 text-amber-400/80 px-2 py-0.5 rounded border border-white/10 font-mono">
+                                    Created By: {p.createdByName || p.createdByEmail || p.createdBy}
+                                  </span>
+                                )}
+                                {p.postedOnBehalf && (
+                                  <span className="text-[10px] bg-amber-500/10 text-amber-400 px-2 py-0.5 rounded border border-amber-500/30 font-mono font-bold">
+                                    Posted on Behalf
+                                  </span>
+                                )}
+                              </p>
                               <p className="text-xs font-mono font-extrabold text-amber-500 mt-1.5">{p.price.toLocaleString()} {p.currency}</p>
                               {((p as any).lastEditReason === 'Edited after approval' || ((p as any).editHistory && (p as any).editHistory.length > 0)) && (
                                 <div className="mt-2 text-[10px] bg-black/50 p-2.5 rounded-xl border border-amber-500/20 font-mono space-y-0.5 text-amber-400/90">

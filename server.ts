@@ -1234,7 +1234,18 @@ const applyDataSanityAndMigrations = () => {
         (p as any).isArchived = false;
       }
 
-      let matchedUser = localDb.users.find(u => u.id === p.ownerId);
+      if (!p.createdBy) {
+        p.createdBy = (p as any).createdBy || (p.ownerId && p.ownerId.startsWith('usr-admin') ? p.ownerId : 'usr-jemal');
+      }
+      if (!p.createdByName) {
+        p.createdByName = (p as any).createdByName || 'Admin Jemal';
+      }
+      if (!p.createdByEmail) {
+        p.createdByEmail = (p as any).createdByEmail || 'jemaljima@gmail.com';
+      }
+
+      // Determine owner matching
+      let matchedUser = localDb.users.find(u => u.id === p.ownerId && u.role !== 'admin');
       if (!matchedUser && (p as any).ownerEmail) {
         const pEmail = ((p as any).ownerEmail || '').trim().toLowerCase();
         if (pEmail) {
@@ -1260,12 +1271,21 @@ const applyDataSanityAndMigrations = () => {
         (p as any).ownerEmail = matchedUser.email;
         (p as any).ownerPhone = matchedUser.phone || p.contactPhone || '';
         if (!p.ownerName) p.ownerName = matchedUser.fullName || 'Property Owner';
+        if (!(p as any).ownerAvatar) (p as any).ownerAvatar = matchedUser.avatar || '';
+        if (!(p as any).ownerBusinessName) (p as any).ownerBusinessName = (matchedUser as any).businessName || '';
       } else {
-        if (!p.ownerId) {
-          p.ownerId = 'usr-jemal';
-          (p as any).ownerEmail = 'jemaljima@gmail.com';
-          p.ownerName = 'Jemal jimma';
+        // Unregistered owner or admin posted on behalf
+        if (!p.ownerId || p.ownerId === 'usr-jemal' || p.ownerId === 'usr-admin') {
+          if (p.contactEmail && p.contactEmail.toLowerCase() !== 'jemaljima@gmail.com') {
+            p.ownerId = 'usr-owner-' + p.id;
+            (p as any).postedOnBehalf = true;
+          } else {
+            p.ownerId = p.createdBy || 'usr-jemal';
+          }
         }
+        if (!(p as any).ownerEmail) (p as any).ownerEmail = p.contactEmail || '';
+        if (!(p as any).ownerPhone) (p as any).ownerPhone = p.contactPhone || '';
+        if (!p.ownerName) p.ownerName = 'Property Owner';
       }
     });
   }
@@ -2948,18 +2968,87 @@ async function startServer() {
     const computedExpiresAt = planDays > 0 ? new Date(Date.now() + planDays * 24 * 60 * 60 * 1000).toISOString() : (propertyData.promotionExpiresAt || undefined);
 
     const isAdmin = authUser?.role === 'admin';
-    const ownerId = authUser ? authUser.id : (propertyData.ownerId || 'usr-jemal');
-    const ownerEmail = authUser ? authUser.email : (propertyData.ownerEmail || propertyData.contactEmail || 'jemaljima@gmail.com');
-    const ownerPhone = authUser ? (authUser.phone || propertyData.contactPhone || '') : (propertyData.contactPhone || '');
-    const ownerName = authUser ? (authUser.fullName || propertyData.ownerName || 'Property Owner') : (propertyData.ownerName || 'Property Owner');
+    const createdBy = authUser ? authUser.id : 'usr-guest';
+    const createdByName = authUser ? (authUser.fullName || authUser.email) : 'Guest';
+    const createdByEmail = authUser ? authUser.email : '';
+
+    let finalOwnerId = '';
+    let finalOwnerName = propertyData.ownerName || '';
+    let finalOwnerEmail = propertyData.contactEmail || propertyData.ownerEmail || '';
+    let finalOwnerPhone = propertyData.contactPhone || propertyData.ownerPhone || '';
+    let finalOwnerBusinessName = propertyData.ownerBusinessName || '';
+    let finalOwnerAvatar = propertyData.ownerAvatar || '';
+    let finalOwnerType = propertyData.ownerType || 'Individual';
+    let postedOnBehalf = false;
+
+    // Look up if entered owner email or phone matches a registered user account
+    let matchedOwnerUser: ServerUser | undefined = undefined;
+    if (finalOwnerEmail) {
+      matchedOwnerUser = localDb.users.find(u => u.email && u.email.trim().toLowerCase() === finalOwnerEmail.trim().toLowerCase());
+    }
+    if (!matchedOwnerUser && finalOwnerPhone) {
+      const normPhone = normalizePhone(finalOwnerPhone);
+      if (normPhone) {
+        matchedOwnerUser = localDb.users.find(u => u.phone && normalizePhone(u.phone) === normPhone);
+      }
+    }
+
+    if (isAdmin) {
+      const isPostingForSelf = !propertyData.postedOnBehalf && (
+        (matchedOwnerUser && matchedOwnerUser.id === authUser.id) ||
+        (!matchedOwnerUser && (!finalOwnerName || finalOwnerName === authUser.fullName) && (!finalOwnerEmail || finalOwnerEmail.toLowerCase() === authUser.email.toLowerCase()))
+      );
+
+      if (isPostingForSelf) {
+        finalOwnerId = authUser.id;
+        finalOwnerName = authUser.fullName || 'Property Owner';
+        finalOwnerEmail = authUser.email;
+        finalOwnerPhone = authUser.phone || finalOwnerPhone || '';
+        finalOwnerAvatar = authUser.avatar || finalOwnerAvatar || '';
+        postedOnBehalf = false;
+      } else {
+        postedOnBehalf = true;
+        if (matchedOwnerUser) {
+          finalOwnerId = matchedOwnerUser.id;
+          finalOwnerName = finalOwnerName || matchedOwnerUser.fullName || 'Property Owner';
+          finalOwnerEmail = finalOwnerEmail || matchedOwnerUser.email;
+          finalOwnerPhone = finalOwnerPhone || matchedOwnerUser.phone || '';
+          finalOwnerAvatar = finalOwnerAvatar || matchedOwnerUser.avatar || '';
+          finalOwnerBusinessName = finalOwnerBusinessName || (matchedOwnerUser as any).businessName || '';
+          finalOwnerType = finalOwnerType || (matchedOwnerUser as any).accountType || 'Individual';
+        } else {
+          finalOwnerId = (propertyData.ownerId && propertyData.ownerId !== authUser.id) ? propertyData.ownerId : ('usr-owner-' + Date.now());
+          finalOwnerName = finalOwnerName || 'Property Owner';
+        }
+      }
+    } else {
+      if (authUser) {
+        finalOwnerId = authUser.id;
+        finalOwnerName = authUser.fullName || finalOwnerName || 'Property Owner';
+        finalOwnerEmail = authUser.email || finalOwnerEmail;
+        finalOwnerPhone = authUser.phone || finalOwnerPhone;
+        finalOwnerAvatar = authUser.avatar || finalOwnerAvatar;
+      } else {
+        finalOwnerId = matchedOwnerUser ? matchedOwnerUser.id : ('usr-guest-' + Date.now());
+      }
+    }
 
     const newProperty: Property = {
       id: 'prop-' + Date.now(),
       ...propertyData,
-      ownerId,
-      ownerName,
-      contactEmail: propertyData.contactEmail || ownerEmail,
-      contactPhone: propertyData.contactPhone || ownerPhone,
+      createdBy,
+      createdByName,
+      createdByEmail,
+      ownerId: finalOwnerId,
+      ownerName: finalOwnerName,
+      contactEmail: finalOwnerEmail,
+      contactPhone: finalOwnerPhone,
+      ownerEmail: finalOwnerEmail,
+      ownerPhone: finalOwnerPhone,
+      ownerBusinessName: finalOwnerBusinessName,
+      ownerAvatar: finalOwnerAvatar,
+      ownerType: finalOwnerType,
+      postedOnBehalf,
       amenities: cleanAmenities,
       brand: propertyData.brand || '',
       condition: propertyData.condition || 'Used - Like New',

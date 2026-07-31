@@ -100,11 +100,14 @@ export default function PropertyDetails({
 
   // Compute seller active listings
   const sellerListings = useMemo(() => {
-    return properties.filter(p => 
-      p.ownerId === property.ownerId || 
-      (p.contactEmail && property.contactEmail && p.contactEmail.toLowerCase() === property.contactEmail.toLowerCase()) ||
-      (p.ownerName && property.ownerName && p.ownerName.toLowerCase() === property.ownerName.toLowerCase())
-    );
+    return properties.filter(p => {
+      if (property.ownerId && property.ownerId !== 'usr-jemal' && !property.ownerId.startsWith('usr-admin')) {
+        if (p.ownerId === property.ownerId) return true;
+      }
+      if (p.contactEmail && property.contactEmail && p.contactEmail.toLowerCase() === property.contactEmail.toLowerCase()) return true;
+      if (p.ownerName && property.ownerName && p.ownerName.toLowerCase() === property.ownerName.toLowerCase()) return true;
+      return false;
+    });
   }, [properties, property]);
 
   // Compute seller registration / membership details
@@ -605,17 +608,31 @@ export default function PropertyDetails({
 
             {/* Seller Avatar */}
             <div className="relative inline-block mb-3">
-              <div className="w-20 h-20 rounded-full bg-gradient-to-tr from-amber-400 to-amber-600 text-black font-extrabold text-2xl flex items-center justify-center mx-auto shadow-xl border-2 border-amber-500/20">
-                {property.ownerName.charAt(0).toUpperCase()}
-              </div>
+              {(property as any).ownerAvatar ? (
+                <img
+                  src={(property as any).ownerAvatar}
+                  alt={property.ownerName}
+                  className="w-20 h-20 rounded-full object-cover mx-auto shadow-xl border-2 border-amber-500/20"
+                />
+              ) : (
+                <div className="w-20 h-20 rounded-full bg-gradient-to-tr from-amber-400 to-amber-600 text-black font-extrabold text-2xl flex items-center justify-center mx-auto shadow-xl border-2 border-amber-500/20">
+                  {property.ownerName ? property.ownerName.charAt(0).toUpperCase() : 'S'}
+                </div>
+              )}
               <span className="absolute bottom-0 right-0 w-5 h-5 bg-emerald-500 border-2 border-[#0d0d12] rounded-full" title={t('verified_seller')} />
             </div>
 
-            {/* Seller Name */}
+            {/* Seller Name & Business */}
             <h4 className="font-extrabold text-white text-xl flex items-center justify-center gap-2">
               <span>{property.ownerName}</span>
               <CheckCircle2 className="w-5 h-5 text-amber-500 shrink-0" title={t('verified_seller')} />
             </h4>
+            {(property as any).ownerBusinessName && (
+              <p className="text-xs text-amber-400/90 font-semibold mt-1 flex items-center justify-center gap-1 font-mono">
+                <Building className="w-3.5 h-3.5" />
+                <span>{(property as any).ownerBusinessName}</span>
+              </p>
+            )}
 
             {/* Verified Badge */}
             <div className="mt-1.5">

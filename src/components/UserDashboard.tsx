@@ -348,6 +348,15 @@ export default function UserDashboard({
   const myListings = properties.filter(p => {
     if (!currentUser) return false;
     if ((p as any).isArchived) return false;
+    
+    // If admin posted on behalf of someone else, exclude from admin's personal dashboard
+    if ((p as any).postedOnBehalf && currentUser.role === 'admin' && p.ownerId !== currentUser.id) {
+      const emailLower = (currentUser.email || '').toLowerCase();
+      if (!p.contactEmail || p.contactEmail.toLowerCase() !== emailLower) {
+        return false;
+      }
+    }
+
     if (p.ownerId === currentUser.id) return true;
     if (currentUser.email) {
       const emailLower = (currentUser.email || '').toLowerCase();

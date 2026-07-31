@@ -94,6 +94,17 @@ export interface Property {
   verificationDocument?: string;
   subCategoryId?: string;
 
+  // Additional fields for Owner attribution & Admin Audit
+  createdBy?: string;
+  createdByName?: string;
+  createdByEmail?: string;
+  ownerEmail?: string;
+  ownerPhone?: string;
+  ownerBusinessName?: string;
+  ownerAvatar?: string;
+  ownerType?: 'Individual' | 'Business' | string;
+  postedOnBehalf?: boolean;
+
   // Post Ad & Promotion extensions
   brand?: string;
   condition?: 'New' | 'Used - Like New' | 'Used - Good' | 'Refurbished' | string;

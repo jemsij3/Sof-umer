@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { useApp } from '../lib/AppContext';
-import { ShieldCheck, MessageSquare, Handshake, Phone, Briefcase } from 'lucide-react';
+import { ShieldCheck, MessageSquare, Handshake, Phone, Briefcase, Building } from 'lucide-react';
 
 interface SellerCardProps {
   ownerName: string;
+  ownerAvatar?: string;
+  ownerBusinessName?: string;
   contactPhone?: string;
   contactEmail?: string;
   activeAdsCount?: number;
@@ -16,6 +18,8 @@ interface SellerCardProps {
 
 export const SellerCard: React.FC<SellerCardProps> = ({
   ownerName,
+  ownerAvatar,
+  ownerBusinessName,
   contactPhone,
   contactEmail,
   activeAdsCount = 1,
@@ -37,14 +41,29 @@ export const SellerCard: React.FC<SellerCardProps> = ({
       </span>
 
       <div className="relative inline-block mb-3">
-        <div className="w-20 h-20 rounded-full bg-gradient-to-tr from-amber-400 to-amber-600 text-black font-extrabold text-2xl flex items-center justify-center mx-auto shadow-xl border-2 border-amber-500/20">
-          {ownerName ? ownerName.charAt(0).toUpperCase() : 'S'}
-        </div>
+        {ownerAvatar ? (
+          <img
+            src={ownerAvatar}
+            alt={ownerName || 'Seller'}
+            className="w-20 h-20 rounded-full object-cover mx-auto shadow-xl border-2 border-amber-500/20"
+          />
+        ) : (
+          <div className="w-20 h-20 rounded-full bg-gradient-to-tr from-amber-400 to-amber-600 text-black font-extrabold text-2xl flex items-center justify-center mx-auto shadow-xl border-2 border-amber-500/20">
+            {ownerName ? ownerName.charAt(0).toUpperCase() : 'S'}
+          </div>
+        )}
       </div>
 
       <h4 className="font-extrabold text-white text-xl flex items-center justify-center gap-2">
         <span>{ownerName || 'Seller'}</span>
       </h4>
+
+      {ownerBusinessName && (
+        <p className="text-xs text-amber-400/90 font-semibold mt-1 flex items-center justify-center gap-1 font-mono">
+          <Building className="w-3.5 h-3.5" />
+          <span>{ownerBusinessName}</span>
+        </p>
+      )}
 
       <div className="mt-1.5">
         <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase bg-amber-500/10 text-amber-500 px-3 py-0.5 rounded-full border border-amber-500/20">

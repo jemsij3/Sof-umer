@@ -1568,10 +1568,13 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
         area: majorCategory === 'Properties' ? Number(fieldsState.area || 0) : 0,
         amenities: finalAmenities,
         images: imagesList.length > 0 ? imagesList : ['https://images.unsplash.com/photo-1613490493576-7fde63acd811?auto=format&fit=crop&w=1200&q=80'],
-        ownerId: currentUser.id,
+        ownerId: currentUser.role === 'admin' ? (fieldsState.ownerId || '') : currentUser.id,
         ownerName: currentUser.role === 'admin' ? (fieldsState.ownerName || 'Property Owner') : (fieldsState.ownerName || currentUser.fullName || 'Anonymous'),
         contactPhone: fieldsState.contactPhone || (currentUser.role === 'admin' ? '' : '+251911223344'),
         contactEmail: fieldsState.contactEmail || (currentUser.role === 'admin' ? '' : (currentUser.email || '')),
+        ownerBusinessName: fieldsState.ownerBusinessName || '',
+        ownerAvatar: fieldsState.ownerAvatar || '',
+        postedOnBehalf: currentUser.role === 'admin',
         boostPlan: selectedPlan,
         isTopAd: isTopAdAddon,
         isFeatured: isFeaturedAddon || selectedPlan === 'vip',
@@ -1832,7 +1835,7 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-1">
                       <div>
                         <label className="block text-[10px] font-bold text-white/80 uppercase mb-1">
-                          {d.ownerNameLabel}
+                          {d.ownerNameLabel} *
                         </label>
                         <input
                           type="text"
@@ -1845,7 +1848,7 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
                       </div>
                       <div>
                         <label className="block text-[10px] font-bold text-white/80 uppercase mb-1">
-                          {d.ownerPhoneLabel}
+                          {d.ownerPhoneLabel} *
                         </label>
                         <input
                           type="text"
@@ -1858,7 +1861,7 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
                       </div>
                       <div>
                         <label className="block text-[10px] font-bold text-white/80 uppercase mb-1">
-                          {d.ownerEmailLabel}
+                          {d.ownerEmailLabel} *
                         </label>
                         <input
                           type="email"
@@ -1866,6 +1869,30 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
                           value={fieldsState.contactEmail || ''}
                           placeholder="e.g. owner@sofumer.com"
                           onChange={e => handleFieldChange('contactEmail', e.target.value)}
+                          className="w-full p-2.5 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white focus:outline-none transition"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-bold text-white/80 uppercase mb-1">
+                          Owner Business / Company
+                        </label>
+                        <input
+                          type="text"
+                          value={fieldsState.ownerBusinessName || ''}
+                          placeholder="e.g. Bikila Real Estate"
+                          onChange={e => handleFieldChange('ownerBusinessName', e.target.value)}
+                          className="w-full p-2.5 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white focus:outline-none transition"
+                        />
+                      </div>
+                      <div className="md:col-span-2">
+                        <label className="block text-[10px] font-bold text-white/80 uppercase mb-1">
+                          Owner Photo / Logo URL
+                        </label>
+                        <input
+                          type="url"
+                          value={fieldsState.ownerAvatar || ''}
+                          placeholder="https://..."
+                          onChange={e => handleFieldChange('ownerAvatar', e.target.value)}
                           className="w-full p-2.5 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white focus:outline-none transition"
                         />
                       </div>
@@ -2096,14 +2123,20 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
 
                     {/* Seller Contact Info Preview */}
                     <div className="bg-black/40 p-3 rounded-xl border border-white/5 flex items-center justify-between text-xs">
-                      <div className="flex items-center gap-2">
-                        <UserIcon className="w-4 h-4 text-amber-500" />
+                      <div className="flex items-center gap-2.5">
+                        {fieldsState.ownerAvatar ? (
+                          <img src={fieldsState.ownerAvatar} alt={fieldsState.ownerName || 'Owner'} className="w-8 h-8 rounded-full object-cover border border-amber-500/30" />
+                        ) : (
+                          <div className="w-8 h-8 rounded-full bg-amber-500/20 text-amber-400 font-extrabold flex items-center justify-center text-xs border border-amber-500/30">
+                            {(fieldsState.ownerName || currentUser?.fullName || 'O').charAt(0).toUpperCase()}
+                          </div>
+                        )}
                         <div>
                           <span className="font-bold text-white block text-[11px]">
-                            {fieldsState.ownerName || (currentUser?.role === 'admin' ? d.propOwnerRole : currentUser?.fullName)}
+                            {fieldsState.ownerName || (currentUser?.role === 'admin' ? 'Property Owner' : currentUser?.fullName)}
                           </span>
-                          <span className="text-[10px] text-white/40">
-                            {currentUser?.role === 'admin' ? d.propOwnerRole : d.verifiedPublisher}
+                          <span className="text-[10px] text-amber-400/80 block font-mono">
+                            {fieldsState.ownerBusinessName || (currentUser?.role === 'admin' ? 'Public Listing Owner' : d.verifiedPublisher)}
                           </span>
                         </div>
                       </div>
