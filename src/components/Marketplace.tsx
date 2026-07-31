@@ -804,13 +804,13 @@ export default function Marketplace({
               <Wallet className="w-5 h-5" />
             </div>
             <div className="text-left">
-              <span className="text-[10px] uppercase font-bold tracking-widest text-white/50 block">Marketplace Wallet Balance</span>
+              <span className="text-[10px] uppercase font-bold tracking-widest text-white/50 block">{t('marketplace_wallet_balance') || 'Marketplace Wallet Balance'}</span>
               <div className="flex items-center gap-2.5">
                 <span className="text-xl font-black font-mono text-amber-400">
                   {(currentUser.walletBalance || 0).toLocaleString()} ETB
                 </span>
                 <span className="text-[9px] font-extrabold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20 uppercase tracking-wider">
-                  Active Credits
+                  {t('active_credits') || 'Active Credits'}
                 </span>
               </div>
             </div>
@@ -822,7 +822,7 @@ export default function Marketplace({
                 className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black font-extrabold uppercase tracking-wider text-xs rounded-xl shadow-lg shadow-amber-500/20 transition duration-300 hover:scale-[1.02] active:scale-95 cursor-pointer"
               >
                 <Plus className="w-4 h-4 stroke-[3]" />
-                <span>Top Up Wallet</span>
+                <span>{t('top_up_wallet') || 'Top Up Wallet'}</span>
               </button>
             )}
           </div>
@@ -867,7 +867,7 @@ export default function Marketplace({
             className="inline-flex items-center gap-2.5 px-6 py-3.5 bg-gradient-to-r from-amber-400 to-amber-600 hover:from-amber-350 hover:to-amber-550 text-black font-extrabold uppercase tracking-widest text-xs rounded-2xl transition duration-300 hover:scale-[1.02] active:scale-95 shadow-xl shadow-amber-500/10 hover:shadow-amber-500/25 cursor-pointer border border-amber-300/10"
           >
             <Folder className="w-4 h-4 fill-black" />
-            <span>ALL CATEGORIES</span>
+            <span>{t('all_categories') || 'ALL CATEGORIES'}</span>
             <ChevronDown className="w-3.5 h-3.5" />
           </button>
         </div>
@@ -896,7 +896,7 @@ export default function Marketplace({
               onClick={() => { setSelectedRedesignedCategory(null); setSelectedSubcategory(null); setSelectedMajorCategory('All'); }}
               className="hover:text-amber-400 transition flex items-center gap-1.5 cursor-pointer font-bold uppercase tracking-wider"
             >
-              <Home className="w-3.5 h-3.5" /> Home
+              <Home className="w-3.5 h-3.5" /> {t('home_tab') || 'Home'}
             </button>
             <ChevronRight className="w-3.5 h-3.5 opacity-60 text-amber-500" />
             <button 
@@ -926,13 +926,13 @@ export default function Marketplace({
                 {renderCategoryIcon(selectedRedesignedCategory.icon, "w-8 h-8 text-white")}
               </div>
               <div>
-                <span className="text-[9px] font-black tracking-widest text-amber-300 uppercase block mb-1">SOF UMER CATALOGS</span>
+                <span className="text-[9px] font-black tracking-widest text-amber-300 uppercase block mb-1">{t('so_umer_catalogs') || 'SOF UMER CATALOGS'}</span>
                 <h2 className="text-2xl sm:text-3xl font-serif font-extrabold text-white tracking-wide">
                   {currentLanguage === 'am' ? selectedRedesignedCategory.nameAm : currentLanguage === 'om' ? selectedRedesignedCategory.nameOm : selectedRedesignedCategory.name}
                 </h2>
                 <p className="text-white/70 text-xs mt-1 font-light tracking-wide flex items-center gap-1.5">
                   <span className="w-2 h-2 rounded-full bg-[#10b981] inline-block animate-pulse" />
-                  {subcategoryProperties.length} active listings found
+                  {subcategoryProperties.length} {currentLanguage === 'om' ? 'beeksisa soscho\'an argaman' : currentLanguage === 'am' ? 'ንቁ ማስታወቂያዎች ተገኝተዋል' : 'active listings found'}
                 </p>
               </div>
             </div>
@@ -951,12 +951,12 @@ export default function Marketplace({
                 {savedCatIds.includes(selectedRedesignedCategory.id) ? (
                   <>
                     <BookmarkCheck className="w-4 h-4" />
-                    <span>Saved</span>
+                    <span>{t('saved') || 'Saved'}</span>
                   </>
                 ) : (
                   <>
                     <Bookmark className="w-4 h-4" />
-                    <span>Save</span>
+                    <span>{t('save') || 'Save'}</span>
                   </>
                 )}
               </button>
@@ -971,7 +971,7 @@ export default function Marketplace({
                 title="Favorite Category"
               >
                 <Heart className={`w-4 h-4 ${favCatIds.includes(selectedRedesignedCategory.id) ? 'fill-white' : ''}`} />
-                <span>{favCatIds.includes(selectedRedesignedCategory.id) ? 'Favorited' : 'Favorite'}</span>
+                <span>{favCatIds.includes(selectedRedesignedCategory.id) ? (t('favorited') || 'Favorited') : (t('favorite') || 'Favorite')}</span>
               </button>
 
               <button
@@ -980,7 +980,7 @@ export default function Marketplace({
                 title="Share Category"
               >
                 <Share2 className="w-4 h-4" />
-                <span>Share</span>
+                <span>{t('share') || 'Share'}</span>
               </button>
 
               <button
@@ -988,7 +988,7 @@ export default function Marketplace({
                 className="p-3 rounded-2xl bg-white text-black hover:bg-zinc-200 transition-all duration-300 flex items-center gap-2 text-xs font-bold uppercase tracking-wider cursor-pointer shadow-lg ml-auto sm:ml-0"
               >
                 <X className="w-4 h-4" />
-                <span>Exit</span>
+                <span>{t('exit') || 'Exit'}</span>
               </button>
             </div>
           </div>

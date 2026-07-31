@@ -131,7 +131,7 @@ export function AllCategoriesModal({
                   {t('all_categories') || 'ALL CATEGORIES'}
                 </h2>
                 <p className="text-xs text-white/50 mt-0.5">
-                  Select a category to browse verified listings
+                  {t('select_category_browse') || 'Select a category to browse verified listings'}
                 </p>
               </div>
             </div>
@@ -150,7 +150,7 @@ export function AllCategoriesModal({
             <Search className="absolute left-4 top-3.5 w-4 h-4 text-white/40" />
             <input
               type="text"
-              placeholder="Search categories, subcategories & brands (e.g. Nike, Toyota, Smartphones)..."
+              placeholder={t('search_categories_placeholder') || "Search categories, subcategories & brands (e.g. Nike, Toyota, Smartphones)..."}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pl-11 pr-10 py-3.5 bg-white/5 border border-white/10 focus:border-amber-500/50 focus:outline-none rounded-2xl text-sm text-white placeholder-white/40 transition"
@@ -171,12 +171,12 @@ export function AllCategoriesModal({
             {searchResults !== null ? (
               searchResults.length === 0 ? (
                 <div className="text-center py-12 bg-white/[0.02] border border-white/5 rounded-2xl">
-                  <p className="text-white/40 text-sm">No category, subcategory or brand matched "{searchQuery}".</p>
+                  <p className="text-white/40 text-sm">{t('no_category_matched') || 'No category, subcategory or brand matched'} "{searchQuery}".</p>
                 </div>
               ) : (
                 <div className="space-y-2">
                   <div className="text-xs text-white/40 font-bold uppercase tracking-wider mb-2">
-                    Search Results ({searchResults.length})
+                    {t('search_results') || 'Search Results'} ({searchResults.length})
                   </div>
                   {searchResults.map((res, idx) => (
                     <button
@@ -276,7 +276,7 @@ export function AllCategoriesModal({
                           >
                             {/* All [Category] button */}
                             <div className="flex items-center justify-between pb-2 border-b border-white/5">
-                              <span className="text-xs text-white/50 font-medium">Subcategories:</span>
+                              <span className="text-xs text-white/50 font-medium">{t('subcategories_label') || 'Subcategories:'}</span>
                               <button
                                 onClick={() => {
                                   onSelectCategory(cat, null, null);
@@ -284,7 +284,7 @@ export function AllCategoriesModal({
                                 }}
                                 className="text-xs font-bold text-amber-400 hover:text-amber-300 flex items-center gap-1 uppercase tracking-wider cursor-pointer"
                               >
-                                View All {translatedCatName}
+                                {t('view_all') || 'View All'} {translatedCatName}
                                 <ChevronRight className="w-3.5 h-3.5" />
                               </button>
                             </div>
@@ -317,7 +317,7 @@ export function AllCategoriesModal({
                             {cat.brands && cat.brands.length > 0 && (
                               <div className="pt-3 border-t border-white/5 space-y-2">
                                 <span className="text-xs text-white/50 font-medium flex items-center gap-1.5">
-                                  <Tag className="w-3.5 h-3.5 text-amber-500" /> Popular Brands:
+                                  <Tag className="w-3.5 h-3.5 text-amber-500" /> {t('popular_brands') || 'Popular Brands:'}
                                 </span>
                                 <div className="flex flex-wrap gap-2">
                                   {cat.brands.map((b) => (
