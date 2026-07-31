@@ -112,22 +112,25 @@ export default function PropertyDetails({
     // If property created date exists, or default to a realistic join date
     const dateStr = property.createdAt || '2023-01-15T00:00:00.000Z';
     const dateObj = new Date(dateStr);
-    if (isNaN(dateObj.getTime())) return { monthYear: 'Jan 2023', yearsAgo: '2 years ago' };
+    if (isNaN(dateObj.getTime())) return { monthYear: 'Jan 2023', yearsAgo: t('joined_this_year') || 'Joined this year' };
     
     const month = dateObj.toLocaleString('en-US', { month: 'short' });
     const year = dateObj.getFullYear();
     const currentYear = new Date().getFullYear();
     const diffYears = Math.max(0, currentYear - year);
 
-    let yearsAgoText = 'Joined this year';
-    if (diffYears === 1) yearsAgoText = 'Joined 1 year ago';
-    else if (diffYears > 1) yearsAgoText = `Joined ${diffYears} years ago`;
+    let yearsAgoText = t('joined_this_year') || 'Joined this year';
+    if (diffYears === 1) {
+      yearsAgoText = currentLanguage === 'om' ? 'Waggaha 1 dura makame' : currentLanguage === 'am' ? 'ከ1 ዓመት በፊት የተቀላቀሉ' : 'Joined 1 year ago';
+    } else if (diffYears > 1) {
+      yearsAgoText = currentLanguage === 'om' ? `Waggoota ${diffYears} dura makame` : currentLanguage === 'am' ? `ከ${diffYears} ዓመታት በፊት የተቀላቀሉ` : `Joined ${diffYears} years ago`;
+    }
 
     return {
       monthYear: `${month} ${year}`,
       yearsAgo: yearsAgoText
     };
-  }, [property]);
+  }, [property, t, currentLanguage]);
 
   // Compute existing active offer by current user for this property
   const existingOffer = useMemo(() => {
@@ -597,7 +600,7 @@ export default function PropertyDetails({
             <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/5 rounded-full blur-2xl pointer-events-none" />
 
             <span className="text-[10px] font-bold text-amber-500/80 uppercase tracking-widest block mb-4 font-mono">
-              SELLER INFORMATION
+              {t('seller_information')}
             </span>
 
             {/* Seller Avatar */}
@@ -605,31 +608,31 @@ export default function PropertyDetails({
               <div className="w-20 h-20 rounded-full bg-gradient-to-tr from-amber-400 to-amber-600 text-black font-extrabold text-2xl flex items-center justify-center mx-auto shadow-xl border-2 border-amber-500/20">
                 {property.ownerName.charAt(0).toUpperCase()}
               </div>
-              <span className="absolute bottom-0 right-0 w-5 h-5 bg-emerald-500 border-2 border-[#0d0d12] rounded-full" title="Active Seller" />
+              <span className="absolute bottom-0 right-0 w-5 h-5 bg-emerald-500 border-2 border-[#0d0d12] rounded-full" title={t('verified_seller')} />
             </div>
 
             {/* Seller Name */}
             <h4 className="font-extrabold text-white text-xl flex items-center justify-center gap-2">
               <span>{property.ownerName}</span>
-              <CheckCircle2 className="w-5 h-5 text-amber-500 shrink-0" title="Verified Seller Badge" />
+              <CheckCircle2 className="w-5 h-5 text-amber-500 shrink-0" title={t('verified_seller')} />
             </h4>
 
             {/* Verified Badge */}
             <div className="mt-1.5">
               <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase bg-amber-500/10 text-amber-500 px-3 py-0.5 rounded-full border border-amber-500/20">
                 <ShieldCheckIcon className="w-3.5 h-3.5" />
-                <span>Verified Seller</span>
+                <span>{t('verified_seller')}</span>
               </span>
             </div>
 
             {/* Seller Quick Stats */}
             <div className="grid grid-cols-2 gap-3 mt-5 pt-5 border-t border-white/5 text-left">
               <div className="bg-[#12121a] p-3 rounded-2xl border border-white/5">
-                <span className="text-[10px] font-bold text-white/40 block uppercase">Active Ads</span>
-                <span className="text-base font-extrabold text-white">{sellerListings.length} {sellerListings.length === 1 ? 'Ad' : 'Ads'}</span>
+                <span className="text-[10px] font-bold text-white/40 block uppercase">{t('active_ads')}</span>
+                <span className="text-base font-extrabold text-white">{sellerListings.length} {sellerListings.length === 1 ? t('ad') : t('ads')}</span>
               </div>
               <div className="bg-[#12121a] p-3 rounded-2xl border border-white/5">
-                <span className="text-[10px] font-bold text-white/40 block uppercase">Member Since</span>
+                <span className="text-[10px] font-bold text-white/40 block uppercase">{t('member_since')}</span>
                 <span className="text-xs font-bold text-amber-500">{sellerMemberSince.monthYear}</span>
               </div>
             </div>
@@ -647,7 +650,7 @@ export default function PropertyDetails({
                 className="w-full bg-[#12121a] hover:bg-white/10 text-white font-bold py-3 px-4 rounded-2xl border border-white/10 transition duration-300 flex items-center justify-center gap-2 cursor-pointer text-xs uppercase tracking-wider"
               >
                 <Briefcase className="w-4 h-4 text-amber-500" />
-                <span>View All Seller Ads ({sellerListings.length})</span>
+                <span>{t('view_all_seller_ads')} ({sellerListings.length})</span>
               </button>
 
               {/* Button 2: Chat with Seller */}
@@ -659,7 +662,7 @@ export default function PropertyDetails({
                 className="w-full bg-[#12121a] hover:bg-white/10 text-white font-bold py-3 px-4 rounded-2xl border border-white/10 transition duration-300 flex items-center justify-center gap-2 cursor-pointer text-xs uppercase tracking-wider"
               >
                 <MessageSquare className="w-4 h-4 text-amber-500" />
-                <span>Chat with Seller</span>
+                <span>{t('chat_with_seller')}</span>
               </button>
 
               {/* Button 3: Make Offer */}
@@ -669,7 +672,7 @@ export default function PropertyDetails({
               >
                 <Handshake className="w-4.5 h-4.5" />
                 <span>
-                  {existingOffer ? `Offer: ${existingOffer.status}` : 'Make Offer'}
+                  {existingOffer ? `${t('make_offer')}: ${existingOffer.status}` : t('make_offer')}
                 </span>
               </button>
 
@@ -680,7 +683,7 @@ export default function PropertyDetails({
                   className="w-full bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 font-bold py-3.5 px-4 rounded-2xl border border-emerald-500/30 transition duration-300 flex items-center justify-center gap-2 cursor-pointer text-xs uppercase tracking-wider"
                 >
                   <Phone className="w-4 h-4 text-emerald-400" />
-                  <span>Show Contact</span>
+                  <span>{t('show_contact')}</span>
                 </button>
               ) : (
                 <motion.div
@@ -689,12 +692,12 @@ export default function PropertyDetails({
                   className="bg-[#12121a] p-4 rounded-2xl border border-emerald-500/30 space-y-3 text-left animate-fade-in"
                 >
                   <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest">Contact Information Revealed</span>
+                    <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest">{t('contact_info_revealed')}</span>
                     <button 
                       onClick={() => setShowContactDetails(false)}
                       className="text-white/40 hover:text-white text-xs"
                     >
-                      Hide
+                      {t('hide')}
                     </button>
                   </div>
                   
@@ -781,34 +784,34 @@ export default function PropertyDetails({
             <div className="flex items-center gap-2.5 text-amber-500">
               <Shield className="w-5 h-5 shrink-0" />
               <h4 className="font-serif text-base font-bold text-white uppercase tracking-wider">
-                Safety Tips for Buyers
+                {t('safety_tips_buyers')}
               </h4>
             </div>
 
             <ul className="space-y-2.5 text-xs text-white/70">
               <li className="flex items-start gap-2">
                 <span className="text-amber-500 font-bold">•</span>
-                <span>Meet the seller in a safe public place.</span>
+                <span>{t('safety_tip_1')}</span>
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-amber-500 font-bold">•</span>
-                <span>Inspect the property before making payment.</span>
+                <span>{t('safety_tip_2')}</span>
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-amber-500 font-bold">•</span>
-                <span>Never pay before confirming ownership.</span>
+                <span>{t('safety_tip_3')}</span>
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-amber-500 font-bold">•</span>
-                <span>Verify all documents carefully.</span>
+                <span>{t('safety_tip_4')}</span>
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-amber-500 font-bold">•</span>
-                <span>Use trusted payment methods whenever possible.</span>
+                <span>{t('safety_tip_5')}</span>
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-amber-500 font-bold">•</span>
-                <span>Report suspicious listings or fraudulent activity immediately.</span>
+                <span>{t('safety_tip_6')}</span>
               </li>
             </ul>
 
@@ -817,7 +820,7 @@ export default function PropertyDetails({
               className="w-full mt-2 py-2.5 hover:bg-red-500/10 text-red-400 border border-dashed border-red-500/20 hover:border-red-500/40 rounded-2xl text-[11px] font-bold transition flex items-center justify-center gap-2 cursor-pointer uppercase tracking-wider"
             >
               <ShieldAlert className="w-4 h-4 text-red-500" />
-              <span>Report Suspicious Listing</span>
+              <span>{t('report_suspicious_listing')}</span>
             </button>
           </div>
 
@@ -829,9 +832,9 @@ export default function PropertyDetails({
         <div className="mt-16 pt-12 border-t border-white/5 space-y-6">
           <div className="flex items-center justify-between">
             <div>
-              <span className="text-[10px] font-bold uppercase text-amber-500 tracking-widest block font-mono">DISCOVER MORE</span>
+              <span className="text-[10px] font-bold uppercase text-amber-500 tracking-widest block font-mono">{t('discover_more')}</span>
               <h3 className="text-2xl font-serif font-bold text-white mt-1">
-                Similar Properties & Listings
+                {t('similar_properties')}
               </h3>
             </div>
           </div>
