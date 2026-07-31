@@ -509,7 +509,7 @@ export default function PropertyDetails({
 
                   if (normKey === 'subcategory') {
                     translatedValue = getTranslatedSubcategoryName(spec.value, currentLanguage);
-                  } else if (normKey === 'condition') {
+                  } else if (normKey === 'condition' || normKey.includes('condition') || normKey.includes('haala') || normKey.includes('ሁኔታ')) {
                     translatedValue = getTranslatedCondition(spec.value, currentLanguage);
                   } else if (normKey === 'negotiable') {
                     translatedValue = getTranslatedOption(spec.value, currentLanguage);

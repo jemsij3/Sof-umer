@@ -1185,17 +1185,57 @@ export function getTranslatedCondition(cond: string, lang: string = 'en'): strin
   const key = cond.toLowerCase().trim();
 
   const map: Record<string, { en: string; om: string; am: string }> = {
-    'new': { en: 'Brand New', om: 'Haaraa Guutuu', am: 'አዲስ' },
+    'new': { en: 'New', om: 'Haaraa', am: 'አዲስ' },
     'brand new': { en: 'Brand New', om: 'Haaraa Guutuu', am: 'አዲስ' },
-    'like new': { en: 'Like New', om: 'Haaraa Fakkaata', am: 'እንደ አዲስ' },
-    'refurbished': { en: 'Refurbished', om: 'Haromfame', am: 'የታደሰ' },
-    'fair': { en: 'Fair Condition', om: 'Gahassa', am: 'መካከለኛ' },
-    'used': { en: 'Used', om: 'Fayyadamaa', am: 'ያገለገለ' },
+    'used - good': { en: 'Used - Good', om: 'Kan Fayyadame - Gaarii', am: 'ጥቅም ላይ የዋለ - ጥሩ' },
+    'used - good condition': { en: 'Used - Good', om: 'Kan Fayyadame - Gaarii', am: 'ጥቅም ላይ የዋለ - ጥሩ' },
+    'used(good)': { en: 'Used - Good', om: 'Kan Fayyadame - Gaarii', am: 'ጥቅም ላይ የዋለ - ጥሩ' },
+    'used (good)': { en: 'Used - Good', om: 'Kan Fayyadame - Gaarii', am: 'ጥቅም ላይ የዋለ - ጥሩ' },
+    'used-good': { en: 'Used - Good', om: 'Kan Fayyadame - Gaarii', am: 'ጥቅም ላይ የዋለ - ጥሩ' },
+    'used good': { en: 'Used - Good', om: 'Kan Fayyadame - Gaarii', am: 'ጥቅም ላይ የዋለ - ጥሩ' },
+    'used - like new': { en: 'Used - Like New', om: 'Kan Fayyadame - Akka Haaraa', am: 'ጥቅም ላይ የዋለ - እንደ አዲስ' },
+    'used - like new condition': { en: 'Used - Like New', om: 'Kan Fayyadame - Akka Haaraa', am: 'ጥቅም ላይ የዋለ - እንደ አዲስ' },
+    'used(like new)': { en: 'Used - Like New', om: 'Kan Fayyadame - Akka Haaraa', am: 'ጥቅም ላይ የዋለ - እንደ አዲስ' },
+    'used (like new)': { en: 'Used - Like New', om: 'Kan Fayyadame - Akka Haaraa', am: 'ጥቅም ላይ የዋለ - እንደ አዲስ' },
+    'used-like new': { en: 'Used - Like New', om: 'Kan Fayyadame - Akka Haaraa', am: 'ጥቅም ላይ የዋለ - እንደ አዲስ' },
+    'used like new': { en: 'Used - Like New', om: 'Kan Fayyadame - Akka Haaraa', am: 'ጥቅም ላይ የዋለ - እንደ አዲስ' },
+    'used - fair': { en: 'Used - Fair', om: 'Kan Fayyadame - Gahaa', am: 'ጥቅም ላይ የዋለ - መካከለኛ' },
+    'used - poor': { en: 'Used - Poor', om: 'Kan Fayyadame - Gad-aanaa', am: 'ጥቅም ላይ የዋለ - ዝቅተኛ' },
+    'used - excellent': { en: 'Used - Excellent', om: 'Kan Fayyadame - Baay\'ee Gaarii', am: 'ጥቅም ላይ የዋለ - በጣም ጥሩ' },
+    'used - foreign': { en: 'Used - Foreign', om: 'Kan Fayyadame - Biyya Alaa', am: 'ጥቅም ላይ የዋለ - የውጭ' },
+    'used - local': { en: 'Used - Local', om: 'Kan Fayyadame - Biyya Keessaa', am: 'ጥቅም ላይ የዋለ - የሀገር ውስጥ' },
+    'used - refurbished': { en: 'Used - Refurbished', om: 'Kan Fayyadame - Haaromfame', am: 'ጥቅም ላይ የዋለ - የታደሰ' },
+    'like new': { en: 'Like New', om: 'Akka Haaraa', am: 'እንደ አዲስ' },
+    'refurbished': { en: 'Refurbished', om: 'Haaromfame', am: 'የታደሰ' },
+    'fair': { en: 'Fair Condition', om: 'Gahaa', am: 'መካከለኛ' },
+    'fair condition': { en: 'Fair Condition', om: 'Gahaa', am: 'መካከለኛ' },
+    'used': { en: 'Used', om: 'Kan Fayyadame', am: 'ጥቅም ላይ የዋለ' },
+    'used / secondhand': { en: 'Used / Secondhand', om: 'Kan Fayyadame / Lammaffaa', am: 'ጥቅም ላይ የዋለ' },
+    'new / unopened': { en: 'New / Unopened', om: 'Haaraa / Hin Banamne', am: 'አዲስ / ያልተከፈተ' },
+    'used / refurbished': { en: 'Used / Refurbished', om: 'Kan Fayyadame / Haaromfame', am: 'ጥቅም ላይ የዋለ / የታደሰ' },
     'good': { en: 'Good Condition', om: 'Gaarii', am: 'ጥሩ' },
-    'excellent': { en: 'Excellent', om: 'Baay\'ee Gaarii', am: 'በጣም ጥሩ' }
+    'good condition': { en: 'Good Condition', om: 'Gaarii', am: 'ጥሩ' },
+    'excellent': { en: 'Excellent', om: 'Baay\'ee Gaarii', am: 'በጣም ጥሩ' },
+    'excellent condition': { en: 'Excellent', om: 'Baay\'ee Gaarii', am: 'በጣም ጥሩ' },
+    'for parts': { en: 'For Parts / Not Working', om: 'Qo\'iyyaaf / Hin Hojjetu', am: 'ለመለዋወጫ / የማይሰራ' },
+    'for parts or not working': { en: 'For Parts / Not Working', om: 'Qo\'iyyaaf / Hin Hojjetu', am: 'ለመለዋወጫ / የማይሰራ' },
+    'any condition': { en: 'Any Condition', om: 'Haala Kamiinuu', am: 'ማንኛውም ሁኔታ' }
   };
 
   if (map[key]) return map[key][langKey];
+
+  // Composite separator handling (e.g. "Used - Good", "Used / Local")
+  if (key.includes('-') || key.includes('/')) {
+    const isDash = key.includes('-');
+    const delimiter = isDash ? ' - ' : ' / ';
+    const parts = key.split(isDash ? '-' : '/').map(p => p.trim());
+    const translatedParts = parts.map(part => {
+      if (map[part]) return map[part][langKey];
+      return part;
+    });
+    return translatedParts.join(delimiter);
+  }
+
   return cond;
 }
 
@@ -1316,6 +1356,12 @@ export function getTranslatedOption(opt: string, lang: string = 'en'): string {
   if (!opt) return '';
   const dyn = checkDynamicDictionary(opt, lang);
   if (dyn) return dyn;
+
+  // Check if it is a condition string
+  const condTrans = getTranslatedCondition(opt, lang);
+  if (condTrans && condTrans !== opt) {
+    return condTrans;
+  }
 
   const langKey = (lang === 'om' || lang === 'am') ? lang : 'en';
   const key = opt.toLowerCase().trim();
