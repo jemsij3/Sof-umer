@@ -14,7 +14,7 @@ interface InfoPageProps {
 }
 
 export default function InfoPage({ pageId, onBack, onOpenReportModalFromInfo }: InfoPageProps) {
-  const { currentLanguage, appFeatures, jobOpenings, systemSettings, properties, users } = useApp();
+  const { currentLanguage, appFeatures, jobOpenings, systemSettings, properties, users, t } = useApp();
   const [activeTab, setActiveTab] = useState<string>(pageId);
 
   // Real live metrics from database
@@ -586,39 +586,45 @@ export default function InfoPage({ pageId, onBack, onOpenReportModalFromInfo }: 
               <Globe className="w-8 h-8 text-emerald-400" />
               <div>
                 <h2 className="text-2xl font-serif text-white font-bold">
-                  {currentLanguage === 'om' ? 'Waa\'ee Sof Umer' : currentLanguage === 'am' ? 'ስለ ሶፍ ኡመር ፕላትፎርም' : 'About Sof Umer'}
+                  {t('about.title')}
                 </h2>
                 <p className="text-xs text-white/40">
-                  {currentLanguage === 'om' ? 'Gabaa qabeenya amansiisaa Itoophiyaa keessatti' : currentLanguage === 'am' ? 'በኢትዮጵያ ውስጥ ግንባር ቀደም የሪል እስቴት እና ምርቶች መገበያያ ገበያ' : 'Ethiopia\'s premier multi-lingual real estate and product marketplace.'}
+                  {t('about.subtitle')}
                 </p>
               </div>
             </div>
 
             <div className="bg-[#0c0c10]/60 p-6 rounded-2xl border border-white/5 space-y-4 text-xs text-white/70 leading-relaxed">
               <p>
-                Named after the legendary **Sof Omar Caves** (one of the world\'s most spectacular natural limestone underground cave networks located in Bale, Ethiopia), **Sof Umer** represents depth, safety, natural connectivity, and robust local heritage.
+                {t('about.p1')}
               </p>
               <p>
-                Established in 2026, our platform serves as a modern bridge, connecting property seekers, auto buyers, electronics traders, job seekers, and local businesses. We provide fully integrated translation engines supporting **English**, **Afaan Oromoo**, and **Amharic** to accommodate our diverse local communities in Ethiopia.
+                {t('about.p2')}
+              </p>
+              <p>
+                {t('about.p3')}
+              </p>
+              <p>
+                {t('about.p4')}
               </p>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 border-t border-white/5">
                 <div className="text-center p-3.5 bg-black/40 rounded-xl border border-white/5">
                   <h4 className="text-base font-serif text-emerald-400 font-bold">{formatStatNumber(verifiedListingsCount)}</h4>
                   <p className="text-[10px] uppercase text-white/40 mt-1">
-                    {currentLanguage === 'om' ? 'Beeksisa Mirkanaa\'e' : currentLanguage === 'am' ? 'የተረጋገጡ ማስታወቂያዎች' : 'Verified Listings'}
+                    {t('about.verified_listings')}
                   </p>
                 </div>
                 <div className="text-center p-3.5 bg-black/40 rounded-xl border border-white/5">
                   <h4 className="text-base font-serif text-amber-500 font-bold">{formatStatNumber(activeProfilesCount)}</h4>
                   <p className="text-[10px] uppercase text-white/40 mt-1">
-                    {currentLanguage === 'om' ? 'Profeelii Socho\'aa' : currentLanguage === 'am' ? 'ንቁ መገለጫዎች' : 'Active Profiles'}
+                    {t('about.active_profiles')}
                   </p>
                 </div>
                 <div className="text-center p-3.5 bg-black/40 rounded-xl border border-white/5">
                   <h4 className="text-base font-serif text-emerald-400 font-bold">3</h4>
                   <p className="text-[10px] uppercase text-white/40 mt-1">
-                    {currentLanguage === 'om' ? 'Afaanota Itoophiyaa' : currentLanguage === 'am' ? 'የኢትዮጵያ ቋንቋዎች' : 'Ethiopian Languages'}
+                    {t('about.ethiopian_languages')}
                   </p>
                 </div>
               </div>
