@@ -3005,16 +3005,109 @@ async function startServer() {
       
       const prevApproval = property.approvalStatus;
       const prevVerification = property.verificationStatus;
+      const isAdmin = currentUser.role === 'admin';
 
-      // Non-admins cannot alter verification/approval flags
-      if (currentUser.role !== 'admin') {
+      // Non-admins editing ANY property information automatically triggers re-approval requirement
+      if (!isAdmin) {
         delete updates.verificationStatus;
         delete updates.approvalStatus;
         delete updates.isVerifiedListing;
         delete updates.ownerId;
+        delete updates.id;
+        delete updates.createdAt;
+        delete updates.viewsCount;
+        delete updates.favoritesCount;
+
+        // Force re-approval status
+        updates.approvalStatus = 'pending';
+        updates.verificationStatus = 'pending';
+        updates.isVerifiedListing = false;
+
+        const nowIso = new Date().toISOString();
+        updates.updatedAt = nowIso;
+        updates.updatedBy = currentUser.email || currentUser.fullName || currentUser.id;
+        const previousApproveDate = (property as any).lastApprovedAt || (property as any).approvedAt || property.createdAt;
+        updates.previousApprovalDate = previousApproveDate;
+        updates.lastEditReason = "Edited after approval";
+
+        // Audit Log entry
+        const editRecord = {
+          id: 'edithist-' + Date.now(),
+          editedBy: currentUser.email || currentUser.fullName || currentUser.id,
+          editedAt: nowIso,
+          reason: "Edited after approval",
+          previousApprovalDate: previousApproveDate,
+          previousVersion: {
+            title: property.title,
+            description: property.description,
+            price: property.price,
+            currency: property.currency,
+            category: property.category,
+            propertyType: property.propertyType,
+            majorCategory: property.majorCategory,
+            images: property.images,
+            location: property.location,
+            contactPhone: property.contactPhone,
+            contactEmail: property.contactEmail,
+            amenities: property.amenities,
+            brand: property.brand,
+            condition: property.condition
+          },
+          newVersion: {
+            title: updates.title !== undefined ? updates.title : property.title,
+            description: updates.description !== undefined ? updates.description : property.description,
+            price: updates.price !== undefined ? updates.price : property.price,
+            currency: updates.currency !== undefined ? updates.currency : property.currency,
+            category: updates.category !== undefined ? updates.category : property.category,
+            propertyType: updates.propertyType !== undefined ? updates.propertyType : property.propertyType,
+            majorCategory: updates.majorCategory !== undefined ? updates.majorCategory : property.majorCategory,
+            images: updates.images || property.images,
+            location: updates.location !== undefined ? updates.location : property.location,
+            contactPhone: updates.contactPhone !== undefined ? updates.contactPhone : property.contactPhone,
+            contactEmail: updates.contactEmail !== undefined ? updates.contactEmail : property.contactEmail,
+            amenities: updates.amenities || property.amenities,
+            brand: updates.brand !== undefined ? updates.brand : property.brand,
+            condition: updates.condition !== undefined ? updates.condition : property.condition
+          }
+        };
+
+        const currentEditHistory = Array.isArray((property as any).editHistory) ? (property as any).editHistory : [];
+        updates.editHistory = [editRecord, ...currentEditHistory];
+
+        // Notify admins of updated listing requiring review
+        if (!localDb.notifications) localDb.notifications = [];
+        localDb.notifications.unshift({
+          id: 'notif-edit-' + Date.now(),
+          userId: 'admin-all',
+          title: `Listing Edited: "${updates.title || property.title}"`,
+          message: `Listing "${updates.title || property.title}" (ID: ${property.id}) was edited by ${currentUser.fullName || currentUser.email} and requires admin review before publication.`,
+          isRead: false,
+          createdAt: nowIso
+        });
       } else {
         if (updates.verificationStatus !== undefined) {
           updates.isVerifiedListing = updates.verificationStatus === 'verified';
+          if (updates.verificationStatus === 'verified') {
+            updates.approvalStatus = 'approved';
+            updates.lastApprovedAt = new Date().toISOString();
+            updates.approvedBy = currentUser.email || currentUser.id;
+
+            // Audit record update for re-approval
+            if (Array.isArray((property as any).editHistory) && (property as any).editHistory.length > 0) {
+              updates.editHistory = (property as any).editHistory.map((h: any, i: number) => {
+                if (i === 0 && !h.approvedAgainAt) {
+                  return {
+                    ...h,
+                    approvedAgainBy: currentUser.email || currentUser.id,
+                    approvedAgainAt: new Date().toISOString()
+                  };
+                }
+                return h;
+              });
+            }
+          } else if (updates.verificationStatus === 'rejected') {
+            updates.approvalStatus = 'rejected';
+          }
         }
       }
 

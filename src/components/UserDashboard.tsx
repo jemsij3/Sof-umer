@@ -3,6 +3,7 @@ import { useApp } from '../lib/AppContext';
 import { formatTimeAgo } from '../lib/utils';
 import { Property, Inquiry, AppNotification } from '../types';
 import { TwoFactorSecurityModule } from './TwoFactorSecurityModule';
+import { getCampaignStatusInfo } from '../utils/campaignUtils';
 import { 
   User, MessageSquare, Bell, CreditCard, Settings, LogOut, CheckCircle2, 
   ChevronRight, UploadCloud, HelpCircle, FileText, AlertTriangle, Send, 
@@ -186,7 +187,8 @@ export default function UserDashboard({
     topUpWallet,
     spendWallet,
     systemSettings,
-    faqs
+    faqs,
+    t
   } = useApp();
 
   // Navigation and State Tabs mapping
@@ -1242,64 +1244,49 @@ export default function UserDashboard({
 
                   {/* Dynamic Free Listing Campaign Status & Quota Banner */}
                   {(() => {
-                    const fls = systemSettings?.freeListingSettings || { enabled: true, maxFreeListingsPerUser: 5 };
-                    const checkFreeListingActive = (f: any) => {
-                      if (!f || f.enabled === false) return false;
-                      const now = new Date();
-                      if (f.startDate) {
-                        const start = new Date(f.startDate);
-                        if (!isNaN(start.getTime()) && now < start) return false;
-                      }
-                      if (f.endDate) {
-                        const end = new Date(f.endDate);
-                        end.setHours(23, 59, 59, 999);
-                        if (!isNaN(end.getTime()) && now > end) return false;
-                      }
-                      return true;
-                    };
-
-                    const isCampaignActive = checkFreeListingActive(fls);
-                    const maxFree = fls.maxFreeListingsPerUser ?? 5;
+                    const fls = systemSettings?.freeListingSettings || { enabled: true, maxFreeListingsPerUser: 5, startDate: '2026-08-01', endDate: '2026-08-31' };
+                    const campaignInfo = getCampaignStatusInfo(fls);
+                    const maxFree = campaignInfo.maxListings;
                     const userFreeUsed = myListings.filter(p => !p.description?.includes('**PAUSED**')).length;
                     const remainingFree = Math.max(0, maxFree - userFreeUsed);
 
                     return (
                       <div className="bg-gradient-to-r from-amber-500/10 via-black/40 to-emerald-500/10 border border-amber-500/30 p-5 rounded-3xl shadow-xl relative overflow-hidden">
                         <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 relative z-10">
-                          <div className="space-y-1 text-left">
-                            <div className="flex items-center gap-2">
-                              <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-extrabold font-mono uppercase border ${
-                                isCampaignActive 
-                                  ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' 
-                                  : 'bg-rose-500/20 text-rose-400 border-rose-500/30'
-                              }`}>
-                                {isCampaignActive ? 'Free Listing Campaign Active' : 'Campaign Inactive'}
+                          <div className="space-y-1.5 text-left">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-extrabold font-mono uppercase border ${campaignInfo.badgeColor}`}>
+                                Campaign Status: {campaignInfo.status}
                               </span>
-                              {fls.showDuration && fls.endDate && (
-                                <span className="text-[10px] text-white/50 font-mono">
-                                  Valid until {fls.endDate}
-                                </span>
-                              )}
+                              <span className="text-[10px] text-amber-400 font-mono font-bold bg-amber-500/10 px-2 py-0.5 rounded-md border border-amber-500/20">
+                                {campaignInfo.displayText}
+                              </span>
                             </div>
                             <h4 className="text-sm font-bold text-white flex items-center gap-2">
                               <Gift className="w-4 h-4 text-amber-400 shrink-0" />
-                              <span>{fls.campaignNotice || 'Free Listing Campaign Available'}</span>
+                              <span>
+                                {campaignInfo.isUpcoming && `🎉 Free Listing Campaign`}
+                                {campaignInfo.isActive && (campaignInfo.isLastDay ? `⚠️ Last day of the Free Listing Campaign!` : `🎉 Free Listing Campaign is LIVE!`)}
+                                {campaignInfo.isExpired && `Free Listing Campaign has ended.`}
+                              </span>
                             </h4>
-                            <p className="text-xs text-white/60">
-                              {isCampaignActive ? (
-                                <>Admin configured limit: <strong className="text-amber-400">{maxFree} free listings</strong> per account.</>
-                              ) : (
-                                <>Standard listing postings require paid ad promotion package.</>
-                              )}
+                            <p className="text-xs text-white/70">
+                              <span className="font-semibold text-white/90">Campaign Period:</span> {campaignInfo.startDateFormatted} → {campaignInfo.endDateFormatted}
                             </p>
                           </div>
 
-                          <div className="bg-black/60 border border-white/10 p-3.5 rounded-2xl text-center shrink-0 min-w-[180px]">
-                            <span className="text-[10px] uppercase font-bold text-white/40 block mb-0.5">Campaign Quota</span>
-                            <p className="text-sm font-extrabold text-amber-400 font-mono">
-                              Free listings available: <span className="text-white text-base">{remainingFree}</span>
-                            </p>
-                            <span className="text-[9px] text-white/40 font-mono">Used {userFreeUsed} of {maxFree} limit</span>
+                          <div className="bg-black/60 border border-white/10 p-3.5 rounded-2xl text-center shrink-0 min-w-[200px]">
+                            <span className="text-[10px] uppercase font-bold text-white/40 block mb-1">Free Listing Quota</span>
+                            <div className="flex justify-center items-center gap-2 text-xs font-mono font-extrabold">
+                              <span className="text-white/60">Used: <strong className="text-amber-400">{userFreeUsed} / {maxFree}</strong></span>
+                              <span className="text-white/30">•</span>
+                              <span className="text-emerald-400">Remaining: <strong className="text-white">{remainingFree}</strong></span>
+                            </div>
+                            {campaignInfo.isActive && (
+                              <p className="text-[9px] text-emerald-400/90 font-medium mt-1">
+                                You can publish up to {remainingFree} free listings.
+                              </p>
+                            )}
                           </div>
                         </div>
                       </div>
@@ -1320,14 +1307,19 @@ export default function UserDashboard({
                         const isSold = desc.includes('**SOLD**') || desc.includes('**COMPLETED**');
                         const isDraft = desc.includes('**DRAFT**');
                         const isExpired = desc.includes('**EXPIRED**');
+                        const isEditedReapproval = (p.approvalStatus === 'pending' || p.verificationStatus === 'pending') && ((p as any).lastEditReason === 'Edited after approval' || ((p as any).editHistory && (p as any).editHistory.length > 0));
 
                         let statusBadge = <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[9px] px-2 py-0.5 rounded-full font-bold uppercase">Active</span>;
                         if (isPaused) statusBadge = <span className="bg-zinc-500/10 text-zinc-400 border border-zinc-500/20 text-[9px] px-2 py-0.5 rounded-full font-bold uppercase">Paused</span>;
                         if (isSold) statusBadge = <span className="bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 text-[9px] px-2 py-0.5 rounded-full font-bold uppercase">Sold</span>;
                         if (isDraft) statusBadge = <span className="bg-amber-500/10 text-amber-500 border border-amber-500/20 text-[9px] px-2 py-0.5 rounded-full font-bold uppercase">Draft</span>;
                         if (isExpired) statusBadge = <span className="bg-red-500/10 text-red-400 border border-red-500/20 text-[9px] px-2 py-0.5 rounded-full font-bold uppercase">Expired</span>;
-                        if (p.verificationStatus === 'pending') statusBadge = <span className="bg-yellow-500/10 text-yellow-500 border border-yellow-500/20 text-[9px] px-2 py-0.5 rounded-full font-bold uppercase">Pending Audit</span>;
-                        if (p.verificationStatus === 'rejected') statusBadge = <span className="bg-rose-500/10 text-rose-400 border border-rose-500/20 text-[9px] px-2 py-0.5 rounded-full font-bold uppercase">Rejected</span>;
+                        if (isEditedReapproval) {
+                          statusBadge = <span className="bg-amber-500/20 text-amber-400 border border-amber-500/40 text-[9px] px-2 py-0.5 rounded-full font-extrabold uppercase animate-pulse">Pending Re-Approval (Edited)</span>;
+                        } else if (p.verificationStatus === 'pending' || p.approvalStatus === 'pending') {
+                          statusBadge = <span className="bg-yellow-500/10 text-yellow-500 border border-yellow-500/20 text-[9px] px-2 py-0.5 rounded-full font-bold uppercase">Pending Audit</span>;
+                        }
+                        if (p.verificationStatus === 'rejected' || p.approvalStatus === 'rejected') statusBadge = <span className="bg-rose-500/10 text-rose-400 border border-rose-500/20 text-[9px] px-2 py-0.5 rounded-full font-bold uppercase">Rejected</span>;
 
                         return (
                           <div key={p.id} className="bg-black/30 hover:bg-black/50 border border-white/5 rounded-2xl p-4 transition duration-300 flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -1734,7 +1726,14 @@ export default function UserDashboard({
                         <X className="w-4 h-4" />
                       </button>
                       <h4 className="text-sm font-bold text-white mb-1">Edit Listing Details</h4>
-                      <p className="text-[10px] text-white/40 mb-4">Edit the price and description of "{editingProperty.title}"</p>
+                      <p className="text-[10px] text-white/40 mb-3">Edit the details of "{editingProperty.title}"</p>
+                      
+                      <div className="bg-amber-500/10 border border-amber-500/30 p-3 rounded-xl mb-4 text-[11px] text-amber-300 flex items-start gap-2">
+                        <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+                        <div>
+                          <strong>Re-Approval Required:</strong> Any edits made to an approved listing will immediately require admin re-approval. Your listing will be temporarily hidden from public pages until approved by an administrator.
+                        </div>
+                      </div>
                       <form onSubmit={handleSaveListingEdit} className="space-y-4">
                         <div>
                           <label className="block text-[10px] font-bold text-white/40 uppercase mb-1 font-mono">Price (ETB)</label>
@@ -2302,8 +2301,8 @@ export default function UserDashboard({
                   {/* Frequently Asked Questions (FAQ) Section - Nested directly under Support & Safety */}
                   <div id="faq-sub-section" className="border-t border-white/5 pt-6 mt-6 scroll-mt-12 text-left">
                     <div className="border-b border-white/5 pb-4 mb-4">
-                      <h4 className="text-xs font-black text-amber-500 uppercase tracking-wider">Frequently Asked Questions (FAQ)</h4>
-                      <p className="text-[11px] text-white/40 mt-0.5">Instant localized answers to general inquiries about our marketplace.</p>
+                      <h4 className="text-xs font-black text-amber-500 uppercase tracking-wider">{t('faq.title')}</h4>
+                      <p className="text-[11px] text-white/40 mt-0.5">{t('faq.subtitle')}</p>
                     </div>
 
                     <div className="space-y-3">

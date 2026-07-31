@@ -341,7 +341,7 @@ export default function Marketplace({
   const filteredProperties = useMemo(() => {
     return properties.filter(prop => {
       if ((prop as any).isArchived) return false;
-      if (prop.approvalStatus === 'rejected') return false;
+      if (prop.approvalStatus === 'rejected' || prop.approvalStatus === 'pending' || prop.verificationStatus === 'pending') return false;
 
       // Search text
       const matchesSearch =

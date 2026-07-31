@@ -17,6 +17,7 @@ import { EmployeeAdminsModule } from './EmployeeAdminsModule';
 import { APP_THEMES, getThemeCSS } from '../lib/themes';
 import { extractString } from '../lib/categoriesData';
 import { maskName, maskEmail } from '../lib/utils';
+import { getCampaignStatusInfo } from '../utils/campaignUtils';
 
 interface AdminDashboardProps {
   onBackToMarketplace: () => void;
@@ -1223,8 +1224,8 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
   const totalUsersCount = users.length;
   const activeUsersCount = users.filter(u => u.status === 'active').length;
   const totalListingsCount = properties.length;
-  const pendingListingsCount = properties.filter(p => p.verificationStatus === 'pending' || !p.verificationStatus).length;
-  const approvedListingsCount = properties.filter(p => p.verificationStatus === 'verified' || p.isVerifiedListing).length;
+  const pendingListingsCount = properties.filter(p => p.verificationStatus === 'pending' || p.approvalStatus === 'pending' || !p.verificationStatus).length;
+  const approvedListingsCount = properties.filter(p => (p.verificationStatus === 'verified' || p.isVerifiedListing || p.approvalStatus === 'approved') && p.verificationStatus !== 'pending' && p.approvalStatus !== 'pending').length;
   const promotedListingsCount = properties.filter(p => p.isFeatured || p.isTopAd || !!p.boostPlan).length;
   const pendingPromotionRequestsCount = properties.filter(p => receipts.some(r => r.relatedPropertyId === p.id && r.status === 'Pending')).length;
   const reportedCount = reports.filter(r => r.status === 'pending').length;
@@ -1252,11 +1253,11 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
     const isPromoted = p.isFeatured || p.isTopAd || !!p.boostPlan;
 
     const matchesStatus = listingStatusFilter === 'all' || 
-      (listingStatusFilter === 'pending' && (p.verificationStatus === 'pending' || !p.verificationStatus)) ||
+      (listingStatusFilter === 'pending' && (p.verificationStatus === 'pending' || p.approvalStatus === 'pending' || !p.verificationStatus)) ||
       (listingStatusFilter === 'promoted' && isPromoted) ||
       (listingStatusFilter === 'promotion_requested' && hasPendingSlip) ||
-      (listingStatusFilter === 'verified' && (p.verificationStatus === 'verified' || p.isVerifiedListing)) ||
-      (listingStatusFilter === 'rejected' && p.verificationStatus === 'rejected');
+      (listingStatusFilter === 'verified' && (p.verificationStatus === 'verified' || p.isVerifiedListing || p.approvalStatus === 'approved') && p.verificationStatus !== 'pending' && p.approvalStatus !== 'pending') ||
+      (listingStatusFilter === 'rejected' && (p.verificationStatus === 'rejected' || p.approvalStatus === 'rejected'));
     return matchesSearch && matchesCat && matchesStatus;
   });
 
@@ -2178,9 +2179,22 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
                                 {p.isFeatured && <span className="text-[8px] bg-emerald-500/10 text-emerald-400 font-extrabold px-1.5 py-0.5 rounded border border-emerald-500/10 uppercase">Featured</span>}
                                 {p.isTopAd && <span className="text-[8px] bg-purple-500/20 text-purple-300 font-extrabold px-1.5 py-0.5 rounded border border-purple-500/30 uppercase">Top Ad</span>}
                                 {p.boostPlan && <span className="text-[8px] bg-amber-500 text-black font-black px-1.5 py-0.5 rounded uppercase">BOOST: {p.boostPlan.toUpperCase()}</span>}
+                                {((p as any).lastEditReason === 'Edited after approval' || ((p as any).editHistory && (p as any).editHistory.length > 0)) && (
+                                  <span className="text-[8px] bg-amber-500/20 text-amber-300 font-extrabold px-2 py-0.5 rounded border border-amber-500/40 uppercase animate-pulse">
+                                    ⚠️ Edited After Approval - Requires Re-Approval
+                                  </span>
+                                )}
                               </div>
                               <p className="text-xs text-white/50 font-light mt-1 flex items-center gap-1"><MapPin className="w-3.5 h-3.5" /> {extractString(p.location)} • <span className="text-white/70">{extractString(p.ownerName) || 'Unknown Owner'}</span> ({p.contactEmail || 'No Email'})</p>
                               <p className="text-xs font-mono font-extrabold text-amber-500 mt-1.5">{p.price.toLocaleString()} {p.currency}</p>
+                              {((p as any).lastEditReason === 'Edited after approval' || ((p as any).editHistory && (p as any).editHistory.length > 0)) && (
+                                <div className="mt-2 text-[10px] bg-black/50 p-2.5 rounded-xl border border-amber-500/20 font-mono space-y-0.5 text-amber-400/90">
+                                  <div><strong className="text-white">Audit Log:</strong> Edited after approval</div>
+                                  <div><strong className="text-white">Edited At:</strong> {(p as any).updatedAt ? new Date((p as any).updatedAt).toLocaleString() : 'Recent'}</div>
+                                  <div><strong className="text-white">Edited By:</strong> {(p as any).updatedBy || (p as any).ownerName || 'User'}</div>
+                                  <div><strong className="text-white">Previous Approval Date:</strong> {(p as any).previousApprovalDate ? new Date((p as any).previousApprovalDate).toLocaleString() : (p.createdAt ? new Date(p.createdAt).toLocaleString() : 'N/A')}</div>
+                                </div>
+                              )}
                             </div>
                           </div>
 
@@ -2416,16 +2430,17 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
                       <h3 className="text-lg font-bold font-serif text-white flex items-center gap-2">
                         <span>Free Listing Availability & Campaign</span>
                         {(() => {
-                          const fls = systemSettings.freeListingSettings || { enabled: true };
-                          if (fls.enabled === false) return <span className="text-[10px] bg-red-500/20 text-red-400 font-mono font-bold px-2 py-0.5 rounded-full border border-red-500/30">OFF (Disabled)</span>;
-                          const now = new Date();
-                          if (fls.startDate && new Date(fls.startDate) > now) return <span className="text-[10px] bg-blue-500/20 text-blue-400 font-mono font-bold px-2 py-0.5 rounded-full border border-blue-500/30">Scheduled</span>;
-                          if (fls.endDate) {
-                            const end = new Date(fls.endDate);
-                            end.setHours(23, 59, 59, 999);
-                            if (now > end) return <span className="text-[10px] bg-amber-500/20 text-amber-400 font-mono font-bold px-2 py-0.5 rounded-full border border-amber-500/30">Expired</span>;
-                          }
-                          return <span className="text-[10px] bg-emerald-500/20 text-emerald-400 font-mono font-bold px-2 py-0.5 rounded-full border border-emerald-500/30">ON (Active)</span>;
+                          const campaignInfo = getCampaignStatusInfo(systemSettings.freeListingSettings);
+                          return (
+                            <div className="flex items-center gap-2">
+                              <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-full border ${campaignInfo.badgeColor}`}>
+                                {campaignInfo.status}
+                              </span>
+                              <span className="text-[10px] text-amber-400 font-mono font-extrabold bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">
+                                {campaignInfo.displayText}
+                              </span>
+                            </div>
+                          );
                         })()}
                       </h3>
                       <p className="text-xs text-white/40 mt-0.5">Control whether standard marketplace users can post listings for free or if paid promotion boost is required.</p>

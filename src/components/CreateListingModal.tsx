@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../lib/AppContext';
+import { getCampaignStatusInfo } from '../utils/campaignUtils';
 import { 
   getMatchingSubcategoryId, 
   getTranslatedCategoryName, 
@@ -1427,7 +1428,8 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
     return true;
   };
 
-  const isFreeListingEnabled = checkFreeListingActive(systemSettings?.freeListingSettings);
+  const campaignInfo = getCampaignStatusInfo(systemSettings?.freeListingSettings);
+  const isFreeListingEnabled = campaignInfo.isActive;
 
   const rawPackages = (systemSettings?.adPackages && systemSettings.adPackages.length > 0)
     ? systemSettings.adPackages.filter((p: any) => p.name !== 'New Custom Promotion Package' && !p.name.includes('Custom'))
@@ -1436,8 +1438,8 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
   const dynamicPackages = rawPackages.length > 0 ? rawPackages : DEFAULT_AD_PACKAGES;
 
   const flsConfig = systemSettings?.freeListingSettings;
-  const maxFree = flsConfig?.maxFreeListingsPerUser ?? 5;
-  const freeDurationText = (flsConfig?.showDuration && flsConfig?.endDate) ? `Until ${flsConfig.endDate}` : 'Standard';
+  const maxFree = campaignInfo.maxListings;
+  const freeDurationText = campaignInfo.displayText;
 
   const allPromotionPlans = [
     ...(isFreeListingEnabled ? [{ 
@@ -1446,8 +1448,8 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
       cost: 0, 
       days: freeDurationText, 
       daysCount: 0, 
-      desc: `Standard catalog listing (Campaign limit: ${maxFree} free listings per user)`, 
-      badge: 'FREE' 
+      desc: `Standard catalog listing (Campaign: ${campaignInfo.displayText}, limit ${maxFree} free listings)`, 
+      badge: campaignInfo.isLastDay ? 'LAST DAY' : 'FREE' 
     }] : []),
     ...dynamicPackages.map((pkg: any) => ({
       id: pkg.id || pkg.name,
@@ -2126,6 +2128,30 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
                     <span>{d.boostTitle}</span>
                   </h4>
                   <p className="text-[11px] text-[#F5F5F4]/50 font-light">{d.boostSubtext}</p>
+                </div>
+
+                {/* Free Listing Campaign Notice Card */}
+                <div className="bg-zinc-900/80 border border-amber-500/30 p-4 rounded-2xl flex flex-col sm:flex-row justify-between sm:items-center gap-3">
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <span className={`px-2 py-0.5 rounded-full text-[9px] font-mono font-bold uppercase border ${campaignInfo.badgeColor}`}>
+                        {campaignInfo.status}
+                      </span>
+                      <span className="text-[10px] text-amber-400 font-bold font-mono bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">
+                        {campaignInfo.displayText}
+                      </span>
+                    </div>
+                    <p className="text-xs text-white/90 font-medium">
+                      <span className="text-amber-400 font-bold">Campaign Period:</span> {campaignInfo.startDateFormatted} → {campaignInfo.endDateFormatted}
+                    </p>
+                  </div>
+                  {campaignInfo.isActive && (
+                    <div className="text-right">
+                      <span className="text-[10px] text-emerald-400 font-bold block">
+                        🎁 Free Listing Eligible ({campaignInfo.maxListings} per user limit)
+                      </span>
+                    </div>
+                  )}
                 </div>
 
                 {/* Plans Grid */}

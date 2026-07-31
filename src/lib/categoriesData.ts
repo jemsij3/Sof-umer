@@ -464,10 +464,11 @@ export function isListingActiveAndPublished(p: any): boolean {
   if (!p) return false;
 
   // 1. Approval/Verification check: Must be verified or explicitly verified listing, and not pending/rejected
-  const isApproved = (p.verificationStatus === 'verified' || p.isVerifiedListing === true) &&
+  const isApproved = (p.verificationStatus === 'verified' || p.isVerifiedListing === true || p.approvalStatus === 'approved') &&
                      p.verificationStatus !== 'rejected' &&
                      p.approvalStatus !== 'rejected' &&
-                     p.verificationStatus !== 'pending';
+                     p.verificationStatus !== 'pending' &&
+                     p.approvalStatus !== 'pending';
   if (!isApproved) return false;
 
   // 2. Status checks
