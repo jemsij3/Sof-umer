@@ -308,6 +308,10 @@ export interface SystemSettings {
   appName: string;
   appLogoText: string;
   logoUrl: string;
+  appIconUrl?: string;
+  faviconUrl?: string;
+  pwaIconUrl?: string;
+  splashLogoUrl?: string;
   bannerUrl?: string;
   themeName: string;
   homepageHeading: string;

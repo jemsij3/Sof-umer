@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useApp } from '../lib/AppContext';
 import { formatTimeAgo } from '../lib/utils';
-import { Bell, Languages, User, LogOut, MessageSquare, Settings, Shield, Plus, Building, Heart, CheckCircle2, Wallet, CreditCard } from 'lucide-react';
+import { Bell, Languages, User, LogOut, MessageSquare, Settings, Shield, Plus, Building, Heart, CheckCircle2, Wallet, CreditCard, Download } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
 
 interface NavbarProps {
@@ -20,7 +20,9 @@ export default function Navbar({ onNavigate, activeView, onOpenCreateModal }: Na
     logout,
     t,
     refreshData,
-    systemSettings
+    systemSettings,
+    promptPwaInstall,
+    isAppInstalled
   } = useApp();
 
   const [langDropdownOpen, setLangDropdownOpen] = useState(false);
@@ -153,6 +155,18 @@ export default function Navbar({ onNavigate, activeView, onOpenCreateModal }: Na
               >
                 <Plus className="w-4 h-4 text-black" />
                 <span>{t('list_property') || 'List Property'}</span>
+              </button>
+            )}
+
+            {/* PWA Install Button */}
+            {!isAppInstalled && (
+              <button
+                onClick={promptPwaInstall}
+                className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/20 font-bold text-[11px] uppercase tracking-wider transition cursor-pointer shadow-sm shadow-amber-500/5"
+                title="Install SOF-UMER App"
+              >
+                <Download className="w-3.5 h-3.5 text-amber-500" />
+                <span className="hidden sm:inline">Install App</span>
               </button>
             )}
 

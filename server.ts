@@ -4717,6 +4717,56 @@ async function startServer() {
     }
   });
 
+  // Dynamic PWA Manifest Route
+  app.get('/manifest.json', (req, res) => {
+    const settings = (localDb as any).appSettings || {};
+    const appName = settings.appName || 'SOF-UMER';
+    const shortName = settings.appLogoText || 'SOF-UMER';
+    const pwaIcon = settings.pwaIconUrl || settings.appIconUrl || settings.logoUrl || '/favicon.svg';
+    const iconType = pwaIcon.endsWith('.svg') ? 'image/svg+xml' : 'image/png';
+
+    res.setHeader('Content-Type', 'application/manifest+json');
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.json({
+      name: appName,
+      short_name: shortName,
+      description: settings.homepageHeading || "SOF-UMER - Buy, sell, rent, hire, and connect through verified listings.",
+      start_url: "/",
+      scope: "/",
+      display: "standalone",
+      orientation: "any",
+      background_color: "#0d0d12",
+      theme_color: "#d97706",
+      icons: [
+        {
+          src: pwaIcon,
+          sizes: "192x192",
+          type: iconType,
+          purpose: "any maskable"
+        },
+        {
+          src: pwaIcon,
+          sizes: "512x512",
+          type: iconType,
+          purpose: "any maskable"
+        }
+      ]
+    });
+  });
+
+  // Service Worker Endpoint
+  app.get('/sw.js', (req, res) => {
+    res.setHeader('Content-Type', 'application/javascript');
+    res.setHeader('Service-Worker-Allowed', '/');
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    const swPath = path.join(process.cwd(), 'public', 'sw.js');
+    if (fsSync.existsSync(swPath)) {
+      res.sendFile(swPath);
+    } else {
+      res.status(404).send('// Service worker not found');
+    }
+  });
+
   // Vite Integration for Front-end serving
   if (process.env.NODE_ENV !== 'production') {
     const vite = await createViteServer({

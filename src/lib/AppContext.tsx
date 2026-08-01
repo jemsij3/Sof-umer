@@ -131,6 +131,12 @@ interface AppContextType {
   toggleNotificationRead: (id: string) => Promise<boolean>;
   deleteInquiry: (id: string) => Promise<boolean>;
   deleteAllInquiries: () => Promise<boolean>;
+
+  // PWA Installation
+  deferredPrompt: any;
+  isInstallable: boolean;
+  isAppInstalled: boolean;
+  promptPwaInstall: () => Promise<void>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -225,6 +231,116 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       } catch (e) {}
     }
   }, []);
+
+  // PWA Installation & Service Worker Logic
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+  const [isInstallable, setIsInstallable] = useState<boolean>(false);
+  const [isAppInstalled, setIsAppInstalled] = useState<boolean>(false);
+
+  useEffect(() => {
+    // Detect standalone mode
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches ||
+      (navigator as any).standalone || document.referrer.includes('android-app://');
+    if (isStandalone) {
+      setIsAppInstalled(true);
+    }
+
+    // Register Service Worker
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js').then(
+          (reg) => console.log('[PWA] Service Worker registered:', reg.scope),
+          (err) => console.warn('[PWA] Service Worker registration failed:', err)
+        );
+      });
+    }
+
+    const handleBeforeInstallPrompt = (e: Event) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+      setIsInstallable(true);
+    };
+
+    const handleAppInstalled = () => {
+      setIsInstallable(false);
+      setIsAppInstalled(true);
+      setDeferredPrompt(null);
+      console.log('[PWA] SOF-UMER App successfully installed');
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    window.addEventListener('appinstalled', handleAppInstalled);
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+      window.removeEventListener('appinstalled', handleAppInstalled);
+    };
+  }, []);
+
+  const promptPwaInstall = async () => {
+    if (!deferredPrompt) {
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
+      if (isIOS) {
+        alert('To install SOF-UMER on iOS:\n1. Tap the Share button in Safari\n2. Scroll down and tap "Add to Home Screen"');
+      } else {
+        alert('To install SOF-UMER:\nOpen your browser menu (⋮ or ⋯) and select "Install App" or "Add to Home screen".');
+      }
+      return;
+    }
+
+    deferredPrompt.prompt();
+    const choiceResult = await deferredPrompt.userChoice;
+    if (choiceResult && choiceResult.outcome === 'accepted') {
+      setIsInstallable(false);
+    }
+    setDeferredPrompt(null);
+  };
+
+  // Dynamic HTML Head Branding Syncing (Favicon, Apple Touch Icon, OG metadata)
+  useEffect(() => {
+    if (!systemSettings) return;
+
+    const faviconIcon = systemSettings.faviconUrl || systemSettings.appIconUrl || systemSettings.logoUrl || '/favicon.svg';
+    const appTitle = systemSettings.appName || 'SOF-UMER';
+
+    // Update Favicon links
+    let favIconLink = document.querySelector("link[rel='icon']") as HTMLLinkElement;
+    if (!favIconLink) {
+      favIconLink = document.createElement('link');
+      favIconLink.rel = 'icon';
+      document.head.appendChild(favIconLink);
+    }
+    if (favIconLink && faviconIcon) {
+      favIconLink.href = `${faviconIcon}${faviconIcon.includes('?') ? '&' : '?'}v=${Date.now()}`;
+      favIconLink.type = faviconIcon.endsWith('.svg') ? 'image/svg+xml' : 'image/png';
+    }
+
+    // Update Apple Touch Icon
+    let appleTouchLink = document.querySelector("link[rel='apple-touch-icon']") as HTMLLinkElement;
+    if (!appleTouchLink) {
+      appleTouchLink = document.createElement('link');
+      appleTouchLink.rel = 'apple-touch-icon';
+      document.head.appendChild(appleTouchLink);
+    }
+    if (appleTouchLink && faviconIcon) {
+      appleTouchLink.href = `${faviconIcon}${faviconIcon.includes('?') ? '&' : '?'}v=${Date.now()}`;
+    }
+
+    // Update Document Title & Application Name
+    if (appTitle) {
+      document.title = `${appTitle} | Real Estate & Property Marketplace`;
+      const appNameMeta = document.querySelector("meta[name='application-name']");
+      if (appNameMeta) appNameMeta.setAttribute('content', appTitle);
+      const appleTitleMeta = document.querySelector("meta[name='apple-mobile-web-app-title']");
+      if (appleTitleMeta) appleTitleMeta.setAttribute('content', appTitle);
+    }
+
+    // Update Manifest Link Cache Busting
+    let manifestLink = document.querySelector("link[rel='manifest']") as HTMLLinkElement;
+    if (manifestLink) {
+      manifestLink.href = `/manifest.json?v=${Date.now()}`;
+    }
+  }, [systemSettings]);
 
   const setCurrentUser = (user: User | null) => {
     setCurrentUserState(user);
@@ -929,7 +1045,11 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       deleteAllNotifications,
       toggleNotificationRead,
       deleteInquiry,
-      deleteAllInquiries
+      deleteAllInquiries,
+      deferredPrompt,
+      isInstallable,
+      isAppInstalled,
+      promptPwaInstall
     }}>
       {children}
     </AppContext.Provider>

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../lib/AppContext';
-import { User, Property, PaymentMethod, PaymentReceipt, Advertisement, TranslationKey, Language, SafetyReport, JobOpening } from '../types';
+import { User, Property, PaymentMethod, PaymentReceipt, Advertisement, TranslationKey, Language, SafetyReport, JobOpening, SystemSettings } from '../types';
 import { 
   Shield, Users, Languages, Volume2, Grid, HelpCircle, ShieldCheck, 
   AlertOctagon, CreditCard, ClipboardCheck, Trash2, Edit2, ToggleLeft, 
@@ -670,7 +670,7 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
     }
   };
 
-  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleBrandingUpload = (fieldKey: keyof SystemSettings & string) => async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -678,15 +678,30 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
     reader.onloadend = async () => {
       const base64String = reader.result as string;
       if (base64String) {
-        const newSettings = { ...systemSettings, logoUrl: base64String };
+        let finalUrl = base64String;
+        try {
+          const res = await fetch('/api/upload', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ image: base64String, folder: 'sof_umer_branding' })
+          });
+          if (res.ok) {
+            const data = await res.json();
+            if (data.url) finalUrl = data.url;
+          }
+        } catch (uploadErr) {
+          console.warn('Cloudinary upload fallback:', uploadErr);
+        }
+
+        const newSettings = { ...systemSettings, [fieldKey]: finalUrl };
         setSystemSettings(newSettings);
         try {
           await updateSystemSettings(newSettings);
           setSaveSettingsSuccess(true);
           setTimeout(() => setSaveSettingsSuccess(false), 3000);
         } catch (err) {
-          console.error('Failed to auto-save application logo:', err);
-          alert('Failed to save application logo.');
+          console.error(`Failed to save ${String(fieldKey)}:`, err);
+          alert('Failed to save branding asset.');
         }
       }
     };
@@ -3740,76 +3755,264 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
               </div>
 
               {/* Branding Section */}
-              <div className="p-4 bg-[#12121a] border border-white/5 rounded-2xl space-y-6">
-                <h4 className="text-xs font-bold text-amber-500 uppercase tracking-widest flex items-center gap-1.5 border-b border-white/5 pb-2">
-                  <ImageIcon className="w-3.5 h-3.5 text-amber-500" />
-                  <span>Application Branding & Visual Assets</span>
-                </h4>
+              <div className="p-5 bg-[#12121a] border border-white/5 rounded-2xl space-y-6">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-white/5 pb-3">
+                  <h4 className="text-xs font-bold text-amber-500 uppercase tracking-widest flex items-center gap-1.5">
+                    <ImageIcon className="w-4 h-4 text-amber-500" />
+                    <span>Application Branding & PWA Visual Assets</span>
+                  </h4>
+                  <span className="text-[10px] text-white/40">Manage Logo, Icon, Favicon, PWA Icon, & Splash Screen</span>
+                </div>
                 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
-                  <div className="flex items-center gap-5">
-                    {systemSettings.logoUrl ? (
-                      <div className="flex flex-col items-center gap-2">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                  {/* Asset 1: App Logo */}
+                  <div className="p-4 bg-black/30 border border-white/5 rounded-2xl flex flex-col justify-between space-y-3">
+                    <div className="flex items-center gap-3">
+                      {systemSettings.logoUrl ? (
                         <img
                           src={systemSettings.logoUrl}
-                          alt="App Brand Logo"
-                          className="w-20 h-20 object-cover rounded-2xl border-2 border-amber-500/50 shadow-lg shadow-amber-500/15"
+                          alt="App Main Logo"
+                          className="w-14 h-14 object-cover rounded-xl border border-amber-500/40 shrink-0"
                           referrerPolicy="no-referrer"
                         />
+                      ) : (
+                        <div className="w-14 h-14 rounded-xl bg-gradient-to-tr from-amber-400 to-amber-600 text-black flex items-center justify-center font-black text-xl shrink-0">
+                          {(systemSettings.appLogoText || systemSettings.appName || 'S')[0].toUpperCase()}
+                        </div>
+                      )}
+                      <div>
+                        <p className="text-xs font-bold text-white">App Main Logo</p>
+                        <p className="text-[10px] text-white/40 leading-snug">Navbar, headers, and footer brand mark.</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 pt-1 border-t border-white/5">
+                      <label className="flex-1 inline-flex items-center justify-center gap-1 px-3 py-1.5 bg-amber-500 hover:bg-amber-400 text-black text-[10px] font-bold rounded-xl cursor-pointer transition">
+                        <Camera className="w-3 h-3" />
+                        <span>{systemSettings.logoUrl ? 'Replace' : 'Upload'}</span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={handleBrandingUpload('logoUrl')}
+                        />
+                      </label>
+                      {systemSettings.logoUrl && (
                         <button
                           type="button"
                           onClick={async () => {
                             const updated = { ...systemSettings, logoUrl: '' };
                             setSystemSettings(updated);
-                            try {
-                              await updateSystemSettings(updated);
-                              setSaveSettingsSuccess(true);
-                              setTimeout(() => setSaveSettingsSuccess(false), 3000);
-                            } catch (err) {
-                              console.error('Failed to delete logo:', err);
-                            }
+                            await updateSystemSettings(updated);
                           }}
-                          className="px-2.5 py-1 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 text-[9px] font-extrabold rounded-lg border border-rose-500/25 cursor-pointer transition flex items-center gap-1 uppercase tracking-wider"
-                          title="Remove brand logo"
+                          className="px-2.5 py-1.5 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 text-[10px] font-bold rounded-xl border border-rose-500/20 transition"
                         >
                           <Trash2 className="w-3 h-3" />
-                          <span>Delete</span>
                         </button>
-                      </div>
-                    ) : (
-                      <div className="w-20 h-20 rounded-2xl bg-gradient-to-tr from-amber-400 to-amber-600 text-black flex items-center justify-center font-black text-3xl shadow-lg shadow-amber-500/10 shrink-0">
-                        {(systemSettings.appLogoText || systemSettings.appName || 'S')[0].toUpperCase()}
-                      </div>
-                    )}
-                    
-                    <div className="flex-1 space-y-2">
-                      <p className="text-xs font-bold text-white">Application Profile Logo</p>
-                      <p className="text-[10px] text-white/40 leading-relaxed max-w-sm">Select an image to represent your application branding across navbar, menus, and profile slots.</p>
-                      
-                      <div className="flex items-center gap-2">
-                        <label className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-amber-500 hover:bg-amber-400 text-black text-[11px] font-extrabold rounded-xl cursor-pointer transition shadow shadow-amber-500/15">
-                          <Camera className="w-3.5 h-3.5" />
-                          <span>{systemSettings.logoUrl ? 'Change Logo' : 'Upload Logo'}</span>
-                          <input
-                            type="file"
-                            accept="image/*"
-                            className="hidden"
-                            onChange={handleLogoUpload}
-                          />
-                        </label>
-                      </div>
+                      )}
                     </div>
                   </div>
 
-                  <div>
-                    <label className="block text-[10px] text-white/40 font-bold mb-1.5 uppercase">Navbar / Sidebar Brand Text</label>
-                    <input
-                      type="text"
-                      placeholder="e.g. SOF-UMER"
-                      value={systemSettings.appLogoText}
-                      onChange={e => setSystemSettings({ ...systemSettings, appLogoText: e.target.value })}
-                      className="w-full px-3.5 py-2.5 bg-black/40 border border-white/5 rounded-xl text-xs text-white focus:outline-none focus:border-amber-500/50 transition"
-                    />
+                  {/* Asset 2: App Icon */}
+                  <div className="p-4 bg-black/30 border border-white/5 rounded-2xl flex flex-col justify-between space-y-3">
+                    <div className="flex items-center gap-3">
+                      {systemSettings.appIconUrl ? (
+                        <img
+                          src={systemSettings.appIconUrl}
+                          alt="App Icon"
+                          className="w-14 h-14 object-cover rounded-xl border border-amber-500/40 shrink-0"
+                          referrerPolicy="no-referrer"
+                        />
+                      ) : (
+                        <div className="w-14 h-14 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-500 flex items-center justify-center font-bold text-xs shrink-0">
+                          Icon
+                        </div>
+                      )}
+                      <div>
+                        <p className="text-xs font-bold text-white">App Icon</p>
+                        <p className="text-[10px] text-white/40 leading-snug">Used for system UI badges and app avatars.</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 pt-1 border-t border-white/5">
+                      <label className="flex-1 inline-flex items-center justify-center gap-1 px-3 py-1.5 bg-amber-500 hover:bg-amber-400 text-black text-[10px] font-bold rounded-xl cursor-pointer transition">
+                        <Camera className="w-3 h-3" />
+                        <span>{systemSettings.appIconUrl ? 'Replace' : 'Upload'}</span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={handleBrandingUpload('appIconUrl')}
+                        />
+                      </label>
+                      {systemSettings.appIconUrl && (
+                        <button
+                          type="button"
+                          onClick={async () => {
+                            const updated = { ...systemSettings, appIconUrl: '' };
+                            setSystemSettings(updated);
+                            await updateSystemSettings(updated);
+                          }}
+                          className="px-2.5 py-1.5 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 text-[10px] font-bold rounded-xl border border-rose-500/20 transition"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Asset 3: Favicon */}
+                  <div className="p-4 bg-black/30 border border-white/5 rounded-2xl flex flex-col justify-between space-y-3">
+                    <div className="flex items-center gap-3">
+                      {systemSettings.faviconUrl ? (
+                        <img
+                          src={systemSettings.faviconUrl}
+                          alt="Favicon"
+                          className="w-14 h-14 object-cover rounded-xl border border-amber-500/40 shrink-0"
+                          referrerPolicy="no-referrer"
+                        />
+                      ) : (
+                        <div className="w-14 h-14 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-500 flex items-center justify-center font-bold text-xs shrink-0">
+                          Favicon
+                        </div>
+                      )}
+                      <div>
+                        <p className="text-xs font-bold text-white">Browser Favicon</p>
+                        <p className="text-[10px] text-white/40 leading-snug">Tab icon displayed in web browsers.</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 pt-1 border-t border-white/5">
+                      <label className="flex-1 inline-flex items-center justify-center gap-1 px-3 py-1.5 bg-amber-500 hover:bg-amber-400 text-black text-[10px] font-bold rounded-xl cursor-pointer transition">
+                        <Camera className="w-3 h-3" />
+                        <span>{systemSettings.faviconUrl ? 'Replace' : 'Upload'}</span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={handleBrandingUpload('faviconUrl')}
+                        />
+                      </label>
+                      {systemSettings.faviconUrl && (
+                        <button
+                          type="button"
+                          onClick={async () => {
+                            const updated = { ...systemSettings, faviconUrl: '' };
+                            setSystemSettings(updated);
+                            await updateSystemSettings(updated);
+                          }}
+                          className="px-2.5 py-1.5 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 text-[10px] font-bold rounded-xl border border-rose-500/20 transition"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Asset 4: PWA Icon */}
+                  <div className="p-4 bg-black/30 border border-white/5 rounded-2xl flex flex-col justify-between space-y-3">
+                    <div className="flex items-center gap-3">
+                      {systemSettings.pwaIconUrl ? (
+                        <img
+                          src={systemSettings.pwaIconUrl}
+                          alt="PWA Icon"
+                          className="w-14 h-14 object-cover rounded-xl border border-amber-500/40 shrink-0"
+                          referrerPolicy="no-referrer"
+                        />
+                      ) : (
+                        <div className="w-14 h-14 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-500 flex items-center justify-center font-bold text-xs shrink-0">
+                          PWA
+                        </div>
+                      )}
+                      <div>
+                        <p className="text-xs font-bold text-white">PWA Home Icon</p>
+                        <p className="text-[10px] text-white/40 leading-snug">Installed mobile app launcher icon.</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 pt-1 border-t border-white/5">
+                      <label className="flex-1 inline-flex items-center justify-center gap-1 px-3 py-1.5 bg-amber-500 hover:bg-amber-400 text-black text-[10px] font-bold rounded-xl cursor-pointer transition">
+                        <Camera className="w-3 h-3" />
+                        <span>{systemSettings.pwaIconUrl ? 'Replace' : 'Upload'}</span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={handleBrandingUpload('pwaIconUrl')}
+                        />
+                      </label>
+                      {systemSettings.pwaIconUrl && (
+                        <button
+                          type="button"
+                          onClick={async () => {
+                            const updated = { ...systemSettings, pwaIconUrl: '' };
+                            setSystemSettings(updated);
+                            await updateSystemSettings(updated);
+                          }}
+                          className="px-2.5 py-1.5 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 text-[10px] font-bold rounded-xl border border-rose-500/20 transition"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Asset 5: Splash Screen Logo */}
+                  <div className="p-4 bg-black/30 border border-white/5 rounded-2xl flex flex-col justify-between space-y-3">
+                    <div className="flex items-center gap-3">
+                      {systemSettings.splashLogoUrl ? (
+                        <img
+                          src={systemSettings.splashLogoUrl}
+                          alt="Splash Screen Logo"
+                          className="w-14 h-14 object-cover rounded-xl border border-amber-500/40 shrink-0"
+                          referrerPolicy="no-referrer"
+                        />
+                      ) : (
+                        <div className="w-14 h-14 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-500 flex items-center justify-center font-bold text-xs shrink-0">
+                          Splash
+                        </div>
+                      )}
+                      <div>
+                        <p className="text-xs font-bold text-white">PWA Splash Screen</p>
+                        <p className="text-[10px] text-white/40 leading-snug">Startup graphic when app opens on mobile.</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 pt-1 border-t border-white/5">
+                      <label className="flex-1 inline-flex items-center justify-center gap-1 px-3 py-1.5 bg-amber-500 hover:bg-amber-400 text-black text-[10px] font-bold rounded-xl cursor-pointer transition">
+                        <Camera className="w-3 h-3" />
+                        <span>{systemSettings.splashLogoUrl ? 'Replace' : 'Upload'}</span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={handleBrandingUpload('splashLogoUrl')}
+                        />
+                      </label>
+                      {systemSettings.splashLogoUrl && (
+                        <button
+                          type="button"
+                          onClick={async () => {
+                            const updated = { ...systemSettings, splashLogoUrl: '' };
+                            setSystemSettings(updated);
+                            await updateSystemSettings(updated);
+                          }}
+                          className="px-2.5 py-1.5 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 text-[10px] font-bold rounded-xl border border-rose-500/20 transition"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Text Input: Brand Text */}
+                  <div className="p-4 bg-black/30 border border-white/5 rounded-2xl flex flex-col justify-between space-y-3">
+                    <div>
+                      <label className="block text-[10px] text-white/40 font-bold mb-1.5 uppercase">Navbar / Sidebar Brand Text</label>
+                      <input
+                        type="text"
+                        placeholder="e.g. SOF-UMER"
+                        value={systemSettings.appLogoText}
+                        onChange={e => setSystemSettings({ ...systemSettings, appLogoText: e.target.value })}
+                        className="w-full px-3.5 py-2.5 bg-black/60 border border-white/10 rounded-xl text-xs text-white focus:outline-none focus:border-amber-500/50 transition"
+                      />
+                    </div>
+                    <p className="text-[10px] text-white/40">Short brand title shown alongside logo mark in menus.</p>
                   </div>
                 </div>
               </div>
