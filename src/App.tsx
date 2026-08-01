@@ -14,6 +14,7 @@ import AdminDashboard from './components/AdminDashboard';
 import CreateListingModal from './components/CreateListingModal';
 import Footer from './components/Footer';
 import InfoPage from './components/InfoPage';
+import PwaInstallBanner from './components/PwaInstallBanner';
 import { Property } from './types';
 import { ShieldAlert, X, Send } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
@@ -215,6 +216,7 @@ function MainAppLayout() {
       <>
         <style>{getThemeCSS(systemSettings?.themeName || 'cosmic-slate')}</style>
         <AuthScreen />
+        <PwaInstallBanner />
       </>
     );
   }
@@ -435,6 +437,9 @@ function MainAppLayout() {
           </div>
         </div>
       )}
+
+      {/* Smart PWA Installation Reminder Banner */}
+      <PwaInstallBanner />
 
     </div>
   );
