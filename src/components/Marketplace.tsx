@@ -1517,7 +1517,7 @@ export default function Marketplace({
               {recentlyViewedIds.length > 0 && (
                 <div className="bg-[#0c0c11]/50 border border-white/5 rounded-3xl p-5">
                   <h4 className="text-[10px] font-bold text-white/30 uppercase tracking-widest mb-3 flex items-center gap-1.5">
-                    <Clock className="w-3.5 h-3.5 text-amber-500" /> RECENTLY VIEWED CATEGORIES
+                    <Clock className="w-3.5 h-3.5 text-amber-500" /> {t('recently_viewed_categories')}
                   </h4>
                   <div className="flex flex-wrap gap-2">
                     {recentlyViewedIds.map(id => {

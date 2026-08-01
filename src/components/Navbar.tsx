@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useApp } from '../lib/AppContext';
 import { formatTimeAgo } from '../lib/utils';
 import { Bell, Languages, User, LogOut, MessageSquare, Settings, Shield, Plus, Building, Heart, CheckCircle2, Wallet, CreditCard } from 'lucide-react';
@@ -26,6 +26,70 @@ export default function Navbar({ onNavigate, activeView, onOpenCreateModal }: Na
   const [langDropdownOpen, setLangDropdownOpen] = useState(false);
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
   const [notifDropdownOpen, setNotifDropdownOpen] = useState(false);
+
+  const bellButtonRef = useRef<HTMLButtonElement>(null);
+  const notifDropdownRef = useRef<HTMLDivElement>(null);
+  const [notifStyle, setNotifStyle] = useState<{ left: string; width: string }>({ left: '0px', width: '320px' });
+
+  // Compute position to keep dropdown anchored beneath bell icon and fully visible inside viewport
+  const updateNotifPosition = useCallback(() => {
+    if (!bellButtonRef.current) return;
+    const rect = bellButtonRef.current.getBoundingClientRect();
+    const viewportWidth = window.innerWidth;
+    const margin = 16;
+    const targetWidth = Math.min(320, viewportWidth - margin * 2);
+
+    const bellCenter = rect.left + rect.width / 2;
+    let idealLeft = bellCenter - targetWidth / 2;
+
+    if (idealLeft < margin) {
+      idealLeft = margin;
+    } else if (idealLeft + targetWidth > viewportWidth - margin) {
+      idealLeft = viewportWidth - margin - targetWidth;
+    }
+
+    const relativeLeft = idealLeft - rect.left;
+
+    setNotifStyle({
+      left: `${relativeLeft}px`,
+      width: `${targetWidth}px`
+    });
+  }, []);
+
+  useEffect(() => {
+    if (notifDropdownOpen) {
+      updateNotifPosition();
+      window.addEventListener('resize', updateNotifPosition);
+      window.addEventListener('scroll', updateNotifPosition, { passive: true });
+      return () => {
+        window.removeEventListener('resize', updateNotifPosition);
+        window.removeEventListener('scroll', updateNotifPosition);
+      };
+    }
+  }, [notifDropdownOpen, updateNotifPosition]);
+
+  // Close dropdown on click outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent | TouchEvent) => {
+      if (
+        notifDropdownRef.current &&
+        !notifDropdownRef.current.contains(event.target as Node) &&
+        bellButtonRef.current &&
+        !bellButtonRef.current.contains(event.target as Node)
+      ) {
+        setNotifDropdownOpen(false);
+      }
+    };
+
+    if (notifDropdownOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener('touchstart', handleClickOutside);
+      return () => {
+        document.removeEventListener('mousedown', handleClickOutside);
+        document.removeEventListener('touchstart', handleClickOutside);
+      };
+    }
+  }, [notifDropdownOpen]);
 
   // Active languages filter
   const activeLanguages = languages.filter(l => l.isActive);
@@ -141,13 +205,16 @@ export default function Navbar({ onNavigate, activeView, onOpenCreateModal }: Na
             {currentUser && (
               <div className="relative">
                 <button
+                  ref={bellButtonRef}
                   onClick={() => {
-                    setNotifDropdownOpen(!notifDropdownOpen);
-                    setUserDropdownOpen(false);
-                    setLangDropdownOpen(false);
-                    if (!notifDropdownOpen) {
+                    const nextState = !notifDropdownOpen;
+                    if (nextState) {
+                      updateNotifPosition();
                       handleMarkNotificationsRead();
                     }
+                    setNotifDropdownOpen(nextState);
+                    setUserDropdownOpen(false);
+                    setLangDropdownOpen(false);
                   }}
                   className="p-3 rounded-xl hover:bg-white/5 text-white/60 hover:text-white transition relative cursor-pointer"
                   aria-label="Notifications"
@@ -163,15 +230,22 @@ export default function Navbar({ onNavigate, activeView, onOpenCreateModal }: Na
                 <AnimatePresence>
                   {notifDropdownOpen && (
                     <motion.div
+                      ref={notifDropdownRef}
                       initial={{ opacity: 0, y: 10, scale: 0.95 }}
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                      className="absolute right-0 mt-2 w-80 bg-[#0d0d12] rounded-2xl shadow-2xl border border-white/10 py-2.5 z-50 max-h-[400px] overflow-y-auto"
+                      style={{
+                        left: notifStyle.left,
+                        width: notifStyle.width,
+                      }}
+                      className="absolute mt-2 bg-[#0d0d12] rounded-2xl shadow-2xl border border-white/10 py-2.5 z-50 max-h-[400px] overflow-y-auto"
                     >
-                      <div className="px-4 py-3 border-b border-white/5 flex justify-between items-center">
-                        <span className="font-bold text-[10px] uppercase tracking-widest text-white/50">{t('notifications')}</span>
+                      <div className="px-4 py-3 border-b border-white/5 flex justify-between items-center gap-2">
+                        <span className="font-bold text-[10px] uppercase tracking-widest text-white/50 truncate">
+                          {t('notifications')}
+                        </span>
                         {unreadNotifications.length > 0 && (
-                          <span className="text-[9px] text-black bg-amber-500 px-2 py-0.5 rounded-full font-black uppercase tracking-wider">
+                          <span className="text-[9px] text-black bg-amber-500 px-2 py-0.5 rounded-full font-black uppercase tracking-wider shrink-0">
                             {unreadNotifications.length} {t('new_notification_suffix')}
                           </span>
                         )}
@@ -194,10 +268,10 @@ export default function Navbar({ onNavigate, activeView, onOpenCreateModal }: Na
                                 }`}
                               >
                                 <p className="font-semibold text-white/95 mb-0.5 flex items-center gap-1.5">
-                                  {!notif.isRead && <span className="w-1.5 h-1.5 bg-amber-500 rounded-full" />}
-                                  {notif.title}
+                                  {!notif.isRead && <span className="w-1.5 h-1.5 bg-amber-500 rounded-full shrink-0" />}
+                                  <span className="break-words">{notif.title}</span>
                                 </p>
-                                <p className="leading-relaxed text-white/60">{notif.message}</p>
+                                <p className="leading-relaxed text-white/60 break-words">{notif.message}</p>
                                 <span className="text-[10px] text-white/30 block mt-1 font-mono">
                                   {formatTimeAgo(notif.createdAt)}
                                 </span>

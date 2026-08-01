@@ -1271,7 +1271,7 @@ const applyDataSanityAndMigrations = () => {
         (p as any).ownerEmail = matchedUser.email;
         (p as any).ownerPhone = matchedUser.phone || p.contactPhone || '';
         if (!p.ownerName) p.ownerName = matchedUser.fullName || 'Property Owner';
-        if (!(p as any).ownerAvatar) (p as any).ownerAvatar = matchedUser.avatar || '';
+        if (!(p as any).ownerAvatar) (p as any).ownerAvatar = (matchedUser as any).avatar || '';
         if (!(p as any).ownerBusinessName) (p as any).ownerBusinessName = (matchedUser as any).businessName || '';
       } else {
         // Unregistered owner or admin posted on behalf
@@ -1409,8 +1409,31 @@ async function startServer() {
     res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
   });
 
-  // Support JSON payloads
-  app.use(express.json({ limit: '10mb' }));
+  // Ensure all /api responses default to application/json
+  app.use('/api', (req, res, next) => {
+    res.setHeader('Content-Type', 'application/json; charset=utf-8');
+    next();
+  });
+
+  // Support JSON & URL-encoded payloads with 50MB body limit
+  app.use(express.json({ limit: '50mb' }));
+  app.use(express.urlencoded({ limit: '50mb', extended: true }));
+
+  // Centralized body parser error handling (catches entity.too.large or malformed JSON payloads)
+  app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+    if (err) {
+      console.error('[BodyParserError]', err.message);
+      res.setHeader('Content-Type', 'application/json; charset=utf-8');
+      return res.status(err.status || 400).json({
+        success: false,
+        error: err.type === 'entity.too.large'
+          ? 'Payload too large. Please reduce image file sizes or upload fewer images.'
+          : 'Invalid or malformed JSON request body.',
+        message: err.message
+      });
+    }
+    next();
+  });
 
   const JWT_SECRET = process.env.JWT_SECRET || 'secure-sof-umer-default-secret-2026-xyz';
 
@@ -2881,194 +2904,268 @@ async function startServer() {
   });
 
   app.post('/api/properties', async (req, res) => {
-    const propertyData = req.body;
-
-    // Optional auth token resolution for seamless creation from client
     let authUser: ServerUser | undefined = undefined;
-    const authHeader = req.headers.authorization;
-    if (authHeader && authHeader.startsWith('Bearer ')) {
-      const token = authHeader.substring(7);
-      try {
-        const decoded = jwt.verify(token, JWT_SECRET) as any;
-        const targetUserId = decoded ? (decoded.userId || decoded.id) : undefined;
-        if (targetUserId) {
-          authUser = localDb.users.find(u => u.id === targetUserId);
-        }
-      } catch (e) {}
-    }
+    const propertyData = req.body || {};
 
-    // Fallback owner matching if no valid token
-    if (!authUser && propertyData.ownerId) {
-      authUser = localDb.users.find(u => u.id === propertyData.ownerId);
-    }
-    if (!authUser && propertyData.contactEmail) {
-      const cEmail = propertyData.contactEmail.trim().toLowerCase();
-      authUser = localDb.users.find(u => u.email && u.email.toLowerCase() === cEmail);
-    }
-
-    const categoryAllowedKeys: Record<string, string[]> = {
-      Products: ['subcategory', 'brand', 'model', 'size', 'dimensions', 'color', 'material', 'condition', 'quantity', 'negotiable', 'gender', 'clothing type', 'storage / spec'],
-      Properties: ['subcategory', 'property type', 'purpose', 'bedrooms', 'bathrooms', 'toilets', 'toilet', 'area', 'area (m²)', 'furnished', 'furnished status', 'parking', 'parking available', 'floor level', 'ownership', 'ownership / title deed', 'title deed', 'zoning'],
-      Vehicles: ['subcategory', 'vehicle type', 'make / brand', 'transmission', 'fuel type', 'engine capacity', 'year', 'mileage', 'mileage (km)', 'color', 'brand', 'condition', 'model'],
-      Jobs: ['subcategory', 'job type', 'employment type', 'sector', 'sector / industry', 'industry', 'salary range', 'qualification', 'education required', 'experience', 'experience required', 'deadline', 'application deadline'],
-      Services: ['subcategory', 'service type', 'service category', 'pricing unit', 'years of experience', 'coverage area', 'availability', 'opening hours'],
-      'Local Businesses': ['subcategory', 'business category', 'business type', 'opening hours', 'website', 'website / social link', 'services offered'],
-      Community: ['subcategory', 'post type', 'organizer', 'organizer name / group', 'venue', 'venue / address', 'date', 'time', 'event date & time']
-    };
-
-    const majorCat = propertyData.majorCategory || 'Properties';
-    const allowedKeys = categoryAllowedKeys[majorCat];
-    let cleanAmenities = Array.isArray(propertyData.amenities) ? propertyData.amenities : [];
-    if (allowedKeys && cleanAmenities.length > 0) {
-      cleanAmenities = cleanAmenities.filter((item: any) => {
-        if (typeof item !== 'string') return false;
-        if (!item.includes(':')) return true;
-        const key = item.split(':')[0].trim().toLowerCase();
-        return allowedKeys.includes(key);
-      });
-    }
-
-    // Check if free listing campaign is active
-    const fls = (localDb as any).appSettings?.freeListingSettings || {};
-    const isFreeListingEnabled = (() => {
-      if (fls.enabled === false) return false;
-      const now = new Date();
-      if (fls.startDate) {
-        const start = new Date(fls.startDate);
-        if (!isNaN(start.getTime()) && now < start) return false;
-      }
-      if (fls.endDate) {
-        const end = new Date(fls.endDate);
-        end.setHours(23, 59, 59, 999);
-        if (!isNaN(end.getTime()) && now > end) return false;
-      }
-      return true;
-    })();
-
-    const requestedPlan = propertyData.boostPlan || 'free';
-    if (!isFreeListingEnabled && requestedPlan === 'free') {
-      if (!authUser || authUser.role !== 'admin') {
+    try {
+      if (!req.body || typeof req.body !== 'object' || Array.isArray(req.body)) {
+        console.warn('[POST /api/properties] Validation Error: Invalid request body', req.body);
         return res.status(400).json({
-          error: 'Free listing campaign is currently disabled or expired. Please select a promotion boost package to list your item.'
+          success: false,
+          error: 'Invalid request body. Object expected.'
         });
       }
-    }
 
-    // Process listing images through Cloudinary if base64 images are submitted
-    if (propertyData.images && Array.isArray(propertyData.images)) {
-      propertyData.images = await Promise.all(
-        propertyData.images.map((img: string) => uploadToCloudinaryIfConfigured(img, 'sof_umer/properties'))
-      );
-    }
-    if (propertyData.coverImage && typeof propertyData.coverImage === 'string') {
-      propertyData.coverImage = await uploadToCloudinaryIfConfigured(propertyData.coverImage, 'sof_umer/properties');
-    }
-
-    const planDays = (requestedPlan === 'starter' || requestedPlan === 'basic') ? 3 : requestedPlan === 'premium' ? 7 : requestedPlan === 'vip' ? 30 : 0;
-    const computedExpiresAt = planDays > 0 ? new Date(Date.now() + planDays * 24 * 60 * 60 * 1000).toISOString() : (propertyData.promotionExpiresAt || undefined);
-
-    const isAdmin = authUser?.role === 'admin';
-    const createdBy = authUser ? authUser.id : 'usr-guest';
-    const createdByName = authUser ? (authUser.fullName || authUser.email) : 'Guest';
-    const createdByEmail = authUser ? authUser.email : '';
-
-    let finalOwnerId = '';
-    let finalOwnerName = propertyData.ownerName || '';
-    let finalOwnerEmail = propertyData.contactEmail || propertyData.ownerEmail || '';
-    let finalOwnerPhone = propertyData.contactPhone || propertyData.ownerPhone || '';
-    let finalOwnerBusinessName = propertyData.ownerBusinessName || '';
-    let finalOwnerAvatar = propertyData.ownerAvatar || '';
-    let finalOwnerType = propertyData.ownerType || 'Individual';
-    let postedOnBehalf = false;
-
-    // Look up if entered owner email or phone matches a registered user account
-    let matchedOwnerUser: ServerUser | undefined = undefined;
-    if (finalOwnerEmail) {
-      matchedOwnerUser = localDb.users.find(u => u.email && u.email.trim().toLowerCase() === finalOwnerEmail.trim().toLowerCase());
-    }
-    if (!matchedOwnerUser && finalOwnerPhone) {
-      const normPhone = normalizePhone(finalOwnerPhone);
-      if (normPhone) {
-        matchedOwnerUser = localDb.users.find(u => u.phone && normalizePhone(u.phone) === normPhone);
-      }
-    }
-
-    if (isAdmin) {
-      const isPostingForSelf = !propertyData.postedOnBehalf && (
-        (matchedOwnerUser && matchedOwnerUser.id === authUser.id) ||
-        (!matchedOwnerUser && (!finalOwnerName || finalOwnerName === authUser.fullName) && (!finalOwnerEmail || finalOwnerEmail.toLowerCase() === authUser.email.toLowerCase()))
-      );
-
-      if (isPostingForSelf) {
-        finalOwnerId = authUser.id;
-        finalOwnerName = authUser.fullName || 'Property Owner';
-        finalOwnerEmail = authUser.email;
-        finalOwnerPhone = authUser.phone || finalOwnerPhone || '';
-        finalOwnerAvatar = authUser.avatar || finalOwnerAvatar || '';
-        postedOnBehalf = false;
-      } else {
-        postedOnBehalf = true;
-        if (matchedOwnerUser) {
-          finalOwnerId = matchedOwnerUser.id;
-          finalOwnerName = finalOwnerName || matchedOwnerUser.fullName || 'Property Owner';
-          finalOwnerEmail = finalOwnerEmail || matchedOwnerUser.email;
-          finalOwnerPhone = finalOwnerPhone || matchedOwnerUser.phone || '';
-          finalOwnerAvatar = finalOwnerAvatar || matchedOwnerUser.avatar || '';
-          finalOwnerBusinessName = finalOwnerBusinessName || (matchedOwnerUser as any).businessName || '';
-          finalOwnerType = finalOwnerType || (matchedOwnerUser as any).accountType || 'Individual';
-        } else {
-          finalOwnerId = (propertyData.ownerId && propertyData.ownerId !== authUser.id) ? propertyData.ownerId : ('usr-owner-' + Date.now());
-          finalOwnerName = finalOwnerName || 'Property Owner';
+      // Optional auth token resolution for seamless creation from client
+      const authHeader = req.headers.authorization;
+      if (authHeader && authHeader.startsWith('Bearer ')) {
+        const token = authHeader.substring(7);
+        try {
+          const decoded = jwt.verify(token, JWT_SECRET) as any;
+          const targetUserId = decoded ? (decoded.userId || decoded.id) : undefined;
+          if (targetUserId) {
+            authUser = localDb.users.find(u => u.id === targetUserId);
+          }
+        } catch (e) {
+          // Ignore invalid token and fall back to guest/ownerId
         }
       }
-    } else {
-      if (authUser) {
-        finalOwnerId = authUser.id;
-        finalOwnerName = authUser.fullName || finalOwnerName || 'Property Owner';
-        finalOwnerEmail = authUser.email || finalOwnerEmail;
-        finalOwnerPhone = authUser.phone || finalOwnerPhone;
-        finalOwnerAvatar = authUser.avatar || finalOwnerAvatar;
-      } else {
-        finalOwnerId = matchedOwnerUser ? matchedOwnerUser.id : ('usr-guest-' + Date.now());
+
+      // Fallback owner matching if no valid token
+      if (!authUser && propertyData.ownerId) {
+        authUser = localDb.users.find(u => u.id === propertyData.ownerId);
       }
+      if (!authUser && propertyData.contactEmail) {
+        const cEmail = propertyData.contactEmail.trim().toLowerCase();
+        authUser = localDb.users.find(u => u.email && u.email.toLowerCase() === cEmail);
+      }
+
+      // Validate required fields
+      const rawTitle = propertyData.title;
+      if (!rawTitle || typeof rawTitle !== 'string' || !rawTitle.trim()) {
+        console.warn('[POST /api/properties] Validation Error: Missing required field title', {
+          userId: authUser?.id || 'guest',
+          title: rawTitle,
+          category: propertyData.category
+        });
+        return res.status(400).json({
+          success: false,
+          error: 'Title is required for listing creation.'
+        });
+      }
+
+      const categoryAllowedKeys: Record<string, string[]> = {
+        Products: ['subcategory', 'brand', 'model', 'size', 'dimensions', 'color', 'material', 'condition', 'quantity', 'negotiable', 'gender', 'clothing type', 'storage / spec'],
+        Properties: ['subcategory', 'property type', 'purpose', 'bedrooms', 'bathrooms', 'toilets', 'toilet', 'area', 'area (m²)', 'furnished', 'furnished status', 'parking', 'parking available', 'floor level', 'ownership', 'ownership / title deed', 'title deed', 'zoning'],
+        Vehicles: ['subcategory', 'vehicle type', 'make / brand', 'transmission', 'fuel type', 'engine capacity', 'year', 'mileage', 'mileage (km)', 'color', 'brand', 'condition', 'model'],
+        Jobs: ['subcategory', 'job type', 'employment type', 'sector', 'sector / industry', 'industry', 'salary range', 'qualification', 'education required', 'experience', 'experience required', 'deadline', 'application deadline'],
+        Services: ['subcategory', 'service type', 'service category', 'pricing unit', 'years of experience', 'coverage area', 'availability', 'opening hours'],
+        'Local Businesses': ['subcategory', 'business category', 'business type', 'opening hours', 'website', 'website / social link', 'services offered'],
+        Community: ['subcategory', 'post type', 'organizer', 'organizer name / group', 'venue', 'venue / address', 'date', 'time', 'event date & time']
+      };
+
+      const majorCat = propertyData.majorCategory || 'Properties';
+      const allowedKeys = categoryAllowedKeys[majorCat];
+      let cleanAmenities = Array.isArray(propertyData.amenities) ? propertyData.amenities : [];
+      if (allowedKeys && cleanAmenities.length > 0) {
+        cleanAmenities = cleanAmenities.filter((item: any) => {
+          if (typeof item !== 'string') return false;
+          if (!item.includes(':')) return true;
+          const key = item.split(':')[0].trim().toLowerCase();
+          return allowedKeys.includes(key);
+        });
+      }
+
+      // Check if free listing campaign is active
+      const fls = (localDb as any).appSettings?.freeListingSettings || {};
+      const isFreeListingEnabled = (() => {
+        if (fls.enabled === false) return false;
+        const now = new Date();
+        if (fls.startDate) {
+          const start = new Date(fls.startDate);
+          if (!isNaN(start.getTime()) && now < start) return false;
+        }
+        if (fls.endDate) {
+          const end = new Date(fls.endDate);
+          end.setHours(23, 59, 59, 999);
+          if (!isNaN(end.getTime()) && now > end) return false;
+        }
+        return true;
+      })();
+
+      const requestedPlan = propertyData.boostPlan || 'free';
+      if (!isFreeListingEnabled && requestedPlan === 'free') {
+        if (!authUser || authUser.role !== 'admin') {
+          return res.status(400).json({
+            success: false,
+            error: 'Free listing campaign is currently disabled or expired. Please select a promotion boost package to list your item.'
+          });
+        }
+      }
+
+      // Safe image processing
+      let processedImages: string[] = [];
+      if (propertyData.images && Array.isArray(propertyData.images)) {
+        try {
+          processedImages = await Promise.all(
+            propertyData.images.map(async (img: string) => {
+              if (typeof img !== 'string') return '';
+              try {
+                return await uploadToCloudinaryIfConfigured(img, 'sof_umer/properties');
+              } catch (imgErr) {
+                console.error('[CloudinaryUploadError] Failed image upload, returning raw image string:', imgErr);
+                return img;
+              }
+            })
+          );
+          processedImages = processedImages.filter(Boolean);
+        } catch (imgArrayErr) {
+          console.error('[ImageProcessingError] Error uploading property images array:', imgArrayErr);
+          processedImages = Array.isArray(propertyData.images) ? propertyData.images.filter((i: any) => typeof i === 'string') : [];
+        }
+      }
+
+      let processedCoverImage = propertyData.coverImage || '';
+      if (processedCoverImage && typeof processedCoverImage === 'string') {
+        try {
+          processedCoverImage = await uploadToCloudinaryIfConfigured(processedCoverImage, 'sof_umer/properties');
+        } catch (coverErr) {
+          console.error('[CloudinaryUploadError] Cover image upload failed:', coverErr);
+        }
+      }
+
+      const planDays = (requestedPlan === 'starter' || requestedPlan === 'basic') ? 3 : requestedPlan === 'premium' ? 7 : requestedPlan === 'vip' ? 30 : 0;
+      const computedExpiresAt = planDays > 0 ? new Date(Date.now() + planDays * 24 * 60 * 60 * 1000).toISOString() : (propertyData.promotionExpiresAt || undefined);
+
+      const isAdmin = authUser?.role === 'admin';
+      const createdBy = authUser ? authUser.id : 'usr-guest';
+      const createdByName = authUser ? (authUser.fullName || authUser.email) : 'Guest';
+      const createdByEmail = authUser ? authUser.email : '';
+
+      let finalOwnerId = '';
+      let finalOwnerName = propertyData.ownerName || '';
+      let finalOwnerEmail = propertyData.contactEmail || propertyData.ownerEmail || '';
+      let finalOwnerPhone = propertyData.contactPhone || propertyData.ownerPhone || '';
+      let finalOwnerBusinessName = propertyData.ownerBusinessName || '';
+      let finalOwnerAvatar = propertyData.ownerAvatar || '';
+      let finalOwnerType = propertyData.ownerType || 'Individual';
+      let postedOnBehalf = false;
+
+      // Look up if entered owner email or phone matches a registered user account
+      let matchedOwnerUser: ServerUser | undefined = undefined;
+      if (finalOwnerEmail) {
+        matchedOwnerUser = localDb.users.find(u => u.email && u.email.trim().toLowerCase() === finalOwnerEmail.trim().toLowerCase());
+      }
+      if (!matchedOwnerUser && finalOwnerPhone) {
+        const normPhone = normalizePhone(finalOwnerPhone);
+        if (normPhone) {
+          matchedOwnerUser = localDb.users.find(u => u.phone && normalizePhone(u.phone) === normPhone);
+        }
+      }
+
+      if (isAdmin) {
+        const isPostingForSelf = !propertyData.postedOnBehalf && (
+          (matchedOwnerUser && matchedOwnerUser.id === authUser.id) ||
+          (!matchedOwnerUser && (!finalOwnerName || finalOwnerName === authUser.fullName) && (!finalOwnerEmail || finalOwnerEmail.toLowerCase() === authUser.email.toLowerCase()))
+        );
+
+        if (isPostingForSelf) {
+          finalOwnerId = authUser.id;
+          finalOwnerName = authUser.fullName || 'Property Owner';
+          finalOwnerEmail = authUser.email;
+          finalOwnerPhone = authUser.phone || finalOwnerPhone || '';
+          finalOwnerAvatar = (authUser as any).avatar || finalOwnerAvatar || '';
+          postedOnBehalf = false;
+        } else {
+          postedOnBehalf = true;
+          if (matchedOwnerUser) {
+            finalOwnerId = matchedOwnerUser.id;
+            finalOwnerName = finalOwnerName || matchedOwnerUser.fullName || 'Property Owner';
+            finalOwnerEmail = finalOwnerEmail || matchedOwnerUser.email;
+            finalOwnerPhone = finalOwnerPhone || matchedOwnerUser.phone || '';
+            finalOwnerAvatar = finalOwnerAvatar || (matchedOwnerUser as any).avatar || '';
+            finalOwnerBusinessName = finalOwnerBusinessName || (matchedOwnerUser as any).businessName || '';
+            finalOwnerType = finalOwnerType || (matchedOwnerUser as any).accountType || 'Individual';
+          } else {
+            finalOwnerId = (propertyData.ownerId && propertyData.ownerId !== authUser.id) ? propertyData.ownerId : ('usr-owner-' + Date.now());
+            finalOwnerName = finalOwnerName || 'Property Owner';
+          }
+        }
+      } else {
+        if (authUser) {
+          finalOwnerId = authUser.id;
+          finalOwnerName = authUser.fullName || finalOwnerName || 'Property Owner';
+          finalOwnerEmail = authUser.email || finalOwnerEmail;
+          finalOwnerPhone = authUser.phone || finalOwnerPhone;
+          finalOwnerAvatar = (authUser as any).avatar || finalOwnerAvatar;
+        } else {
+          finalOwnerId = matchedOwnerUser ? matchedOwnerUser.id : ('usr-guest-' + Date.now());
+        }
+      }
+
+      const newProperty: Property = {
+        id: 'prop-' + Date.now(),
+        ...propertyData,
+        images: processedImages,
+        coverImage: processedCoverImage,
+        createdBy,
+        createdByName,
+        createdByEmail,
+        ownerId: finalOwnerId,
+        ownerName: finalOwnerName,
+        contactEmail: finalOwnerEmail,
+        contactPhone: finalOwnerPhone,
+        ownerEmail: finalOwnerEmail,
+        ownerPhone: finalOwnerPhone,
+        ownerBusinessName: finalOwnerBusinessName,
+        ownerAvatar: finalOwnerAvatar,
+        ownerType: finalOwnerType,
+        postedOnBehalf,
+        amenities: cleanAmenities,
+        brand: propertyData.brand || '',
+        condition: propertyData.condition || 'Used - Like New',
+        boostPlan: requestedPlan,
+        isTopAd: propertyData.isTopAd === true || requestedPlan === 'starter' || requestedPlan === 'basic' || requestedPlan === 'vip',
+        isFeatured: propertyData.isFeatured === true || requestedPlan === 'premium' || requestedPlan === 'vip',
+        promotionExpiresAt: computedExpiresAt,
+        approvalStatus: isAdmin ? (propertyData.approvalStatus || 'approved') : 'pending',
+        verificationStatus: isAdmin ? (propertyData.verificationStatus || 'verified') : 'pending',
+        isVerifiedListing: isAdmin ? (propertyData.isVerifiedListing !== undefined ? propertyData.isVerifiedListing : true) : false,
+        createdAt: new Date().toISOString()
+      };
+
+      (newProperty as any).ownerEmail = finalOwnerEmail;
+      (newProperty as any).ownerPhone = finalOwnerPhone;
+      (newProperty as any).isArchived = false;
+
+      localDb.properties.push(newProperty);
+      await saveDb();
+
+      console.log(`[ListingCreated] ID: ${newProperty.id}, Title: "${newProperty.title}", Category: ${newProperty.category}, Images: ${processedImages.length}`);
+
+      return res.status(201).json({
+        success: true,
+        message: 'Listing created successfully.',
+        listing: newProperty,
+        ...newProperty
+      });
+    } catch (err: any) {
+      console.error('[ListingCreationError] Detailed failure log:', {
+        endpoint: 'POST /api/properties',
+        authenticatedUserId: authUser?.id || 'none',
+        title: propertyData?.title || 'N/A',
+        category: propertyData?.category || 'N/A',
+        imageCount: Array.isArray(propertyData?.images) ? propertyData.images.length : 0,
+        errorMessage: err.message,
+        stackTrace: err.stack
+      });
+
+      return res.status(500).json({
+        success: false,
+        error: err.message || 'An unexpected server error occurred while creating the listing.',
+        message: 'Internal server error'
+      });
     }
-
-    const newProperty: Property = {
-      id: 'prop-' + Date.now(),
-      ...propertyData,
-      createdBy,
-      createdByName,
-      createdByEmail,
-      ownerId: finalOwnerId,
-      ownerName: finalOwnerName,
-      contactEmail: finalOwnerEmail,
-      contactPhone: finalOwnerPhone,
-      ownerEmail: finalOwnerEmail,
-      ownerPhone: finalOwnerPhone,
-      ownerBusinessName: finalOwnerBusinessName,
-      ownerAvatar: finalOwnerAvatar,
-      ownerType: finalOwnerType,
-      postedOnBehalf,
-      amenities: cleanAmenities,
-      brand: propertyData.brand || '',
-      condition: propertyData.condition || 'Used - Like New',
-      boostPlan: requestedPlan,
-      isTopAd: propertyData.isTopAd === true || requestedPlan === 'starter' || requestedPlan === 'basic' || requestedPlan === 'vip',
-      isFeatured: propertyData.isFeatured === true || requestedPlan === 'premium' || requestedPlan === 'vip',
-      promotionExpiresAt: computedExpiresAt,
-      approvalStatus: isAdmin ? (propertyData.approvalStatus || 'approved') : 'pending',
-      verificationStatus: isAdmin ? (propertyData.verificationStatus || 'verified') : 'pending',
-      isVerifiedListing: isAdmin ? (propertyData.isVerifiedListing !== undefined ? propertyData.isVerifiedListing : true) : false,
-      createdAt: new Date().toISOString()
-    };
-
-    (newProperty as any).ownerEmail = ownerEmail;
-    (newProperty as any).ownerPhone = ownerPhone;
-    (newProperty as any).isArchived = false;
-
-    localDb.properties.push(newProperty);
-    await saveDb();
-    res.json(newProperty);
   });
 
   app.put('/api/properties/:id', requireAuth, async (req, res) => {
@@ -4483,6 +4580,28 @@ async function startServer() {
       await saveDb();
     }
     res.json({ success: true });
+  });
+
+  // API Fallback 404 Handler
+  app.all('/api/*', (req, res) => {
+    res.setHeader('Content-Type', 'application/json; charset=utf-8');
+    res.status(404).json({
+      success: false,
+      error: `API endpoint ${req.method} ${req.path} not found.`
+    });
+  });
+
+  // Global Unhandled Error Middleware
+  app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+    console.error('[UnhandledExpressError]', err);
+    if (!res.headersSent) {
+      res.setHeader('Content-Type', 'application/json; charset=utf-8');
+      res.status(err.status || err.statusCode || 500).json({
+        success: false,
+        error: typeof err === 'string' ? err : (err.message || 'An unexpected error occurred on the server.'),
+        message: 'Internal Server Error'
+      });
+    }
   });
 
   // Vite Integration for Front-end serving

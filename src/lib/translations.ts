@@ -2312,10 +2312,17 @@ export const staticTranslations: TranslationKey[] = [
   },
   {
     key: "auth_intro_desc",
-    en: "Explore high-value real estate properties, premium jobs, and certified legal & home services. Verified secure payments with instant receipt tracking.",
-    om: "Qabeenya manneen dhuunfaa fi bittaa, carraawwan hojii gaarii fi tajaajiloota seeraa fi mana keessaa mirkanaa’an tajaajiloota explore godhi. Kafaltii amansiisaa qorannoo risiitii saffisaa waliin.",
-    am: "ከፍተኛ ዋጋ ያላቸውን የሪል እስቴት ንብረቶች፣ ዋና ዋና ስራዎች እና የተረጋገጡ የህግ እና የቤት አገልግሎቶችን ያስሱ። ፈጣን የደረሰኝ ክትትል ያላቸው የተረጋገጡ አስተማማኝ ክፍያዎች።",
+    en: "Buy, sell, rent, hire, and connect with confidence through verified listings, trusted businesses, and secure services—all in one modern marketplace.",
+    om: "Bitti, gurguri, kireessi, qacari, akkasumas galmeewwan mirkanaa'an, daldala amanamoo fi tajaajiloota nagaa ta'aniin amantummaadhan walqunnami—hunda gabaa ammayyaa tokko keessatti.",
+    am: "በተረጋገጡ ዝርዝሮች፣ ታማኝ ንግዶች እና ደህንነታቸው በተጠበቁ አገልግሎቶች በራስ መተማመን ይግዙ፣ ይሸጡ፣ ያከራዩ፣ ይቀጥሩ እና ይገናኙ—ሁሉም በአንድ ዘመናዊ ገበያ።",
     category: "Auth"
+  },
+  {
+    key: "recently_viewed_categories",
+    en: "RECENTLY VIEWED CATEGORIES",
+    om: "Ramaddiiwwan Dhiheenya Kana Ilaalaman",
+    am: "በቅርብ ጊዜ የታዩ ምድቦች",
+    category: "Catalog"
   },
   {
     key: "auth_regional_gateway",
@@ -2326,9 +2333,9 @@ export const staticTranslations: TranslationKey[] = [
   },
   {
     key: "auth_connecting_markets",
-    en: "Connecting Ethiopia's Finest Markets",
-    om: "Gabaawwan Filatamoof Itiyoophiyaa Walitti Qabsiisuu",
-    am: "የኢትዮጵያን ምርጥ ገበያዎች ማገናኘት",
+    en: "The Smart Way to Discover, Connect & Grow",
+    om: "Karaa Mala-qabeessa Birmachuuf, Walqunnamuufi Guddisuuf",
+    am: "ማግኘት፣ መገናኘት እና ማደግ የሚችሉበት ብልህ መንገድ",
     category: "Auth"
   },
   {

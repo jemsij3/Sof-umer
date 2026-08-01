@@ -1595,12 +1595,32 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
         body: JSON.stringify(propertyData)
       });
 
-      if (!res.ok) {
-        const errData = await res.json();
-        throw new Error(errData.error || 'Failed to create listing.');
+      const responseText = await res.text();
+      let createdProp: any = null;
+      let errData: any = null;
+
+      if (responseText && responseText.trim()) {
+        try {
+          const parsed = JSON.parse(responseText);
+          if (res.ok) {
+            createdProp = parsed.listing || parsed;
+          } else {
+            errData = parsed;
+          }
+        } catch (parseErr) {
+          console.error('[CreateListing] Response is not valid JSON:', responseText.substring(0, 250));
+          throw new Error(`Server returned HTTP ${res.status}, but response was not valid JSON.`);
+        }
       }
 
-      const createdProp = await res.json();
+      if (!res.ok) {
+        const errorMsg = errData?.error || errData?.message || `Failed to create listing (Server status ${res.status}).`;
+        throw new Error(errorMsg);
+      }
+
+      if (!createdProp) {
+        throw new Error('Listing was created but server returned empty response data.');
+      }
 
       // Handle monetization payment if totalCost > 0
       if (totalCost > 0) {
