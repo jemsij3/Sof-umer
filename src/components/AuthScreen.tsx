@@ -9,6 +9,19 @@ interface AuthScreenProps {
 
 export default function AuthScreen({ initialMode }: AuthScreenProps) {
   const { setCurrentUser, setToken, t, sessionExpired, setSessionExpired, currentLanguage, systemSettings } = useApp();
+
+  // Localized constants for the permanent login page hero text to prevent any dynamic overwrite
+  const loginHeroTitle = currentLanguage === 'om'
+    ? "Karaa Mala-qabeessa Birmachuuf, Walqunnamuufi Guddisuuf"
+    : currentLanguage === 'am'
+      ? "ማግኘት፣ መገናኘት እና ማደግ የሚችሉበት ብልህ መንገድ"
+      : "The Smart Way to Discover, Connect & Grow";
+
+  const loginHeroDesc = currentLanguage === 'om'
+    ? "Bitti, gurguri, kireessi, qacari, akkasumas galmeewwan mirkanaa'an, daldala amanamoo fi tajaajiloota nagaa ta'aniin amantummaadhan walqunnami—hunda gabaa ammayyaa tokko keessatti."
+    : currentLanguage === 'am'
+      ? "በተረጋገጡ ዝርዝሮች፣ ታማኝ ንግዶች እና ደህንነታቸው በተጠበቁ አገልግሎቶች በራስ መተማመን ይግዙ፣ ይሸጡ፣ ያከራዩ፣ ይቀጥሩ እና ይገናኙ—ሁሉም በአንድ ዘመናዊ ገበያ።"
+      : "Buy, sell, rent, hire, and connect with confidence through verified listings, trusted businesses, and secure services—all in one modern marketplace.";
   
   // Use 'splash' as default if no initial mode is provided
   const [mode, setMode] = useState<'splash' | 'welcome' | 'login' | 'signup' | 'forgot' | 'verify' | 'reset' | 'twoFactor'>(
@@ -601,10 +614,10 @@ export default function AuthScreen({ initialMode }: AuthScreenProps) {
 
                 <div className="space-y-4">
                   <h3 className="text-3xl md:text-4xl font-serif font-semibold text-white tracking-tight leading-tight">
-                    {t('auth_connecting_markets')}
+                    {loginHeroTitle}
                   </h3>
                   <p className="text-sm md:text-base text-white/50 leading-relaxed font-light">
-                    {t('auth_intro_desc')}
+                    {loginHeroDesc}
                   </p>
                 </div>
 
