@@ -81,14 +81,24 @@ export default function PwaInstallBanner() {
 
           <div className="flex items-center gap-2 shrink-0">
             <button
-              onClick={handleInstallClick}
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                handleInstallClick();
+              }}
               className="flex items-center gap-1.5 px-3 py-2 bg-amber-500 hover:bg-amber-400 text-black font-extrabold text-[11px] uppercase tracking-wider rounded-xl transition shadow-md cursor-pointer active:scale-95"
             >
               <Download className="w-3.5 h-3.5" />
               <span>Install</span>
             </button>
             <button
-              onClick={handleDismiss}
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                handleDismiss();
+              }}
               className="p-1.5 text-white/40 hover:text-white bg-white/5 hover:bg-white/10 rounded-xl transition cursor-pointer"
               title="Dismiss reminder"
             >

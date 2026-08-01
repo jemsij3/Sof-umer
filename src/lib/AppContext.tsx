@@ -245,26 +245,44 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       setIsAppInstalled(true);
     }
 
+    // Check if early beforeinstallprompt was captured before React mounted
+    if ((window as any).deferredPwaPrompt) {
+      setDeferredPrompt((window as any).deferredPwaPrompt);
+      setIsInstallable(true);
+    }
+
     // Register Service Worker
     if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
+      const registerSW = () => {
         navigator.serviceWorker.register('/sw.js').then(
-          (reg) => console.log('[PWA] Service Worker registered:', reg.scope),
-          (err) => console.warn('[PWA] Service Worker registration failed:', err)
+          (reg) => {
+            console.log('[PWA] Service Worker registered:', reg.scope);
+            reg.update().catch(() => {});
+          },
+          (err) => console.warn('[PWA] SW registration failed:', err)
         );
-      });
+      };
+
+      if (document.readyState === 'complete') {
+        registerSW();
+      } else {
+        window.addEventListener('load', registerSW);
+      }
     }
 
     const handleBeforeInstallPrompt = (e: Event) => {
       e.preventDefault();
+      (window as any).deferredPwaPrompt = e;
       setDeferredPrompt(e);
       setIsInstallable(true);
+      console.log('[PWA] beforeinstallprompt event captured in React');
     };
 
     const handleAppInstalled = () => {
       setIsInstallable(false);
       setIsAppInstalled(true);
       setDeferredPrompt(null);
+      (window as any).deferredPwaPrompt = null;
       console.log('[PWA] SOF-UMER App successfully installed');
     };
 
@@ -278,22 +296,30 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const promptPwaInstall = async () => {
-    if (!deferredPrompt) {
+    const promptObj = deferredPrompt || (window as any).deferredPwaPrompt;
+    if (!promptObj) {
       const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
       if (isIOS) {
         alert('To install SOF-UMER on iOS:\n1. Tap the Share button in Safari\n2. Scroll down and tap "Add to Home Screen"');
       } else {
-        alert('To install SOF-UMER:\nOpen your browser menu (⋮ or ⋯) and select "Install App" or "Add to Home screen".');
+        alert('To install SOF-UMER App:\n1. Open your browser menu (⋮ or ⋯)\n2. Select "Install App" or "Add to Home screen".');
       }
       return;
     }
 
-    deferredPrompt.prompt();
-    const choiceResult = await deferredPrompt.userChoice;
-    if (choiceResult && choiceResult.outcome === 'accepted') {
-      setIsInstallable(false);
+    try {
+      promptObj.prompt();
+      const choiceResult = await promptObj.userChoice;
+      if (choiceResult && choiceResult.outcome === 'accepted') {
+        setIsInstallable(false);
+        setIsAppInstalled(true);
+      }
+    } catch (err) {
+      console.error('[PWA] Error launching install prompt:', err);
+    } finally {
+      setDeferredPrompt(null);
+      (window as any).deferredPwaPrompt = null;
     }
-    setDeferredPrompt(null);
   };
 
   // Dynamic HTML Head Branding Syncing (Favicon, Apple Touch Icon, OG metadata)

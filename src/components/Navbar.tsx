@@ -161,7 +161,12 @@ export default function Navbar({ onNavigate, activeView, onOpenCreateModal }: Na
             {/* PWA Install Button */}
             {!isAppInstalled && (
               <button
-                onClick={promptPwaInstall}
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  promptPwaInstall();
+                }}
                 className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/20 font-bold text-[11px] uppercase tracking-wider transition cursor-pointer shadow-sm shadow-amber-500/5"
                 title="Install SOF-UMER App"
               >
@@ -400,7 +405,13 @@ export default function Navbar({ onNavigate, activeView, onOpenCreateModal }: Na
 
                       {!isAppInstalled && (
                         <button
-                          onClick={() => { promptPwaInstall(); setUserDropdownOpen(false); }}
+                          type="button"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            promptPwaInstall();
+                            setUserDropdownOpen(false);
+                          }}
                           className="w-full text-left px-4 py-2 text-[11px] uppercase tracking-wider hover:bg-amber-500/10 text-amber-400 font-bold transition flex items-center gap-2.5 cursor-pointer"
                         >
                           <Download className="w-4 h-4 text-amber-500" />

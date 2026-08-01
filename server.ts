@@ -4722,12 +4722,51 @@ async function startServer() {
     const settings = (localDb as any).appSettings || {};
     const appName = settings.appName || 'SOF-UMER';
     const shortName = settings.appLogoText || 'SOF-UMER';
-    const pwaIcon = settings.pwaIconUrl || settings.appIconUrl || settings.logoUrl || '/favicon.svg';
+    const pwaIcon = settings.pwaIconUrl || settings.appIconUrl || settings.logoUrl || '/pwa-192.png';
     const iconType = pwaIcon.endsWith('.svg') ? 'image/svg+xml' : 'image/png';
 
     res.setHeader('Content-Type', 'application/manifest+json');
     res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+
+    const iconsList = [];
+    if (pwaIcon && pwaIcon !== '/pwa-192.png') {
+      iconsList.push({
+        src: pwaIcon,
+        sizes: "192x192 512x512",
+        type: iconType,
+        purpose: "any maskable"
+      });
+    }
+
+    iconsList.push(
+      {
+        src: "/pwa-192.png",
+        sizes: "192x192",
+        type: "image/png",
+        purpose: "any"
+      },
+      {
+        src: "/pwa-192.png",
+        sizes: "192x192",
+        type: "image/png",
+        purpose: "maskable"
+      },
+      {
+        src: "/pwa-512.png",
+        sizes: "512x512",
+        type: "image/png",
+        purpose: "any"
+      },
+      {
+        src: "/pwa-512.png",
+        sizes: "512x512",
+        type: "image/png",
+        purpose: "maskable"
+      }
+    );
+
     res.json({
+      id: "/",
       name: appName,
       short_name: shortName,
       description: settings.homepageHeading || "SOF-UMER - Buy, sell, rent, hire, and connect through verified listings.",
@@ -4737,20 +4776,8 @@ async function startServer() {
       orientation: "any",
       background_color: "#0d0d12",
       theme_color: "#d97706",
-      icons: [
-        {
-          src: pwaIcon,
-          sizes: "192x192",
-          type: iconType,
-          purpose: "any maskable"
-        },
-        {
-          src: pwaIcon,
-          sizes: "512x512",
-          type: iconType,
-          purpose: "any maskable"
-        }
-      ]
+      categories: ["shopping", "business", "lifestyle"],
+      icons: iconsList
     });
   });
 
