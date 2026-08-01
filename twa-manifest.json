@@ -1,0 +1,33 @@
+{
+  "packageId": "com.sofumer.app",
+  "host": "sofumerapp.com",
+  "name": "SOF-UMER",
+  "launcherName": "SOF-UMER",
+  "display": "standalone",
+  "themeColor": "#D97706",
+  "themeColorDark": "#0D0D12",
+  "navigationColor": "#0D0D12",
+  "navigationColorDark": "#0D0D12",
+  "backgroundColor": "#0D0D12",
+  "enableNotifications": true,
+  "startUrl": "/",
+  "iconUrl": "https://sofumerapp.com/pwa-512.png",
+  "maskableIconUrl": "https://sofumerapp.com/pwa-512.png",
+  "splashScreenFadeOutDuration": 300,
+  "appVersionName": "1.0.0",
+  "appVersionCode": 1,
+  "shortcuts": [],
+  "generatorApp": "bubblewrap-cli",
+  "minSdkVersion": 21,
+  "targetSdkVersion": 34,
+  "webManifestUrl": "https://sofumerapp.com/manifest.json",
+  "fallbackType": "customtabs",
+  "features": {
+    "locationDelegation": {
+      "enabled": true
+    }
+  },
+  "alphaDependencies": {
+    "enabled": false
+  }
+}

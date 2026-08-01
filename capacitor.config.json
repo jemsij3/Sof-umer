@@ -1,0 +1,18 @@
+{
+  "appId": "com.sofumer.app",
+  "appName": "SOF-UMER",
+  "webDir": "dist",
+  "bundledWebRuntime": false,
+  "server": {
+    "androidScheme": "https",
+    "cleartext": true
+  },
+  "android": {
+    "minSdkVersion": 21,
+    "targetSdkVersion": 34,
+    "buildOptions": {
+      "keystorePath": "",
+      "releaseType": "APK"
+    }
+  }
+}
