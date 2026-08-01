@@ -4725,20 +4725,10 @@ async function startServer() {
     const pwaIcon = settings.pwaIconUrl || settings.appIconUrl || settings.logoUrl || '/pwa-192.png';
     const iconType = pwaIcon.endsWith('.svg') ? 'image/svg+xml' : 'image/png';
 
-    res.setHeader('Content-Type', 'application/manifest+json');
+    res.type('application/manifest+json');
     res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
 
-    const iconsList = [];
-    if (pwaIcon && pwaIcon !== '/pwa-192.png') {
-      iconsList.push({
-        src: pwaIcon,
-        sizes: "192x192 512x512",
-        type: iconType,
-        purpose: "any maskable"
-      });
-    }
-
-    iconsList.push(
+    const iconsList = [
       {
         src: "/pwa-192.png",
         sizes: "192x192",
@@ -4763,9 +4753,18 @@ async function startServer() {
         type: "image/png",
         purpose: "maskable"
       }
-    );
+    ];
 
-    res.json({
+    if (pwaIcon && pwaIcon !== '/pwa-192.png' && pwaIcon !== '/pwa-512.png') {
+      iconsList.unshift({
+        src: pwaIcon,
+        sizes: "512x512",
+        type: iconType,
+        purpose: "any maskable"
+      });
+    }
+
+    const manifestData = {
       id: "/",
       name: appName,
       short_name: shortName,
@@ -4778,17 +4777,22 @@ async function startServer() {
       theme_color: "#d97706",
       categories: ["shopping", "business", "lifestyle"],
       icons: iconsList
-    });
+    };
+
+    res.send(JSON.stringify(manifestData, null, 2));
   });
 
   // Service Worker Endpoint
   app.get('/sw.js', (req, res) => {
-    res.setHeader('Content-Type', 'application/javascript');
+    res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
     res.setHeader('Service-Worker-Allowed', '/');
     res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-    const swPath = path.join(process.cwd(), 'public', 'sw.js');
-    if (fsSync.existsSync(swPath)) {
-      res.sendFile(swPath);
+    const swPublic = path.join(process.cwd(), 'public', 'sw.js');
+    const swDist = path.join(process.cwd(), 'dist', 'sw.js');
+    if (fsSync.existsSync(swPublic)) {
+      res.sendFile(swPublic);
+    } else if (fsSync.existsSync(swDist)) {
+      res.sendFile(swDist);
     } else {
       res.status(404).send('// Service worker not found');
     }
