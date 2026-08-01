@@ -169,8 +169,8 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     logoUrl: '',
     bannerUrl: '',
     themeName: 'cosmic-slate',
-    homepageHeading: 'Discover Premium Verified Listings in East Africa',
-    homepageSubheading: 'Properties, Jobs, Local Businesses, and Community events. Clean, manual-receipt audited, and fully verified.',
+    homepageHeading: 'The Smart Way to Discover, Connect & Grow',
+    homepageSubheading: 'Buy, sell, rent, hire, and connect with confidence through verified listings, trusted businesses, and secure services—all in one modern marketplace.',
     termsAndPrivacy: 'Sof Umer guarantees user security. All listed properties are audited for legal compliance before publishing. Transactions are processed manually by our finance team.',
     notificationsEnabled: true,
     siteStatus: 'Online'

@@ -495,16 +495,15 @@ export default function AuthScreen({ initialMode }: AuthScreenProps) {
                 referrerPolicy="no-referrer"
               />
             ) : (
-              <motion.div 
-                animate={{ 
-                  scale: [1, 1.05, 1],
-                  boxShadow: ["0 0 0 0px rgba(245,158,11,0)", "0 0 40px 10px rgba(245,158,11,0.15)", "0 0 0 0px rgba(245,158,11,0)"]
+              <img
+                src={systemSettings?.appIconUrl || systemSettings?.pwaIconUrl || '/pwa-192.png'}
+                alt="App Logo"
+                className="h-20 w-20 object-cover rounded-3xl border border-amber-500/40 shadow-[0_10px_30px_rgba(245,158,11,0.35)]"
+                referrerPolicy="no-referrer"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src = '/pwa-192.png';
                 }}
-                transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
-                className="h-20 w-20 bg-gradient-to-br from-amber-400 to-amber-600 text-[#050505] rounded-3xl flex items-center justify-center font-bold shadow-[0_10px_30px_rgba(245,158,11,0.35)]"
-              >
-                <Building2 className="w-10 h-10" />
-              </motion.div>
+              />
             )}
             
             <div className="space-y-2 text-center">
@@ -556,18 +555,15 @@ export default function AuthScreen({ initialMode }: AuthScreenProps) {
               
               {/* Brand Floating on visual side */}
               <div className="absolute top-8 left-8 z-20 flex items-center gap-3">
-                {systemSettings?.logoUrl ? (
-                  <img
-                    src={systemSettings.logoUrl}
-                    alt="Logo"
-                    className="w-10 h-10 object-cover rounded-xl shadow-lg"
-                    referrerPolicy="no-referrer"
-                  />
-                ) : (
-                  <div className="h-10 w-10 bg-amber-500 text-black rounded-xl flex items-center justify-center font-bold shadow-lg">
-                    <Building2 className="w-5 h-5" />
-                  </div>
-                )}
+                <img
+                  src={systemSettings?.logoUrl || systemSettings?.appIconUrl || systemSettings?.pwaIconUrl || '/pwa-192.png'}
+                  alt="Logo"
+                  className="w-10 h-10 object-cover rounded-xl border border-amber-500/30 shadow-lg bg-[#0d0d12]"
+                  referrerPolicy="no-referrer"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src = '/pwa-192.png';
+                  }}
+                />
                 <span className="text-xl font-serif text-white font-bold tracking-wider uppercase">
                   {systemSettings?.appName || 'SOF-UMER'}
                 </span>
@@ -605,10 +601,10 @@ export default function AuthScreen({ initialMode }: AuthScreenProps) {
 
                 <div className="space-y-4">
                   <h3 className="text-3xl md:text-4xl font-serif font-semibold text-white tracking-tight leading-tight">
-                    {systemSettings?.homepageHeading || t('auth_connecting_markets')}
+                    {t('auth_connecting_markets')}
                   </h3>
                   <p className="text-sm md:text-base text-white/50 leading-relaxed font-light">
-                    {systemSettings?.homepageSubheading || t('auth_intro_desc')}
+                    {t('auth_intro_desc')}
                   </p>
                 </div>
 
@@ -672,8 +668,16 @@ export default function AuthScreen({ initialMode }: AuthScreenProps) {
                 <ArrowLeft className="w-4 h-4" />
               </button>
               
-              <div className="mx-auto h-14 w-14 bg-gradient-to-br from-amber-400 to-amber-600 text-[#050505] rounded-2xl flex items-center justify-center font-bold shadow-xl">
-                <Building2 className="w-7 h-7" />
+              <div className="mx-auto h-16 w-16 p-1 bg-gradient-to-br from-amber-400 to-amber-600 rounded-2xl shadow-xl shadow-amber-500/20 flex items-center justify-center">
+                <img
+                  src={systemSettings?.logoUrl || systemSettings?.appIconUrl || systemSettings?.pwaIconUrl || '/pwa-192.png'}
+                  alt={systemSettings?.appName || 'SOF-UMER Logo'}
+                  className="w-full h-full object-cover rounded-xl bg-[#0d0d12]"
+                  referrerPolicy="no-referrer"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src = '/pwa-192.png';
+                  }}
+                />
               </div>
               
               <h2 className="mt-6 text-2xl md:text-3xl font-serif text-[#F5F5F4] tracking-tight font-semibold">
