@@ -1313,6 +1313,27 @@ const applyDataSanityAndMigrations = () => {
       }
     }
   }
+
+  // Force-override critical login page hero translations to be permanently identical to the staticDefaults
+  if (localDb.translations && Array.isArray(localDb.translations)) {
+    const keysToForce = ["auth_connecting_markets", "auth_intro_desc"];
+    for (const k of keysToForce) {
+      const defaultTrans = defaultData.translations.find(t => t.key === k);
+      if (defaultTrans) {
+        const existingIdx = localDb.translations.findIndex(t => t.key === k);
+        if (existingIdx !== -1) {
+          localDb.translations[existingIdx] = {
+            ...localDb.translations[existingIdx],
+            en: defaultTrans.en,
+            om: defaultTrans.om,
+            am: defaultTrans.am
+          };
+        } else {
+          localDb.translations.push(defaultTrans);
+        }
+      }
+    }
+  }
   if (!localDb.reports || !Array.isArray(localDb.reports)) localDb.reports = [];
   if (!localDb.notifications || !Array.isArray(localDb.notifications)) localDb.notifications = [];
   if (!(localDb as any).faqs || !Array.isArray((localDb as any).faqs) || (localDb as any).faqs.length === 0) {
@@ -3989,7 +4010,25 @@ async function startServer() {
   app.put('/api/languages/translations', async (req, res) => {
     const { translations } = req.body; // Full updated translations list
     if (translations && Array.isArray(translations)) {
-      localDb.translations = translations;
+      // Overwrite/Force-reset the critical login page hero keys to default translations
+      const defaultData = getInitialData();
+      const keysToForce = ["auth_connecting_markets", "auth_intro_desc"];
+      const updatedTranslations = translations.map(t => {
+        if (keysToForce.includes(t.key)) {
+          const defaultTrans = defaultData.translations.find(dt => dt.key === t.key);
+          if (defaultTrans) {
+            return {
+              ...t,
+              en: defaultTrans.en,
+              om: defaultTrans.om,
+              am: defaultTrans.am
+            };
+          }
+        }
+        return t;
+      });
+
+      localDb.translations = updatedTranslations;
       await saveDb();
     }
     res.json({ success: true, translations: localDb.translations });
@@ -4001,6 +4040,10 @@ async function startServer() {
       return res.status(400).json({ error: 'Key and English translation are required.' });
     }
     const cleanKey = key.trim();
+    const keysToForce = ["auth_connecting_markets", "auth_intro_desc"];
+    if (keysToForce.includes(cleanKey)) {
+      return res.status(400).json({ error: 'This critical login hero key is read-only and cannot be modified.' });
+    }
     const existingIdx = localDb.translations.findIndex(t => t.key.toLowerCase() === cleanKey.toLowerCase());
     const newEntry = {
       key: cleanKey,
