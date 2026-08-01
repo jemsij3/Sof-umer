@@ -605,10 +605,10 @@ export default function AuthScreen({ initialMode }: AuthScreenProps) {
 
                 <div className="space-y-4">
                   <h3 className="text-3xl md:text-4xl font-serif font-semibold text-white tracking-tight leading-tight">
-                    {t('auth_connecting_markets')}
+                    {systemSettings?.homepageHeading || t('auth_connecting_markets')}
                   </h3>
                   <p className="text-sm md:text-base text-white/50 leading-relaxed font-light">
-                    {t('auth_intro_desc')}
+                    {systemSettings?.homepageSubheading || t('auth_intro_desc')}
                   </p>
                 </div>
 

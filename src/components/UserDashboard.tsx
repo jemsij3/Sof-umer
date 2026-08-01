@@ -188,6 +188,11 @@ export default function UserDashboard({
     spendWallet,
     systemSettings,
     faqs,
+    deleteNotification,
+    deleteAllNotifications,
+    toggleNotificationRead,
+    deleteInquiry,
+    deleteAllInquiries,
     t
   } = useApp();
 
@@ -1958,9 +1963,25 @@ export default function UserDashboard({
               {/* SECTION 4: MESSAGES */}
               {activeTab === 'messages' && (
                 <div className="space-y-6">
-                  <div className="border-b border-white/5 pb-4">
-                    <h3 className="text-lg font-bold text-white">Messages</h3>
-                    <p className="text-[11px] text-white/40 mt-0.5">Instant secure inbox communication history with buyers and sellers.</p>
+                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-white/5 pb-4">
+                    <div>
+                      <h3 className="text-lg font-bold text-white">Messages</h3>
+                      <p className="text-[11px] text-white/40 mt-0.5">Instant secure inbox communication history with buyers and sellers.</p>
+                    </div>
+                    {myInquiries.length > 0 && (
+                      <button 
+                        onClick={async () => {
+                          if (window.confirm('Are you sure you want to delete all message conversations?')) {
+                            await deleteAllInquiries();
+                            setActiveInquiryId(null);
+                          }
+                        }}
+                        className="text-[11px] text-rose-400 hover:text-rose-300 hover:underline font-bold flex items-center gap-1 cursor-pointer"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                        <span>Delete All Conversations</span>
+                      </button>
+                    )}
                   </div>
 
                   {myInquiries.length === 0 ? (
@@ -1980,14 +2001,13 @@ export default function UserDashboard({
                           const hasUnread = lastMsg && lastMsg.senderId !== currentUser.id && inq.messages.length > (readInquiries[inq.id] || 0);
 
                           return (
-                            <button
+                            <div
                               key={inq.id}
-                              onClick={() => handleOpenConversation(inq.id)}
-                              className={`w-full text-left p-3 rounded-xl transition flex justify-between items-center gap-3 cursor-pointer ${
+                              className={`p-3 rounded-xl transition flex justify-between items-center gap-3 cursor-pointer ${
                                 isActive ? 'bg-amber-500 text-black' : 'bg-white/5 hover:bg-white/10'
                               }`}
                             >
-                              <div className="truncate">
+                              <div className="truncate flex-1" onClick={() => handleOpenConversation(inq.id)}>
                                 <p className={`text-xs font-bold truncate ${isActive ? 'text-black' : 'text-white'}`}>
                                   {inq.propertyTitle}
                                 </p>
@@ -1995,10 +2015,26 @@ export default function UserDashboard({
                                   {lastMsg ? `${lastMsg.senderName}: ${lastMsg.text}` : 'Inquiry thread started'}
                                 </p>
                               </div>
-                              {hasUnread && !isActive && (
-                                <span className="w-2.5 h-2.5 bg-red-500 rounded-full animate-pulse flex-shrink-0" />
-                              )}
-                            </button>
+                              <div className="flex items-center gap-1 shrink-0">
+                                {hasUnread && !isActive && (
+                                  <span className="w-2.5 h-2.5 bg-red-500 rounded-full animate-pulse flex-shrink-0" />
+                                )}
+                                <button
+                                  type="button"
+                                  onClick={async (e) => {
+                                    e.stopPropagation();
+                                    if (window.confirm(`Delete message thread for "${inq.propertyTitle}"?`)) {
+                                      await deleteInquiry(inq.id);
+                                      if (activeInquiryId === inq.id) setActiveInquiryId(null);
+                                    }
+                                  }}
+                                  className={`p-1 rounded transition ${isActive ? 'text-black/60 hover:text-black hover:bg-black/10' : 'text-white/40 hover:text-rose-400 hover:bg-white/10'}`}
+                                  title="Delete Message Thread"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+                            </div>
                           );
                         })}
                       </div>
@@ -2084,12 +2120,25 @@ export default function UserDashboard({
                       <p className="text-[11px] text-white/40 mt-0.5">Stay updated with listing status reports and chat notification alerts.</p>
                     </div>
                     {myNotifications.length > 0 && (
-                      <button 
-                        onClick={handleMarkAllNotificationsRead}
-                        className="text-[11px] text-amber-500 hover:underline font-bold"
-                      >
-                        Mark All as Read
-                      </button>
+                      <div className="flex items-center gap-3">
+                        <button 
+                          onClick={handleMarkAllNotificationsRead}
+                          className="text-[11px] text-amber-500 hover:underline font-bold cursor-pointer"
+                        >
+                          Mark All as Read
+                        </button>
+                        <button 
+                          onClick={async () => {
+                            if (window.confirm('Are you sure you want to clear all notifications?')) {
+                              await deleteAllNotifications();
+                            }
+                          }}
+                          className="text-[11px] text-rose-400 hover:text-rose-300 hover:underline font-bold flex items-center gap-1 cursor-pointer"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                          <span>Clear All</span>
+                        </button>
+                      </div>
                     )}
                   </div>
 
@@ -2101,12 +2150,12 @@ export default function UserDashboard({
                   ) : (
                     <div className="space-y-3">
                       {myNotifications.slice().reverse().map(n => {
-                        const isRead = readNotificationIds.includes(n.id);
+                        const isRead = readNotificationIds.includes(n.id) || n.isRead;
                         return (
                           <div key={n.id} className={`p-4 rounded-2xl border transition duration-300 text-left flex justify-between items-start gap-3 ${
                             isRead ? 'bg-black/20 border-white/5' : 'bg-[#e5a00d]/5 border-[#e5a00d]/10'
                           }`}>
-                            <div>
+                            <div className="flex-1">
                               <div className="flex items-center gap-2">
                                 <span className={`w-1.5 h-1.5 rounded-full ${isRead ? 'bg-white/20' : 'bg-amber-500 animate-pulse'}`} />
                                 <h4 className="text-xs font-bold text-white">{n.title}</h4>
@@ -2115,6 +2164,29 @@ export default function UserDashboard({
                               <span className="text-[9px] text-white/30 block pl-3.5 mt-1.5 font-mono">
                                 {formatTimeAgo(n.createdAt)}
                               </span>
+                            </div>
+
+                            <div className="flex items-center gap-1 shrink-0 pt-0.5">
+                              <button
+                                type="button"
+                                onClick={async () => {
+                                  await toggleNotificationRead(n.id);
+                                }}
+                                className="p-1.5 text-white/40 hover:text-amber-400 hover:bg-white/5 rounded-lg transition"
+                                title={isRead ? "Mark as Unread" : "Mark as Read"}
+                              >
+                                <Check className="w-3.5 h-3.5" />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={async () => {
+                                  await deleteNotification(n.id);
+                                }}
+                                className="p-1.5 text-white/40 hover:text-rose-400 hover:bg-white/5 rounded-lg transition"
+                                title="Delete Notification"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
                             </div>
                           </div>
                         );

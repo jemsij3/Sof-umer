@@ -3874,6 +3874,37 @@ async function startServer() {
     res.json(inquiry);
   });
 
+  // Delete a single inquiry thread
+  app.delete('/api/inquiries/:id', requireAuth, async (req, res) => {
+    const { id } = req.params;
+    const user = (req as any).user;
+    const index = localDb.inquiries.findIndex(i => i.id === id);
+    if (index === -1) {
+      return res.status(404).json({ error: 'Inquiry conversation not found.' });
+    }
+    const targetInquiry = localDb.inquiries[index];
+    if (user.role !== 'admin' && targetInquiry.senderId !== user.id && targetInquiry.receiverId !== user.id) {
+      return res.status(403).json({ error: 'Unauthorized to delete this conversation.' });
+    }
+    localDb.inquiries.splice(index, 1);
+    await saveDb();
+    res.json({ success: true, message: 'Inquiry conversation deleted successfully.' });
+  });
+
+  // Delete all inquiries for the authenticated user
+  app.delete('/api/inquiries', requireAuth, async (req, res) => {
+    const user = (req as any).user;
+    if (user.role === 'admin' && req.query.all === 'true') {
+      localDb.inquiries = [];
+    } else {
+      localDb.inquiries = localDb.inquiries.filter(
+        i => i.senderId !== user.id && i.receiverId !== user.id
+      );
+    }
+    await saveDb();
+    res.json({ success: true, message: 'All message threads deleted successfully.' });
+  });
+
   // Advertisements
   app.get('/api/advertisements', async (req, res) => {
     res.json(localDb.advertisements);
@@ -4259,8 +4290,9 @@ async function startServer() {
 
   app.put('/api/notifications/read', async (req, res) => {
     const { userId } = req.body;
+    const targetUserId = userId || ((req as any).user ? (req as any).user.id : undefined);
     localDb.notifications = localDb.notifications.map(n => {
-      if (n.userId === userId) {
+      if (!targetUserId || n.userId === targetUserId) {
         return { ...n, isRead: true };
       }
       return n;
@@ -4268,6 +4300,87 @@ async function startServer() {
     await saveDb();
     res.json({ success: true });
   });
+
+  app.put('/api/notifications/:id/toggle-read', requireAuth, async (req, res) => {
+    const { id } = req.params;
+    const user = (req as any).user;
+    const notif = localDb.notifications.find(n => n.id === id);
+    if (!notif) {
+      return res.status(404).json({ error: 'Notification not found' });
+    }
+    if (user.role !== 'admin' && notif.userId !== user.id) {
+      return res.status(403).json({ error: 'Unauthorized to modify this notification' });
+    }
+    notif.isRead = !notif.isRead;
+    await saveDb();
+    res.json({ success: true, notification: notif });
+  });
+
+  app.delete('/api/notifications/:id', requireAuth, async (req, res) => {
+    const { id } = req.params;
+    const user = (req as any).user;
+    const index = localDb.notifications.findIndex(n => n.id === id);
+    if (index === -1) {
+      return res.status(404).json({ error: 'Notification not found' });
+    }
+    const targetNotif = localDb.notifications[index];
+    if (user.role !== 'admin' && targetNotif.userId !== user.id) {
+      return res.status(403).json({ error: 'Unauthorized to delete this notification' });
+    }
+    localDb.notifications.splice(index, 1);
+    await saveDb();
+    res.json({ success: true, message: 'Notification deleted successfully' });
+  });
+
+  app.delete('/api/notifications', requireAuth, async (req, res) => {
+    const user = (req as any).user;
+    if (user.role === 'admin' && req.query.all === 'true') {
+      localDb.notifications = [];
+    } else {
+      localDb.notifications = localDb.notifications.filter(n => n.userId !== user.id);
+    }
+    await saveDb();
+    res.json({ success: true, message: 'All notifications deleted successfully' });
+  });
+
+  // Simulated Notification Dispatcher (runs when systemSettings.notificationsEnabled !== false)
+  setInterval(async () => {
+    try {
+      const settings = (localDb as any).appSettings || {};
+      if (settings.notificationsEnabled === false) return;
+      if (!localDb.users || localDb.users.length === 0) return;
+
+      const simulatedTips = [
+        { title: 'Verified Audit Active', message: 'All listing receipts and property title deeds are continuously audited for security.' },
+        { title: 'East Africa Market Trend', message: 'High user demand recorded in verified real estate and job vacancy categories today.' },
+        { title: 'Security Best Practice', message: 'Remember to conduct in-person meetings in safe, open public locations.' },
+        { title: 'Instant Receipts Active', message: 'Bank transfer payment receipts are reviewed within 5-10 minutes by our finance team.' }
+      ];
+
+      const randomTip = simulatedTips[Math.floor(Math.random() * simulatedTips.length)];
+      const targetUser = localDb.users[Math.floor(Math.random() * localDb.users.length)];
+
+      if (targetUser && localDb.notifications) {
+        const recentSame = localDb.notifications.find(n => n.userId === targetUser.id && n.title === randomTip.title);
+        if (!recentSame) {
+          localDb.notifications.push({
+            id: 'notif-sim-' + Date.now(),
+            userId: targetUser.id,
+            title: randomTip.title,
+            message: randomTip.message,
+            isRead: false,
+            createdAt: new Date().toISOString()
+          });
+          if (localDb.notifications.length > 300) {
+            localDb.notifications = localDb.notifications.slice(-250);
+          }
+          await saveDb();
+        }
+      }
+    } catch (err) {
+      console.error('[NotificationDispatcherError]', err);
+    }
+  }, 45000);
 
   // Offers & Negotiation Endpoints
   app.get('/api/offers', async (req, res) => {

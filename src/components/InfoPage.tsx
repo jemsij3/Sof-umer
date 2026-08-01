@@ -522,6 +522,13 @@ export default function InfoPage({ pageId, onBack, onOpenReportModalFromInfo }: 
               </div>
             </div>
 
+            {systemSettings?.termsAndPrivacy && (
+              <div className="bg-amber-500/10 border border-amber-500/20 p-4 rounded-xl text-xs text-amber-200 leading-relaxed font-medium">
+                <span className="font-bold uppercase tracking-wider text-amber-400 block mb-1">Platform Policy & Legal Notice:</span>
+                {systemSettings.termsAndPrivacy}
+              </div>
+            )}
+
             <div className="bg-[#0c0c10]/60 p-6 rounded-2xl border border-white/5 text-xs text-white/70 space-y-4 max-h-[400px] overflow-y-auto leading-relaxed scrollbar-thin">
               <h3 className="font-serif text-sm text-white font-bold">1. Agreement to Terms</h3>
               <p>

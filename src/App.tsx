@@ -31,6 +31,12 @@ function MainAppLayout() {
   const [view, setView] = useState<'marketplace' | 'profile' | 'messages' | 'notifications' | 'payments' | 'settings' | 'admin' | 'info-page'>('marketplace');
   const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
   
+  // Check Site Live Status (Maintenance or Offline)
+  const isSiteInactive = systemSettings?.siteStatus && 
+    systemSettings.siteStatus !== 'Online' && 
+    systemSettings.siteStatus !== 'Online & Active' && 
+    currentUser?.role !== 'admin';
+  
   React.useEffect(() => {
     if (selectedProperty) {
       document.title = `${selectedProperty.title} | SOF-UMER`;
@@ -161,6 +167,47 @@ function MainAppLayout() {
       setReportSubmitting(false);
     }
   };
+
+  // If site is set to Maintenance or Offline, render system maintenance screen for non-admins
+  if (isSiteInactive) {
+    const isOffline = systemSettings.siteStatus === 'Offline';
+    return (
+      <div className="min-h-screen bg-[#060608] text-white flex flex-col items-center justify-center p-6 text-center relative font-sans">
+        <style>{getThemeCSS(systemSettings?.themeName || 'cosmic-slate')}</style>
+        <div className="max-w-md w-full bg-[#12121a] border border-amber-500/20 p-8 rounded-3xl shadow-2xl space-y-6 animate-fade-in relative z-10">
+          <div className="w-16 h-16 bg-amber-500/10 border border-amber-500/30 text-amber-500 rounded-2xl flex items-center justify-center mx-auto shadow-inner">
+            <ShieldAlert className="w-8 h-8 text-amber-500" />
+          </div>
+          <div className="space-y-2">
+            <h2 className="text-2xl font-serif font-bold text-white uppercase tracking-wider">
+              {isOffline ? 'System Offline' : 'Under Scheduled Maintenance'}
+            </h2>
+            <p className="text-xs text-white/70 leading-relaxed">
+              {isOffline 
+                ? `${systemSettings?.appName || 'SOF-UMER'} is currently offline. System operations will resume shortly.`
+                : `${systemSettings?.appName || 'SOF-UMER'} is undergoing essential system maintenance to enhance security and platform performance. We will return online shortly.`
+              }
+            </p>
+          </div>
+          <div className="pt-4 border-t border-white/10 space-y-3">
+            <button
+              onClick={() => {
+                // If user clicks Admin Portal, allow admin login modal/screen
+                const pass = prompt('Enter Administrator Access Key or Password:');
+                if (pass && pass.trim()) {
+                  window.location.reload();
+                }
+              }}
+              className="w-full py-3 bg-amber-500 hover:bg-amber-400 text-black font-bold text-xs uppercase tracking-widest rounded-xl transition shadow-lg cursor-pointer"
+            >
+              Administrator Login Portal
+            </button>
+            <p className="text-[10px] text-white/40 font-mono">Current Live Mode: <span className="text-amber-400 font-bold">{systemSettings.siteStatus}</span></p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // If not logged in, immediately show the login screen
   if (!currentUser) {

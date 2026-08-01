@@ -124,6 +124,13 @@ interface AppContextType {
   spendWallet: (amount: number, description: string, propertyId: string, promotionType: 'basic' | 'premium' | 'vip' | 'top_ad' | 'featured', durationDays?: number) => Promise<boolean>;
   approveWalletTx: (transactionId: string) => Promise<boolean>;
   rejectWalletTx: (transactionId: string, reason?: string) => Promise<boolean>;
+
+  // Notification and Inquiry deletion methods
+  deleteNotification: (id: string) => Promise<boolean>;
+  deleteAllNotifications: () => Promise<boolean>;
+  toggleNotificationRead: (id: string) => Promise<boolean>;
+  deleteInquiry: (id: string) => Promise<boolean>;
+  deleteAllInquiries: () => Promise<boolean>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -752,6 +759,121 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  // Update Document Title when App Name changes
+  useEffect(() => {
+    if (systemSettings?.appName) {
+      document.title = `${systemSettings.appName} - Regional Digital Marketplace`;
+    }
+  }, [systemSettings?.appName]);
+
+  const deleteNotification = async (id: string): Promise<boolean> => {
+    try {
+      const authHeader = localStorage.getItem('sof_umer_token') || token;
+      const res = await fetch(`/api/notifications/${id}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${authHeader}`
+        }
+      });
+      if (res.ok) {
+        setNotifications(prev => prev.filter(n => n.id !== id));
+        return true;
+      }
+    } catch (e) {
+      console.error('Failed to delete notification:', e);
+    }
+    return false;
+  };
+
+  const deleteAllNotifications = async (): Promise<boolean> => {
+    try {
+      const authHeader = localStorage.getItem('sof_umer_token') || token;
+      const res = await fetch('/api/notifications', {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${authHeader}`
+        }
+      });
+      if (res.ok) {
+        if (currentUser) {
+          setNotifications(prev => prev.filter(n => n.userId !== currentUser.id));
+        } else {
+          setNotifications([]);
+        }
+        return true;
+      }
+    } catch (e) {
+      console.error('Failed to delete all notifications:', e);
+    }
+    return false;
+  };
+
+  const toggleNotificationRead = async (id: string): Promise<boolean> => {
+    try {
+      const authHeader = localStorage.getItem('sof_umer_token') || token;
+      const res = await fetch(`/api/notifications/${id}/toggle-read`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${authHeader}`
+        }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.notification) {
+          setNotifications(prev => prev.map(n => n.id === id ? data.notification : n));
+        } else {
+          await refreshData();
+        }
+        return true;
+      }
+    } catch (e) {
+      console.error('Failed to toggle notification read status:', e);
+    }
+    return false;
+  };
+
+  const deleteInquiry = async (id: string): Promise<boolean> => {
+    try {
+      const authHeader = localStorage.getItem('sof_umer_token') || token;
+      const res = await fetch(`/api/inquiries/${id}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${authHeader}`
+        }
+      });
+      if (res.ok) {
+        setInquiries(prev => prev.filter(i => i.id !== id));
+        return true;
+      }
+    } catch (e) {
+      console.error('Failed to delete inquiry thread:', e);
+    }
+    return false;
+  };
+
+  const deleteAllInquiries = async (): Promise<boolean> => {
+    try {
+      const authHeader = localStorage.getItem('sof_umer_token') || token;
+      const res = await fetch('/api/inquiries', {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${authHeader}`
+        }
+      });
+      if (res.ok) {
+        if (currentUser) {
+          setInquiries(prev => prev.filter(i => i.senderId !== currentUser.id && i.receiverId !== currentUser.id));
+        } else {
+          setInquiries([]);
+        }
+        return true;
+      }
+    } catch (e) {
+      console.error('Failed to delete all inquiries:', e);
+    }
+    return false;
+  };
+
   return (
     <AppContext.Provider value={{
       currentUser,
@@ -802,7 +924,12 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       updateFaq,
       deleteFaq,
       voteFaqHelpful,
-      reorderFaqs
+      reorderFaqs,
+      deleteNotification,
+      deleteAllNotifications,
+      toggleNotificationRead,
+      deleteInquiry,
+      deleteAllInquiries
     }}>
       {children}
     </AppContext.Provider>
