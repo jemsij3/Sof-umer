@@ -1421,11 +1421,42 @@ async function startServer() {
   // Trust proxy for Render / Cloudflare reverse proxies
   app.set('trust proxy', 1);
 
-  // Global CORS Middleware
+  // Dynamic CORS Middleware
   app.use((req, res, next) => {
-    res.header('Access-Control-Allow-Origin', '*');
+    const origin = req.headers.origin;
+
+    let isAllowed = false;
+    if (origin) {
+      // 1. Check if localhost or 127.0.0.1 (with or without port)
+      if (/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)) {
+        isAllowed = true;
+      }
+      // 2. Check if ends with sofumerapp.com or onrender.com
+      else if (/^https?:\/\/([a-z0-9-]+\.)*sofumerapp\.com$/.test(origin)) {
+        isAllowed = true;
+      }
+      else if (/^https?:\/\/([a-z0-9-]+\.)*onrender\.com$/.test(origin)) {
+        isAllowed = true;
+      }
+      // 3. Support FRONTEND_URL environment variable
+      else if (process.env.FRONTEND_URL) {
+        const customOrigins = process.env.FRONTEND_URL.split(",").map(o => o.trim());
+        if (customOrigins.includes(origin)) {
+          isAllowed = true;
+        }
+      }
+    }
+
+    if (isAllowed && origin) {
+      res.header('Access-Control-Allow-Origin', origin);
+      res.header('Access-Control-Allow-Credentials', 'true');
+    } else {
+      res.header('Access-Control-Allow-Origin', '*');
+    }
+
     res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
     res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+
     if (req.method === 'OPTIONS') {
       return res.sendStatus(200);
     }
