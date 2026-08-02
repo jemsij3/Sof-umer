@@ -4101,7 +4101,21 @@ async function startServer() {
         : defaults.adPackages
     };
 
+    // Ensure siteStatus defaults to Online if invalid or empty
+    if (!(localDb as any).appSettings.siteStatus) {
+      (localDb as any).appSettings.siteStatus = 'Online';
+    }
+
     res.json((localDb as any).appSettings);
+  });
+
+  app.post('/api/system-settings/reset-online', async (req, res) => {
+    if (!(localDb as any).appSettings) {
+      (localDb as any).appSettings = {};
+    }
+    (localDb as any).appSettings.siteStatus = 'Online';
+    await saveDb();
+    res.json({ success: true, siteStatus: 'Online', appSettings: (localDb as any).appSettings });
   });
 
   app.put('/api/system-settings', requireAdmin, async (req, res) => {

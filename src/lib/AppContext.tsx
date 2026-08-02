@@ -221,7 +221,11 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     const savedSysSettings = localStorage.getItem('sof_umer_sys_settings');
     if (savedSysSettings) {
       try {
-        setSystemSettings(JSON.parse(savedSysSettings));
+        const parsed = JSON.parse(savedSysSettings);
+        if (!parsed.siteStatus || parsed.siteStatus === 'Offline') {
+          parsed.siteStatus = 'Online';
+        }
+        setSystemSettings(parsed);
       } catch (e) {}
     }
   }, []);

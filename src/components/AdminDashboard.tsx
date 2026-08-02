@@ -4100,7 +4100,7 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
                 <div>
                   <label className="block text-[10px] text-white/40 font-bold mb-1.5 uppercase">Site Live Status</label>
                   <select
-                    value={systemSettings.siteStatus}
+                    value={systemSettings.siteStatus || 'Online'}
                     onChange={e => setSystemSettings({ ...systemSettings, siteStatus: e.target.value })}
                     className="w-full px-3.5 py-2.5 bg-[#12121a] border border-white/5 rounded-xl text-xs animate-none"
                   >

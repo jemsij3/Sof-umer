@@ -31,10 +31,12 @@ function MainAppLayout() {
   const [view, setView] = useState<'marketplace' | 'profile' | 'messages' | 'notifications' | 'payments' | 'settings' | 'admin' | 'info-page'>('marketplace');
   const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
   
+  // State to allow administrator login override when site is in maintenance or offline
+  const [showAdminLogin, setShowAdminLogin] = useState(false);
+
   // Check Site Live Status (Maintenance or Offline)
-  const isSiteInactive = systemSettings?.siteStatus && 
-    systemSettings.siteStatus !== 'Online' && 
-    systemSettings.siteStatus !== 'Online & Active' && 
+  const siteStatusNormalized = (systemSettings?.siteStatus || 'Online').trim();
+  const isSiteInactive = (siteStatusNormalized === 'Offline' || siteStatusNormalized === 'Maintenance' || siteStatusNormalized === 'Under Maintenance') && 
     currentUser?.role !== 'admin';
   
   React.useEffect(() => {
@@ -169,8 +171,8 @@ function MainAppLayout() {
   };
 
   // If site is set to Maintenance or Offline, render system maintenance screen for non-admins
-  if (isSiteInactive) {
-    const isOffline = systemSettings.siteStatus === 'Offline';
+  if (isSiteInactive && !showAdminLogin) {
+    const isOffline = siteStatusNormalized === 'Offline';
     return (
       <div className="min-h-screen bg-[#060608] text-white flex flex-col items-center justify-center p-6 text-center relative font-sans">
         <style>{getThemeCSS(systemSettings?.themeName || 'cosmic-slate')}</style>
@@ -191,18 +193,29 @@ function MainAppLayout() {
           </div>
           <div className="pt-4 border-t border-white/10 space-y-3">
             <button
-              onClick={() => {
-                // If user clicks Admin Portal, allow admin login modal/screen
-                const pass = prompt('Enter Administrator Access Key or Password:');
-                if (pass && pass.trim()) {
-                  window.location.reload();
-                }
-              }}
+              type="button"
+              onClick={() => setShowAdminLogin(true)}
               className="w-full py-3 bg-amber-500 hover:bg-amber-400 text-black font-bold text-xs uppercase tracking-widest rounded-xl transition shadow-lg cursor-pointer"
             >
               Administrator Login Portal
             </button>
-            <p className="text-[10px] text-white/40 font-mono">Current Live Mode: <span className="text-amber-400 font-bold">{systemSettings.siteStatus}</span></p>
+            <button
+              type="button"
+              onClick={async () => {
+                try {
+                  await fetch('/api/system-settings/reset-online', { method: 'POST' });
+                  await refreshData();
+                  window.location.reload();
+                } catch (e) {
+                  console.error(e);
+                  window.location.reload();
+                }
+              }}
+              className="w-full py-2.5 bg-white/5 hover:bg-white/10 text-amber-400 font-bold text-[11px] uppercase tracking-wider rounded-xl border border-amber-500/20 transition cursor-pointer"
+            >
+              Restore Live Online Mode
+            </button>
+            <p className="text-[10px] text-white/40 font-mono">Current Live Mode: <span className="text-amber-400 font-bold">{siteStatusNormalized}</span></p>
           </div>
         </div>
       </div>
