@@ -1654,9 +1654,9 @@ export const staticTranslations: TranslationKey[] = [
   },
   {
     key: "splash_tagline",
-    en: "Explore high-value real estate properties, premium jobs, and certified legal & home services. Verified secure payments with instant receipt tracking.",
-    om: "Qabeenya, hojiiwwan gaarii, fi tajaajila seeraa fi manaa beekamtii qaban hordofaa. Kafaltiiwwan amansiisoo risiitii hordofni battalatti qabaniin.",
-    am: "ከፍተኛ ዋጋ ያላቸውን የሪል እስቴት ንብረቶች፣ ምርጥ ስራዎችን እና የተረጋገጡ የህግ እና የቤት አገልግሎቶችን ያስሱ። ፈጣን የደረሰኝ ክትትል ያላቸው የተረጋገጡ አስተማማኝ ክፍያዎች።",
+    en: "The Smart Way to Discover, Connect & Grow",
+    om: "Karaa Mala-qabeessa Birmachuuf, Walqunnamuufi Guddisuuf",
+    am: "ማግኘት፣ መገናኘት እና ማደግ የሚችሉበት ብልህ መንገድ",
     category: "Welcome"
   },
   {

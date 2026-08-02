@@ -165,6 +165,9 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     themeName: 'cosmic-slate',
     homepageHeading: 'The Smart Way to Discover, Connect & Grow',
     homepageSubheading: 'Buy, sell, rent, hire, and connect with confidence through verified listings, trusted businesses, and secure services—all in one modern marketplace.',
+    heroTitle: 'The Smart Way to Discover, Connect & Grow',
+    heroDescription: 'Buy, sell, rent, hire, and connect with confidence through verified listings, trusted businesses, and secure services—all in one modern marketplace.',
+    heroImageUrl: '',
     termsAndPrivacy: 'Sof Umer guarantees user security. All listed properties are audited for legal compliance before publishing. Transactions are processed manually by our finance team.',
     notificationsEnabled: true,
     siteStatus: 'Online'
@@ -224,6 +227,12 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         const parsed = JSON.parse(savedSysSettings);
         if (!parsed.siteStatus || parsed.siteStatus === 'Offline') {
           parsed.siteStatus = 'Online';
+        }
+        if (!parsed.heroTitle || parsed.heroTitle.includes("Connecting Ethiopia")) {
+          parsed.heroTitle = 'The Smart Way to Discover, Connect & Grow';
+        }
+        if (!parsed.heroDescription || parsed.heroDescription.includes("Explore high-value")) {
+          parsed.heroDescription = 'Buy, sell, rent, hire, and connect with confidence through verified listings, trusted businesses, and secure services—all in one modern marketplace.';
         }
         setSystemSettings(parsed);
       } catch (e) {}

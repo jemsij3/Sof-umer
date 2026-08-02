@@ -10,7 +10,7 @@ import {
   Activity, DollarSign, Percent, Clock, FileCheck, Info, Plus, 
   Calendar, MapPin, ChevronRight, HelpCircle as HelpIcon, BellRing,
   Camera, Image as ImageIcon, Folder, FolderKanban, ChevronDown,
-  Mail, Phone, RotateCcw, Zap, LogOut, Gift
+  Mail, Phone, RotateCcw, Zap, LogOut, Gift, Monitor, Smartphone, Upload, XCircle, Save
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { EmployeeAdminsModule } from './EmployeeAdminsModule';
@@ -412,6 +412,9 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
     themeName: 'cosmic-slate',
     homepageHeading: 'The Smart Way to Discover, Connect & Grow',
     homepageSubheading: 'Buy, sell, rent, hire, and connect with confidence through verified listings, trusted businesses, and secure services—all in one modern marketplace.',
+    heroTitle: 'The Smart Way to Discover, Connect & Grow',
+    heroDescription: 'Buy, sell, rent, hire, and connect with confidence through verified listings, trusted businesses, and secure services—all in one modern marketplace.',
+    heroImageUrl: '',
     termsAndPrivacy: 'Sof Umer guarantees user security. All listed properties are audited for legal compliance before publishing. Transactions are processed manually by our finance team.',
     notificationsEnabled: true,
     siteStatus: 'Online'
@@ -419,6 +422,158 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
 
   const [isSavingSettings, setIsSavingSettings] = useState(false);
   const [saveSettingsSuccess, setSaveSettingsSuccess] = useState(false);
+
+  // Login Hero Settings States & Handlers
+  const [heroPreviewMode, setHeroPreviewMode] = useState<'desktop' | 'mobile'>('desktop');
+  const [heroError, setHeroError] = useState('');
+  const [heroSuccess, setHeroSuccess] = useState('');
+  const [isUploadingHeroImage, setIsUploadingHeroImage] = useState(false);
+
+  const handleSaveHeroSettings = async () => {
+    setHeroError('');
+    setHeroSuccess('');
+
+    const title = (systemSettings.heroTitle || 'The Smart Way to Discover, Connect & Grow').trim();
+    const description = (systemSettings.heroDescription || 'Buy, sell, rent, hire, and connect with confidence through verified listings, trusted businesses, and secure services—all in one modern marketplace.').trim();
+
+    if (!title) {
+      setHeroError('Hero Title field cannot be empty.');
+      return;
+    }
+    if (title.length > 200) {
+      setHeroError('Hero Title must be less than 200 characters.');
+      return;
+    }
+    if (!description) {
+      setHeroError('Hero Description field cannot be empty.');
+      return;
+    }
+    if (description.length > 1000) {
+      setHeroError('Hero Description must be less than 1000 characters.');
+      return;
+    }
+
+    try {
+      const updated = {
+        ...systemSettings,
+        heroTitle: title,
+        heroDescription: description,
+        homepageHeading: title,
+        homepageSubheading: description,
+        heroUpdatedAt: new Date().toISOString(),
+        heroUpdatedBy: currentUser?.fullName || currentUser?.email || 'Administrator'
+      };
+      setSystemSettings(updated);
+      await updateSystemSettings(updated);
+      setHeroSuccess('Login Hero Settings saved successfully! Changes are live across all portals.');
+      setTimeout(() => setHeroSuccess(''), 4000);
+    } catch (err: any) {
+      setHeroError(err.message || 'Failed to save Login Hero Settings.');
+    }
+  };
+
+  const handleCancelHeroSettings = () => {
+    setHeroError('');
+    setHeroSuccess('');
+    if (globalSystemSettings) {
+      setSystemSettings(globalSystemSettings);
+    }
+  };
+
+  const handleResetHeroToDefault = async () => {
+    setHeroError('');
+    setHeroSuccess('');
+    const defaultTitle = 'The Smart Way to Discover, Connect & Grow';
+    const defaultDesc = 'Buy, sell, rent, hire, and connect with confidence through verified listings, trusted businesses, and secure services—all in one modern marketplace.';
+    const updated = {
+      ...systemSettings,
+      heroTitle: defaultTitle,
+      heroDescription: defaultDesc,
+      homepageHeading: defaultTitle,
+      homepageSubheading: defaultDesc,
+      heroImageUrl: '',
+      heroUpdatedAt: new Date().toISOString(),
+      heroUpdatedBy: currentUser?.fullName || currentUser?.email || 'Administrator'
+    };
+    setSystemSettings(updated);
+    try {
+      await updateSystemSettings(updated);
+      setHeroSuccess('Reset Login Hero to default settings successfully.');
+      setTimeout(() => setHeroSuccess(''), 4000);
+    } catch (err: any) {
+      setHeroError('Failed to reset Login Hero to default.');
+    }
+  };
+
+  const handleHeroImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      setHeroError('Please select a valid image file (PNG, JPG, WebP).');
+      return;
+    }
+
+    setIsUploadingHeroImage(true);
+    setHeroError('');
+    setHeroSuccess('');
+
+    const reader = new FileReader();
+    reader.onloadend = async () => {
+      const base64 = reader.result as string;
+      if (base64) {
+        let finalUrl = base64;
+        try {
+          const res = await fetch('/api/upload', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ image: base64, folder: 'sof_umer_login_hero' })
+          });
+          if (res.ok) {
+            const data = await res.json();
+            if (data.url) finalUrl = data.url;
+          }
+        } catch (uploadErr) {
+          console.warn('Cloudinary upload fallback:', uploadErr);
+        }
+
+        const updated = {
+          ...systemSettings,
+          heroImageUrl: finalUrl,
+          heroUpdatedAt: new Date().toISOString(),
+          heroUpdatedBy: currentUser?.fullName || currentUser?.email || 'Administrator'
+        };
+        setSystemSettings(updated);
+        try {
+          await updateSystemSettings(updated);
+          setHeroSuccess('Login Hero image uploaded and saved successfully via Cloudinary!');
+          setTimeout(() => setHeroSuccess(''), 4000);
+        } catch (err) {
+          setHeroError('Failed to save uploaded image.');
+        }
+      }
+      setIsUploadingHeroImage(false);
+    };
+    reader.readAsDataURL(file);
+    e.target.value = '';
+  };
+
+  const handleRemoveHeroImage = async () => {
+    const updated = {
+      ...systemSettings,
+      heroImageUrl: '',
+      heroUpdatedAt: new Date().toISOString(),
+      heroUpdatedBy: currentUser?.fullName || currentUser?.email || 'Administrator'
+    };
+    setSystemSettings(updated);
+    try {
+      await updateSystemSettings(updated);
+      setHeroSuccess('Hero image removed.');
+      setTimeout(() => setHeroSuccess(''), 3000);
+    } catch (err) {
+      setHeroError('Failed to remove hero image.');
+    }
+  };
 
   useEffect(() => {
     if (globalSystemSettings) {
@@ -4084,6 +4239,280 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
                       </button>
                     );
                   })}
+                </div>
+              </div>
+
+              {/* Dedicated Login Hero Settings Section */}
+              <div className="p-6 bg-[#12121a] border border-amber-500/20 rounded-3xl space-y-6 shadow-2xl">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/10 pb-4">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="px-2.5 py-0.5 bg-amber-500/10 text-amber-500 border border-amber-500/30 rounded-full text-[10px] font-bold uppercase tracking-wider">
+                        Website Settings
+                      </span>
+                      <ChevronRight className="w-3.5 h-3.5 text-white/40" />
+                      <span className="text-xs font-bold text-white uppercase tracking-wider">
+                        Login Hero Settings
+                      </span>
+                    </div>
+                    <h4 className="text-lg font-serif font-bold text-white mt-1">
+                      Login Hero Single Source of Truth
+                    </h4>
+                    <p className="text-xs text-white/50">
+                      Manage the headline, description, and visual asset displayed on the Authentication & Welcome Portal across all environments.
+                    </p>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setHeroPreviewMode('desktop')}
+                      className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 ${
+                        heroPreviewMode === 'desktop'
+                          ? 'bg-amber-500 text-black shadow-lg'
+                          : 'bg-white/5 text-white/60 hover:text-white border border-white/10'
+                      }`}
+                    >
+                      <Monitor className="w-3.5 h-3.5" />
+                      <span>Desktop View</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setHeroPreviewMode('mobile')}
+                      className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 ${
+                        heroPreviewMode === 'mobile'
+                          ? 'bg-amber-500 text-black shadow-lg'
+                          : 'bg-white/5 text-white/60 hover:text-white border border-white/10'
+                      }`}
+                    >
+                      <Smartphone className="w-3.5 h-3.5" />
+                      <span>Mobile View</span>
+                    </button>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+                  {/* Left Column: Form Controls */}
+                  <div className="lg:col-span-7 space-y-5">
+                    {/* Hero Title */}
+                    <div>
+                      <div className="flex justify-between items-center mb-1.5">
+                        <label className="text-xs font-bold text-amber-500 uppercase tracking-wider">
+                          Hero Title <span className="text-rose-400">*</span>
+                        </label>
+                        <span className="text-[10px] text-white/40 font-mono">
+                          {(systemSettings.heroTitle || '').length}/200
+                        </span>
+                      </div>
+                      <input
+                        type="text"
+                        maxLength={200}
+                        value={systemSettings.heroTitle ?? ''}
+                        onChange={(e) => setSystemSettings({ ...systemSettings, heroTitle: e.target.value })}
+                        placeholder="The Smart Way to Discover, Connect & Grow"
+                        className="w-full px-4 py-3 bg-black/60 border border-white/10 rounded-2xl text-sm font-medium text-white focus:outline-none focus:border-amber-500 transition"
+                      />
+                      <p className="text-[11px] text-white/40 mt-1">
+                        Primary headline shown in bold typography on the login screen.
+                      </p>
+                    </div>
+
+                    {/* Hero Description */}
+                    <div>
+                      <div className="flex justify-between items-center mb-1.5">
+                        <label className="text-xs font-bold text-amber-500 uppercase tracking-wider">
+                          Hero Description <span className="text-rose-400">*</span>
+                        </label>
+                        <span className="text-[10px] text-white/40 font-mono">
+                          {(systemSettings.heroDescription || '').length}/1000
+                        </span>
+                      </div>
+                      <textarea
+                        rows={4}
+                        maxLength={1000}
+                        value={systemSettings.heroDescription ?? ''}
+                        onChange={(e) => setSystemSettings({ ...systemSettings, heroDescription: e.target.value })}
+                        placeholder="Buy, sell, rent, hire, and connect with confidence through verified listings, trusted businesses, and secure services—all in one modern marketplace."
+                        className="w-full px-4 py-3 bg-black/60 border border-white/10 rounded-2xl text-sm text-white/90 leading-relaxed focus:outline-none focus:border-amber-500 transition resize-none"
+                      />
+                      <p className="text-[11px] text-white/40 mt-1">
+                        Detailed subtitle text describing the Sof Umer ecosystem.
+                      </p>
+                    </div>
+
+                    {/* Hero Image Management */}
+                    <div className="p-4 bg-black/40 border border-white/10 rounded-2xl space-y-3">
+                      <label className="block text-xs font-bold text-amber-500 uppercase tracking-wider">
+                        Hero Background Visual Asset (Cloudinary)
+                      </label>
+                      <div className="flex flex-col sm:flex-row items-center gap-4">
+                        <div className="w-24 h-24 rounded-2xl bg-black border border-white/10 overflow-hidden relative group shrink-0 flex items-center justify-center">
+                          {systemSettings.heroImageUrl ? (
+                            <img
+                              src={systemSettings.heroImageUrl}
+                              alt="Hero Preview"
+                              className="w-full h-full object-cover"
+                              referrerPolicy="no-referrer"
+                            />
+                          ) : (
+                            <div className="text-center p-2">
+                              <ImageIcon className="w-6 h-6 text-white/20 mx-auto mb-1" />
+                              <span className="text-[9px] text-white/30 font-bold uppercase block">Default Slide</span>
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="flex-1 space-y-2">
+                          <p className="text-xs text-white/80 font-medium">
+                            {systemSettings.heroImageUrl ? 'Custom Cloudinary Image active' : 'Using default rotating slideshow backdrop'}
+                          </p>
+                          <p className="text-[11px] text-white/40">
+                            Upload high-resolution landscape image (1920x1080 recommended). Stored securely via Cloudinary CDN.
+                          </p>
+                          <div className="flex items-center gap-2 pt-1">
+                            <label className="inline-flex items-center justify-center gap-1.5 px-3 py-2 bg-amber-500 hover:bg-amber-400 text-black text-xs font-bold rounded-xl cursor-pointer transition shadow">
+                              <Upload className="w-3.5 h-3.5" />
+                              <span>{isUploadingHeroImage ? 'Uploading...' : systemSettings.heroImageUrl ? 'Replace Image' : 'Upload Image'}</span>
+                              <input
+                                type="file"
+                                accept="image/*"
+                                onChange={handleHeroImageUpload}
+                                disabled={isUploadingHeroImage}
+                                className="hidden"
+                              />
+                            </label>
+
+                            {systemSettings.heroImageUrl && (
+                              <button
+                                type="button"
+                                onClick={handleRemoveHeroImage}
+                                className="inline-flex items-center gap-1 px-3 py-2 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 text-xs font-bold rounded-xl transition"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                                <span>Remove</span>
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Timestamp / Audit Log Info */}
+                    {systemSettings.heroUpdatedAt && (
+                      <div className="text-[11px] text-white/40 flex items-center gap-2 font-mono">
+                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                        <span>
+                          Last modified: {new Date(systemSettings.heroUpdatedAt).toLocaleString()} by {systemSettings.heroUpdatedBy || 'Administrator'}
+                        </span>
+                      </div>
+                    )}
+
+                    {/* Alert Notifications */}
+                    {heroError && (
+                      <div className="p-3.5 bg-rose-500/10 border border-rose-500/30 rounded-2xl text-rose-400 text-xs flex items-center gap-2">
+                        <XCircle className="w-4 h-4 shrink-0" />
+                        <span>{heroError}</span>
+                      </div>
+                    )}
+
+                    {heroSuccess && (
+                      <div className="p-3.5 bg-emerald-500/10 border border-emerald-500/30 rounded-2xl text-emerald-400 text-xs flex items-center gap-2">
+                        <CheckCircle2 className="w-4 h-4 shrink-0" />
+                        <span>{heroSuccess}</span>
+                      </div>
+                    )}
+
+                    {/* Control Buttons */}
+                    <div className="flex flex-wrap items-center gap-3 pt-2">
+                      <button
+                        type="button"
+                        onClick={handleSaveHeroSettings}
+                        className="px-6 py-3 bg-amber-500 hover:bg-amber-400 text-black font-bold text-xs rounded-2xl shadow-xl transition flex items-center gap-2"
+                      >
+                        <Save className="w-4 h-4" />
+                        <span>Save Hero Changes</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={handleCancelHeroSettings}
+                        className="px-5 py-3 bg-white/5 hover:bg-white/10 text-white/70 hover:text-white font-bold text-xs rounded-2xl border border-white/10 transition"
+                      >
+                        Cancel
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={handleResetHeroToDefault}
+                        className="px-5 py-3 bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 font-bold text-xs rounded-2xl border border-rose-500/30 transition flex items-center gap-1.5 ml-auto"
+                      >
+                        <RefreshCw className="w-3.5 h-3.5" />
+                        <span>Reset To Default</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Right Column: Live Interactive Preview */}
+                  <div className="lg:col-span-5 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-bold text-white/50 uppercase tracking-wider flex items-center gap-1.5">
+                        <Eye className="w-3.5 h-3.5 text-amber-500" />
+                        <span>Live Login Hero Preview ({heroPreviewMode})</span>
+                      </span>
+                      <span className="text-[10px] text-amber-500 font-mono bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-full">
+                        Real-time
+                      </span>
+                    </div>
+
+                    <div className={`mx-auto transition-all duration-300 ${
+                      heroPreviewMode === 'mobile' ? 'max-w-[320px]' : 'w-full'
+                    }`}>
+                      <div className="bg-[#060608] border border-white/15 rounded-3xl overflow-hidden shadow-2xl relative">
+                        {/* Simulated Image / Backdrop */}
+                        <div className="relative h-48 w-full overflow-hidden bg-black">
+                          {systemSettings.heroImageUrl ? (
+                            <img
+                              src={systemSettings.heroImageUrl}
+                              alt="Hero Visual"
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-full h-full bg-gradient-to-br from-amber-900/40 via-amber-950/20 to-black p-4 flex flex-col justify-end">
+                              <div className="flex items-center gap-2 mb-2">
+                                <div className="w-6 h-6 rounded-lg bg-amber-500 text-black flex items-center justify-center font-bold text-xs">
+                                  S
+                                </div>
+                                <span className="text-xs font-bold text-white font-serif tracking-wider">SOF-UMER</span>
+                              </div>
+                            </div>
+                          )}
+                          <div className="absolute inset-0 bg-gradient-to-t from-[#060608] via-transparent to-transparent" />
+                        </div>
+
+                        {/* Simulated Hero Text Area */}
+                        <div className="p-6 space-y-4">
+                          <div className="space-y-2">
+                            <h3 className="text-xl font-serif font-bold text-white leading-tight">
+                              {systemSettings.heroTitle || 'The Smart Way to Discover, Connect & Grow'}
+                            </h3>
+                            <p className="text-xs text-white/60 leading-relaxed font-light line-clamp-4">
+                              {systemSettings.heroDescription || 'Buy, sell, rent, hire, and connect with confidence through verified listings, trusted businesses, and secure services—all in one modern marketplace.'}
+                            </p>
+                          </div>
+
+                          {/* Dummy Interactive Controls */}
+                          <div className="pt-2 space-y-2">
+                            <div className="w-full py-2.5 bg-amber-500 text-black text-center font-bold text-xs rounded-xl shadow">
+                              Sign In / Register
+                            </div>
+                            <div className="w-full py-2 bg-white/5 border border-white/10 text-white/50 text-center font-medium text-[11px] rounded-xl">
+                              Browse Guest Marketplace
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
 

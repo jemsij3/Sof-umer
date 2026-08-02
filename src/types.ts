@@ -316,6 +316,11 @@ export interface SystemSettings {
   themeName: string;
   homepageHeading: string;
   homepageSubheading: string;
+  heroTitle?: string;
+  heroDescription?: string;
+  heroImageUrl?: string;
+  heroUpdatedAt?: string;
+  heroUpdatedBy?: string;
   termsAndPrivacy: string;
   notificationsEnabled: boolean;
   siteStatus: string;

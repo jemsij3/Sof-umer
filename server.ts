@@ -1329,10 +1329,40 @@ const applyDataSanityAndMigrations = () => {
       themeName: 'cosmic-slate',
       homepageHeading: 'The Smart Way to Discover, Connect & Grow',
       homepageSubheading: 'Buy, sell, rent, hire, and connect with confidence through verified listings, trusted businesses, and secure services—all in one modern marketplace.',
+      heroTitle: 'The Smart Way to Discover, Connect & Grow',
+      heroDescription: 'Buy, sell, rent, hire, and connect with confidence through verified listings, trusted businesses, and secure services—all in one modern marketplace.',
+      heroImageUrl: '',
       termsAndPrivacy: 'Sof Umer guarantees user security. All listed properties are audited for legal compliance before publishing. Transactions are processed manually by our finance team.',
       notificationsEnabled: true,
       siteStatus: 'Online'
     };
+  }
+
+  // Sanitize and ensure Hero settings and translations are scrubbed of old strings
+  const appSet = (localDb as any).appSettings;
+  if (!appSet.heroTitle || appSet.heroTitle.includes("Connecting Ethiopia")) {
+    appSet.heroTitle = 'The Smart Way to Discover, Connect & Grow';
+  }
+  if (!appSet.heroDescription || appSet.heroDescription.includes("Explore high-value")) {
+    appSet.heroDescription = 'Buy, sell, rent, hire, and connect with confidence through verified listings, trusted businesses, and secure services—all in one modern marketplace.';
+  }
+  if (appSet.heroImageUrl === undefined) appSet.heroImageUrl = '';
+  if (!appSet.homepageHeading || appSet.homepageHeading.includes("Connecting Ethiopia")) {
+    appSet.homepageHeading = 'The Smart Way to Discover, Connect & Grow';
+  }
+  if (!appSet.homepageSubheading || appSet.homepageSubheading.includes("Explore high-value")) {
+    appSet.homepageSubheading = 'Buy, sell, rent, hire, and connect with confidence through verified listings, trusted businesses, and secure services—all in one modern marketplace.';
+  }
+
+  if (Array.isArray(localDb.translations)) {
+    for (const tr of localDb.translations) {
+      if (tr.key === 'auth_connecting_markets' || tr.key === 'splash_tagline' || (tr.en && tr.en.includes("Connecting Ethiopia"))) {
+        tr.en = 'The Smart Way to Discover, Connect & Grow';
+      }
+      if (tr.key === 'auth_intro_desc') {
+        tr.en = 'Buy, sell, rent, hire, and connect with confidence through verified listings, trusted businesses, and secure services—all in one modern marketplace.';
+      }
+    }
   }
 
   syncAllWalletBalances();
@@ -4042,6 +4072,9 @@ async function startServer() {
       themeName: 'cosmic-slate',
       homepageHeading: 'The Smart Way to Discover, Connect & Grow',
       homepageSubheading: 'Buy, sell, rent, hire, and connect with confidence through verified listings, trusted businesses, and secure services—all in one modern marketplace.',
+      heroTitle: 'The Smart Way to Discover, Connect & Grow',
+      heroDescription: 'Buy, sell, rent, hire, and connect with confidence through verified listings, trusted businesses, and secure services—all in one modern marketplace.',
+      heroImageUrl: '',
       termsAndPrivacy: 'Sof Umer guarantees user security. All listed properties are audited for legal compliance before publishing. Transactions are processed manually by our finance team.',
       notificationsEnabled: true,
       siteStatus: 'Online',

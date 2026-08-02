@@ -639,8 +639,8 @@ export default function AuthScreen({ initialMode }: AuthScreenProps) {
             <div className="md:w-1/2 relative h-[300px] md:h-auto overflow-hidden">
               <AnimatePresence mode="wait">
                 <motion.img
-                  key={currentSlide}
-                  src={welcomeImages[currentSlide]}
+                  key={systemSettings?.heroImageUrl || currentSlide}
+                  src={systemSettings?.heroImageUrl || welcomeImages[currentSlide]}
                   initial={{ opacity: 0, scale: 1.05 }}
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0 }}
@@ -670,10 +670,10 @@ export default function AuthScreen({ initialMode }: AuthScreenProps) {
               <div className="absolute bottom-12 left-8 md:left-12 z-20 max-w-md hidden md:block">
                 <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-500/10 border border-amber-500/20 rounded-full text-amber-500 text-xs font-semibold mb-4 backdrop-blur-md">
                   <Sparkles className="w-3.5 h-3.5" />
-                  <span>{t('premier_portal_ethiopia')}</span>
+                  <span>{systemSettings?.appName || 'SOF-UMER'} Marketplace</span>
                 </div>
                 <h2 className="text-3xl font-serif text-white font-normal leading-snug">
-                  {t('discover_refined_spaces')}
+                  {systemSettings?.heroTitle || 'The Smart Way to Discover, Connect & Grow'}
                 </h2>
               </div>
             </div>
@@ -698,10 +698,10 @@ export default function AuthScreen({ initialMode }: AuthScreenProps) {
 
                 <div className="space-y-4">
                   <h3 className="text-3xl md:text-4xl font-serif font-semibold text-white tracking-tight leading-tight">
-                    {t('auth_connecting_markets')}
+                    {systemSettings?.heroTitle || 'The Smart Way to Discover, Connect & Grow'}
                   </h3>
                   <p className="text-sm md:text-base text-white/50 leading-relaxed font-light">
-                    {t('auth_intro_desc')}
+                    {systemSettings?.heroDescription || 'Buy, sell, rent, hire, and connect with confidence through verified listings, trusted businesses, and secure services—all in one modern marketplace.'}
                   </p>
                 </div>
 
