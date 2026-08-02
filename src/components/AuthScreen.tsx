@@ -200,81 +200,14 @@ export default function AuthScreen({ initialMode }: AuthScreenProps) {
         return;
       }
 
-      // Cache admin credentials for offline fallback
-      if (data.user?.role === 'admin' || data.user?.email === 'jemaljima@gmail.com') {
-        try {
-          localStorage.setItem('sof_umer_cached_admin', JSON.stringify(data.user));
-          localStorage.setItem('sof_umer_admin_pass', password);
-        } catch (e) {}
-      }
+      // Clear any legacy cached admin items to maintain strict security
+      localStorage.removeItem('sof_umer_cached_admin');
+      localStorage.removeItem('sof_umer_admin_pass');
 
       setToken(data.token);
       setCurrentUser(data.user);
       setSessionExpired(false);
     } catch (err: any) {
-      const isNetworkError = !navigator.onLine || 
-        err?.name === 'TypeError' || 
-        (err?.message && (
-          err.message.toLowerCase().includes('failed to fetch') || 
-          err.message.toLowerCase().includes('network') ||
-          err.message.toLowerCase().includes('load failed')
-        ));
-
-      if (isNetworkError) {
-        const inputEmail = email.trim().toLowerCase();
-        const savedAdminRaw = localStorage.getItem('sof_umer_cached_admin') || localStorage.getItem('sof_umer_user');
-        const savedAdminPass = localStorage.getItem('sof_umer_admin_pass');
-        
-        let cachedAdmin: any = null;
-        if (savedAdminRaw) {
-          try {
-            const parsed = JSON.parse(savedAdminRaw);
-            if (parsed && (parsed.role === 'admin' || parsed.email?.toLowerCase() === 'jemaljima@gmail.com' || parsed.email?.toLowerCase() === inputEmail)) {
-              cachedAdmin = parsed;
-            }
-          } catch (e) {}
-        }
-
-        const isAdminAccount = inputEmail === 'jemaljima@gmail.com' || inputEmail.includes('admin') || (cachedAdmin && (cachedAdmin.role === 'admin' || cachedAdmin.isEmployee));
-
-        if (isAdminAccount) {
-          const matchesPassword = (savedAdminPass && password === savedAdminPass) || password.length >= 4;
-          if (matchesPassword) {
-            const offlineUser = cachedAdmin || {
-              id: 'usr-admin',
-              fullName: 'Jemal Jimma (Admin)',
-              email: inputEmail || 'jemaljima@gmail.com',
-              role: 'admin',
-              status: 'active',
-              isVerified: true,
-              walletBalance: 10000,
-              phone: '+251911000000'
-            };
-            offlineUser.role = 'admin';
-
-            const offlineToken = `offline-token-admin-${Date.now()}`;
-            try {
-              localStorage.setItem('sof_umer_user', JSON.stringify(offlineUser));
-              localStorage.setItem('sof_umer_token', offlineToken);
-              localStorage.setItem('sof_umer_cached_admin', JSON.stringify(offlineUser));
-              localStorage.setItem('sof_umer_admin_pass', password);
-            } catch (e) {}
-
-            setToken(offlineToken);
-            setCurrentUser(offlineUser);
-            setSessionExpired(false);
-            setSuccess('Signed in successfully in Offline Administrator Mode.');
-            return;
-          } else {
-            setError('Offline Administrator Authentication failed: Incorrect password for administrator account.');
-            return;
-          }
-        } else {
-          setError('Network connection unavailable. You are currently offline. Please reconnect to the internet or sign in with a cached Administrator account.');
-          return;
-        }
-      }
-
       setError(err.message || t('server_error_retry'));
     } finally {
       setSubmitting(false);
@@ -310,36 +243,14 @@ export default function AuthScreen({ initialMode }: AuthScreenProps) {
         setGeneratedBackupCodes(data.backupCodes);
       }
 
+      // Clear any legacy cached admin items
+      localStorage.removeItem('sof_umer_cached_admin');
+      localStorage.removeItem('sof_umer_admin_pass');
+
       setToken(data.token);
       setCurrentUser(data.user);
       setSessionExpired(false);
     } catch (err: any) {
-      const isNetworkError = !navigator.onLine || 
-        err?.name === 'TypeError' || 
-        (err?.message && (
-          err.message.toLowerCase().includes('failed to fetch') || 
-          err.message.toLowerCase().includes('network') ||
-          err.message.toLowerCase().includes('load failed')
-        ));
-
-      if (isNetworkError) {
-        const savedAdminRaw = localStorage.getItem('sof_umer_cached_admin') || localStorage.getItem('sof_umer_user');
-        if (savedAdminRaw) {
-          try {
-            const offlineUser = JSON.parse(savedAdminRaw);
-            offlineUser.role = 'admin';
-            const offlineToken = `offline-token-admin-${Date.now()}`;
-            localStorage.setItem('sof_umer_user', JSON.stringify(offlineUser));
-            localStorage.setItem('sof_umer_token', offlineToken);
-            setToken(offlineToken);
-            setCurrentUser(offlineUser);
-            setSessionExpired(false);
-            setSuccess('Signed in successfully in Offline Administrator Mode.');
-            return;
-          } catch (e) {}
-        }
-      }
-
       setError(err.message || 'Verification failed. Please try again.');
     } finally {
       setSubmitting(false);

@@ -1833,6 +1833,18 @@ async function startServer() {
     return sendEmail({ to: toEmail, subject, html });
   }
 
+  // Helper to determine if a user has administrator / owner / employee admin permissions
+  function isUserAdmin(user: any): boolean {
+    if (!user) return false;
+    if (user.status === 'suspended') return false;
+    if (user.email && user.email.toLowerCase() === 'jemaljima@gmail.com') return true;
+    const role = (user.role || '').toLowerCase();
+    const adminRoles = ['admin', 'owner', 'superadmin'];
+    if (adminRoles.includes(role)) return true;
+    if (user.isAdmin || user.isOwner || user.isSuperAdmin || user.isEmployee) return true;
+    return false;
+  }
+
   // Secure Helper middleware to verify real secure user JWT
   app.use(async (req, res, next) => {
     let token: string | undefined;
@@ -1844,6 +1856,11 @@ async function startServer() {
     if (token) {
       try {
         const decoded = jwt.verify(token, JWT_SECRET) as any;
+        if (decoded && decoded.purpose === '2fa_login') {
+          // Temporary 2FA token cannot be used to authenticate general endpoints
+          (req as any).user = undefined;
+          return next();
+        }
         const targetUserId = decoded.userId || decoded.id;
         const user = localDb.users.find(u => u.id === targetUserId);
         if (user) {
@@ -1871,8 +1888,12 @@ async function startServer() {
   };
 
   const requireAdmin = (req: express.Request, res: express.Response, next: express.NextFunction) => {
-    if (!(req as any).user || (req as any).user.role !== 'admin') {
-      return res.status(403).json({ error: 'Administrator access required.' });
+    const user = (req as any).user;
+    if (!user) {
+      return res.status(401).json({ error: 'Authentication required.' });
+    }
+    if (!isUserAdmin(user)) {
+      return res.status(403).json({ error: 'Access denied. Admin access required.' });
     }
     next();
   };
@@ -2006,7 +2027,7 @@ async function startServer() {
     }
 
     // 2FA Security Check (Mandatory for Admin accounts, or accounts with twoFactorEnabled: true)
-    const isAdmin = user.role === 'admin' || Boolean(user.isEmployee);
+    const isAdmin = isUserAdmin(user);
     const has2FA = Boolean(user.twoFactorEnabled);
 
     if (has2FA || isAdmin) {
@@ -2823,6 +2844,48 @@ async function startServer() {
     }
 
     user.tokenVersion = user.tokenVersion || 1;
+
+    // 2FA Security Check (Mandatory for Admin accounts, or accounts with twoFactorEnabled: true)
+    const isAdmin = isUserAdmin(user);
+    const has2FA = Boolean(user.twoFactorEnabled);
+
+    if (has2FA || isAdmin) {
+      const temp2faToken = jwt.sign(
+        { userId: user.id, purpose: '2fa_login' },
+        JWT_SECRET,
+        { expiresIn: '10m' }
+      );
+
+      let setupData = null;
+      if (isAdmin && !has2FA) {
+        let rawSecret = decryptSecret(user.tempTwoFactorSecret || '');
+        if (!rawSecret) {
+          rawSecret = authenticator.generateSecret();
+          user.tempTwoFactorSecret = encryptSecret(rawSecret);
+        }
+        const otpauth = authenticator.keyuri(user.email, 'Sof Umer Admin', rawSecret);
+        const qrCodeUrl = await QRCode.toDataURL(otpauth);
+        setupData = {
+          secret: rawSecret,
+          qrCodeUrl,
+          otpauthUri: otpauth
+        };
+      }
+
+      await saveDb();
+
+      return res.json({
+        requires2FA: true,
+        requires2FASetup: isAdmin && !has2FA,
+        tempToken: temp2faToken,
+        email: user.email,
+        setupData,
+        message: isAdmin && !has2FA
+          ? 'Two-Factor Authentication (2FA) is mandatory for Administrator accounts. Please scan the QR code and enter the 6-digit code to complete sign-in.'
+          : 'Google Authenticator 2FA verification is required.'
+      });
+    }
+
     await saveDb();
 
     const token = jwt.sign({
@@ -2857,7 +2920,7 @@ async function startServer() {
     const updates = req.body;
     const currentUser = (req as any).user;
 
-    if (currentUser.id !== id && currentUser.role !== 'admin') {
+    if (currentUser.id !== id && !isUserAdmin(currentUser)) {
       return res.status(403).json({ error: 'You are not authorized to update this user profile.' });
     }
 
@@ -2877,7 +2940,7 @@ async function startServer() {
       }
 
       // Prevent non-admins from changing their role or status
-      if (currentUser.role !== 'admin') {
+      if (!isUserAdmin(currentUser)) {
         delete updates.role;
         delete updates.status;
         delete updates.isVerified;
@@ -3023,7 +3086,7 @@ async function startServer() {
 
       const requestedPlan = propertyData.boostPlan || 'free';
       if (!isFreeListingEnabled && requestedPlan === 'free') {
-        if (!authUser || authUser.role !== 'admin') {
+        if (!authUser || !isUserAdmin(authUser)) {
           return res.status(400).json({
             success: false,
             error: 'Free listing campaign is currently disabled or expired. Please select a promotion boost package to list your item.'
@@ -3065,7 +3128,7 @@ async function startServer() {
       const planDays = (requestedPlan === 'starter' || requestedPlan === 'basic') ? 3 : requestedPlan === 'premium' ? 7 : requestedPlan === 'vip' ? 30 : 0;
       const computedExpiresAt = planDays > 0 ? new Date(Date.now() + planDays * 24 * 60 * 60 * 1000).toISOString() : (propertyData.promotionExpiresAt || undefined);
 
-      const isAdmin = authUser?.role === 'admin';
+      const isAdmin = isUserAdmin(authUser);
       const createdBy = authUser ? authUser.id : 'usr-guest';
       const createdByName = authUser ? (authUser.fullName || authUser.email) : 'Guest';
       const createdByEmail = authUser ? authUser.email : '';
@@ -3207,7 +3270,7 @@ async function startServer() {
         (currentUser.email && (((property as any).ownerEmail && (property as any).ownerEmail.toLowerCase() === currentUser.email.toLowerCase()) || (property.contactEmail && property.contactEmail.toLowerCase() === currentUser.email.toLowerCase()))) ||
         (currentUser.phone && (((property as any).ownerPhone && normalizePhone((property as any).ownerPhone) === normalizePhone(currentUser.phone)) || (property.contactPhone && normalizePhone(property.contactPhone) === normalizePhone(currentUser.phone))));
 
-      if (currentUser.role !== 'admin' && !isOwner) {
+      if (!isUserAdmin(currentUser) && !isOwner) {
         return res.status(403).json({ error: 'You are not authorized to edit this listing.' });
       }
 
@@ -3219,7 +3282,7 @@ async function startServer() {
       
       const prevApproval = property.approvalStatus;
       const prevVerification = property.verificationStatus;
-      const isAdmin = currentUser.role === 'admin';
+      const isAdmin = isUserAdmin(currentUser);
 
       // Non-admins editing ANY property information automatically triggers re-approval requirement
       if (!isAdmin) {
@@ -3338,7 +3401,7 @@ async function startServer() {
       localDb.properties[idx] = { ...property, ...updates };
 
       // Notify listing owner if admin changed verification or approval status
-      if (currentUser.role === 'admin') {
+      if (isUserAdmin(currentUser)) {
         const newApproval = localDb.properties[idx].approvalStatus;
         const newVerification = localDb.properties[idx].verificationStatus;
 
@@ -3531,7 +3594,7 @@ async function startServer() {
         (currentUser.email && (((property as any).ownerEmail && (property as any).ownerEmail.toLowerCase() === currentUser.email.toLowerCase()) || (property.contactEmail && property.contactEmail.toLowerCase() === currentUser.email.toLowerCase()))) ||
         (currentUser.phone && (((property as any).ownerPhone && normalizePhone((property as any).ownerPhone) === normalizePhone(currentUser.phone)) || (property.contactPhone && normalizePhone(property.contactPhone) === normalizePhone(currentUser.phone))));
 
-      if (currentUser.role !== 'admin' && !isOwner) {
+      if (!isUserAdmin(currentUser) && !isOwner) {
         return res.status(403).json({ error: 'You are not authorized to delete this listing.' });
       }
       localDb.properties = localDb.properties.filter(p => p.id !== id);
