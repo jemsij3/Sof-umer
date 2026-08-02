@@ -10,7 +10,7 @@ import {
   Activity, DollarSign, Percent, Clock, FileCheck, Info, Plus, 
   Calendar, MapPin, ChevronRight, HelpCircle as HelpIcon, BellRing,
   Camera, Image as ImageIcon, Folder, FolderKanban, ChevronDown,
-  Mail, Phone, RotateCcw, Zap, LogOut, Gift, Monitor, Smartphone, Upload, XCircle, Save
+  Mail, Phone, RotateCcw, Zap, LogOut, Gift, Monitor, Smartphone, Upload, XCircle, Save, Globe
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { EmployeeAdminsModule } from './EmployeeAdminsModule';
@@ -406,22 +406,120 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
   };
 
   const [systemSettings, setSystemSettings] = useState<any>(globalSystemSettings || {
-    appName: 'Sof Umer',
+    appName: 'SOF-UMER',
     appLogoText: 'SOF-UMER',
     logoUrl: '',
     themeName: 'cosmic-slate',
-    homepageHeading: 'The Smart Way to Discover, Connect & Grow',
-    homepageSubheading: 'Buy, sell, rent, hire, and connect with confidence through verified listings, trusted businesses, and secure services—all in one modern marketplace.',
     heroTitle: 'The Smart Way to Discover, Connect & Grow',
     heroDescription: 'Buy, sell, rent, hire, and connect with confidence through verified listings, trusted businesses, and secure services—all in one modern marketplace.',
     heroImageUrl: '',
-    termsAndPrivacy: 'Sof Umer guarantees user security. All listed properties are audited for legal compliance before publishing. Transactions are processed manually by our finance team.',
-    notificationsEnabled: true,
-    siteStatus: 'Online'
+    siteStatus: 'Online',
+    maintenanceMessage: 'SOF-UMER is currently undergoing scheduled platform maintenance. Normal operations will resume shortly. Thank you for your patience.'
   });
 
+  const [settingsSubTab, setSettingsSubTab] = useState<'web' | 'branding' | 'payments' | 'contact'>('web');
   const [isSavingSettings, setIsSavingSettings] = useState(false);
   const [saveSettingsSuccess, setSaveSettingsSuccess] = useState(false);
+
+  // Core App Name Handlers
+  const [appNameError, setAppNameError] = useState('');
+  const [appNameSuccess, setAppNameSuccess] = useState('');
+  const [isSavingAppName, setIsSavingAppName] = useState(false);
+
+  const handleSaveAppName = async () => {
+    setAppNameError('');
+    setAppNameSuccess('');
+    const name = (systemSettings.appName || 'SOF-UMER').trim();
+    if (!name) {
+      setAppNameError('Core App Name field cannot be empty.');
+      return;
+    }
+    setIsSavingAppName(true);
+    try {
+      const updated = {
+        ...systemSettings,
+        appName: name,
+        appLogoText: systemSettings.appLogoText || name
+      };
+      setSystemSettings(updated);
+      await updateSystemSettings(updated);
+      document.title = `${name} | Admin Management Dashboard`;
+      setAppNameSuccess('Core App Name saved successfully! Branding updated across all portals.');
+      setTimeout(() => setAppNameSuccess(''), 4000);
+    } catch (err: any) {
+      setAppNameError(err.message || 'Failed to save Core App Name.');
+    } finally {
+      setIsSavingAppName(false);
+    }
+  };
+
+  const handleResetAppName = async () => {
+    setAppNameError('');
+    setAppNameSuccess('');
+    setIsSavingAppName(true);
+    try {
+      const updated = {
+        ...systemSettings,
+        appName: 'SOF-UMER',
+        appLogoText: 'SOF-UMER'
+      };
+      setSystemSettings(updated);
+      await updateSystemSettings(updated);
+      document.title = `SOF-UMER | Admin Management Dashboard`;
+      setAppNameSuccess('Reset Core App Name to default "SOF-UMER" successfully.');
+      setTimeout(() => setAppNameSuccess(''), 4000);
+    } catch (err: any) {
+      setAppNameError('Failed to reset Core App Name.');
+    } finally {
+      setIsSavingAppName(false);
+    }
+  };
+
+  // Site Live Status Handlers
+  const [siteStatusError, setSiteStatusError] = useState('');
+  const [siteStatusSuccess, setSiteStatusSuccess] = useState('');
+  const [isSavingSiteStatus, setIsSavingSiteStatus] = useState(false);
+
+  const handleSaveSiteStatus = async () => {
+    setSiteStatusError('');
+    setSiteStatusSuccess('');
+    setIsSavingSiteStatus(true);
+    try {
+      const updated = {
+        ...systemSettings,
+        siteStatus: systemSettings.siteStatus || 'Online',
+        maintenanceMessage: (systemSettings.maintenanceMessage || 'SOF-UMER is currently undergoing scheduled platform maintenance. Normal operations will resume shortly. Thank you for your patience.').trim()
+      };
+      setSystemSettings(updated);
+      await updateSystemSettings(updated);
+      setSiteStatusSuccess(`Site Live Status updated to "${updated.siteStatus}" successfully! Changes apply instantly.`);
+      setTimeout(() => setSiteStatusSuccess(''), 4000);
+    } catch (err: any) {
+      setSiteStatusError(err.message || 'Failed to save Site Live Status.');
+    } finally {
+      setIsSavingSiteStatus(false);
+    }
+  };
+
+  const handleResetSiteStatus = async () => {
+    setSiteStatusError('');
+    setSiteStatusSuccess('');
+    setIsSavingSiteStatus(true);
+    try {
+      const updated = {
+        ...systemSettings,
+        siteStatus: 'Online'
+      };
+      setSystemSettings(updated);
+      await updateSystemSettings(updated);
+      setSiteStatusSuccess('Site Live Status reset to Live (Online) mode successfully.');
+      setTimeout(() => setSiteStatusSuccess(''), 4000);
+    } catch (err: any) {
+      setSiteStatusError('Failed to reset Site Live Status.');
+    } finally {
+      setIsSavingSiteStatus(false);
+    }
+  };
 
   // Login Hero Settings States & Handlers
   const [heroPreviewMode, setHeroPreviewMode] = useState<'desktop' | 'mobile'>('desktop');
@@ -458,8 +556,6 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
         ...systemSettings,
         heroTitle: title,
         heroDescription: description,
-        homepageHeading: title,
-        homepageSubheading: description,
         heroUpdatedAt: new Date().toISOString(),
         heroUpdatedBy: currentUser?.fullName || currentUser?.email || 'Administrator'
       };
@@ -489,8 +585,6 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
       ...systemSettings,
       heroTitle: defaultTitle,
       heroDescription: defaultDesc,
-      homepageHeading: defaultTitle,
-      homepageSubheading: defaultDesc,
       heroImageUrl: '',
       heroUpdatedAt: new Date().toISOString(),
       heroUpdatedBy: currentUser?.fullName || currentUser?.email || 'Administrator'
@@ -3904,12 +3998,629 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
                 <style dangerouslySetInnerHTML={{ __html: getThemeCSS(systemSettings.themeName) }} />
               )}
 
-              <div>
-                <h3 className="text-xl font-serif font-bold text-white">System Brand & Parameter Adjustments</h3>
-                <p className="text-xs text-white/40 mt-1">Rebrand application nodes, edit terms & conditions, or trigger system status.</p>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/10 pb-5">
+                <div>
+                  <h3 className="text-xl font-serif font-bold text-white flex items-center gap-2">
+                    <Globe className="w-5 h-5 text-amber-500" />
+                    <span>System & Web Settings Console</span>
+                  </h3>
+                  <p className="text-xs text-white/40 mt-1">
+                    Configure application identity, live status, login hero, visual branding, and payment gateways.
+                  </p>
+                </div>
+
+                <button
+                  type="button"
+                  disabled={isSavingSettings}
+                  onClick={async () => {
+                    setIsSavingSettings(true);
+                    try {
+                      await updateSystemSettings(systemSettings);
+                      setSaveSettingsSuccess(true);
+                      setTimeout(() => setSaveSettingsSuccess(false), 4000);
+                    } catch (e) {
+                      console.error(e);
+                    } finally {
+                      setIsSavingSettings(false);
+                    }
+                  }}
+                  className="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-black font-extrabold text-xs rounded-xl shadow-lg transition flex items-center gap-2 cursor-pointer disabled:opacity-50"
+                >
+                  <Save className="w-4 h-4" />
+                  <span>{isSavingSettings ? 'Saving...' : 'Save All Settings'}</span>
+                </button>
               </div>
 
-              {/* Branding Section */}
+              {saveSettingsSuccess && (
+                <div className="p-3 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 rounded-2xl text-xs font-semibold flex items-center gap-2 animate-fadeIn">
+                  <Check className="w-4 h-4 text-emerald-400" />
+                  <span>All system settings have been successfully saved to MongoDB!</span>
+                </div>
+              )}
+
+              {/* Sub-Navigation Tabs */}
+              <div className="flex flex-wrap items-center gap-2 bg-black/40 p-2 rounded-2xl border border-white/5">
+                <button
+                  type="button"
+                  onClick={() => setSettingsSubTab('web')}
+                  className={`px-4 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 cursor-pointer ${
+                    settingsSubTab === 'web'
+                      ? 'bg-amber-500 text-black shadow-md shadow-amber-500/10'
+                      : 'text-white/60 hover:text-white hover:bg-white/5'
+                  }`}
+                >
+                  <Globe className="w-4 h-4" />
+                  <span>1. Web Settings</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setSettingsSubTab('branding')}
+                  className={`px-4 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 cursor-pointer ${
+                    settingsSubTab === 'branding'
+                      ? 'bg-amber-500 text-black shadow-md shadow-amber-500/10'
+                      : 'text-white/60 hover:text-white hover:bg-white/5'
+                  }`}
+                >
+                  <ImageIcon className="w-4 h-4" />
+                  <span>2. Branding & Visual Themes</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setSettingsSubTab('payments')}
+                  className={`px-4 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 cursor-pointer ${
+                    settingsSubTab === 'payments'
+                      ? 'bg-amber-500 text-black shadow-md shadow-amber-500/10'
+                      : 'text-white/60 hover:text-white hover:bg-white/5'
+                  }`}
+                >
+                  <Landmark className="w-4 h-4" />
+                  <span>3. Payment Gateways</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setSettingsSubTab('contact')}
+                  className={`px-4 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 cursor-pointer ${
+                    settingsSubTab === 'contact'
+                      ? 'bg-amber-500 text-black shadow-md shadow-amber-500/10'
+                      : 'text-white/60 hover:text-white hover:bg-white/5'
+                  }`}
+                >
+                  <Mail className="w-4 h-4" />
+                  <span>4. Contact Us Config</span>
+                </button>
+              </div>
+
+              {/* TAB 1: WEB SETTINGS */}
+              {settingsSubTab === 'web' && (
+                <div className="space-y-6 animate-fadeIn">
+                  {/* 1. CORE APP NAME SETTING */}
+                  <div className="p-6 bg-[#12121a] border border-white/10 rounded-3xl space-y-5 shadow-xl">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/10 pb-4">
+                      <div>
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="px-2.5 py-0.5 bg-amber-500/10 text-amber-500 border border-amber-500/30 rounded-full text-[10px] font-bold uppercase tracking-wider">
+                            Core Setting
+                          </span>
+                          <h4 className="text-lg font-bold text-white tracking-wide font-serif">Core App Name</h4>
+                        </div>
+                        <p className="text-xs text-white/50">
+                          Control official application name, website branding, and browser tab identity.
+                        </p>
+                      </div>
+                    </div>
+
+                    {appNameError && (
+                      <div className="p-3 bg-rose-500/10 border border-rose-500/30 text-rose-400 rounded-xl text-xs font-medium flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <XCircle className="w-4 h-4 shrink-0" />
+                          <span>{appNameError}</span>
+                        </div>
+                        <button onClick={() => setAppNameError('')} className="text-rose-400 hover:text-white">
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                    )}
+
+                    {appNameSuccess && (
+                      <div className="p-3 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 rounded-xl text-xs font-medium flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <CheckCircle2 className="w-4 h-4 shrink-0" />
+                          <span>{appNameSuccess}</span>
+                        </div>
+                        <button onClick={() => setAppNameSuccess('')} className="text-emerald-400 hover:text-white">
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                    )}
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <label className="block text-xs font-bold text-white/80 uppercase tracking-wider">
+                          Application Brand Title
+                        </label>
+                        <input
+                          type="text"
+                          required
+                          placeholder="e.g. SOF-UMER"
+                          value={systemSettings.appName || ''}
+                          onChange={e => setSystemSettings({ ...systemSettings, appName: e.target.value })}
+                          className="w-full px-4 py-3 bg-black/60 border border-white/10 rounded-xl text-sm text-white focus:outline-none focus:border-amber-500 transition"
+                        />
+                        <p className="text-[11px] text-white/40">
+                          Default: <span className="text-amber-400 font-mono font-bold">SOF-UMER</span>. Controls browser tab title and site header text.
+                        </p>
+                      </div>
+
+                      <div className="p-4 bg-black/40 border border-white/5 rounded-2xl flex flex-col justify-between space-y-3">
+                        <div>
+                          <span className="text-[10px] uppercase font-bold text-amber-500/80 tracking-widest block mb-1">
+                            Live Brand Preview
+                          </span>
+                          <div className="flex items-center gap-3 p-3 bg-black/80 rounded-xl border border-white/10">
+                            <div className="w-9 h-9 bg-gradient-to-tr from-amber-500 to-amber-600 rounded-xl flex items-center justify-center font-black text-black text-base shadow">
+                              {((systemSettings.appName || 'SOF-UMER')[0] || 'S').toUpperCase()}
+                            </div>
+                            <div>
+                              <span className="font-extrabold text-sm text-white tracking-wider block">
+                                {systemSettings.appName || 'SOF-UMER'}
+                              </span>
+                              <span className="text-[10px] text-white/40 font-mono block">
+                                Title: {systemSettings.appName || 'SOF-UMER'} | Admin Management Dashboard
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-wrap items-center justify-end gap-3 pt-4 border-t border-white/10">
+                      <button
+                        type="button"
+                        disabled={isSavingAppName}
+                        onClick={handleResetAppName}
+                        className="px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 text-white/70 hover:text-white text-xs font-bold rounded-xl transition flex items-center gap-2 cursor-pointer"
+                      >
+                        <RefreshCw className="w-3.5 h-3.5" />
+                        <span>Reset to Default (SOF-UMER)</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        disabled={isSavingAppName}
+                        onClick={handleSaveAppName}
+                        className="px-5 py-2 bg-amber-500 hover:bg-amber-400 text-black font-extrabold text-xs rounded-xl shadow-lg transition flex items-center gap-2 cursor-pointer disabled:opacity-50"
+                      >
+                        <Save className="w-4 h-4" />
+                        <span>{isSavingAppName ? 'Saving...' : 'Save Core App Name'}</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* 2. SITE LIVE STATUS SETTING */}
+                  <div className="p-6 bg-[#12121a] border border-white/10 rounded-3xl space-y-5 shadow-xl">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/10 pb-4">
+                      <div>
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="px-2.5 py-0.5 bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 rounded-full text-[10px] font-bold uppercase tracking-wider">
+                            Access Control
+                          </span>
+                          <h4 className="text-lg font-bold text-white tracking-wide font-serif">Site Live Status</h4>
+                        </div>
+                        <p className="text-xs text-white/50">
+                          Control platform availability. Toggle maintenance mode without code changes or redeployments.
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className={`px-3 py-1 rounded-full text-xs font-bold border flex items-center gap-1.5 ${
+                          (systemSettings.siteStatus || 'Online') === 'Online'
+                            ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
+                            : 'bg-amber-500/10 border-amber-500/30 text-amber-400 animate-pulse'
+                        }`}>
+                          <div className={`w-2 h-2 rounded-full ${
+                            (systemSettings.siteStatus || 'Online') === 'Online' ? 'bg-emerald-400 animate-ping' : 'bg-amber-400'
+                          }`} />
+                          <span>{(systemSettings.siteStatus || 'Online') === 'Online' ? 'LIVE ONLINE' : 'MAINTENANCE MODE'}</span>
+                        </span>
+                      </div>
+                    </div>
+
+                    {siteStatusError && (
+                      <div className="p-3 bg-rose-500/10 border border-rose-500/30 text-rose-400 rounded-xl text-xs font-medium flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <XCircle className="w-4 h-4 shrink-0" />
+                          <span>{siteStatusError}</span>
+                        </div>
+                        <button onClick={() => setSiteStatusError('')} className="text-rose-400 hover:text-white">
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                    )}
+
+                    {siteStatusSuccess && (
+                      <div className="p-3 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 rounded-xl text-xs font-medium flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <CheckCircle2 className="w-4 h-4 shrink-0" />
+                          <span>{siteStatusSuccess}</span>
+                        </div>
+                        <button onClick={() => setSiteStatusSuccess('')} className="text-emerald-400 hover:text-white">
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                    )}
+
+                    <div className="space-y-4">
+                      <label className="block text-xs font-bold text-white/80 uppercase tracking-wider">
+                        Platform Mode Selection
+                      </label>
+                      
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <button
+                          type="button"
+                          onClick={() => setSystemSettings({ ...systemSettings, siteStatus: 'Online' })}
+                          className={`p-4 rounded-2xl border text-left transition flex items-start gap-3 cursor-pointer ${
+                            (systemSettings.siteStatus || 'Online') === 'Online'
+                              ? 'bg-emerald-500/10 border-emerald-500 text-white shadow-lg'
+                              : 'bg-black/40 border-white/5 text-white/60 hover:border-white/20'
+                          }`}
+                        >
+                          <div className={`p-2.5 rounded-xl ${
+                            (systemSettings.siteStatus || 'Online') === 'Online' ? 'bg-emerald-500 text-black' : 'bg-white/5 text-white/40'
+                          }`}>
+                            <Zap className="w-5 h-5" />
+                          </div>
+                          <div>
+                            <span className="font-bold text-sm text-white block">ON — Website Live</span>
+                            <span className="text-xs text-white/50 block mt-0.5">
+                              Normal application access enabled for all users.
+                            </span>
+                          </div>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => setSystemSettings({ ...systemSettings, siteStatus: 'Maintenance' })}
+                          className={`p-4 rounded-2xl border text-left transition flex items-start gap-3 cursor-pointer ${
+                            (systemSettings.siteStatus || 'Online') === 'Maintenance'
+                              ? 'bg-amber-500/10 border-amber-500 text-white shadow-lg'
+                              : 'bg-black/40 border-white/5 text-white/60 hover:border-white/20'
+                          }`}
+                        >
+                          <div className={`p-2.5 rounded-xl ${
+                            (systemSettings.siteStatus || 'Online') === 'Maintenance' ? 'bg-amber-500 text-black' : 'bg-white/5 text-white/40'
+                          }`}>
+                            <ShieldAlert className="w-5 h-5" />
+                          </div>
+                          <div>
+                            <span className="font-bold text-sm text-white block">OFF — Maintenance Mode</span>
+                            <span className="text-xs text-white/50 block mt-0.5">
+                              Displays maintenance screen to users. Allows admin access.
+                            </span>
+                          </div>
+                        </button>
+                      </div>
+
+                      <div className="space-y-2 pt-2">
+                        <label className="block text-xs font-bold text-white/80 uppercase tracking-wider">
+                          Custom Maintenance Notice Message
+                        </label>
+                        <textarea
+                          rows={3}
+                          placeholder="e.g. SOF-UMER is currently undergoing scheduled platform maintenance. Normal operations will resume shortly. Thank you for your patience."
+                          value={systemSettings.maintenanceMessage || ''}
+                          onChange={e => setSystemSettings({ ...systemSettings, maintenanceMessage: e.target.value })}
+                          className="w-full px-4 py-3 bg-black/60 border border-white/10 rounded-xl text-xs text-white focus:outline-none focus:border-amber-500 transition leading-relaxed"
+                        />
+                        <p className="text-[11px] text-white/40">
+                          Displayed prominently on the maintenance landing page when Site Status is OFF.
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-wrap items-center justify-end gap-3 pt-4 border-t border-white/10">
+                      <button
+                        type="button"
+                        disabled={isSavingSiteStatus}
+                        onClick={handleResetSiteStatus}
+                        className="px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 text-white/70 hover:text-white text-xs font-bold rounded-xl transition flex items-center gap-2 cursor-pointer"
+                      >
+                        <RefreshCw className="w-3.5 h-3.5" />
+                        <span>Reset Status to Live (Online)</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        disabled={isSavingSiteStatus}
+                        onClick={handleSaveSiteStatus}
+                        className="px-5 py-2 bg-amber-500 hover:bg-amber-400 text-black font-extrabold text-xs rounded-xl shadow-lg transition flex items-center gap-2 cursor-pointer disabled:opacity-50"
+                      >
+                        <Save className="w-4 h-4" />
+                        <span>{isSavingSiteStatus ? 'Saving...' : 'Save Site Live Status'}</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* 3. DEDICATED LOGIN HERO SETTINGS SECTION */}
+                  <div className="p-6 bg-[#12121a] border border-amber-500/20 rounded-3xl space-y-6 shadow-2xl">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/10 pb-4">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="px-2.5 py-0.5 bg-amber-500/10 text-amber-500 border border-amber-500/30 rounded-full text-[10px] font-bold uppercase tracking-wider">
+                            Web Settings
+                          </span>
+                          <ChevronRight className="w-3.5 h-3.5 text-white/40" />
+                          <span className="text-xs font-bold text-white uppercase tracking-wider">
+                            Login Hero Settings
+                          </span>
+                        </div>
+                        <h4 className="text-lg font-serif font-bold text-white mt-1">
+                          Login Hero Single Source of Truth
+                        </h4>
+                        <p className="text-xs text-white/50">
+                          Manage the headline, description, and visual asset displayed on the Authentication & Welcome Portal across all environments.
+                        </p>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setHeroPreviewMode('desktop')}
+                          className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 ${
+                            heroPreviewMode === 'desktop'
+                              ? 'bg-amber-500 text-black shadow-lg'
+                              : 'bg-white/5 text-white/60 hover:text-white border border-white/10'
+                          }`}
+                        >
+                          <Monitor className="w-3.5 h-3.5" />
+                          <span>Desktop View</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setHeroPreviewMode('mobile')}
+                          className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 ${
+                            heroPreviewMode === 'mobile'
+                              ? 'bg-amber-500 text-black shadow-lg'
+                              : 'bg-white/5 text-white/60 hover:text-white border border-white/10'
+                          }`}
+                        >
+                          <Smartphone className="w-3.5 h-3.5" />
+                          <span>Mobile View</span>
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+                      {/* Left Column: Form Controls */}
+                      <div className="lg:col-span-7 space-y-5">
+                        {/* Hero Title */}
+                        <div>
+                          <div className="flex justify-between items-center mb-1.5">
+                            <label className="text-xs font-bold text-amber-500 uppercase tracking-wider">
+                              Hero Title <span className="text-rose-400">*</span>
+                            </label>
+                            <span className="text-[10px] text-white/40 font-mono">
+                              {(systemSettings.heroTitle || '').length}/200
+                            </span>
+                          </div>
+                          <input
+                            type="text"
+                            maxLength={200}
+                            value={systemSettings.heroTitle ?? ''}
+                            onChange={(e) => setSystemSettings({ ...systemSettings, heroTitle: e.target.value })}
+                            placeholder="The Smart Way to Discover, Connect & Grow"
+                            className="w-full px-4 py-3 bg-black/60 border border-white/10 rounded-2xl text-sm font-medium text-white focus:outline-none focus:border-amber-500 transition"
+                          />
+                          <p className="text-[11px] text-white/40 mt-1">
+                            Primary headline shown in bold typography on the login screen.
+                          </p>
+                        </div>
+
+                        {/* Hero Description */}
+                        <div>
+                          <div className="flex justify-between items-center mb-1.5">
+                            <label className="text-xs font-bold text-amber-500 uppercase tracking-wider">
+                              Hero Description <span className="text-rose-400">*</span>
+                            </label>
+                            <span className="text-[10px] text-white/40 font-mono">
+                              {(systemSettings.heroDescription || '').length}/1000
+                            </span>
+                          </div>
+                          <textarea
+                            rows={4}
+                            maxLength={1000}
+                            value={systemSettings.heroDescription ?? ''}
+                            onChange={(e) => setSystemSettings({ ...systemSettings, heroDescription: e.target.value })}
+                            placeholder="Buy, sell, rent, hire, and connect with confidence through verified listings, trusted businesses, and secure services—all in one modern marketplace."
+                            className="w-full px-4 py-3 bg-black/60 border border-white/10 rounded-2xl text-sm text-white/90 leading-relaxed focus:outline-none focus:border-amber-500 transition resize-none"
+                          />
+                          <p className="text-[11px] text-white/40 mt-1">
+                            Detailed subtitle text describing the Sof Umer ecosystem.
+                          </p>
+                        </div>
+
+                        {/* Hero Image Management */}
+                        <div className="p-4 bg-black/40 border border-white/10 rounded-2xl space-y-3">
+                          <label className="block text-xs font-bold text-amber-500 uppercase tracking-wider">
+                            Hero Background Visual Asset (Cloudinary)
+                          </label>
+                          <div className="flex flex-col sm:flex-row items-center gap-4">
+                            <div className="w-24 h-24 rounded-2xl bg-black border border-white/10 overflow-hidden relative group shrink-0 flex items-center justify-center">
+                              {systemSettings.heroImageUrl ? (
+                                <img
+                                  src={systemSettings.heroImageUrl}
+                                  alt="Hero Preview"
+                                  className="w-full h-full object-cover"
+                                  referrerPolicy="no-referrer"
+                                />
+                              ) : (
+                                <div className="text-center p-2">
+                                  <ImageIcon className="w-6 h-6 text-white/20 mx-auto mb-1" />
+                                  <span className="text-[9px] text-white/30 font-bold uppercase block">Default Slide</span>
+                                </div>
+                              )}
+                            </div>
+
+                            <div className="flex-1 space-y-2">
+                              <p className="text-xs text-white/80 font-medium">
+                                {systemSettings.heroImageUrl ? 'Custom Cloudinary Image active' : 'Using default rotating slideshow backdrop'}
+                              </p>
+                              <p className="text-[11px] text-white/40">
+                                Upload high-resolution landscape image (1920x1080 recommended). Stored securely via Cloudinary CDN.
+                              </p>
+                              <div className="flex items-center gap-2 pt-1">
+                                <label className="inline-flex items-center justify-center gap-1.5 px-3 py-2 bg-amber-500 hover:bg-amber-400 text-black text-xs font-bold rounded-xl cursor-pointer transition shadow">
+                                  <Upload className="w-3.5 h-3.5" />
+                                  <span>{isUploadingHeroImage ? 'Uploading...' : systemSettings.heroImageUrl ? 'Replace Image' : 'Upload Image'}</span>
+                                  <input
+                                    type="file"
+                                    accept="image/*"
+                                    onChange={handleHeroImageUpload}
+                                    disabled={isUploadingHeroImage}
+                                    className="hidden"
+                                  />
+                                </label>
+
+                                {systemSettings.heroImageUrl && (
+                                  <button
+                                    type="button"
+                                    onClick={handleRemoveHeroImage}
+                                    className="inline-flex items-center gap-1 px-3 py-2 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 text-xs font-bold rounded-xl transition cursor-pointer"
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                    <span>Remove</span>
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Timestamp / Audit Log Info */}
+                        {systemSettings.heroUpdatedAt && (
+                          <div className="text-[11px] text-white/40 flex items-center gap-2 font-mono">
+                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                            <span>
+                              Last modified: {new Date(systemSettings.heroUpdatedAt).toLocaleString()} by {systemSettings.heroUpdatedBy || 'Administrator'}
+                            </span>
+                          </div>
+                        )}
+
+                        {/* Alert Notifications */}
+                        {heroError && (
+                          <div className="p-3.5 bg-rose-500/10 border border-rose-500/30 rounded-2xl text-rose-400 text-xs flex items-center gap-2">
+                            <XCircle className="w-4 h-4 shrink-0" />
+                            <span>{heroError}</span>
+                          </div>
+                        )}
+
+                        {heroSuccess && (
+                          <div className="p-3.5 bg-emerald-500/10 border border-emerald-500/30 rounded-2xl text-emerald-400 text-xs flex items-center gap-2">
+                            <CheckCircle2 className="w-4 h-4 shrink-0" />
+                            <span>{heroSuccess}</span>
+                          </div>
+                        )}
+
+                        {/* Control Buttons */}
+                        <div className="flex flex-wrap items-center gap-3 pt-2">
+                          <button
+                            type="button"
+                            onClick={handleSaveHeroSettings}
+                            className="px-6 py-3 bg-amber-500 hover:bg-amber-400 text-black font-bold text-xs rounded-2xl shadow-xl transition flex items-center gap-2 cursor-pointer"
+                          >
+                            <Save className="w-4 h-4" />
+                            <span>Save Hero Changes</span>
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={handleCancelHeroSettings}
+                            className="px-5 py-3 bg-white/5 hover:bg-white/10 text-white/70 hover:text-white font-bold text-xs rounded-2xl border border-white/10 transition cursor-pointer"
+                          >
+                            Cancel
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={handleResetHeroToDefault}
+                            className="px-5 py-3 bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 font-bold text-xs rounded-2xl border border-rose-500/30 transition flex items-center gap-1.5 ml-auto cursor-pointer"
+                          >
+                            <RefreshCw className="w-3.5 h-3.5" />
+                            <span>Reset To Default</span>
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Right Column: Live Interactive Preview */}
+                      <div className="lg:col-span-5 space-y-3">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-bold text-white/50 uppercase tracking-wider flex items-center gap-1.5">
+                            <Eye className="w-3.5 h-3.5 text-amber-500" />
+                            <span>Live Login Hero Preview ({heroPreviewMode})</span>
+                          </span>
+                          <span className="text-[10px] text-amber-500 font-mono bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-full">
+                            Real-time
+                          </span>
+                        </div>
+
+                        <div className={`mx-auto transition-all duration-300 ${
+                          heroPreviewMode === 'mobile' ? 'max-w-[320px]' : 'w-full'
+                        }`}>
+                          <div className="bg-[#060608] border border-white/15 rounded-3xl overflow-hidden shadow-2xl relative">
+                            {/* Simulated Image / Backdrop */}
+                            <div className="relative h-48 w-full overflow-hidden bg-black">
+                              {systemSettings.heroImageUrl ? (
+                                <img
+                                  src={systemSettings.heroImageUrl}
+                                  alt="Hero Visual"
+                                  className="w-full h-full object-cover"
+                                />
+                              ) : (
+                                <div className="w-full h-full bg-gradient-to-br from-amber-900/40 via-amber-950/20 to-black p-4 flex flex-col justify-end">
+                                  <div className="flex items-center gap-2 mb-2">
+                                    <div className="w-6 h-6 rounded-lg bg-amber-500 text-black flex items-center justify-center font-bold text-xs">
+                                      S
+                                    </div>
+                                    <span className="text-xs font-bold text-white font-serif tracking-wider">SOF-UMER</span>
+                                  </div>
+                                </div>
+                              )}
+                              <div className="absolute inset-0 bg-gradient-to-t from-[#060608] via-transparent to-transparent" />
+                            </div>
+
+                            {/* Simulated Hero Text Area */}
+                            <div className="p-6 space-y-4">
+                              <div className="space-y-2">
+                                <h3 className="text-xl font-serif font-bold text-white leading-tight">
+                                  {systemSettings.heroTitle || 'The Smart Way to Discover, Connect & Grow'}
+                                </h3>
+                                <p className="text-xs text-white/60 leading-relaxed font-light line-clamp-4">
+                                  {systemSettings.heroDescription || 'Buy, sell, rent, hire, and connect with confidence through verified listings, trusted businesses, and secure services—all in one modern marketplace.'}
+                                </p>
+                              </div>
+
+                              {/* Dummy Interactive Controls */}
+                              <div className="pt-2 space-y-2">
+                                <div className="w-full py-2.5 bg-amber-500 text-black text-center font-bold text-xs rounded-xl shadow">
+                                  Sign In / Register
+                                </div>
+                                <div className="w-full py-2 bg-white/5 border border-white/10 text-white/50 text-center font-medium text-[11px] rounded-xl">
+                                  Browse Guest Marketplace
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* TAB 2: BRANDING & VISUAL THEMES */}
+              {settingsSubTab === 'branding' && (
+                <div className="space-y-6 animate-fadeIn">
               <div className="p-5 bg-[#12121a] border border-white/5 rounded-2xl space-y-6">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-white/5 pb-3">
                   <h4 className="text-xs font-bold text-amber-500 uppercase tracking-widest flex items-center gap-1.5">
@@ -4515,72 +5226,37 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
                   </div>
                 </div>
               </div>
+            </div>
+          )}
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-[10px] text-white/40 font-bold mb-1.5 uppercase">Core App Name</label>
-                  <input
-                    type="text"
-                    value={systemSettings.appName}
-                    onChange={e => setSystemSettings({ ...systemSettings, appName: e.target.value })}
-                    className="w-full px-3.5 py-2.5 bg-black/40 border border-white/5 rounded-xl text-xs"
-                  />
-                </div>
-                <div>
-                  <label className="block text-[10px] text-white/40 font-bold mb-1.5 uppercase">Site Live Status</label>
-                  <select
-                    value={systemSettings.siteStatus || 'Online'}
-                    onChange={e => setSystemSettings({ ...systemSettings, siteStatus: e.target.value })}
-                    className="w-full px-3.5 py-2.5 bg-[#12121a] border border-white/5 rounded-xl text-xs animate-none"
-                  >
-                    <option value="Online">Online & Active</option>
-                    <option value="Maintenance">Under Maintenance</option>
-                    <option value="Offline">Offline</option>
-                  </select>
-                </div>
-                <div className="sm:col-span-2">
-                  <label className="block text-[10px] text-white/40 font-bold mb-1.5 uppercase">Homepage Big Heading</label>
-                  <input
-                    type="text"
-                    value={systemSettings.homepageHeading}
-                    onChange={e => setSystemSettings({ ...systemSettings, homepageHeading: e.target.value })}
-                    className="w-full px-3.5 py-2.5 bg-black/40 border border-white/5 rounded-xl text-xs"
-                  />
-                </div>
-                <div className="sm:col-span-2">
-                  <label className="block text-[10px] text-white/40 font-bold mb-1.5 uppercase">Homepage Subheading description</label>
-                  <textarea
-                    rows={2}
-                    value={systemSettings.homepageSubheading}
-                    onChange={e => setSystemSettings({ ...systemSettings, homepageSubheading: e.target.value })}
-                    className="w-full px-3.5 py-2.5 bg-black/40 border border-white/5 rounded-xl text-xs text-white"
-                  />
-                </div>
-                <div className="sm:col-span-2">
-                  <label className="block text-[10px] text-white/40 font-bold mb-1.5 uppercase">Legal Terms of Use & Privacy</label>
-                  <textarea
-                    rows={3}
-                    value={systemSettings.termsAndPrivacy}
-                    onChange={e => setSystemSettings({ ...systemSettings, termsAndPrivacy: e.target.value })}
-                    className="w-full px-3.5 py-2.5 bg-black/40 border border-white/5 rounded-xl text-xs text-white"
-                  />
+          {/* TAB 3: PAYMENT GATEWAYS */}
+          {settingsSubTab === 'payments' && (
+            <div className="space-y-6 animate-fadeIn">
+              <div className="p-5 bg-[#12121a] border border-white/5 rounded-2xl space-y-4">
+                <h4 className="text-xs font-bold text-amber-500 uppercase tracking-widest flex items-center gap-1.5">
+                  <Landmark className="w-4 h-4 text-amber-500" />
+                  <span>Payment Gateways & Clearing Account Settings</span>
+                </h4>
+                <p className="text-xs text-white/50">
+                  Configure bank transfer receiving accounts and verification procedures.
+                </p>
+                <div className="p-4 bg-black/40 border border-white/10 rounded-2xl space-y-3">
+                  <div className="flex items-center justify-between border-b border-white/10 pb-3">
+                    <span className="text-xs font-bold text-white">Commercial Bank of Ethiopia (CBE)</span>
+                    <span className="px-2.5 py-0.5 bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 rounded-full text-[10px] font-bold">
+                      ACTIVE
+                    </span>
+                  </div>
+                  <p className="text-xs text-white/60">Account Number: 1000123456789 (SOF-UMER MARKETPLACE PLC)</p>
+                  <p className="text-[11px] text-white/40">Manual slip uploads are verified by finance admins within 5–10 minutes.</p>
                 </div>
               </div>
+            </div>
+          )}
 
-              <div className="p-3.5 bg-white/5 border border-white/10 rounded-2xl flex justify-between items-center">
-                <div className="space-y-0.5">
-                  <h5 className="font-bold text-xs">Simulated Notifications Dispatcher</h5>
-                  <p className="text-[10px] text-white/40">Toggle real-time alerts on user dashboard nodes.</p>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setSystemSettings({ ...systemSettings, notificationsEnabled: !systemSettings.notificationsEnabled })}
-                  className="cursor-pointer"
-                >
-                  {systemSettings.notificationsEnabled ? <ToggleRight className="w-8 h-8 text-amber-500" /> : <ToggleLeft className="w-8 h-8 text-white/20" />}
-                </button>
-              </div>
-
+          {/* TAB 4: CONTACT US CONFIG */}
+          {settingsSubTab === 'contact' && (
+            <div className="space-y-6 animate-fadeIn">
               {/* Contact Us Management Section */}
               <div className="pt-6 border-t border-white/5 space-y-4 text-left">
                 <div className="bg-[#12121c] border border-amber-500/20 rounded-2xl p-5 space-y-5 shadow-xl">
@@ -4847,8 +5523,10 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
                   )}
                 </div>
               </div>
+            </div>
+          )}
 
-              {/* How It Works Management Section */}
+          {/* How It Works Management Section */}
               <div className="pt-6 border-t border-white/5 space-y-4 text-left">
                 <div className="bg-[#12121c] border border-amber-500/20 rounded-2xl p-5 space-y-5 shadow-xl">
                   {/* How It Works Header */}

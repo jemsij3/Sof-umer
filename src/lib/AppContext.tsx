@@ -20,11 +20,13 @@ export interface SystemSettings {
   logoUrl: string;
   bannerUrl?: string;
   themeName: string;
-  homepageHeading: string;
-  homepageSubheading: string;
-  termsAndPrivacy: string;
-  notificationsEnabled: boolean;
+  heroTitle?: string;
+  heroDescription?: string;
+  heroImageUrl?: string;
+  heroUpdatedAt?: string;
+  heroUpdatedBy?: string;
   siteStatus: string;
+  maintenanceMessage?: string;
   adPackages?: AdPackage[];
   freeListingSettings?: {
     enabled: boolean;
@@ -158,19 +160,16 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const [offers, setOffers] = useState<PropertyOffer[]>([]);
   const [faqs, setFaqs] = useState<FAQItem[]>([]);
   const [systemSettings, setSystemSettings] = useState<SystemSettings>({
-    appName: 'Sof Umer',
+    appName: 'SOF-UMER',
     appLogoText: 'SOF-UMER',
     logoUrl: '',
     bannerUrl: '',
     themeName: 'cosmic-slate',
-    homepageHeading: 'The Smart Way to Discover, Connect & Grow',
-    homepageSubheading: 'Buy, sell, rent, hire, and connect with confidence through verified listings, trusted businesses, and secure services—all in one modern marketplace.',
     heroTitle: 'The Smart Way to Discover, Connect & Grow',
     heroDescription: 'Buy, sell, rent, hire, and connect with confidence through verified listings, trusted businesses, and secure services—all in one modern marketplace.',
     heroImageUrl: '',
-    termsAndPrivacy: 'Sof Umer guarantees user security. All listed properties are audited for legal compliance before publishing. Transactions are processed manually by our finance team.',
-    notificationsEnabled: true,
-    siteStatus: 'Online'
+    siteStatus: 'Online',
+    maintenanceMessage: 'SOF-UMER is currently undergoing scheduled platform maintenance. Normal operations will resume shortly. Thank you for your patience.'
   });
   const [loading, setLoading] = useState<boolean>(true);
 

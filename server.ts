@@ -1323,23 +1323,23 @@ const applyDataSanityAndMigrations = () => {
   if (!(localDb as any).loginHistory || !Array.isArray((localDb as any).loginHistory)) (localDb as any).loginHistory = [];
   if (!(localDb as any).appSettings) {
     (localDb as any).appSettings = {
-      appName: 'Sof Umer',
+      appName: 'SOF-UMER',
       appLogoText: 'SOF-UMER',
       logoUrl: '',
       themeName: 'cosmic-slate',
-      homepageHeading: 'The Smart Way to Discover, Connect & Grow',
-      homepageSubheading: 'Buy, sell, rent, hire, and connect with confidence through verified listings, trusted businesses, and secure services—all in one modern marketplace.',
       heroTitle: 'The Smart Way to Discover, Connect & Grow',
       heroDescription: 'Buy, sell, rent, hire, and connect with confidence through verified listings, trusted businesses, and secure services—all in one modern marketplace.',
       heroImageUrl: '',
-      termsAndPrivacy: 'Sof Umer guarantees user security. All listed properties are audited for legal compliance before publishing. Transactions are processed manually by our finance team.',
-      notificationsEnabled: true,
-      siteStatus: 'Online'
+      siteStatus: 'Online',
+      maintenanceMessage: 'SOF-UMER is currently undergoing scheduled platform maintenance. Normal operations will resume shortly. Thank you for your patience.'
     };
   }
 
   // Sanitize and ensure Hero settings and translations are scrubbed of old strings
   const appSet = (localDb as any).appSettings;
+  if (!appSet.appName || appSet.appName === 'Sof Umer') {
+    appSet.appName = 'SOF-UMER';
+  }
   if (!appSet.heroTitle || appSet.heroTitle.includes("Connecting Ethiopia")) {
     appSet.heroTitle = 'The Smart Way to Discover, Connect & Grow';
   }
@@ -1347,12 +1347,10 @@ const applyDataSanityAndMigrations = () => {
     appSet.heroDescription = 'Buy, sell, rent, hire, and connect with confidence through verified listings, trusted businesses, and secure services—all in one modern marketplace.';
   }
   if (appSet.heroImageUrl === undefined) appSet.heroImageUrl = '';
-  if (!appSet.homepageHeading || appSet.homepageHeading.includes("Connecting Ethiopia")) {
-    appSet.homepageHeading = 'The Smart Way to Discover, Connect & Grow';
-  }
-  if (!appSet.homepageSubheading || appSet.homepageSubheading.includes("Explore high-value")) {
-    appSet.homepageSubheading = 'Buy, sell, rent, hire, and connect with confidence through verified listings, trusted businesses, and secure services—all in one modern marketplace.';
-  }
+  delete appSet.homepageHeading;
+  delete appSet.homepageSubheading;
+  delete appSet.termsAndPrivacy;
+  delete appSet.notificationsEnabled;
 
   if (Array.isArray(localDb.translations)) {
     for (const tr of localDb.translations) {
@@ -4066,18 +4064,15 @@ async function startServer() {
       (localDb as any).appSettings = {};
     }
     const defaults = {
-      appName: 'Sof Umer',
+      appName: 'SOF-UMER',
       appLogoText: 'SOF-UMER',
       logoUrl: '',
       themeName: 'cosmic-slate',
-      homepageHeading: 'The Smart Way to Discover, Connect & Grow',
-      homepageSubheading: 'Buy, sell, rent, hire, and connect with confidence through verified listings, trusted businesses, and secure services—all in one modern marketplace.',
       heroTitle: 'The Smart Way to Discover, Connect & Grow',
       heroDescription: 'Buy, sell, rent, hire, and connect with confidence through verified listings, trusted businesses, and secure services—all in one modern marketplace.',
       heroImageUrl: '',
-      termsAndPrivacy: 'Sof Umer guarantees user security. All listed properties are audited for legal compliance before publishing. Transactions are processed manually by our finance team.',
-      notificationsEnabled: true,
       siteStatus: 'Online',
+      maintenanceMessage: 'SOF-UMER is currently undergoing scheduled platform maintenance. Normal operations will resume shortly. Thank you for your patience.',
       freeListingSettings: {
         enabled: true,
         startDate: '2026-07-01',
@@ -4389,45 +4384,6 @@ async function startServer() {
     await saveDb();
     res.json({ success: true, message: 'All notifications deleted successfully' });
   });
-
-  // Simulated Notification Dispatcher (runs when systemSettings.notificationsEnabled !== false)
-  setInterval(async () => {
-    try {
-      const settings = (localDb as any).appSettings || {};
-      if (settings.notificationsEnabled === false) return;
-      if (!localDb.users || localDb.users.length === 0) return;
-
-      const simulatedTips = [
-        { title: 'Verified Audit Active', message: 'All listing receipts and property title deeds are continuously audited for security.' },
-        { title: 'East Africa Market Trend', message: 'High user demand recorded in verified real estate and job vacancy categories today.' },
-        { title: 'Security Best Practice', message: 'Remember to conduct in-person meetings in safe, open public locations.' },
-        { title: 'Instant Receipts Active', message: 'Bank transfer payment receipts are reviewed within 5-10 minutes by our finance team.' }
-      ];
-
-      const randomTip = simulatedTips[Math.floor(Math.random() * simulatedTips.length)];
-      const targetUser = localDb.users[Math.floor(Math.random() * localDb.users.length)];
-
-      if (targetUser && localDb.notifications) {
-        const recentSame = localDb.notifications.find(n => n.userId === targetUser.id && n.title === randomTip.title);
-        if (!recentSame) {
-          localDb.notifications.push({
-            id: 'notif-sim-' + Date.now(),
-            userId: targetUser.id,
-            title: randomTip.title,
-            message: randomTip.message,
-            isRead: false,
-            createdAt: new Date().toISOString()
-          });
-          if (localDb.notifications.length > 300) {
-            localDb.notifications = localDb.notifications.slice(-250);
-          }
-          await saveDb();
-        }
-      }
-    } catch (err) {
-      console.error('[NotificationDispatcherError]', err);
-    }
-  }, 45000);
 
   // Offers & Negotiation Endpoints
   app.get('/api/offers', async (req, res) => {

@@ -314,16 +314,13 @@ export interface SystemSettings {
   splashLogoUrl?: string;
   bannerUrl?: string;
   themeName: string;
-  homepageHeading: string;
-  homepageSubheading: string;
   heroTitle?: string;
   heroDescription?: string;
   heroImageUrl?: string;
   heroUpdatedAt?: string;
   heroUpdatedBy?: string;
-  termsAndPrivacy: string;
-  notificationsEnabled: boolean;
   siteStatus: string;
+  maintenanceMessage?: string;
   adPackages?: AdPackage[];
   freeListingSettings?: FreeListingSettings;
   contactUsSettings?: {
