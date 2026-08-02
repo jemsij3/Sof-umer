@@ -4717,85 +4717,25 @@ async function startServer() {
     }
   });
 
-  // Dynamic PWA Manifest Route
+  // PWA Manifest explicitly disabled
   app.get('/manifest.json', (req, res) => {
-    const settings = (localDb as any).appSettings || {};
-    const appName = settings.appName || 'SOF-UMER';
-    const shortName = settings.appLogoText || 'SOF-UMER';
-    const pwaIcon = settings.pwaIconUrl || settings.appIconUrl || settings.logoUrl || '/pwa-192.png';
-    const iconType = pwaIcon.endsWith('.svg') ? 'image/svg+xml' : 'image/png';
-
-    res.type('application/manifest+json');
-    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-
-    const iconsList = [
-      {
-        src: "/pwa-192.png",
-        sizes: "192x192",
-        type: "image/png",
-        purpose: "any"
-      },
-      {
-        src: "/pwa-192.png",
-        sizes: "192x192",
-        type: "image/png",
-        purpose: "maskable"
-      },
-      {
-        src: "/pwa-512.png",
-        sizes: "512x512",
-        type: "image/png",
-        purpose: "any"
-      },
-      {
-        src: "/pwa-512.png",
-        sizes: "512x512",
-        type: "image/png",
-        purpose: "maskable"
-      }
-    ];
-
-    if (pwaIcon && pwaIcon !== '/pwa-192.png' && pwaIcon !== '/pwa-512.png') {
-      iconsList.unshift({
-        src: pwaIcon,
-        sizes: "512x512",
-        type: iconType,
-        purpose: "any maskable"
-      });
-    }
-
-    const manifestData = {
-      id: "/",
-      name: appName,
-      short_name: shortName,
-      description: settings.homepageHeading || "SOF-UMER - Buy, sell, rent, hire, and connect through verified listings.",
-      start_url: "/",
-      scope: "/",
-      display: "standalone",
-      orientation: "any",
-      background_color: "#0d0d12",
-      theme_color: "#d97706",
-      categories: ["shopping", "business", "lifestyle"],
-      icons: iconsList
-    };
-
-    res.send(JSON.stringify(manifestData, null, 2));
+    res.status(404).json({ error: 'PWA manifest is disabled.' });
   });
 
-  // Service Worker Endpoint
+  // Service Worker Endpoint (serves self-unregistering script)
   app.get('/sw.js', (req, res) => {
     res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
-    res.setHeader('Service-Worker-Allowed', '/');
     res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-    const swPublic = path.join(process.cwd(), 'public', 'sw.js');
-    const swDist = path.join(process.cwd(), 'dist', 'sw.js');
-    if (fsSync.existsSync(swPublic)) {
-      res.sendFile(swPublic);
-    } else if (fsSync.existsSync(swDist)) {
-      res.sendFile(swDist);
-    } else {
-      res.status(404).send('// Service worker not found');
-    }
+    const unregisterScript = `
+self.addEventListener('install', () => self.skipWaiting());
+self.addEventListener('activate', (e) => {
+  e.waitUntil(
+    caches.keys().then((keys) => Promise.all(keys.map((k) => caches.delete(k))))
+      .then(() => self.registration.unregister())
+  );
+});
+`;
+    res.send(unregisterScript);
   });
 
   // Vite Integration for Front-end serving

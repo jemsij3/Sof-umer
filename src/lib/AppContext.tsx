@@ -131,12 +131,6 @@ interface AppContextType {
   toggleNotificationRead: (id: string) => Promise<boolean>;
   deleteInquiry: (id: string) => Promise<boolean>;
   deleteAllInquiries: () => Promise<boolean>;
-
-  // PWA Installation
-  deferredPrompt: any;
-  isInstallable: boolean;
-  isAppInstalled: boolean;
-  promptPwaInstall: () => Promise<void>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -232,95 +226,27 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     }
   }, []);
 
-  // PWA Installation & Service Worker Logic
-  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
-  const [isInstallable, setIsInstallable] = useState<boolean>(false);
-  const [isAppInstalled, setIsAppInstalled] = useState<boolean>(false);
-
+  // Complete PWA Removal: Unregister Service Worker & Clear Caches
   useEffect(() => {
-    // Detect standalone mode
-    const isStandalone = window.matchMedia('(display-mode: standalone)').matches ||
-      (navigator as any).standalone || document.referrer.includes('android-app://');
-    if (isStandalone) {
-      setIsAppInstalled(true);
-    }
-
-    // Check if early beforeinstallprompt was captured before React mounted
-    if ((window as any).deferredPwaPrompt) {
-      setDeferredPrompt((window as any).deferredPwaPrompt);
-      setIsInstallable(true);
-    }
-
-    // Register Service Worker
     if ('serviceWorker' in navigator) {
-      const registerSW = () => {
-        navigator.serviceWorker.register('/sw.js').then(
-          (reg) => {
-            console.log('[PWA] Service Worker registered:', reg.scope);
-            reg.update().catch(() => {});
-          },
-          (err) => console.warn('[PWA] SW registration failed:', err)
-        );
-      };
-
-      if (document.readyState === 'complete') {
-        registerSW();
-      } else {
-        window.addEventListener('load', registerSW);
-      }
+      navigator.serviceWorker.getRegistrations().then((registrations) => {
+        for (let registration of registrations) {
+          registration.unregister().catch(() => {});
+        }
+      }).catch(() => {});
     }
-
-    const handleBeforeInstallPrompt = (e: Event) => {
-      e.preventDefault();
-      (window as any).deferredPwaPrompt = e;
-      setDeferredPrompt(e);
-      setIsInstallable(true);
-      console.log('[PWA] beforeinstallprompt event captured in React');
-    };
-
-    const handleAppInstalled = () => {
-      setIsInstallable(false);
-      setIsAppInstalled(true);
-      setDeferredPrompt(null);
-      (window as any).deferredPwaPrompt = null;
-      console.log('[PWA] SOF-UMER App successfully installed');
-    };
-
-    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-    window.addEventListener('appinstalled', handleAppInstalled);
-
-    return () => {
-      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-      window.removeEventListener('appinstalled', handleAppInstalled);
-    };
+    if ('caches' in window) {
+      caches.keys().then((names) => {
+        for (let name of names) {
+          caches.delete(name).catch(() => {});
+        }
+      }).catch(() => {});
+    }
+    const manifestLink = document.querySelector("link[rel='manifest']");
+    if (manifestLink) {
+      manifestLink.remove();
+    }
   }, []);
-
-  const promptPwaInstall = async () => {
-    const promptObj = deferredPrompt || (window as any).deferredPwaPrompt;
-    if (!promptObj) {
-      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
-      if (isIOS) {
-        alert('To install SOF-UMER on iOS:\n1. Tap the Share button in Safari\n2. Scroll down and tap "Add to Home Screen"');
-      } else {
-        alert('To install SOF-UMER App:\n1. Open your browser menu (⋮ or ⋯)\n2. Select "Install App" or "Add to Home screen".');
-      }
-      return;
-    }
-
-    try {
-      promptObj.prompt();
-      const choiceResult = await promptObj.userChoice;
-      if (choiceResult && choiceResult.outcome === 'accepted') {
-        setIsInstallable(false);
-        setIsAppInstalled(true);
-      }
-    } catch (err) {
-      console.error('[PWA] Error launching install prompt:', err);
-    } finally {
-      setDeferredPrompt(null);
-      (window as any).deferredPwaPrompt = null;
-    }
-  };
 
   // Dynamic HTML Head Branding Syncing (Favicon, Apple Touch Icon, OG metadata)
   useEffect(() => {
@@ -359,12 +285,6 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       if (appNameMeta) appNameMeta.setAttribute('content', appTitle);
       const appleTitleMeta = document.querySelector("meta[name='apple-mobile-web-app-title']");
       if (appleTitleMeta) appleTitleMeta.setAttribute('content', appTitle);
-    }
-
-    // Update Manifest Link Cache Busting
-    let manifestLink = document.querySelector("link[rel='manifest']") as HTMLLinkElement;
-    if (manifestLink) {
-      manifestLink.href = `/manifest.json?v=${Date.now()}`;
     }
   }, [systemSettings]);
 
@@ -1071,11 +991,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       deleteAllNotifications,
       toggleNotificationRead,
       deleteInquiry,
-      deleteAllInquiries,
-      deferredPrompt,
-      isInstallable,
-      isAppInstalled,
-      promptPwaInstall
+      deleteAllInquiries
     }}>
       {children}
     </AppContext.Provider>
