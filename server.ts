@@ -45,15 +45,21 @@ async function uploadToCloudinaryIfConfigured(mediaStr: string, folder: string =
     return mediaStr;
   }
 
-  // Upload base64 image or video data to Cloudinary if configured
-  if (isCloudinaryConfigured && (mediaStr.startsWith('data:image/') || mediaStr.startsWith('data:video/'))) {
+  // Upload base64 image, video, or PDF document data to Cloudinary if configured
+  if (isCloudinaryConfigured && (
+    mediaStr.startsWith('data:image/') || 
+    mediaStr.startsWith('data:video/') || 
+    mediaStr.startsWith('data:application/pdf') ||
+    mediaStr.startsWith('data:application/raw')
+  )) {
     try {
       const isVideo = mediaStr.startsWith('data:video/');
+      const isPdf = mediaStr.startsWith('data:application/pdf');
       const uploadRes = await cloudinary.uploader.upload(mediaStr, {
         folder: folder,
-        resource_type: isVideo ? 'video' : 'auto',
+        resource_type: isVideo ? 'video' : (isPdf ? 'raw' : 'auto'),
       });
-      console.log(`[Cloudinary] Media uploaded successfully (${isVideo ? 'video' : 'image'}): ${uploadRes.secure_url}`);
+      console.log(`[Cloudinary] Media/Doc uploaded successfully (${isPdf ? 'PDF' : isVideo ? 'video' : 'image'}): ${uploadRes.secure_url}`);
       return uploadRes.secure_url;
     } catch (err) {
       console.error('[Cloudinary] Media upload failed, preserving original input:', err);
@@ -1330,6 +1336,7 @@ const applyDataSanityAndMigrations = () => {
   if (!(localDb as any).customRoles || !Array.isArray((localDb as any).customRoles)) (localDb as any).customRoles = [];
   if (!(localDb as any).activityLogs || !Array.isArray((localDb as any).activityLogs)) (localDb as any).activityLogs = [];
   if (!(localDb as any).loginHistory || !Array.isArray((localDb as any).loginHistory)) (localDb as any).loginHistory = [];
+  if (!(localDb as any).moderationLogs || !Array.isArray((localDb as any).moderationLogs)) (localDb as any).moderationLogs = [];
   if (!(localDb as any).appSettings) {
     (localDb as any).appSettings = {
       appName: 'SOF-UMER',
@@ -1875,8 +1882,14 @@ async function startServer() {
         const targetUserId = decoded.userId || decoded.id;
         const user = localDb.users.find(u => u.id === targetUserId);
         if (user) {
-          if (user.status === 'suspended') {
-            return res.status(403).json({ error: 'This account has been suspended by the administrator.' });
+          if (user.status === 'suspended' || user.status === 'banned') {
+            const reason = user.status === 'banned' ? user.banReason : user.suspendReason;
+            const statusLabel = user.status === 'banned' ? 'banned' : 'suspended';
+            return res.status(403).json({
+              error: `This account has been ${statusLabel} by the administrator.${reason ? ' Reason: ' + reason : ''}`,
+              accountStatus: user.status,
+              statusReason: reason
+            });
           }
           if (user.tokenVersion && user.tokenVersion !== decoded.tokenVersion) {
             (req as any).user = undefined;
@@ -1988,8 +2001,14 @@ async function startServer() {
       return res.status(401).json({ error: 'Invalid email or password.' });
     }
 
-    if (user.status === 'suspended') {
-      return res.status(403).json({ error: 'This account has been suspended by the administrator.' });
+    if (user.status === 'suspended' || user.status === 'banned') {
+      const reason = user.status === 'banned' ? user.banReason : user.suspendReason;
+      const statusLabel = user.status === 'banned' ? 'banned' : 'suspended';
+      return res.status(403).json({
+        error: `This account has been ${statusLabel} by the administrator.${reason ? ' Reason: ' + reason : ''}`,
+        accountStatus: user.status,
+        statusReason: reason
+      });
     }
 
     if (!user.isVerified) {
@@ -2984,6 +3003,158 @@ async function startServer() {
 
   app.get('/api/users', requireAdmin, async (req, res) => {
     res.json(localDb.users.map(stripSecrets));
+  });
+
+  // --- USER MODERATION ENDPOINTS ---
+  app.post('/api/admin/users/:id/warn', requireAdmin, async (req, res) => {
+    const { id } = req.params;
+    const { reason, note } = req.body;
+    const admin = (req as any).user;
+
+    if (!reason || !reason.trim()) {
+      return res.status(400).json({ error: 'Warning reason is required.' });
+    }
+
+    const targetUser = localDb.users.find(u => u.id === id);
+    if (!targetUser) {
+      return res.status(404).json({ error: 'User not found.' });
+    }
+
+    if (!targetUser.warnings) targetUser.warnings = [];
+
+    const warningItem = {
+      id: 'warn-' + Date.now(),
+      reason: reason.trim(),
+      note: note ? note.trim() : undefined,
+      dateIssued: new Date().toISOString(),
+      adminId: admin.id,
+      adminName: admin.fullName || admin.email
+    };
+
+    targetUser.warnings.unshift(warningItem);
+
+    // Send in-app notification to target user
+    if (!localDb.notifications) localDb.notifications = [];
+    localDb.notifications.unshift({
+      id: 'notif-' + Date.now() + '-warn',
+      userId: targetUser.id,
+      title: '⚠️ Official Warning Issued',
+      message: `Reason: ${reason.trim()}${note ? '\nAdmin Note: ' + note.trim() : ''}`,
+      isRead: false,
+      createdAt: new Date().toISOString()
+    });
+
+    // Log moderation action
+    if (!(localDb as any).moderationLogs) (localDb as any).moderationLogs = [];
+    (localDb as any).moderationLogs.unshift({
+      id: 'mod-' + Date.now(),
+      action: 'warn',
+      targetUserId: targetUser.id,
+      targetUserName: targetUser.fullName,
+      targetUserEmail: targetUser.email,
+      reason: reason.trim(),
+      note: note ? note.trim() : undefined,
+      timestamp: new Date().toISOString(),
+      adminName: admin.fullName || admin.email
+    });
+
+    await saveDb();
+    res.json({ success: true, user: stripSecrets(targetUser), warning: warningItem });
+  });
+
+  app.post('/api/admin/users/:id/status', requireAdmin, async (req, res) => {
+    const { id } = req.params;
+    const { status, reason, note } = req.body;
+    const admin = (req as any).user;
+
+    if (!['active', 'suspended', 'banned'].includes(status)) {
+      return res.status(400).json({ error: 'Invalid status specified.' });
+    }
+
+    const targetUser = localDb.users.find(u => u.id === id);
+    if (!targetUser) {
+      return res.status(404).json({ error: 'User not found.' });
+    }
+
+    const prevStatus = targetUser.status;
+    targetUser.status = status;
+    if (status === 'banned') {
+      targetUser.banReason = reason ? reason.trim() : 'Banned by administrator';
+    } else if (status === 'suspended') {
+      targetUser.suspendReason = reason ? reason.trim() : 'Suspended by administrator';
+    } else if (status === 'active') {
+      targetUser.banReason = undefined;
+      targetUser.suspendReason = undefined;
+    }
+
+    // Send in-app notification to target user
+    if (!localDb.notifications) localDb.notifications = [];
+    const statusTitles: Record<string, string> = {
+      active: '✅ Account Restored',
+      suspended: '⏸️ Account Suspended',
+      banned: '🚫 Account Banned'
+    };
+    localDb.notifications.unshift({
+      id: 'notif-' + Date.now() + '-status',
+      userId: targetUser.id,
+      title: statusTitles[status] || 'Account Status Update',
+      message: status === 'active' 
+        ? 'Your account restrictions have been lifted by an administrator.'
+        : `Status: ${status.toUpperCase()}.${reason ? '\nReason: ' + reason.trim() : ''}`,
+      isRead: false,
+      createdAt: new Date().toISOString()
+    });
+
+    // Log moderation action
+    if (!(localDb as any).moderationLogs) (localDb as any).moderationLogs = [];
+    const actionType = status === 'active' ? (prevStatus === 'banned' ? 'unban' : 'unsuspend') : (status === 'banned' ? 'ban' : 'suspend');
+    (localDb as any).moderationLogs.unshift({
+      id: 'mod-' + Date.now(),
+      action: actionType,
+      targetUserId: targetUser.id,
+      targetUserName: targetUser.fullName,
+      targetUserEmail: targetUser.email,
+      reason: reason ? reason.trim() : undefined,
+      note: note ? note.trim() : undefined,
+      timestamp: new Date().toISOString(),
+      adminName: admin.fullName || admin.email
+    });
+
+    await saveDb();
+    res.json({ success: true, user: stripSecrets(targetUser) });
+  });
+
+  app.delete('/api/admin/users/:id', requireAdmin, async (req, res) => {
+    const { id } = req.params;
+    const admin = (req as any).user;
+
+    const idx = localDb.users.findIndex(u => u.id === id);
+    if (idx === -1) {
+      return res.status(404).json({ error: 'User not found.' });
+    }
+
+    const targetUser = localDb.users[idx];
+
+    // Log moderation action
+    if (!(localDb as any).moderationLogs) (localDb as any).moderationLogs = [];
+    (localDb as any).moderationLogs.unshift({
+      id: 'mod-' + Date.now(),
+      action: 'delete',
+      targetUserId: targetUser.id,
+      targetUserName: targetUser.fullName,
+      targetUserEmail: targetUser.email,
+      reason: 'Permanently deleted by administrator',
+      timestamp: new Date().toISOString(),
+      adminName: admin.fullName || admin.email
+    });
+
+    localDb.users.splice(idx, 1);
+    await saveDb();
+    res.json({ success: true, message: 'User deleted successfully.' });
+  });
+
+  app.get('/api/admin/moderation-logs', requireAdmin, async (req, res) => {
+    res.json((localDb as any).moderationLogs || []);
   });
 
   // Properties Endpoints

@@ -3,6 +3,7 @@ import { useApp } from '../lib/AppContext';
 import { formatTimeAgo } from '../lib/utils';
 import { Property, Inquiry, AppNotification } from '../types';
 import { TwoFactorSecurityModule } from './TwoFactorSecurityModule';
+import { ReceiptUploadInput } from './ReceiptUploadInput';
 import { getCampaignStatusInfo } from '../utils/campaignUtils';
 import { 
   User, MessageSquare, Bell, CreditCard, Settings, LogOut, CheckCircle2, 
@@ -307,6 +308,7 @@ export default function UserDashboard({
   const [selectedMethodId, setSelectedMethodId] = useState('');
   const [amount, setAmount] = useState<number | ''>('');
   const [receiptImageSim, setReceiptImageSim] = useState('');
+  const [receiptFileData, setReceiptFileData] = useState<{ url: string; fileType: 'image' | 'pdf'; fileName: string; fileSize: number } | null>(null);
   const [receiptSuccess, setReceiptSuccess] = useState('');
   const [receiptSubmitting, setReceiptSubmitting] = useState(false);
 
@@ -761,8 +763,8 @@ export default function UserDashboard({
         setReceiptSubmitting(false);
         return;
       }
-      if (!receiptImageSim.trim()) {
-        setPromoteError('Please enter your transaction reference number or SMS code.');
+      if (!receiptImageSim.trim() && !receiptFileData?.url) {
+        setPromoteError('Please enter a transaction reference number or upload a payment receipt file.');
         setReceiptSubmitting(false);
         return;
       }
@@ -774,17 +776,23 @@ export default function UserDashboard({
           body: JSON.stringify({
             userId: currentUser.id,
             userEmail: currentUser.email,
+            userName: currentUser.fullName,
             amount: totalCost,
             paymentMethodId: selectedMethodId,
             paymentMethodName: method?.name || 'Bank Transfer',
             relatedPropertyId: promotingProperty.id,
             relatedPropertyTitle: promotingProperty.title,
-            receiptUrlOrFile: receiptImageSim.trim()
+            referenceNumber: receiptImageSim.trim() || undefined,
+            receiptUrlOrFile: receiptFileData?.url || receiptImageSim.trim(),
+            fileType: receiptFileData?.fileType || 'image',
+            fileName: receiptFileData?.fileName,
+            fileSize: receiptFileData?.fileSize
           })
         });
         if (res.ok) {
           setReceiptSuccess('Payment receipt submitted successfully! Admin will verify and activate your boost.');
           setReceiptImageSim('');
+          setReceiptFileData(null);
           refreshData();
           setTimeout(() => {
             setReceiptSuccess('');
@@ -1664,17 +1672,15 @@ export default function UserDashboard({
                                   </select>
                                 </div>
 
-                                <div>
-                                  <label className="block text-[10px] font-bold text-white/50 uppercase mb-1.5 font-mono">
-                                    Transaction Ref / FT Reference SMS *
-                                  </label>
-                                  <input 
-                                    type="text" 
-                                    required 
-                                    value={receiptImageSim} 
-                                    onChange={e => setReceiptImageSim(e.target.value)} 
-                                    placeholder="e.g. CBE FT230918... / Telebirr Transaction ID" 
-                                    className="w-full p-3 bg-black border border-white/10 text-xs text-white rounded-xl focus:outline-none focus:border-amber-500/30 font-mono" 
+                                <div className="col-span-1 sm:col-span-2 pt-2">
+                                  <ReceiptUploadInput
+                                    referenceNumber={receiptImageSim}
+                                    onReferenceChange={setReceiptImageSim}
+                                    receiptFile={receiptFileData?.url || ''}
+                                    fileName={receiptFileData?.fileName}
+                                    fileType={receiptFileData?.fileType}
+                                    fileSize={receiptFileData?.fileSize}
+                                    onFileChange={(data) => setReceiptFileData(data)}
                                   />
                                 </div>
                               </div>

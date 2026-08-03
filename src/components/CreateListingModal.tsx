@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../lib/AppContext';
 import { getCampaignStatusInfo } from '../utils/campaignUtils';
+import { ReceiptUploadInput } from './ReceiptUploadInput';
 import { 
   getMatchingSubcategoryId, 
   getTranslatedCategoryName, 
@@ -1294,6 +1295,7 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
   const [paymentMethod, setPaymentMethod] = useState<'wallet' | 'direct'>('wallet');
   const [selectedDirectMethodId, setSelectedDirectMethodId] = useState('');
   const [receiptRefNumber, setReceiptRefNumber] = useState('');
+  const [receiptFileData, setReceiptFileData] = useState<{ url: string; fileType: 'image' | 'pdf'; fileName: string; fileSize: number } | null>(null);
 
   // Clean form state initialized with base fields only
   const [fieldsState, setFieldsState] = useState<Record<string, any>>({
@@ -1831,12 +1833,17 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
             body: JSON.stringify({
               userId: currentUser.id,
               userEmail: currentUser.email,
+              userName: currentUser.fullName,
               amount: totalCost,
               paymentMethodId: selectedDirectMethodId || 'direct-transfer',
               paymentMethodName: directMethod?.name || 'Direct Bank / Telebirr',
               relatedPropertyId: createdProp.id,
               relatedPropertyTitle: createdProp.title,
-              receiptUrlOrFile: receiptRefNumber || 'Payment Reference Submitted'
+              referenceNumber: receiptRefNumber.trim() || undefined,
+              receiptUrlOrFile: receiptFileData?.url || receiptRefNumber || 'Payment Reference Submitted',
+              fileType: receiptFileData?.fileType || 'image',
+              fileName: receiptFileData?.fileName,
+              fileSize: receiptFileData?.fileSize
             })
           });
         }
@@ -2948,19 +2955,16 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
                           </select>
                         </div>
 
-                        <div>
-                          <label className="block text-[11px] font-bold text-white/70 uppercase mb-1.5">
-                            {d.txnRefLabel}
-                          </label>
-                          <input
-                            type="text"
-                            required
-                            value={receiptRefNumber}
-                            onChange={e => setReceiptRefNumber(e.target.value)}
-                            placeholder={d.txnRefPlaceholder}
-                            className="w-full p-3 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white font-mono placeholder-zinc-600 focus:outline-none transition"
+                        <div className="pt-2">
+                          <ReceiptUploadInput
+                            referenceNumber={receiptRefNumber}
+                            onReferenceChange={setReceiptRefNumber}
+                            receiptFile={receiptFileData?.url || ''}
+                            fileName={receiptFileData?.fileName}
+                            fileType={receiptFileData?.fileType}
+                            fileSize={receiptFileData?.fileSize}
+                            onFileChange={(data) => setReceiptFileData(data)}
                           />
-                          <p className="text-[10px] text-white/40 mt-1">{d.txnRefSub}</p>
                         </div>
                       </div>
                     )}

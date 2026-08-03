@@ -17,12 +17,36 @@ export interface WalletTransaction {
   promotionType?: 'basic' | 'premium' | 'vip' | 'top_ad' | 'featured';
 }
 
+export interface WarningItem {
+  id: string;
+  reason: string;
+  note?: string;
+  dateIssued: string;
+  adminId?: string;
+  adminName?: string;
+}
+
+export interface ModerationLogItem {
+  id: string;
+  action: 'suspend' | 'unsuspend' | 'ban' | 'unban' | 'warn' | 'edit' | 'delete';
+  targetUserId: string;
+  targetUserName?: string;
+  targetUserEmail?: string;
+  reason?: string;
+  note?: string;
+  timestamp: string;
+  adminName: string;
+}
+
 export interface User {
   id: string;
   email: string;
   fullName: string;
   role: 'admin' | 'user';
-  status: 'active' | 'suspended' | 'disabled';
+  status: 'active' | 'suspended' | 'banned' | 'disabled';
+  banReason?: string;
+  suspendReason?: string;
+  warnings?: WarningItem[];
   isVerified: boolean;
   verificationStatus: 'unverified' | 'pending' | 'verified' | 'rejected';
   verificationDocument?: string;
@@ -154,12 +178,17 @@ export interface PaymentReceipt {
   id: string;
   userId: string;
   userEmail: string;
+  userName?: string;
   amount: number;
   paymentMethodId: string;
   paymentMethodName: string;
   relatedPropertyId: string;
   relatedPropertyTitle: string;
-  receiptUrlOrFile: string; // base64 or custom filename
+  referenceNumber?: string;
+  receiptUrlOrFile: string; // base64, URL, or image/pdf data
+  fileType?: 'image' | 'pdf';
+  fileName?: string;
+  fileSize?: number;
   status: 'Pending' | 'Approved' | 'Rejected';
   adminNotes?: string;
   rejectionReason?: string;

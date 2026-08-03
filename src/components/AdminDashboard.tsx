@@ -10,7 +10,8 @@ import {
   Activity, DollarSign, Percent, Clock, FileCheck, Info, Plus, 
   Calendar, MapPin, ChevronRight, HelpCircle as HelpIcon, BellRing,
   Camera, Image as ImageIcon, Folder, FolderKanban, ChevronDown,
-  Mail, Phone, RotateCcw, Zap, LogOut, Gift, Monitor, Smartphone, Upload, XCircle, Save, Globe
+  Mail, Phone, RotateCcw, Zap, LogOut, Gift, Monitor, Smartphone, Upload, XCircle, Save, Globe,
+  Ban, PauseCircle, AlertTriangle, Download, ZoomIn, ZoomOut, History, UserX
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { EmployeeAdminsModule } from './EmployeeAdminsModule';
@@ -679,16 +680,48 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
   const handleClearDemoAnalytics = () => {};
   const handleResetDemoAnalytics = () => {};
 
-  const [newFaqQuestion, setNewFaqQuestion] = useState('');
-  const [newFaqAnswer, setNewFaqAnswer] = useState('');
+  // Multilingual FAQ State
+  const [newFaqQuestion, setNewFaqQuestion] = useState({ en: '', om: '', am: '' });
+  const [newFaqAnswer, setNewFaqAnswer] = useState({ en: '', om: '', am: '' });
   const [newFaqCategory, setNewFaqCategory] = useState('general');
 
   const [editingFaqId, setEditingFaqId] = useState<string | null>(null);
-  const [editFaqQuestion, setEditFaqQuestion] = useState('');
-  const [editFaqAnswer, setEditFaqAnswer] = useState('');
+  const [editFaqQuestion, setEditFaqQuestion] = useState({ en: '', om: '', am: '' });
+  const [editFaqAnswer, setEditFaqAnswer] = useState({ en: '', om: '', am: '' });
   const [editFaqCategory, setEditFaqCategory] = useState('general');
   const [editFaqIsPopular, setEditFaqIsPopular] = useState(false);
   const [editFaqSubmitting, setEditFaqSubmitting] = useState(false);
+
+  // User Moderation Tools State
+  const [viewingUser, setViewingUser] = useState<User | null>(null);
+  const [warningModalUser, setWarningModalUser] = useState<User | null>(null);
+  const [warningReason, setWarningReason] = useState('Policy Violation');
+  const [customWarningReason, setCustomWarningReason] = useState('');
+  const [warningNote, setWarningNote] = useState('');
+  const [warningSubmitting, setWarningSubmitting] = useState(false);
+
+  const [warningHistoryUser, setWarningHistoryUser] = useState<User | null>(null);
+
+  const [statusModalUser, setStatusModalUser] = useState<User | null>(null);
+  const [targetStatus, setTargetStatus] = useState<'suspended' | 'banned' | 'active'>('suspended');
+  const [statusReason, setStatusReason] = useState('Terms of Service Violation');
+  const [customStatusReason, setCustomStatusReason] = useState('');
+  const [statusNote, setStatusNote] = useState('');
+  const [statusSubmitting, setStatusSubmitting] = useState(false);
+
+  const [deletingUserModal, setDeletingUserModal] = useState<User | null>(null);
+  const [deleteConfirmInput, setDeleteConfirmInput] = useState('');
+  const [deleteSubmitting, setDeleteSubmitting] = useState(false);
+
+  const [moderationLogs, setModerationLogs] = useState<any[]>([]);
+  const [showModerationLogs, setShowModerationLogs] = useState(false);
+
+  // Payment Receipt Verification Desk State
+  const [inspectingReceipt, setInspectingReceipt] = useState<PaymentReceipt | null>(null);
+  const [receiptZoomLevel, setReceiptZoomLevel] = useState<number>(1);
+  const [rejectionModalReceipt, setRejectionModalReceipt] = useState<PaymentReceipt | null>(null);
+  const [rejectionReasonText, setRejectionReasonText] = useState('Unclear receipt image / Reference number mismatch.');
+  const [receiptActionSubmitting, setReceiptActionSubmitting] = useState(false);
   const [ticketReplyId, setTicketReplyId] = useState<string | null>(null);
   const [ticketReplyText, setTicketReplyText] = useState('');
 
@@ -1398,19 +1431,41 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
     }
   };
 
+  // Helper to check missing translations
+  const getMissingFaqLanguages = (q: any, a: any) => {
+    const qObj = typeof q === 'object' && q !== null ? q : { en: q || '' };
+    const aObj = typeof a === 'object' && a !== null ? a : { en: a || '' };
+    const missing: string[] = [];
+    if (!qObj.en?.trim() || !aObj.en?.trim()) missing.push('English (EN)');
+    if (!qObj.om?.trim() || !aObj.om?.trim()) missing.push('Afaan Oromoo (OM)');
+    if (!qObj.am?.trim() || !aObj.am?.trim()) missing.push('Amharic (AM)');
+    return missing;
+  };
+
   // FAQ Management Handlers
   const handleAddFaq = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newFaqQuestion || !newFaqAnswer) return;
+    if (!newFaqQuestion.en.trim() || !newFaqAnswer.en.trim()) {
+      alert('English Question and Answer are required at minimum.');
+      return;
+    }
     try {
       await addFaq({
-        question: { en: newFaqQuestion, om: newFaqQuestion, am: newFaqQuestion },
-        answer: { en: newFaqAnswer, om: newFaqAnswer, am: newFaqAnswer },
+        question: {
+          en: newFaqQuestion.en.trim(),
+          om: newFaqQuestion.om.trim() || newFaqQuestion.en.trim(),
+          am: newFaqQuestion.am.trim() || newFaqQuestion.en.trim()
+        },
+        answer: {
+          en: newFaqAnswer.en.trim(),
+          om: newFaqAnswer.om.trim() || newFaqAnswer.en.trim(),
+          am: newFaqAnswer.am.trim() || newFaqAnswer.en.trim()
+        },
         category: newFaqCategory || 'general',
         status: 'published'
       });
-      setNewFaqQuestion('');
-      setNewFaqAnswer('');
+      setNewFaqQuestion({ en: '', om: '', am: '' });
+      setNewFaqAnswer({ en: '', om: '', am: '' });
     } catch (err: any) {
       alert('Failed to create FAQ: ' + err.message);
     }
@@ -1418,22 +1473,40 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
 
   const startEditFaq = (f: any) => {
     setEditingFaqId(f.id);
-    setEditFaqQuestion(getFaqText(f.question));
-    setEditFaqAnswer(getFaqText(f.answer));
+    const qObj = typeof f.question === 'object' && f.question !== null ? f.question : { en: f.question || '', om: '', am: '' };
+    const aObj = typeof f.answer === 'object' && f.answer !== null ? f.answer : { en: f.answer || '', om: '', am: '' };
+    setEditFaqQuestion({
+      en: qObj.en || '',
+      om: qObj.om || '',
+      am: qObj.am || ''
+    });
+    setEditFaqAnswer({
+      en: aObj.en || '',
+      om: aObj.om || '',
+      am: aObj.am || ''
+    });
     setEditFaqCategory(f.category || 'general');
     setEditFaqIsPopular(Boolean(f.isPopular));
   };
 
   const handleSaveFaq = async (id: string) => {
-    if (!editFaqQuestion.trim() || !editFaqAnswer.trim()) {
-      alert('Question and Answer cannot be empty.');
+    if (!editFaqQuestion.en.trim() || !editFaqAnswer.en.trim()) {
+      alert('English Question and Answer cannot be empty.');
       return;
     }
     setEditFaqSubmitting(true);
     try {
       await updateFaq(id, {
-        question: { en: editFaqQuestion, om: editFaqQuestion, am: editFaqQuestion },
-        answer: { en: editFaqAnswer, om: editFaqAnswer, am: editFaqAnswer },
+        question: {
+          en: editFaqQuestion.en.trim(),
+          om: editFaqQuestion.om.trim() || editFaqQuestion.en.trim(),
+          am: editFaqQuestion.am.trim() || editFaqQuestion.en.trim()
+        },
+        answer: {
+          en: editFaqAnswer.en.trim(),
+          om: editFaqAnswer.om.trim() || editFaqAnswer.en.trim(),
+          am: editFaqAnswer.am.trim() || editFaqAnswer.en.trim()
+        },
         category: editFaqCategory,
         isPopular: editFaqIsPopular
       });
@@ -1442,6 +1515,119 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
       alert('Failed to update FAQ: ' + (err.message || 'Unknown error'));
     } finally {
       setEditFaqSubmitting(false);
+    }
+  };
+
+  // --- USER MODERATION HANDLERS ---
+  const handleSendUserWarning = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!warningModalUser) return;
+    const finalReason = warningReason === 'Custom' ? customWarningReason.trim() : warningReason;
+    if (!finalReason) {
+      alert('Please specify a warning reason.');
+      return;
+    }
+    setWarningSubmitting(true);
+    try {
+      const res = await fetch(`/api/admin/users/${warningModalUser.id}/warn`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('sof_umer_token')}`
+        },
+        body: JSON.stringify({ reason: finalReason, note: warningNote })
+      });
+      if (res.ok) {
+        setWarningModalUser(null);
+        setCustomWarningReason('');
+        setWarningNote('');
+        refreshData();
+      } else {
+        const data = await res.json();
+        alert('Error: ' + (data.error || 'Failed to send warning'));
+      }
+    } catch (err: any) {
+      alert('Error: ' + err.message);
+    } finally {
+      setWarningSubmitting(false);
+    }
+  };
+
+  const handleUpdateUserStatus = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!statusModalUser) return;
+    const finalReason = statusReason === 'Custom' ? customStatusReason.trim() : statusReason;
+    if (targetStatus !== 'active' && !finalReason) {
+      alert('Please specify a reason for this status change.');
+      return;
+    }
+    setStatusSubmitting(true);
+    try {
+      const res = await fetch(`/api/admin/users/${statusModalUser.id}/status`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('sof_umer_token')}`
+        },
+        body: JSON.stringify({ status: targetStatus, reason: finalReason, note: statusNote })
+      });
+      if (res.ok) {
+        setStatusModalUser(null);
+        setCustomStatusReason('');
+        setStatusNote('');
+        refreshData();
+      } else {
+        const data = await res.json();
+        alert('Error: ' + (data.error || 'Failed to update user status'));
+      }
+    } catch (err: any) {
+      alert('Error: ' + err.message);
+    } finally {
+      setStatusSubmitting(false);
+    }
+  };
+
+  const handleDeleteUserSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!deletingUserModal) return;
+    if (deleteConfirmInput !== deletingUserModal.email) {
+      alert(`Please type "${deletingUserModal.email}" to confirm deletion.`);
+      return;
+    }
+    setDeleteSubmitting(true);
+    try {
+      const res = await fetch(`/api/admin/users/${deletingUserModal.id}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('sof_umer_token')}`
+        }
+      });
+      if (res.ok) {
+        setDeletingUserModal(null);
+        setDeleteConfirmInput('');
+        refreshData();
+      } else {
+        const data = await res.json();
+        alert('Error: ' + (data.error || 'Failed to delete user'));
+      }
+    } catch (err: any) {
+      alert('Error: ' + err.message);
+    } finally {
+      setDeleteSubmitting(false);
+    }
+  };
+
+  const fetchModerationLogs = async () => {
+    try {
+      const res = await fetch('/api/admin/moderation-logs', {
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('sof_umer_token')}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setModerationLogs(data);
+      }
+    } catch (err) {
+      console.error(err);
     }
   };
 
@@ -2198,15 +2384,37 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
                           </span>
                         </td>
                         <td className="py-4 px-4">
-                          <span className={`px-2 py-0.5 rounded font-extrabold text-[9px] uppercase ${u.status === 'active' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'}`}>
-                            {u.status}
-                          </span>
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <span className={`px-2 py-0.5 rounded font-extrabold text-[9px] uppercase ${u.status === 'active' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : u.status === 'suspended' ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20' : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'}`}>
+                              {u.status || 'active'}
+                            </span>
+                            {u.warnings && u.warnings.length > 0 && (
+                              <button
+                                onClick={() => setWarningHistoryUser(u)}
+                                className="px-1.5 py-0.5 bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 rounded text-[9px] font-mono flex items-center gap-0.5 cursor-pointer"
+                                title="View warning history"
+                              >
+                                <AlertTriangle className="w-2.5 h-2.5" />
+                                <span>{u.warnings.length} Warn</span>
+                              </button>
+                            )}
+                          </div>
                         </td>
                         <td className="py-4 px-4">
                           <span className="text-[10px] uppercase font-mono text-white/40">{u.verificationStatus}</span>
                         </td>
                         <td className="py-4 px-4 text-right">
-                          <div className="flex justify-end gap-1.5">
+                          <div className="flex justify-end items-center gap-1">
+                            {/* View Details */}
+                            <button
+                              onClick={() => setViewingUser(u)}
+                              className="p-1.5 bg-white/5 hover:bg-white/10 rounded-lg text-white/70 hover:text-white cursor-pointer"
+                              title="View Full User Profile"
+                            >
+                              <Eye className="w-3.5 h-3.5" />
+                            </button>
+
+                            {/* Edit Info */}
                             <button
                               onClick={() => {
                                 setEditingUser(u);
@@ -2217,18 +2425,52 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
                             >
                               <Edit2 className="w-3.5 h-3.5" />
                             </button>
+
+                            {/* Warn User */}
                             <button
-                              onClick={() => handleToggleUserSuspension(u)}
-                              className={`px-2.5 py-1.5 rounded-lg text-[10px] font-extrabold uppercase cursor-pointer ${u.status === 'active' ? 'bg-rose-500/10 text-rose-400 hover:bg-rose-500/20' : 'bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20'}`}
+                              onClick={() => setWarningModalUser(u)}
+                              className="p-1.5 bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/20 rounded-lg cursor-pointer"
+                              title="Send Official Warning"
                             >
-                              {u.status === 'active' ? 'Suspend' : 'Unsuspend'}
+                              <AlertTriangle className="w-3.5 h-3.5" />
                             </button>
+
+                            {/* Suspend / Ban Status */}
+                            {u.status === 'active' ? (
+                              <button
+                                onClick={() => { setStatusModalUser(u); setTargetStatus('suspended'); }}
+                                className="px-2 py-1 bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/20 rounded-lg text-[9px] font-extrabold uppercase cursor-pointer"
+                                title="Suspend Account"
+                              >
+                                Suspend
+                              </button>
+                            ) : (
+                              <button
+                                onClick={() => { setStatusModalUser(u); setTargetStatus('active'); }}
+                                className="px-2 py-1 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/20 rounded-lg text-[9px] font-extrabold uppercase cursor-pointer"
+                                title="Unsuspend / Reactivate Account"
+                              >
+                                Activate
+                              </button>
+                            )}
+
+                            {u.status !== 'banned' && (
+                              <button
+                                onClick={() => { setStatusModalUser(u); setTargetStatus('banned'); }}
+                                className="p-1.5 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 rounded-lg cursor-pointer"
+                                title="Ban Account"
+                              >
+                                <Ban className="w-3.5 h-3.5" />
+                              </button>
+                            )}
+
+                            {/* Delete User */}
                             <button
-                              onClick={() => handleToggleUserRole(u)}
-                              className="px-2.5 py-1.5 bg-white/5 border border-white/5 hover:bg-white/10 rounded-lg text-[10px] font-bold text-white/70 cursor-pointer"
-                              title="Change Role"
+                              onClick={() => setDeletingUserModal(u)}
+                              className="p-1.5 bg-white/5 hover:bg-rose-500/20 text-white/30 hover:text-rose-400 rounded-lg cursor-pointer transition"
+                              title="Permanently Delete User"
                             >
-                              Role
+                              <Trash2 className="w-3.5 h-3.5" />
                             </button>
                           </div>
                         </td>
@@ -3270,149 +3512,284 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
                   <p className="text-xs text-white/40 mt-1">Configure questions and answers served on user-facing FAQ panels.</p>
                 </div>
 
-                {/* FAQ Add Form */}
-                <form onSubmit={handleAddFaq} className="bg-black/40 border border-white/5 p-4.5 rounded-2xl space-y-3">
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                    <input
-                      type="text"
-                      required
-                      placeholder="Frequently Asked Question..."
-                      value={newFaqQuestion}
-                      onChange={e => setNewFaqQuestion(e.target.value)}
-                      className="px-3.5 py-2 bg-black/40 border border-white/5 rounded-xl text-xs text-white"
-                    />
-                    <input
-                      type="text"
-                      required
-                      placeholder="Knowledge Answer..."
-                      value={newFaqAnswer}
-                      onChange={e => setNewFaqAnswer(e.target.value)}
-                      className="px-3.5 py-2 bg-black/40 border border-white/5 rounded-xl text-xs text-white"
-                    />
+                {/* Multilingual FAQ Add Form */}
+                <form onSubmit={handleAddFaq} className="bg-black/40 border border-white/10 p-5 rounded-2xl space-y-4">
+                  <div className="flex items-center justify-between border-b border-white/5 pb-2">
+                    <span className="text-xs font-bold text-amber-500 uppercase tracking-wider flex items-center gap-1.5">
+                      <Plus className="w-4 h-4" /> Create Multilingual FAQ Entry
+                    </span>
+                    <span className="text-[10px] text-white/40">Provide translations for EN, Afaan Oromoo, and Amharic</span>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {/* English */}
+                    <div className="p-3 bg-white/[0.02] border border-white/5 rounded-xl space-y-2">
+                      <div className="flex justify-between items-center">
+                        <span className="text-[10px] font-bold text-amber-400 uppercase font-mono">English (EN) *</span>
+                        <span className="text-[9px] bg-amber-500/10 text-amber-400 px-1.5 py-0.2 rounded">Required</span>
+                      </div>
+                      <input
+                        type="text"
+                        required
+                        placeholder="Question (English)..."
+                        value={newFaqQuestion.en}
+                        onChange={e => setNewFaqQuestion({ ...newFaqQuestion, en: e.target.value })}
+                        className="w-full px-3 py-1.5 bg-black/60 border border-white/10 rounded-lg text-xs text-white focus:outline-none focus:border-amber-500"
+                      />
+                      <textarea
+                        required
+                        rows={2}
+                        placeholder="Answer (English)..."
+                        value={newFaqAnswer.en}
+                        onChange={e => setNewFaqAnswer({ ...newFaqAnswer, en: e.target.value })}
+                        className="w-full px-3 py-1.5 bg-black/60 border border-white/10 rounded-lg text-xs text-white focus:outline-none focus:border-amber-500"
+                      />
+                    </div>
+
+                    {/* Afaan Oromoo */}
+                    <div className="p-3 bg-white/[0.02] border border-white/5 rounded-xl space-y-2">
+                      <div className="flex justify-between items-center">
+                        <span className="text-[10px] font-bold text-teal-400 uppercase font-mono">Afaan Oromoo (OM)</span>
+                        <span className="text-[9px] text-white/40">Auto-falls back if empty</span>
+                      </div>
+                      <input
+                        type="text"
+                        placeholder="Gaaffii (Afaan Oromoo)..."
+                        value={newFaqQuestion.om}
+                        onChange={e => setNewFaqQuestion({ ...newFaqQuestion, om: e.target.value })}
+                        className="w-full px-3 py-1.5 bg-black/60 border border-white/10 rounded-lg text-xs text-white focus:outline-none focus:border-teal-500"
+                      />
+                      <textarea
+                        rows={2}
+                        placeholder="Deebii (Afaan Oromoo)..."
+                        value={newFaqAnswer.om}
+                        onChange={e => setNewFaqAnswer({ ...newFaqAnswer, om: e.target.value })}
+                        className="w-full px-3 py-1.5 bg-black/60 border border-white/10 rounded-lg text-xs text-white focus:outline-none focus:border-teal-500"
+                      />
+                    </div>
+
+                    {/* Amharic */}
+                    <div className="p-3 bg-white/[0.02] border border-white/5 rounded-xl space-y-2">
+                      <div className="flex justify-between items-center">
+                        <span className="text-[10px] font-bold text-purple-400 uppercase font-mono">Amharic (AM)</span>
+                        <span className="text-[9px] text-white/40">Auto-falls back if empty</span>
+                      </div>
+                      <input
+                        type="text"
+                        placeholder="ጥያቄ (አማርኛ)..."
+                        value={newFaqQuestion.am}
+                        onChange={e => setNewFaqQuestion({ ...newFaqQuestion, am: e.target.value })}
+                        className="w-full px-3 py-1.5 bg-black/60 border border-white/10 rounded-lg text-xs text-white focus:outline-none focus:border-purple-500"
+                      />
+                      <textarea
+                        rows={2}
+                        placeholder="መልስ (አማርኛ)..."
+                        value={newFaqAnswer.am}
+                        onChange={e => setNewFaqAnswer({ ...newFaqAnswer, am: e.target.value })}
+                        className="w-full px-3 py-1.5 bg-black/60 border border-white/10 rounded-lg text-xs text-white focus:outline-none focus:border-purple-500"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col sm:flex-row justify-between items-center gap-3 pt-2">
                     <select
                       value={newFaqCategory}
                       onChange={e => setNewFaqCategory(e.target.value)}
-                      className="px-3.5 py-2 bg-black/40 border border-white/5 rounded-xl text-xs text-white"
+                      className="w-full sm:w-auto px-3.5 py-2 bg-black/60 border border-white/10 rounded-xl text-xs text-white focus:outline-none"
                     >
-                      <option value="general">Category: General</option>
+                      <option value="general">Category: General Inquiries</option>
                       <option value="account">Category: Account & Profile</option>
-                      <option value="listings">Category: Listings & Boosting</option>
+                      <option value="listings">Category: Listings & Wholesale</option>
                       <option value="payments">Category: Payments & Wallet</option>
                       <option value="safety">Category: Safety & Verification</option>
                     </select>
+
+                    <button type="submit" className="w-full sm:w-auto px-5 py-2.5 bg-amber-500 hover:bg-amber-400 text-black font-extrabold text-xs rounded-xl flex items-center justify-center gap-1.5 cursor-pointer transition shadow">
+                      <Plus className="w-4 h-4" /> Save FAQ in All 3 Languages
+                    </button>
                   </div>
-                  <button type="submit" className="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-black font-bold text-xs rounded-xl flex items-center gap-1 cursor-pointer">
-                    <Plus className="w-4 h-4" /> Add FAQ Item
-                  </button>
                 </form>
 
                 <div className="space-y-3">
                   {faqs && faqs.map(f => {
                     const isEditing = editingFaqId === f.id;
+                    const missingLangs = getMissingFaqLanguages(f.question, f.answer);
+
                     if (isEditing) {
                       return (
-                        <div key={f.id} className="bg-[#181824] border border-amber-500/40 p-4.5 rounded-2xl space-y-3 shadow-xl">
+                        <div key={f.id} className="bg-[#181824] border border-amber-500/40 p-5 rounded-2xl space-y-4 shadow-xl">
                           <div className="flex items-center justify-between border-b border-white/10 pb-2">
                             <span className="text-xs font-bold text-amber-500 uppercase tracking-wider flex items-center gap-1.5">
-                              <Edit2 className="w-3.5 h-3.5" /> Edit FAQ Item
+                              <Edit2 className="w-3.5 h-3.5" /> Edit FAQ Item (Multilingual)
                             </span>
                             <span className="text-[10px] font-mono text-white/40">ID: {f.id}</span>
                           </div>
 
-                          <div className="space-y-3">
-                            <div>
-                              <label className="block text-[10px] font-bold text-white/50 uppercase mb-1 font-mono">Question</label>
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            {/* EN Edit */}
+                            <div className="p-3 bg-black/40 border border-amber-500/20 rounded-xl space-y-2">
+                              <span className="text-[10px] font-bold text-amber-400 uppercase font-mono block">English (EN)</span>
                               <input 
                                 type="text"
                                 required
-                                value={editFaqQuestion}
-                                onChange={e => setEditFaqQuestion(e.target.value)}
-                                className="w-full px-3.5 py-2 bg-black/60 border border-white/10 focus:border-amber-500/50 rounded-xl text-xs text-white focus:outline-none"
+                                value={editFaqQuestion.en}
+                                onChange={e => setEditFaqQuestion({ ...editFaqQuestion, en: e.target.value })}
+                                placeholder="Question (EN)"
+                                className="w-full px-3 py-1.5 bg-black/60 border border-white/10 rounded-lg text-xs text-white"
                               />
-                            </div>
-
-                            <div>
-                              <label className="block text-[10px] font-bold text-white/50 uppercase mb-1 font-mono">Answer</label>
                               <textarea 
                                 required
                                 rows={3}
-                                value={editFaqAnswer}
-                                onChange={e => setEditFaqAnswer(e.target.value)}
-                                className="w-full px-3.5 py-2 bg-black/60 border border-white/10 focus:border-amber-500/50 rounded-xl text-xs text-white focus:outline-none font-sans"
+                                value={editFaqAnswer.en}
+                                onChange={e => setEditFaqAnswer({ ...editFaqAnswer, en: e.target.value })}
+                                placeholder="Answer (EN)"
+                                className="w-full px-3 py-1.5 bg-black/60 border border-white/10 rounded-lg text-xs text-white font-sans"
                               />
                             </div>
 
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 items-center">
-                              <div>
-                                <label className="block text-[10px] font-bold text-white/50 uppercase mb-1 font-mono">Category</label>
-                                <select 
-                                  value={editFaqCategory}
-                                  onChange={e => setEditFaqCategory(e.target.value)}
-                                  className="w-full px-3.5 py-2 bg-black/60 border border-white/10 focus:border-amber-500/50 rounded-xl text-xs text-white focus:outline-none"
-                                >
-                                  <option value="general">General Inquiries</option>
-                                  <option value="account">Account & Profile</option>
-                                  <option value="listings">Listings & Boosting</option>
-                                  <option value="payments">Payments & Wallet</option>
-                                  <option value="safety">Safety & Verification</option>
-                                </select>
-                              </div>
-
-                              <div className="pt-2 sm:pt-4 flex items-center gap-2">
-                                <label className="flex items-center gap-2 cursor-pointer text-xs text-white/80">
-                                  <input 
-                                    type="checkbox"
-                                    checked={editFaqIsPopular}
-                                    onChange={e => setEditFaqIsPopular(e.target.checked)}
-                                    className="w-4 h-4 accent-amber-500 rounded cursor-pointer"
-                                  />
-                                  <span>Mark as Popular FAQ</span>
-                                </label>
-                              </div>
+                            {/* OM Edit */}
+                            <div className="p-3 bg-black/40 border border-teal-500/20 rounded-xl space-y-2">
+                              <span className="text-[10px] font-bold text-teal-400 uppercase font-mono block">Afaan Oromoo (OM)</span>
+                              <input 
+                                type="text"
+                                value={editFaqQuestion.om}
+                                onChange={e => setEditFaqQuestion({ ...editFaqQuestion, om: e.target.value })}
+                                placeholder="Gaaffii (Afaan Oromoo)"
+                                className="w-full px-3 py-1.5 bg-black/60 border border-white/10 rounded-lg text-xs text-white"
+                              />
+                              <textarea 
+                                rows={3}
+                                value={editFaqAnswer.om}
+                                onChange={e => setEditFaqAnswer({ ...editFaqAnswer, om: e.target.value })}
+                                placeholder="Deebii (Afaan Oromoo)"
+                                className="w-full px-3 py-1.5 bg-black/60 border border-white/10 rounded-lg text-xs text-white font-sans"
+                              />
                             </div>
 
-                            <div className="flex items-center gap-2 pt-2 border-t border-white/5">
-                              <button 
-                                type="button"
-                                onClick={() => handleSaveFaq(f.id)}
-                                disabled={editFaqSubmitting}
-                                className="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-black font-extrabold text-xs rounded-xl flex items-center gap-1.5 cursor-pointer shadow transition uppercase tracking-wider disabled:opacity-50"
-                              >
-                                <Check className="w-4 h-4" />
-                                <span>{editFaqSubmitting ? 'Saving...' : 'Save'}</span>
-                              </button>
-
-                              <button 
-                                type="button"
-                                onClick={() => setEditingFaqId(null)}
-                                disabled={editFaqSubmitting}
-                                className="px-3.5 py-2 bg-white/10 hover:bg-white/20 text-white font-bold text-xs rounded-xl flex items-center gap-1.5 cursor-pointer transition"
-                              >
-                                <X className="w-4 h-4" />
-                                <span>Cancel</span>
-                              </button>
+                            {/* AM Edit */}
+                            <div className="p-3 bg-black/40 border border-purple-500/20 rounded-xl space-y-2">
+                              <span className="text-[10px] font-bold text-purple-400 uppercase font-mono block">Amharic (AM)</span>
+                              <input 
+                                type="text"
+                                value={editFaqQuestion.am}
+                                onChange={e => setEditFaqQuestion({ ...editFaqQuestion, am: e.target.value })}
+                                placeholder="ጥያቄ (አማርኛ)"
+                                className="w-full px-3 py-1.5 bg-black/60 border border-white/10 rounded-lg text-xs text-white"
+                              />
+                              <textarea 
+                                rows={3}
+                                value={editFaqAnswer.am}
+                                onChange={e => setEditFaqAnswer({ ...editFaqAnswer, am: e.target.value })}
+                                placeholder="መልስ (አማርኛ)"
+                                className="w-full px-3 py-1.5 bg-black/60 border border-white/10 rounded-lg text-xs text-white font-sans"
+                              />
                             </div>
+                          </div>
+
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 items-center">
+                            <div>
+                              <label className="block text-[10px] font-bold text-white/50 uppercase mb-1 font-mono">Category</label>
+                              <select 
+                                value={editFaqCategory}
+                                onChange={e => setEditFaqCategory(e.target.value)}
+                                className="w-full px-3.5 py-2 bg-black/60 border border-white/10 rounded-xl text-xs text-white focus:outline-none"
+                              >
+                                <option value="general">General Inquiries</option>
+                                <option value="account">Account & Profile</option>
+                                <option value="listings">Listings & Wholesale</option>
+                                <option value="payments">Payments & Wallet</option>
+                                <option value="safety">Safety & Verification</option>
+                              </select>
+                            </div>
+
+                            <div className="pt-2 sm:pt-4 flex items-center gap-2">
+                              <label className="flex items-center gap-2 cursor-pointer text-xs text-white/80">
+                                <input 
+                                  type="checkbox"
+                                  checked={editFaqIsPopular}
+                                  onChange={e => setEditFaqIsPopular(e.target.checked)}
+                                  className="w-4 h-4 accent-amber-500 rounded cursor-pointer"
+                                />
+                                <span>Mark as Popular FAQ</span>
+                              </label>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-2 pt-2 border-t border-white/5">
+                            <button 
+                              type="button"
+                              onClick={() => handleSaveFaq(f.id)}
+                              disabled={editFaqSubmitting}
+                              className="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-black font-extrabold text-xs rounded-xl flex items-center gap-1.5 cursor-pointer shadow transition uppercase tracking-wider disabled:opacity-50"
+                            >
+                              <Check className="w-4 h-4" />
+                              <span>{editFaqSubmitting ? 'Saving...' : 'Save Translations'}</span>
+                            </button>
+
+                            <button 
+                              type="button"
+                              onClick={() => setEditingFaqId(null)}
+                              disabled={editFaqSubmitting}
+                              className="px-3.5 py-2 bg-white/10 hover:bg-white/20 text-white font-bold text-xs rounded-xl flex items-center gap-1.5 cursor-pointer transition"
+                            >
+                              <X className="w-4 h-4" />
+                              <span>Cancel</span>
+                            </button>
                           </div>
                         </div>
                       );
                     }
 
+                    const qObj = typeof f.question === 'object' && f.question !== null ? f.question : { en: f.question || '' };
+                    const aObj = typeof f.answer === 'object' && f.answer !== null ? f.answer : { en: f.answer || '' };
+
                     return (
-                      <div key={f.id} className="bg-[#12121a] border border-white/5 p-4 rounded-xl flex justify-between items-start gap-4 hover:border-white/10 transition">
-                        <div className="space-y-1">
+                      <div key={f.id} className="bg-[#12121a] border border-white/5 p-4 rounded-2xl flex flex-col md:flex-row justify-between items-start gap-4 hover:border-white/10 transition">
+                        <div className="space-y-2.5 flex-1">
                           <div className="flex items-center gap-2 flex-wrap">
-                            <p className="font-bold text-white text-xs">Q: {getFaqText(f.question)}</p>
+                            <span className="text-[10px] font-bold text-amber-500 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20 uppercase">
+                              {f.category || 'general'}
+                            </span>
                             {f.isPopular && (
                               <span className="text-[9px] bg-amber-500/20 border border-amber-500/40 text-amber-400 px-1.5 py-0.5 rounded font-mono font-bold">
                                 Popular
                               </span>
                             )}
+                            
+                            {/* Language badges */}
+                            <div className="flex items-center gap-1">
+                              <span className={`px-1.5 py-0.5 rounded text-[8px] font-extrabold font-mono ${qObj.en ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' : 'bg-white/5 text-white/30'}`}>EN</span>
+                              <span className={`px-1.5 py-0.5 rounded text-[8px] font-extrabold font-mono ${qObj.om ? 'bg-teal-500/20 text-teal-400 border border-teal-500/30' : 'bg-white/5 text-white/30'}`}>OM</span>
+                              <span className={`px-1.5 py-0.5 rounded text-[8px] font-extrabold font-mono ${qObj.am ? 'bg-purple-500/20 text-purple-400 border border-purple-500/30' : 'bg-white/5 text-white/30'}`}>AM</span>
+                            </div>
+
+                            {missingLangs.length > 0 && (
+                              <span className="text-[9px] bg-rose-500/10 text-rose-400 border border-rose-500/20 px-2 py-0.5 rounded font-mono flex items-center gap-1">
+                                <AlertTriangle className="w-3 h-3" /> Missing: {missingLangs.join(', ')}
+                              </span>
+                            )}
                           </div>
-                          <p className="text-[11px] text-white/60 leading-relaxed font-light">A: {getFaqText(f.answer)}</p>
-                          {f.category && (
-                            <span className="inline-block mt-2 text-[9px] bg-white/5 border border-white/10 text-amber-400 font-mono px-2 py-0.5 rounded uppercase">
-                              Category: {f.category}
-                            </span>
+
+                          <div className="space-y-1">
+                            <p className="font-bold text-white text-xs">EN Q: {qObj.en || <span className="text-rose-400 italic">Not set</span>}</p>
+                            <p className="text-[11px] text-white/60 leading-relaxed font-light">EN A: {aObj.en || <span className="text-rose-400 italic">Not set</span>}</p>
+                          </div>
+
+                          {(qObj.om || qObj.am) && (
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-2 border-t border-white/5 text-[11px]">
+                              {qObj.om && (
+                                <div className="p-2 bg-black/30 rounded-lg border border-teal-500/10">
+                                  <p className="font-bold text-teal-400 text-[10px]">OM: {qObj.om}</p>
+                                  <p className="text-white/50 text-[10px] truncate">{aObj.om}</p>
+                                </div>
+                              )}
+                              {qObj.am && (
+                                <div className="p-2 bg-black/30 rounded-lg border border-purple-500/10">
+                                  <p className="font-bold text-purple-400 text-[10px]">AM: {qObj.am}</p>
+                                  <p className="text-white/50 text-[10px] truncate">{aObj.am}</p>
+                                </div>
+                              )}
+                            </div>
                           )}
                         </div>
 
@@ -3420,11 +3797,11 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
                           <button 
                             type="button"
                             onClick={() => startEditFaq(f)} 
-                            className="px-2.5 py-1.5 bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/30 rounded-lg text-xs font-semibold flex items-center gap-1 cursor-pointer transition"
+                            className="px-3 py-1.5 bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/30 rounded-xl text-xs font-semibold flex items-center gap-1 cursor-pointer transition"
                             title="Edit FAQ Item"
                           >
                             <Edit2 className="w-3.5 h-3.5" />
-                            <span>Edit</span>
+                            <span>Edit Translations</span>
                           </button>
 
                           <button 
@@ -3739,13 +4116,14 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
                               </td>
                               <td className="py-3 px-4 font-extrabold text-amber-500 font-mono text-sm">{rec.amount.toLocaleString()}</td>
                               <td className="py-3 px-4">
-                                {rec.receiptUrlOrFile.startsWith('http') ? (
-                                  <a href={rec.receiptUrlOrFile} target="_blank" rel="noreferrer" className="text-amber-500 font-bold hover:underline flex items-center gap-1">
-                                    <Eye className="w-3.5 h-3.5" /> View Slip
-                                  </a>
-                                ) : (
-                                  <span className="font-mono bg-black/40 px-2 py-1 rounded text-white/70 text-[10px] border border-white/5">{rec.receiptUrlOrFile}</span>
-                                )}
+                                <button
+                                  type="button"
+                                  onClick={() => setInspectingReceipt(rec)}
+                                  className="px-2.5 py-1 bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/30 rounded-lg text-xs font-bold cursor-pointer transition inline-flex items-center gap-1"
+                                >
+                                  <Eye className="w-3.5 h-3.5" />
+                                  <span>Inspect & Audit</span>
+                                </button>
                               </td>
                               <td className="py-3 px-4">
                                 <span className={`px-2 py-0.5 rounded font-extrabold text-[8px] uppercase tracking-wider ${rec.status === 'Approved' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : rec.status === 'Rejected' ? 'bg-rose-500/10 text-rose-400 border border-rose-500/20' : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'}`}>
@@ -3756,6 +4134,13 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
                                 {rec.status === 'Pending' ? (
                                   <div className="flex justify-end gap-1.5">
                                     <button 
+                                      onClick={() => setInspectingReceipt(rec)} 
+                                      className="px-2.5 py-1.5 bg-amber-500 hover:bg-amber-400 text-black font-extrabold rounded-lg cursor-pointer text-[10px] uppercase flex items-center gap-1"
+                                      title="Inspect Slip Details"
+                                    >
+                                      <Eye className="w-3.5 h-3.5" /> Review
+                                    </button>
+                                    <button 
                                       onClick={() => handleVerifyReceipt(rec.id, 'Approved')} 
                                       className="px-2.5 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-black font-extrabold rounded-lg cursor-pointer text-[10px] uppercase flex items-center gap-1"
                                       title="Approve Receipt and Activate Promotion"
@@ -3763,10 +4148,7 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
                                       <Check className="w-3.5 h-3.5" /> Approve
                                     </button>
                                     <button 
-                                      onClick={() => {
-                                        const r = prompt('Rejection reason:');
-                                        if (r) handleVerifyReceipt(rec.id, 'Rejected', r);
-                                      }} 
+                                      onClick={() => setRejectionModalReceipt(rec)} 
                                       className="px-2.5 py-1.5 bg-rose-500/20 hover:bg-rose-500 text-rose-300 hover:text-white font-extrabold rounded-lg cursor-pointer text-[10px] uppercase flex items-center gap-1"
                                     >
                                       <X className="w-3.5 h-3.5" /> Reject
@@ -3774,10 +4156,15 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
                                   </div>
                                 ) : (
                                   <div className="flex justify-end gap-2 items-center">
-                                    <span className="text-[10px] text-white/30 font-mono">Audited</span>
+                                    <button
+                                      onClick={() => setInspectingReceipt(rec)}
+                                      className="text-[10px] text-amber-400 hover:underline font-bold"
+                                    >
+                                      View Audit Log
+                                    </button>
                                     <button 
                                       onClick={() => handleVerifyReceipt(rec.id, rec.status === 'Approved' ? 'Rejected' : 'Approved')}
-                                      className="text-[9px] text-amber-500 font-bold hover:underline cursor-pointer uppercase"
+                                      className="text-[9px] text-white/40 font-bold hover:underline cursor-pointer uppercase"
                                     >
                                       Re-audit
                                     </button>
