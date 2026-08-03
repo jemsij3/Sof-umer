@@ -2102,35 +2102,38 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
                 <div className="bg-amber-500/5 border border-amber-500/20 p-5 rounded-2xl space-y-4 mt-5">
                   <div className="flex items-center gap-2 text-amber-400 font-bold text-xs uppercase tracking-wider">
                     <Package className="w-4 h-4 text-amber-500" />
-                    <span>📦 Selling Type & Wholesale Configuration</span>
+                    <span>📦 {t('wholesale.wholesale_config_title') || 'Selling Type & Wholesale Configuration'}</span>
                   </div>
 
                   <div className="space-y-2">
                     <label className="block text-[11px] font-bold text-white/80 uppercase tracking-wider">
-                      Selling Type *
+                      {t('wholesale.selling_type') || 'Selling Type'} *
                     </label>
                     <div className="grid grid-cols-3 gap-3">
-                      {(['Retail', 'Wholesale', 'Retail & Wholesale'] as const).map(st => (
-                        <button
-                          key={st}
-                          type="button"
-                          onClick={() => handleFieldChange('sellingType', st)}
-                          className={`p-3 rounded-xl border text-xs font-semibold transition flex items-center justify-center gap-2 cursor-pointer ${
-                            (fieldsState.sellingType || 'Retail') === st
-                              ? 'bg-amber-500 text-black border-amber-500 font-bold shadow-md'
-                              : 'bg-zinc-900 border-white/10 text-white/80 hover:border-amber-500/40'
-                          }`}
-                        >
-                          <input
-                            type="radio"
-                            name="sellingType"
-                            checked={(fieldsState.sellingType || 'Retail') === st}
-                            onChange={() => {}}
-                            className="accent-black pointer-events-none"
-                          />
-                          <span>{st}</span>
-                        </button>
-                      ))}
+                      {(['Retail', 'Wholesale', 'Retail & Wholesale'] as const).map(st => {
+                        const labelKey = st === 'Retail' ? 'wholesale.retail' : st === 'Wholesale' ? 'wholesale.wholesale' : 'wholesale.retail_and_wholesale';
+                        return (
+                          <button
+                            key={st}
+                            type="button"
+                            onClick={() => handleFieldChange('sellingType', st)}
+                            className={`p-3 rounded-xl border text-xs font-semibold transition flex items-center justify-center gap-2 cursor-pointer ${
+                              (fieldsState.sellingType || 'Retail') === st
+                                ? 'bg-amber-500 text-black border-amber-500 font-bold shadow-md'
+                                : 'bg-zinc-900 border-white/10 text-white/80 hover:border-amber-500/40'
+                            }`}
+                          >
+                            <input
+                              type="radio"
+                              name="sellingType"
+                              checked={(fieldsState.sellingType || 'Retail') === st}
+                              onChange={() => {}}
+                              className="accent-black pointer-events-none"
+                            />
+                            <span>{t(labelKey) || st}</span>
+                          </button>
+                        );
+                      })}
                     </div>
                   </div>
 
@@ -2140,46 +2143,46 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
                         {/* Business Type */}
                         <div>
                           <label className="block text-[11px] font-bold text-white/80 uppercase tracking-wider mb-1">
-                            🏢 Business Type *
+                            🏢 {t('wholesale.business_type') || 'Business Type'} *
                           </label>
                           <select
-                            value={fieldsState.businessType || 'Wholesaler / Distributor'}
+                            value={fieldsState.businessType || 'Wholesaler / Supplier'}
                             onChange={e => handleFieldChange('businessType', e.target.value)}
                             className="w-full p-3 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white focus:outline-none transition"
                           >
-                            <option value="Manufacturer">Manufacturer</option>
-                            <option value="Importer">Importer</option>
-                            <option value="Wholesaler / Distributor">Wholesaler / Distributor</option>
-                            <option value="Authorized Agent">Authorized Agent</option>
-                            <option value="Local Supplier">Local Supplier</option>
+                            <option value="Manufacturer">{t('wholesale.manufacturer') || 'Manufacturer'}</option>
+                            <option value="Importer">{t('wholesale.importer') || 'Importer'}</option>
+                            <option value="Wholesaler / Supplier">{t('wholesale.wholesaler') || 'Wholesaler / Supplier'}</option>
+                            <option value="Authorized Agent">{t('wholesale.authorized_agent') || 'Authorized Agent'}</option>
+                            <option value="Local Supplier">{t('wholesale.local_supplier') || 'Local Supplier'}</option>
                           </select>
                         </div>
 
                         {/* Wholesale Unit */}
                         <div>
                           <label className="block text-[11px] font-bold text-white/80 uppercase tracking-wider mb-1">
-                            📏 Wholesale Unit *
+                            📏 {t('wholesale.wholesale_unit') || 'Wholesale Unit'} *
                           </label>
                           <select
                             value={fieldsState.wholesaleUnit || 'Pieces (Pcs)'}
                             onChange={e => handleFieldChange('wholesaleUnit', e.target.value)}
                             className="w-full p-3 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white focus:outline-none transition"
                           >
-                            <option value="Pieces (Pcs)">Pieces (Pcs)</option>
-                            <option value="Cartons / Boxes">Cartons / Boxes</option>
-                            <option value="Kilograms (Kg)">Kilograms (Kg)</option>
-                            <option value="Tons">Tons</option>
-                            <option value="Meters">Meters</option>
-                            <option value="Sets">Sets</option>
-                            <option value="Pairs">Pairs</option>
-                            <option value="Dozens">Dozens</option>
+                            <option value="Pieces (Pcs)">{t('wholesale.unit_pieces') || 'Pieces (Pcs)'}</option>
+                            <option value="Cartons / Boxes">{t('wholesale.unit_cartons') || 'Cartons / Boxes'}</option>
+                            <option value="Kilograms (Kg)">{t('wholesale.unit_kilograms') || 'Kilograms (Kg)'}</option>
+                            <option value="Tons">{t('wholesale.unit_tons') || 'Tons'}</option>
+                            <option value="Meters">{t('wholesale.unit_meters') || 'Meters'}</option>
+                            <option value="Sets">{t('wholesale.unit_sets') || 'Sets'}</option>
+                            <option value="Pairs">{t('wholesale.unit_pairs') || 'Pairs'}</option>
+                            <option value="Dozens">{t('wholesale.unit_dozens') || 'Dozens'}</option>
                           </select>
                         </div>
 
                         {/* Wholesale Price */}
                         <div>
                           <label className="block text-[11px] font-bold text-white/80 uppercase tracking-wider mb-1">
-                            💰 Wholesale Price ({currency}) *
+                            💰 {t('wholesale.wholesale_price') || 'Wholesale Price'} ({currency}) *
                           </label>
                           <div className="relative">
                             <span className="absolute left-3 top-3 text-xs text-amber-500 font-bold">{currency}</span>
@@ -2198,7 +2201,7 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
                         {/* Minimum Order Quantity */}
                         <div>
                           <label className="block text-[11px] font-bold text-white/80 uppercase tracking-wider mb-1">
-                            📦 Minimum Order Quantity (MOQ) *
+                            📦 {t('wholesale.minimum_order_quantity') || 'Minimum Order Quantity (MOQ)'} *
                           </label>
                           <input
                             type="number"
@@ -2215,21 +2218,21 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
                       {/* Delivery Options */}
                       <div className="space-y-2 pt-2">
                         <label className="block text-[11px] font-bold text-white/80 uppercase tracking-wider">
-                          🚚 Delivery Options
+                          🚚 {t('wholesale.delivery_options') || 'Delivery Options'}
                         </label>
                         <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                           {[
-                            'Store Pickup',
-                            'Local Delivery',
-                            'Nationwide Shipping',
-                            'Buyer Pays Shipping',
-                            'Free Shipping for Bulk Orders'
-                          ].map(opt => {
+                            { id: 'Store Pickup', key: 'wholesale.delivery_pickup', label: 'Store Pickup' },
+                            { id: 'Local Delivery', key: 'wholesale.delivery_local', label: 'Local Delivery' },
+                            { id: 'Nationwide Shipping', key: 'wholesale.delivery_nationwide', label: 'Nationwide Shipping' },
+                            { id: 'Buyer Pays Shipping', key: 'wholesale.delivery_buyer_pays', label: 'Buyer Pays Shipping' },
+                            { id: 'Free Shipping for Bulk Orders', key: 'wholesale.delivery_free_bulk', label: 'Free Shipping for Bulk Orders' }
+                          ].map(item => {
                             const currentDel: string[] = Array.isArray(fieldsState.deliveryOptions) ? fieldsState.deliveryOptions : [];
-                            const isChecked = currentDel.includes(opt);
+                            const isChecked = currentDel.includes(item.id);
                             return (
                               <label
-                                key={opt}
+                                key={item.id}
                                 className={`p-2.5 rounded-xl border text-[11px] font-medium flex items-center gap-2 cursor-pointer transition ${
                                   isChecked
                                     ? 'bg-amber-500/20 border-amber-500 text-amber-300'
@@ -2241,14 +2244,14 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
                                   checked={isChecked}
                                   onChange={e => {
                                     if (e.target.checked) {
-                                      handleFieldChange('deliveryOptions', [...currentDel, opt]);
+                                      handleFieldChange('deliveryOptions', [...currentDel, item.id]);
                                     } else {
-                                      handleFieldChange('deliveryOptions', currentDel.filter(d => d !== opt));
+                                      handleFieldChange('deliveryOptions', currentDel.filter(d => d !== item.id));
                                     }
                                   }}
                                   className="accent-amber-500 rounded"
                                 />
-                                <span>{opt}</span>
+                                <span>{t(item.key) || item.label}</span>
                               </label>
                             );
                           })}
@@ -2258,11 +2261,11 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
                       {/* Wholesale Notes / Terms */}
                       <div className="space-y-1 pt-1">
                         <label className="block text-[11px] font-bold text-white/80 uppercase tracking-wider">
-                          📝 Additional Wholesale Terms / Notes (Optional)
+                          📝 {t('wholesale.wholesale_notes') || 'Additional Wholesale Terms / Notes'}
                         </label>
                         <textarea
                           rows={2}
-                          placeholder="e.g. 50% advance payment required, lead time 3-5 days for bulk orders..."
+                          placeholder={t('wholesale.notes_placeholder') || 'e.g. 50% advance payment required, lead time 3-5 days for bulk orders...'}
                           value={fieldsState.wholesaleNotes || ''}
                           onChange={e => handleFieldChange('wholesaleNotes', e.target.value)}
                           className="w-full p-3 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white focus:outline-none transition resize-none font-light placeholder-zinc-600"

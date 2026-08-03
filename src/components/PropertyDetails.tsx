@@ -473,55 +473,86 @@ export default function PropertyDetails({
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2 text-amber-400 font-bold text-sm uppercase tracking-wider">
                   <Package className="w-5 h-5 text-amber-400" />
-                  <span>📦 Wholesale & Bulk Selling Terms</span>
+                  <span>📦 {t('wholesale.wholesale_terms') || 'Wholesale & Bulk Selling Terms'}</span>
                 </div>
                 <span className="bg-amber-500 text-black text-[10px] font-black uppercase px-3 py-1 rounded-full shadow">
-                  {(property as any).sellingType}
+                  {(property as any).sellingType === 'Wholesale' ? (t('wholesale.wholesale') || 'Wholesale') : (t('wholesale.retail_and_wholesale') || 'Retail & Wholesale')}
                 </span>
               </div>
 
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-2">
                 <div className="bg-black/40 p-3.5 rounded-2xl border border-white/5">
-                  <span className="text-[10px] text-white/50 uppercase font-bold block mb-1">Business Type</span>
-                  <span className="text-xs font-bold text-white">{(property as any).businessType || 'Wholesaler / Supplier'}</span>
+                  <span className="text-[10px] text-white/50 uppercase font-bold block mb-1">{t('wholesale.business_type') || 'Business Type'}</span>
+                  <span className="text-xs font-bold text-white">
+                    {(() => {
+                      const bt = (property as any).businessType;
+                      if (bt === 'Manufacturer') return t('wholesale.manufacturer') || bt;
+                      if (bt === 'Importer') return t('wholesale.importer') || bt;
+                      if (bt === 'Wholesaler / Supplier' || bt === 'Wholesaler / Distributor') return t('wholesale.wholesaler') || bt;
+                      if (bt === 'Authorized Agent') return t('wholesale.authorized_agent') || bt;
+                      if (bt === 'Local Supplier') return t('wholesale.local_supplier') || bt;
+                      return bt || t('wholesale.wholesaler') || 'Wholesaler';
+                    })()}
+                  </span>
                 </div>
 
                 <div className="bg-black/40 p-3.5 rounded-2xl border border-white/5">
-                  <span className="text-[10px] text-amber-400/80 uppercase font-bold block mb-1">Wholesale Price</span>
+                  <span className="text-[10px] text-amber-400/80 uppercase font-bold block mb-1">{t('wholesale.wholesale_price') || 'Wholesale Price'}</span>
                   <span className="text-sm font-black text-amber-400 font-mono">
-                    {(property as any).wholesalePrice ? `${Number((property as any).wholesalePrice).toLocaleString()} ${property.currency || 'ETB'}` : 'Contact Seller'}
+                    {(property as any).wholesalePrice ? `${Number((property as any).wholesalePrice).toLocaleString()} ${property.currency || 'ETB'}` : t('contact_seller') || 'Contact Seller'}
                   </span>
                 </div>
 
                 <div className="bg-black/40 p-3.5 rounded-2xl border border-white/5">
-                  <span className="text-[10px] text-white/50 uppercase font-bold block mb-1">Min. Order (MOQ)</span>
+                  <span className="text-[10px] text-white/50 uppercase font-bold block mb-1">{t('wholesale.moq') || 'Min. Order (MOQ)'}</span>
                   <span className="text-xs font-bold text-white font-mono">
-                    {(property as any).minimumOrderQuantity || 1} {(property as any).wholesaleUnit || 'Pieces'}
+                    {(property as any).minimumOrderQuantity || 1} {((property as any).wholesaleUnit || 'Pcs').replace(/\s*\(.*\)/, '')}
                   </span>
                 </div>
 
                 <div className="bg-black/40 p-3.5 rounded-2xl border border-white/5">
-                  <span className="text-[10px] text-white/50 uppercase font-bold block mb-1">Wholesale Unit</span>
-                  <span className="text-xs font-bold text-white">{(property as any).wholesaleUnit || 'Pieces (Pcs)'}</span>
+                  <span className="text-[10px] text-white/50 uppercase font-bold block mb-1">{t('wholesale.wholesale_unit') || 'Wholesale Unit'}</span>
+                  <span className="text-xs font-bold text-white">
+                    {(() => {
+                      const wu = (property as any).wholesaleUnit;
+                      if (wu === 'Pieces (Pcs)') return t('wholesale.unit_pieces') || wu;
+                      if (wu === 'Cartons / Boxes') return t('wholesale.unit_cartons') || wu;
+                      if (wu === 'Kilograms (Kg)') return t('wholesale.unit_kilograms') || wu;
+                      if (wu === 'Tons') return t('wholesale.unit_tons') || wu;
+                      if (wu === 'Meters') return t('wholesale.unit_meters') || wu;
+                      if (wu === 'Sets') return t('wholesale.unit_sets') || wu;
+                      if (wu === 'Pairs') return t('wholesale.unit_pairs') || wu;
+                      if (wu === 'Dozens') return t('wholesale.unit_dozens') || wu;
+                      return wu || t('wholesale.unit_pieces') || 'Pieces';
+                    })()}
+                  </span>
                 </div>
               </div>
 
               {Array.isArray((property as any).deliveryOptions) && (property as any).deliveryOptions.length > 0 && (
                 <div className="pt-2 border-t border-white/10">
-                  <span className="text-[11px] font-bold text-white/60 uppercase tracking-wider block mb-2">🚚 Delivery Options</span>
+                  <span className="text-[11px] font-bold text-white/60 uppercase tracking-wider block mb-2">🚚 {t('wholesale.delivery_options') || 'Delivery Options'}</span>
                   <div className="flex flex-wrap gap-2">
-                    {((property as any).deliveryOptions as string[]).map((opt, i) => (
-                      <span key={i} className="bg-white/5 border border-white/10 px-3 py-1 rounded-xl text-xs text-amber-300 font-medium">
-                        ✓ {opt}
-                      </span>
-                    ))}
+                    {((property as any).deliveryOptions as string[]).map((opt, i) => {
+                      let translatedOpt = opt;
+                      if (opt === 'Store Pickup') translatedOpt = t('wholesale.delivery_pickup') || opt;
+                      else if (opt === 'Local Delivery') translatedOpt = t('wholesale.delivery_local') || opt;
+                      else if (opt === 'Nationwide Shipping') translatedOpt = t('wholesale.delivery_nationwide') || opt;
+                      else if (opt === 'Buyer Pays Shipping') translatedOpt = t('wholesale.delivery_buyer_pays') || opt;
+                      else if (opt === 'Free Shipping for Bulk Orders') translatedOpt = t('wholesale.delivery_free_bulk') || opt;
+                      return (
+                        <span key={i} className="bg-white/5 border border-white/10 px-3 py-1 rounded-xl text-xs text-amber-300 font-medium">
+                          ✓ {translatedOpt}
+                        </span>
+                      );
+                    })}
                   </div>
                 </div>
               )}
 
               {(property as any).wholesaleNotes && (
                 <div className="pt-2 border-t border-white/10">
-                  <span className="text-[11px] font-bold text-white/60 uppercase tracking-wider block mb-1">📝 Wholesale Terms / Notes</span>
+                  <span className="text-[11px] font-bold text-white/60 uppercase tracking-wider block mb-1">📝 {t('wholesale.wholesale_notes') || 'Additional Wholesale Terms / Notes'}</span>
                   <p className="text-xs text-white/80 font-light leading-relaxed italic">{(property as any).wholesaleNotes}</p>
                 </div>
               )}
@@ -695,11 +726,11 @@ export default function PropertyDetails({
               });
               setReviewSubmitting(false);
               if (res.success) {
-                setReviewMsg({ type: 'success', text: 'Thank you! Your review has been submitted and is pending approval.' });
+                setReviewMsg({ type: 'success', text: t('reviews.success_pending') || 'Thank you! Your review has been submitted and is pending approval.' });
                 setReviewComment('');
                 setReviewRating(5);
               } else {
-                setReviewMsg({ type: 'error', text: res.error || 'Failed to submit review.' });
+                setReviewMsg({ type: 'error', text: res.error || t('common.error') || 'Failed to submit review.' });
               }
             };
 
@@ -709,10 +740,10 @@ export default function PropertyDetails({
                   <div>
                     <h3 className="text-xl font-serif font-bold text-white flex items-center gap-2">
                       <Star className="w-5 h-5 text-amber-400 fill-amber-400" />
-                      <span>Reviews & Ratings</span>
+                      <span>{t('reviews.reviews_and_ratings') || 'Reviews & Ratings'}</span>
                     </h3>
                     <p className="text-xs text-white/50 mt-1">
-                      {propertyReviews.length} verified review{propertyReviews.length === 1 ? '' : 's'} for this listing
+                      {propertyReviews.length} {t('reviews.verified_reviews_count') || 'verified review(s) for this listing'}
                     </p>
                   </div>
                   {avgRating && (
@@ -730,7 +761,7 @@ export default function PropertyDetails({
                 {/* Review List */}
                 <div className="space-y-4 max-h-96 overflow-y-auto pr-1">
                   {propertyReviews.length === 0 ? (
-                    <p className="text-xs text-white/40 italic py-3">No reviews submitted yet. Be the first to leave a review!</p>
+                    <p className="text-xs text-white/40 italic py-3">{t('reviews.no_reviews_yet') || 'No reviews yet.'}</p>
                   ) : (
                     propertyReviews.map(r => (
                       <div key={r.id} className="bg-[#12121a] p-4 rounded-2xl border border-white/5 space-y-2">
@@ -757,7 +788,7 @@ export default function PropertyDetails({
                               onClick={() => deleteReview(r.id)}
                               className="text-[10px] text-rose-400 hover:text-rose-300 flex items-center gap-1 cursor-pointer"
                             >
-                              <Trash2 className="w-3 h-3" /> Delete
+                              <Trash2 className="w-3 h-3" /> {t('common.delete') || 'Delete'}
                             </button>
                           </div>
                         )}
@@ -768,7 +799,7 @@ export default function PropertyDetails({
 
                 {/* Submit Review Form */}
                 <form onSubmit={handleReviewSubmit} className="pt-4 border-t border-white/10 space-y-3">
-                  <h4 className="text-xs font-bold text-white uppercase tracking-wider">Leave a Review</h4>
+                  <h4 className="text-xs font-bold text-white uppercase tracking-wider">{t('reviews.leave_review') || 'Leave a Review'}</h4>
                   
                   {reviewMsg && (
                     <div className={`p-3 rounded-xl text-xs font-semibold ${reviewMsg.type === 'success' ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 'bg-rose-500/20 text-rose-300 border border-rose-500/30'}`}>
@@ -777,7 +808,7 @@ export default function PropertyDetails({
                   )}
 
                   <div className="flex items-center gap-2">
-                    <span className="text-xs text-white/60">Rating:</span>
+                    <span className="text-xs text-white/60">{t('reviews.rating') || 'Rating'}:</span>
                     <div className="flex text-amber-400 gap-1">
                       {[1, 2, 3, 4, 5].map(s => (
                         <button
@@ -794,7 +825,7 @@ export default function PropertyDetails({
 
                   <textarea
                     rows={3}
-                    placeholder="Share your experience with this listing or seller..."
+                    placeholder={t('reviews.placeholder') || 'Share your experience with this listing or seller...'}
                     value={reviewComment}
                     onChange={e => setReviewComment(e.target.value)}
                     className="w-full p-3 bg-[#12121a] border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white focus:outline-none transition resize-none font-light placeholder-zinc-600"
@@ -805,7 +836,7 @@ export default function PropertyDetails({
                     disabled={reviewSubmitting}
                     className="bg-amber-500 hover:bg-amber-400 text-black font-extrabold text-xs uppercase tracking-wider px-5 py-2.5 rounded-xl transition cursor-pointer disabled:opacity-50"
                   >
-                    {reviewSubmitting ? 'Submitting...' : 'Submit Review'}
+                    {reviewSubmitting ? (t('reviews.submitting') || 'Submitting...') : (t('reviews.submit_review') || 'Submit Review')}
                   </button>
                 </form>
               </div>

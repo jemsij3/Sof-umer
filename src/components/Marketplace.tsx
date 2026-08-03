@@ -1388,7 +1388,7 @@ export default function Marketplace({
                         : 'text-white/60 hover:text-white'
                     }`}
                   >
-                    {st === 'All' ? 'All Types' : st}
+                    {st === 'All' ? (t('wholesale.all_types') || 'All Types') : st === 'Retail' ? (t('wholesale.retail') || 'Retail') : (t('wholesale.wholesale') || 'Wholesale')}
                   </button>
                 ))}
               </div>
@@ -1960,28 +1960,36 @@ function PropertyCard({ property, onSelect, favorites, onToggleFav, onReport, t,
 
   return (
     <div className="bg-[#0d0d12]/80 rounded-3xl overflow-hidden border border-white/5 hover:border-white/20 transition-all duration-300 flex flex-col group relative shadow-lg hover:shadow-2xl">
-      {/* Category Tag overlay */}
-      {(() => {
-        if (!property.category) return null;
-        const catLower = (property.category || '').toLowerCase().trim();
-        let badgeText = '';
-        if (catLower === 'buy' || catLower === 'for sale' || catLower === 'sale') {
-          badgeText = t('cat_buy') || 'For Sale';
-        } else if (catLower === 'rent' || catLower === 'for rent') {
-          badgeText = t('cat_rent') || 'For Rent';
-        } else if (
-          catLower !== (property.propertyType || '').toLowerCase().trim() &&
-          catLower !== (property.majorCategory || '').toLowerCase().trim()
-        ) {
-          badgeText = property.category;
-        }
-        if (!badgeText) return null;
-        return (
-          <span className="absolute top-4 left-4 z-10 text-[9px] font-black uppercase tracking-widest px-3 py-1.5 rounded-xl shadow-md bg-[#050505]/80 backdrop-blur-md text-amber-500 border border-white/10">
-            {badgeText}
+      {/* Category & Wholesale Tag overlay */}
+      <div className="absolute top-4 left-4 z-10 flex flex-wrap gap-1.5 items-center max-w-[70%]">
+        {(() => {
+          if (!property.category) return null;
+          const catLower = (property.category || '').toLowerCase().trim();
+          let badgeText = '';
+          if (catLower === 'buy' || catLower === 'for sale' || catLower === 'sale') {
+            badgeText = t('cat_buy') || 'For Sale';
+          } else if (catLower === 'rent' || catLower === 'for rent') {
+            badgeText = t('cat_rent') || 'For Rent';
+          } else if (
+            catLower !== (property.propertyType || '').toLowerCase().trim() &&
+            catLower !== (property.majorCategory || '').toLowerCase().trim()
+          ) {
+            badgeText = property.category;
+          }
+          if (!badgeText) return null;
+          return (
+            <span className="text-[9px] font-black uppercase tracking-widest px-3 py-1.5 rounded-xl shadow-md bg-[#050505]/80 backdrop-blur-md text-amber-500 border border-white/10">
+              {badgeText}
+            </span>
+          );
+        })()}
+
+        {((property as any).sellingType === 'Wholesale' || (property as any).sellingType === 'Retail & Wholesale') && (
+          <span className="text-[9px] font-black uppercase tracking-widest px-2.5 py-1.5 rounded-xl shadow-md bg-amber-500 text-black border border-amber-400 font-sans">
+            📦 {t('wholesale.wholesale') || 'Wholesale'}
           </span>
-        );
-      })()}
+        )}
+      </div>
 
       {/* Save favorite toggle */}
       <button

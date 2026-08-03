@@ -1364,22 +1364,7 @@ export default function AuthScreen({ initialMode }: AuthScreenProps) {
                     </button>
                   )}
 
-                  {/* Option 2: jemaljima@gmail.com */}
-                  <button
-                    type="button"
-                    onClick={() => executeGoogleLogin('jemaljima@gmail.com', 'Jemal jimma')}
-                    className="w-full flex items-center gap-3 p-3.5 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/5 hover:border-white/10 text-left transition cursor-pointer"
-                  >
-                    <div className="w-8 h-8 rounded-full bg-blue-500 text-white flex items-center justify-center text-sm font-bold uppercase">
-                      J
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-white">Jemal jimma</p>
-                      <p className="text-xs text-white/40">jemaljima@gmail.com</p>
-                    </div>
-                  </button>
-
-                  {/* Option 4: Use another account */}
+                  {/* Option: Use Google account */}
                   <button
                     type="button"
                     onClick={() => setIsUsingCustomGoogle(true)}
@@ -1389,8 +1374,8 @@ export default function AuthScreen({ initialMode }: AuthScreenProps) {
                       +
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-white/80">Use another account</p>
-                      <p className="text-xs text-white/30">Enter your Google account email address</p>
+                      <p className="text-sm font-medium text-white/80">Use another Google account</p>
+                      <p className="text-xs text-white/30">Enter your Google email address</p>
                     </div>
                   </button>
                 </div>
@@ -1404,7 +1389,7 @@ export default function AuthScreen({ initialMode }: AuthScreenProps) {
                       value={customGoogleEmail}
                       onChange={e => setCustomGoogleEmail(e.target.value)}
                       className="w-full px-4 py-2.5 bg-[#0d0d12] border border-white/10 rounded-xl text-white placeholder-white/20 text-sm focus:outline-none focus:border-amber-500 transition"
-                      placeholder="e.g. jemaljima@gmail.com"
+                      placeholder="name@gmail.com"
                     />
                   </div>
                   <div>
@@ -1414,7 +1399,7 @@ export default function AuthScreen({ initialMode }: AuthScreenProps) {
                       value={customGoogleName}
                       onChange={e => setCustomGoogleName(e.target.value)}
                       className="w-full px-4 py-2.5 bg-[#0d0d12] border border-white/10 rounded-xl text-white placeholder-white/20 text-sm focus:outline-none focus:border-amber-500 transition"
-                      placeholder="e.g. Jemal jimma"
+                      placeholder="Full Name"
                     />
                   </div>
 
