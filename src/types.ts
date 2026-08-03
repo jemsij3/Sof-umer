@@ -112,6 +112,31 @@ export interface Property {
   isTopAd?: boolean;
   promotionExpiresAt?: string; // ISO date string
   approvalStatus?: 'approved' | 'pending' | 'rejected';
+
+  // Wholesale Selling extensions
+  sellingType?: 'retail' | 'wholesale' | 'retail_wholesale';
+  businessType?: 'Manufacturer' | 'Wholesaler' | 'Distributor' | 'Importer' | 'Exporter' | 'Retailer' | 'Farmer' | 'Cooperative' | 'Other' | string;
+  wholesalePrice?: number;
+  minimumOrderQuantity?: number;
+  wholesaleUnit?: string;
+  deliveryOptions?: string[];
+  wholesaleNotes?: string;
+}
+
+export interface Review {
+  id: string;
+  propertyId?: string;
+  propertyTitle?: string;
+  sellerId: string;
+  sellerName?: string;
+  buyerId: string;
+  buyerName: string;
+  buyerEmail?: string;
+  rating: number; // 1 to 5
+  title?: string;
+  comment: string;
+  status: 'active' | 'hidden' | 'flagged';
+  createdAt: string;
 }
 
 export interface PaymentMethod {

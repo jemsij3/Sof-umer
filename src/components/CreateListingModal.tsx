@@ -11,7 +11,7 @@ import {
 import { 
   X, Building, DollarSign, Plus, Trash2, Camera, Upload, Car, ShoppingBag, 
   Briefcase, Wrench, Calendar, Info, Check, ArrowRight, ArrowLeft, Eye, 
-  Zap, Crown, ShieldCheck, CreditCard, Sparkles, Star, Tag, MapPin, Phone, User as UserIcon, Store
+  Zap, Crown, ShieldCheck, CreditCard, Sparkles, Star, Tag, MapPin, Phone, User as UserIcon, Store, Package
 } from 'lucide-react';
 
 interface CreateListingModalProps {
@@ -1505,6 +1505,20 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
         }
       }
     }
+
+    // Wholesale validation
+    const st = fieldsState.sellingType || 'Retail';
+    if (st === 'Wholesale' || st === 'Retail & Wholesale') {
+      if (!fieldsState.wholesalePrice || Number(fieldsState.wholesalePrice) <= 0) {
+        setError('Please enter a valid Wholesale Price.');
+        return;
+      }
+      if (!fieldsState.minimumOrderQuantity || Number(fieldsState.minimumOrderQuantity) < 1) {
+        setError('Please enter a valid Minimum Order Quantity (MOQ >= 1).');
+        return;
+      }
+    }
+
     setError('');
     setCurrentStep(4); // Advance to Preview
   };
@@ -1582,7 +1596,14 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
         approvalStatus: currentUser?.role === 'admin' ? 'approved' : 'pending',
         verificationStatus: currentUser?.role === 'admin' ? 'verified' : 'pending',
         isVerifiedListing: currentUser?.role === 'admin',
-        subCategoryId: computedSubcatId || undefined
+        subCategoryId: computedSubcatId || undefined,
+        sellingType: fieldsState.sellingType || 'Retail',
+        businessType: (fieldsState.sellingType === 'Wholesale' || fieldsState.sellingType === 'Retail & Wholesale') ? (fieldsState.businessType || 'Wholesaler / Distributor') : undefined,
+        wholesalePrice: (fieldsState.sellingType === 'Wholesale' || fieldsState.sellingType === 'Retail & Wholesale') && fieldsState.wholesalePrice ? Number(fieldsState.wholesalePrice) : undefined,
+        minimumOrderQuantity: (fieldsState.sellingType === 'Wholesale' || fieldsState.sellingType === 'Retail & Wholesale') && fieldsState.minimumOrderQuantity ? Number(fieldsState.minimumOrderQuantity) : undefined,
+        wholesaleUnit: (fieldsState.sellingType === 'Wholesale' || fieldsState.sellingType === 'Retail & Wholesale') ? (fieldsState.wholesaleUnit || 'Pieces (Pcs)') : undefined,
+        deliveryOptions: (fieldsState.sellingType === 'Wholesale' || fieldsState.sellingType === 'Retail & Wholesale') && Array.isArray(fieldsState.deliveryOptions) ? fieldsState.deliveryOptions : [],
+        wholesaleNotes: (fieldsState.sellingType === 'Wholesale' || fieldsState.sellingType === 'Retail & Wholesale') ? (fieldsState.wholesaleNotes || '') : undefined
       };
 
       const authToken = localStorage.getItem('sof_umer_token') || '';
@@ -2076,6 +2097,180 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
                     );
                   })}
                 </div>
+
+                {/* Wholesale Selling Enhancement Section */}
+                <div className="bg-amber-500/5 border border-amber-500/20 p-5 rounded-2xl space-y-4 mt-5">
+                  <div className="flex items-center gap-2 text-amber-400 font-bold text-xs uppercase tracking-wider">
+                    <Package className="w-4 h-4 text-amber-500" />
+                    <span>📦 Selling Type & Wholesale Configuration</span>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="block text-[11px] font-bold text-white/80 uppercase tracking-wider">
+                      Selling Type *
+                    </label>
+                    <div className="grid grid-cols-3 gap-3">
+                      {(['Retail', 'Wholesale', 'Retail & Wholesale'] as const).map(st => (
+                        <button
+                          key={st}
+                          type="button"
+                          onClick={() => handleFieldChange('sellingType', st)}
+                          className={`p-3 rounded-xl border text-xs font-semibold transition flex items-center justify-center gap-2 cursor-pointer ${
+                            (fieldsState.sellingType || 'Retail') === st
+                              ? 'bg-amber-500 text-black border-amber-500 font-bold shadow-md'
+                              : 'bg-zinc-900 border-white/10 text-white/80 hover:border-amber-500/40'
+                          }`}
+                        >
+                          <input
+                            type="radio"
+                            name="sellingType"
+                            checked={(fieldsState.sellingType || 'Retail') === st}
+                            onChange={() => {}}
+                            className="accent-black pointer-events-none"
+                          />
+                          <span>{st}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {((fieldsState.sellingType || 'Retail') === 'Wholesale' || (fieldsState.sellingType || 'Retail') === 'Retail & Wholesale') && (
+                    <div className="space-y-4 pt-3 border-t border-amber-500/15 animate-in fade-in duration-200">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {/* Business Type */}
+                        <div>
+                          <label className="block text-[11px] font-bold text-white/80 uppercase tracking-wider mb-1">
+                            🏢 Business Type *
+                          </label>
+                          <select
+                            value={fieldsState.businessType || 'Wholesaler / Distributor'}
+                            onChange={e => handleFieldChange('businessType', e.target.value)}
+                            className="w-full p-3 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white focus:outline-none transition"
+                          >
+                            <option value="Manufacturer">Manufacturer</option>
+                            <option value="Importer">Importer</option>
+                            <option value="Wholesaler / Distributor">Wholesaler / Distributor</option>
+                            <option value="Authorized Agent">Authorized Agent</option>
+                            <option value="Local Supplier">Local Supplier</option>
+                          </select>
+                        </div>
+
+                        {/* Wholesale Unit */}
+                        <div>
+                          <label className="block text-[11px] font-bold text-white/80 uppercase tracking-wider mb-1">
+                            📏 Wholesale Unit *
+                          </label>
+                          <select
+                            value={fieldsState.wholesaleUnit || 'Pieces (Pcs)'}
+                            onChange={e => handleFieldChange('wholesaleUnit', e.target.value)}
+                            className="w-full p-3 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white focus:outline-none transition"
+                          >
+                            <option value="Pieces (Pcs)">Pieces (Pcs)</option>
+                            <option value="Cartons / Boxes">Cartons / Boxes</option>
+                            <option value="Kilograms (Kg)">Kilograms (Kg)</option>
+                            <option value="Tons">Tons</option>
+                            <option value="Meters">Meters</option>
+                            <option value="Sets">Sets</option>
+                            <option value="Pairs">Pairs</option>
+                            <option value="Dozens">Dozens</option>
+                          </select>
+                        </div>
+
+                        {/* Wholesale Price */}
+                        <div>
+                          <label className="block text-[11px] font-bold text-white/80 uppercase tracking-wider mb-1">
+                            💰 Wholesale Price ({currency}) *
+                          </label>
+                          <div className="relative">
+                            <span className="absolute left-3 top-3 text-xs text-amber-500 font-bold">{currency}</span>
+                            <input
+                              type="number"
+                              min="0"
+                              required
+                              placeholder="e.g. 500"
+                              value={fieldsState.wholesalePrice !== undefined ? fieldsState.wholesalePrice : ''}
+                              onChange={e => handleFieldChange('wholesalePrice', e.target.value === '' ? '' : Number(e.target.value))}
+                              className="w-full pl-12 pr-3 py-3 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white focus:outline-none transition"
+                            />
+                          </div>
+                        </div>
+
+                        {/* Minimum Order Quantity */}
+                        <div>
+                          <label className="block text-[11px] font-bold text-white/80 uppercase tracking-wider mb-1">
+                            📦 Minimum Order Quantity (MOQ) *
+                          </label>
+                          <input
+                            type="number"
+                            min="1"
+                            required
+                            placeholder="e.g. 10"
+                            value={fieldsState.minimumOrderQuantity !== undefined ? fieldsState.minimumOrderQuantity : ''}
+                            onChange={e => handleFieldChange('minimumOrderQuantity', e.target.value === '' ? '' : Number(e.target.value))}
+                            className="w-full p-3 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white focus:outline-none transition"
+                          />
+                        </div>
+                      </div>
+
+                      {/* Delivery Options */}
+                      <div className="space-y-2 pt-2">
+                        <label className="block text-[11px] font-bold text-white/80 uppercase tracking-wider">
+                          🚚 Delivery Options
+                        </label>
+                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                          {[
+                            'Store Pickup',
+                            'Local Delivery',
+                            'Nationwide Shipping',
+                            'Buyer Pays Shipping',
+                            'Free Shipping for Bulk Orders'
+                          ].map(opt => {
+                            const currentDel: string[] = Array.isArray(fieldsState.deliveryOptions) ? fieldsState.deliveryOptions : [];
+                            const isChecked = currentDel.includes(opt);
+                            return (
+                              <label
+                                key={opt}
+                                className={`p-2.5 rounded-xl border text-[11px] font-medium flex items-center gap-2 cursor-pointer transition ${
+                                  isChecked
+                                    ? 'bg-amber-500/20 border-amber-500 text-amber-300'
+                                    : 'bg-zinc-900/80 border-white/10 text-white/70 hover:border-white/20'
+                                }`}
+                              >
+                                <input
+                                  type="checkbox"
+                                  checked={isChecked}
+                                  onChange={e => {
+                                    if (e.target.checked) {
+                                      handleFieldChange('deliveryOptions', [...currentDel, opt]);
+                                    } else {
+                                      handleFieldChange('deliveryOptions', currentDel.filter(d => d !== opt));
+                                    }
+                                  }}
+                                  className="accent-amber-500 rounded"
+                                />
+                                <span>{opt}</span>
+                              </label>
+                            );
+                          })}
+                        </div>
+                      </div>
+
+                      {/* Wholesale Notes / Terms */}
+                      <div className="space-y-1 pt-1">
+                        <label className="block text-[11px] font-bold text-white/80 uppercase tracking-wider">
+                          📝 Additional Wholesale Terms / Notes (Optional)
+                        </label>
+                        <textarea
+                          rows={2}
+                          placeholder="e.g. 50% advance payment required, lead time 3-5 days for bulk orders..."
+                          value={fieldsState.wholesaleNotes || ''}
+                          onChange={e => handleFieldChange('wholesaleNotes', e.target.value)}
+                          className="w-full p-3 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white focus:outline-none transition resize-none font-light placeholder-zinc-600"
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
               </form>
             )}
 
@@ -2124,8 +2319,25 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
                         <span className="text-lg font-extrabold text-amber-400 font-mono block">
                           {fieldsState.price ? `${Number(fieldsState.price).toLocaleString()} ${currency}` : d.contactPrice}
                         </span>
+                        {((fieldsState.sellingType || 'Retail') === 'Wholesale' || (fieldsState.sellingType || 'Retail') === 'Retail & Wholesale') && fieldsState.wholesalePrice && (
+                          <span className="text-[10px] text-amber-300 font-bold block mt-0.5">
+                            Wholesale: {Number(fieldsState.wholesalePrice).toLocaleString()} {currency} (MOQ: {fieldsState.minimumOrderQuantity || 1} {fieldsState.wholesaleUnit || 'Pcs'})
+                          </span>
+                        )}
                       </div>
                     </div>
+
+                    {((fieldsState.sellingType || 'Retail') === 'Wholesale' || (fieldsState.sellingType || 'Retail') === 'Retail & Wholesale') && (
+                      <div className="bg-amber-500/10 border border-amber-500/20 p-2.5 rounded-xl flex items-center justify-between text-[11px] text-amber-300">
+                        <div className="flex items-center gap-1.5 font-bold">
+                          <Package className="w-3.5 h-3.5 text-amber-400" />
+                          <span>{fieldsState.sellingType} &bull; {fieldsState.businessType || 'Wholesaler'}</span>
+                        </div>
+                        <span className="text-[10px] text-amber-400/80 font-mono">
+                          MOQ: {fieldsState.minimumOrderQuantity || 1} {fieldsState.wholesaleUnit || 'Pcs'}
+                        </span>
+                      </div>
+                    )}
 
                     {/* Specifications Grid */}
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 pt-2 border-t border-white/5">

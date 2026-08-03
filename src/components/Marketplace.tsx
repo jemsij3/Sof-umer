@@ -241,6 +241,7 @@ export default function Marketplace({
   const [filterElecStorage, setFilterElecStorage] = useState<string>('All');
   const [filterJobType, setFilterJobType] = useState<string>('All');
   const [filterJobIndustry, setFilterJobIndustry] = useState<string>('All');
+  const [filterSellingType, setFilterSellingType] = useState<string>('All');
 
   const [sortBy, setSortBy] = useState<string>('newest');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
@@ -617,6 +618,15 @@ export default function Marketplace({
       list = list.filter(p => extractString(p.description, currentLanguage).toLowerCase().includes(ind) || extractString(p.title, currentLanguage).toLowerCase().includes(ind));
     }
 
+    // 15. Selling Type (Retail / Wholesale / Retail & Wholesale)
+    if (filterSellingType !== 'All') {
+      if (filterSellingType === 'Wholesale') {
+        list = list.filter(p => p.sellingType === 'Wholesale' || p.sellingType === 'Retail & Wholesale');
+      } else if (filterSellingType === 'Retail') {
+        list = list.filter(p => !p.sellingType || p.sellingType === 'Retail' || p.sellingType === 'Retail & Wholesale');
+      }
+    }
+
     // Sort options: Newest, Oldest, Lowest Price, Highest Price, Most Popular, Best Rated
     list.sort((a, b) => {
       if (sortBy === 'newest') {
@@ -755,6 +765,7 @@ export default function Marketplace({
     setFilterElecStorage('All');
     setFilterJobType('All');
     setFilterJobIndustry('All');
+    setFilterSellingType('All');
     setSelectedSubcategory(null);
   };
 
@@ -1364,7 +1375,24 @@ export default function Marketplace({
               </p>
             </div>
 
-            <div className="flex items-center gap-3 w-full sm:w-auto justify-end">
+            <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto justify-end">
+              {/* Selling Type Quick Filter */}
+              <div className="flex items-center bg-[#12121a] p-1 rounded-xl border border-white/5">
+                {(['All', 'Retail', 'Wholesale'] as const).map(st => (
+                  <button
+                    key={st}
+                    onClick={() => setFilterSellingType(st)}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
+                      filterSellingType === st
+                        ? 'bg-amber-500 text-black font-bold shadow'
+                        : 'text-white/60 hover:text-white'
+                    }`}
+                  >
+                    {st === 'All' ? 'All Types' : st}
+                  </button>
+                ))}
+              </div>
+
               {/* Sort selector */}
               <div className="flex items-center gap-2">
                 <span className="text-[10px] font-bold text-white/30 uppercase tracking-widest hidden md:inline">Sort By</span>

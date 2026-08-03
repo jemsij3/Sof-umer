@@ -78,7 +78,8 @@ import {
   JobOpening,
   SupportTicket,
   PropertyOffer,
-  FAQItem
+  FAQItem,
+  Review
 } from './src/types';
 import { staticTranslations } from './src/lib/translations';
 
@@ -147,6 +148,7 @@ const offerSchema = new mongoose.Schema({ id: { type: String, required: true, un
 const languageSchema = new mongoose.Schema({ code: { type: String, required: true, unique: true } }, { strict: false });
 const translationSchema = new mongoose.Schema({ key: { type: String, required: true, unique: true } }, { strict: false });
 const faqSchema = new mongoose.Schema({ id: { type: String, required: true, unique: true } }, { strict: false });
+const reviewSchema = new mongoose.Schema({ id: { type: String, required: true, unique: true } }, { strict: false });
 const appSettingsSchema = new mongoose.Schema({ key: { type: String, required: true, unique: true } }, { strict: false });
 
 export const UserModel = mongoose.models.User || mongoose.model('User', userSchema);
@@ -165,6 +167,7 @@ export const OfferModel = mongoose.models.Offer || mongoose.model('Offer', offer
 export const LanguageModel = mongoose.models.Language || mongoose.model('Language', languageSchema);
 export const TranslationModel = mongoose.models.Translation || mongoose.model('Translation', translationSchema);
 export const FaqModel = mongoose.models.Faq || mongoose.model('Faq', faqSchema);
+export const ReviewModel = mongoose.models.Review || mongoose.model('Review', reviewSchema);
 export const AppSettingsModel = mongoose.models.AppSettings || mongoose.model('AppSettings', appSettingsSchema);
 
 async function connectMongo(): Promise<boolean> {
@@ -818,7 +821,8 @@ const getInitialData = () => {
     jobOpenings,
     supportTickets,
     faqs: initialFaqs,
-    offers: [] as PropertyOffer[]
+    offers: [] as PropertyOffer[],
+    reviews: [] as Review[]
   };
 };
 
@@ -976,6 +980,7 @@ async function saveToMongo() {
       syncCollectionToMongo(LanguageModel, localDb.languages || [], 'code'),
       syncCollectionToMongo(TranslationModel, localDb.translations || [], 'key'),
       syncCollectionToMongo(FaqModel, (localDb as any).faqs || [], 'id'),
+      syncCollectionToMongo(ReviewModel, (localDb as any).reviews || [], 'id'),
       (async () => {
         if ((localDb as any).appSettings) {
           await AppSettingsModel.updateOne(
@@ -1039,6 +1044,7 @@ async function loadFromMongo(): Promise<boolean> {
       languages,
       translations,
       faqs,
+      reviews,
       appSettingsDoc
     ] = await Promise.all([
       fetchCollection(UserModel),
@@ -1057,6 +1063,7 @@ async function loadFromMongo(): Promise<boolean> {
       fetchCollection(LanguageModel),
       fetchCollection(TranslationModel),
       fetchCollection(FaqModel),
+      fetchCollection(ReviewModel),
       fetchAppSettings()
     ]);
 
@@ -1077,6 +1084,7 @@ async function loadFromMongo(): Promise<boolean> {
       languages: languages as any,
       translations: translations as any,
       faqs: faqs as any,
+      reviews: reviews as any,
       appSettings: appSettingsDoc ? (appSettingsDoc as any).data : (getInitialData() as any).appSettings
     } as any;
 
@@ -1423,11 +1431,13 @@ async function startServer() {
 
   // Global CORS Middleware
   app.use((req, res, next) => {
-    res.header('Access-Control-Allow-Origin', '*');
+    const origin = req.headers.origin || '*';
+    res.header('Access-Control-Allow-Origin', origin);
+    res.header('Access-Control-Allow-Credentials', 'true');
     res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
-    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization, X-Access-Token, X-Requested-By');
     if (req.method === 'OPTIONS') {
-      return res.sendStatus(200);
+      return res.status(200).end();
     }
     next();
   });
@@ -3797,6 +3807,157 @@ async function startServer() {
     localDb.paymentMethods = localDb.paymentMethods.filter(m => m.id !== id);
     await saveDb();
     res.json({ success: true });
+  });
+
+  // Receipts Endpoints (Manual Receipt Verification Desk)
+  // Reviews & Ratings Endpoints
+  app.get('/api/reviews', async (req, res) => {
+    try {
+      if (!localDb.reviews) localDb.reviews = [];
+      const { propertyId, sellerId, status } = req.query;
+      let list = localDb.reviews;
+
+      if (propertyId) {
+        list = list.filter(r => r.propertyId === String(propertyId));
+      }
+      if (sellerId) {
+        list = list.filter(r => r.sellerId === String(sellerId));
+      }
+
+      // Check if caller is admin
+      const authHeader = req.headers.authorization;
+      let isAdminUser = false;
+      if (authHeader && authHeader.startsWith('Bearer ')) {
+        const token = authHeader.split(' ')[1];
+        try {
+          const decoded = jwt.verify(token, JWT_SECRET) as any;
+          if (decoded && (decoded.role === 'admin' || decoded.email === 'jemaljima@gmail.com')) {
+            isAdminUser = true;
+          }
+        } catch (_) {}
+      }
+
+      if (!isAdminUser) {
+        list = list.filter(r => !r.status || r.status === 'active');
+      } else if (status) {
+        list = list.filter(r => r.status === String(status));
+      }
+
+      return res.json(list);
+    } catch (err: any) {
+      return res.status(500).json({ error: err.message || 'Failed to fetch reviews' });
+    }
+  });
+
+  app.post('/api/reviews', requireAuth, async (req, res) => {
+    try {
+      if (!localDb.reviews) localDb.reviews = [];
+      const currentUser = (req as any).user;
+      const { propertyId, sellerId, rating, title, comment } = req.body;
+
+      if (!sellerId) {
+        return res.status(400).json({ error: 'sellerId is required.' });
+      }
+
+      const parsedRating = Number(rating);
+      if (!parsedRating || parsedRating < 1 || parsedRating > 5) {
+        return res.status(400).json({ error: 'Rating must be a number between 1 and 5.' });
+      }
+
+      if (!comment || typeof comment !== 'string' || comment.trim().length === 0) {
+        return res.status(400).json({ error: 'Comment is required.' });
+      }
+
+      // Prevent self-reviewing
+      if (currentUser.id === sellerId) {
+        return res.status(400).json({ error: 'You cannot review your own listing or seller profile.' });
+      }
+
+      // Check duplicate review by same buyer for same property
+      if (propertyId) {
+        const existingPropertyReview = localDb.reviews.find(r => r.buyerId === currentUser.id && r.propertyId === propertyId && r.status !== 'hidden');
+        if (existingPropertyReview) {
+          return res.status(400).json({ error: 'You have already submitted a review for this listing.' });
+        }
+      }
+
+      let propertyTitle = '';
+      if (propertyId) {
+        const prop = localDb.properties.find(p => p.id === propertyId);
+        if (prop) {
+          propertyTitle = typeof prop.title === 'string' ? prop.title : JSON.stringify(prop.title);
+        }
+      }
+
+      const seller = localDb.users.find(u => u.id === sellerId);
+      const sellerName = seller?.fullName || 'Seller';
+
+      const newReview: Review = {
+        id: 'rev-' + Date.now(),
+        propertyId: propertyId || '',
+        propertyTitle: propertyTitle || '',
+        sellerId,
+        sellerName,
+        buyerId: currentUser.id,
+        buyerName: currentUser.fullName || 'Verified Buyer',
+        buyerEmail: currentUser.email || '',
+        rating: parsedRating,
+        title: title || '',
+        comment: comment.trim(),
+        status: 'active',
+        createdAt: new Date().toISOString()
+      };
+
+      localDb.reviews.unshift(newReview);
+      await saveDb();
+
+      return res.status(201).json({ success: true, review: newReview });
+    } catch (err: any) {
+      return res.status(500).json({ error: err.message || 'Failed to submit review' });
+    }
+  });
+
+  app.put('/api/reviews/:id/status', requireAdmin, async (req, res) => {
+    try {
+      if (!localDb.reviews) localDb.reviews = [];
+      const { id } = req.params;
+      const { status } = req.body;
+
+      const idx = localDb.reviews.findIndex(r => r.id === id);
+      if (idx === -1) {
+        return res.status(404).json({ error: 'Review not found' });
+      }
+
+      if (!['active', 'hidden', 'flagged'].includes(status)) {
+        return res.status(400).json({ error: 'Invalid status' });
+      }
+
+      localDb.reviews[idx].status = status;
+      await saveDb();
+
+      return res.json({ success: true, review: localDb.reviews[idx] });
+    } catch (err: any) {
+      return res.status(500).json({ error: err.message || 'Failed to update review status' });
+    }
+  });
+
+  app.delete('/api/reviews/:id', requireAdmin, async (req, res) => {
+    try {
+      if (!localDb.reviews) localDb.reviews = [];
+      const { id } = req.params;
+
+      const review = localDb.reviews.find(r => r.id === id);
+      if (!review) {
+        return res.status(404).json({ error: 'Review not found' });
+      }
+
+      localDb.reviews = localDb.reviews.filter(r => r.id !== id);
+      await saveDb();
+
+      return res.json({ success: true });
+    } catch (err: any) {
+      return res.status(500).json({ error: err.message || 'Failed to delete review' });
+    }
   });
 
   // Receipts Endpoints (Manual Receipt Verification Desk)

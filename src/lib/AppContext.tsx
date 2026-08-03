@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { User, Property, PaymentMethod, PaymentReceipt, Inquiry, Advertisement, Language, TranslationKey, AppNotification, SafetyReport, Category, AppFeature, JobOpening, SupportTicket, PropertyOffer, FAQItem } from '../types';
+import { User, Property, PaymentMethod, PaymentReceipt, Inquiry, Advertisement, Language, TranslationKey, AppNotification, SafetyReport, Category, AppFeature, JobOpening, SupportTicket, PropertyOffer, FAQItem, Review } from '../types';
 import { staticTranslations } from './translations';
 import { setGlobalTranslations, getTranslatedCategoryName, getTranslatedSubcategoryName, getTranslatedFieldLabel, getTranslatedOption } from './categoriesData';
 
@@ -133,6 +133,12 @@ interface AppContextType {
   toggleNotificationRead: (id: string) => Promise<boolean>;
   deleteInquiry: (id: string) => Promise<boolean>;
   deleteAllInquiries: () => Promise<boolean>;
+
+  // Reviews & Ratings
+  reviews: Review[];
+  submitReview: (reviewData: { propertyId?: string; sellerId: string; rating: number; title?: string; comment: string }) => Promise<{ success: boolean; error?: string; review?: Review }>;
+  updateReviewStatus: (reviewId: string, status: 'active' | 'hidden' | 'flagged') => Promise<boolean>;
+  deleteReview: (reviewId: string) => Promise<boolean>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -159,6 +165,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const [supportTickets, setSupportTickets] = useState<SupportTicket[]>([]);
   const [offers, setOffers] = useState<PropertyOffer[]>([]);
   const [faqs, setFaqs] = useState<FAQItem[]>([]);
+  const [reviews, setReviews] = useState<Review[]>([]);
   const [systemSettings, setSystemSettings] = useState<SystemSettings>({
     appName: 'SOF-UMER',
     appLogoText: 'SOF-UMER',
@@ -371,7 +378,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         }
       };
 
-      const [langsData, propsData, payData, receiptsData, inqsData, advsData, notifsData, usersData, reportsData, catsData, featsData, jobsData, sysSettingsData, ticketsData, offersData, faqsData] = await Promise.all([
+      const [langsData, propsData, payData, receiptsData, inqsData, advsData, notifsData, usersData, reportsData, catsData, featsData, jobsData, sysSettingsData, ticketsData, offersData, faqsData, reviewsData] = await Promise.all([
         safeFetchJson('/api/languages', { languages: [], translations: [] }),
         safeFetchJson('/api/properties', []),
         safeFetchJson('/api/payment-methods', []),
@@ -387,7 +394,8 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         safeFetchJson('/api/system-settings', null),
         safeFetchJson('/api/support-tickets', []),
         safeFetchJson('/api/offers', []),
-        safeFetchJson('/api/faqs', [])
+        safeFetchJson('/api/faqs', []),
+        safeFetchJson('/api/reviews', [])
       ]);
 
       const activeProperties = propsData || [];
@@ -404,6 +412,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       setUsers(activeUsers);
       setOffers(offersData || []);
       setFaqs(faqsData || []);
+      setReviews(reviewsData || []);
 
       // Keep currentUser updated with latest balance & details from backend
       if (currentUser) {
@@ -948,6 +957,70 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     return false;
   };
 
+  const submitReview = async (reviewData: { propertyId?: string; sellerId: string; rating: number; title?: string; comment: string }): Promise<{ success: boolean; error?: string; review?: Review }> => {
+    try {
+      const authHeader = localStorage.getItem('sof_umer_token') || token;
+      const res = await fetch('/api/reviews', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${authHeader}`
+        },
+        body: JSON.stringify(reviewData)
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        if (data.review) {
+          setReviews(prev => [data.review, ...prev]);
+        }
+        return { success: true, review: data.review };
+      }
+      return { success: false, error: data.error || 'Failed to submit review' };
+    } catch (e: any) {
+      return { success: false, error: e.message || 'Network error' };
+    }
+  };
+
+  const updateReviewStatus = async (reviewId: string, status: 'active' | 'hidden' | 'flagged'): Promise<boolean> => {
+    try {
+      const authHeader = localStorage.getItem('sof_umer_token') || token;
+      const res = await fetch(`/api/reviews/${reviewId}/status`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${authHeader}`
+        },
+        body: JSON.stringify({ status })
+      });
+      if (res.ok) {
+        setReviews(prev => prev.map(r => r.id === reviewId ? { ...r, status } : r));
+        return true;
+      }
+    } catch (e) {
+      console.error('Failed to update review status:', e);
+    }
+    return false;
+  };
+
+  const deleteReview = async (reviewId: string): Promise<boolean> => {
+    try {
+      const authHeader = localStorage.getItem('sof_umer_token') || token;
+      const res = await fetch(`/api/reviews/${reviewId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${authHeader}`
+        }
+      });
+      if (res.ok) {
+        setReviews(prev => prev.filter(r => r.id !== reviewId));
+        return true;
+      }
+    } catch (e) {
+      console.error('Failed to delete review:', e);
+    }
+    return false;
+  };
+
   return (
     <AppContext.Provider value={{
       currentUser,
@@ -1003,7 +1076,11 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       deleteAllNotifications,
       toggleNotificationRead,
       deleteInquiry,
-      deleteAllInquiries
+      deleteAllInquiries,
+      reviews,
+      submitReview,
+      updateReviewStatus,
+      deleteReview
     }}>
       {children}
     </AppContext.Provider>
