@@ -36,31 +36,32 @@ if (isCloudinaryConfigured) {
   console.log('[Storage] Cloudinary environment variables (CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET) not set. System running with direct URI fallback.');
 }
 
-// Utility to upload base64 images to Cloudinary and return secure URL
-async function uploadToCloudinaryIfConfigured(imageStr: string, folder: string = 'sof_umer'): Promise<string> {
-  if (!imageStr || typeof imageStr !== 'string') return imageStr;
+// Utility to upload base64 images and videos to Cloudinary and return secure URL
+async function uploadToCloudinaryIfConfigured(mediaStr: string, folder: string = 'sof_umer'): Promise<string> {
+  if (!mediaStr || typeof mediaStr !== 'string') return mediaStr;
 
   // Preserve existing remote HTTP/HTTPS URLs
-  if (imageStr.startsWith('http://') || imageStr.startsWith('https://')) {
-    return imageStr;
+  if (mediaStr.startsWith('http://') || mediaStr.startsWith('https://')) {
+    return mediaStr;
   }
 
-  // Upload base64 image data to Cloudinary if configured
-  if (isCloudinaryConfigured && imageStr.startsWith('data:image/')) {
+  // Upload base64 image or video data to Cloudinary if configured
+  if (isCloudinaryConfigured && (mediaStr.startsWith('data:image/') || mediaStr.startsWith('data:video/'))) {
     try {
-      const uploadRes = await cloudinary.uploader.upload(imageStr, {
+      const isVideo = mediaStr.startsWith('data:video/');
+      const uploadRes = await cloudinary.uploader.upload(mediaStr, {
         folder: folder,
-        resource_type: 'image',
+        resource_type: isVideo ? 'video' : 'auto',
       });
-      console.log(`[Cloudinary] Image uploaded successfully: ${uploadRes.secure_url}`);
+      console.log(`[Cloudinary] Media uploaded successfully (${isVideo ? 'video' : 'image'}): ${uploadRes.secure_url}`);
       return uploadRes.secure_url;
     } catch (err) {
-      console.error('[Cloudinary] Image upload failed, preserving original input:', err);
-      return imageStr;
+      console.error('[Cloudinary] Media upload failed, preserving original input:', err);
+      return mediaStr;
     }
   }
 
-  return imageStr;
+  return mediaStr;
 }
 import {
   User,
@@ -2910,18 +2911,19 @@ async function startServer() {
 
   app.post('/api/upload', async (req, res) => {
     try {
-      const { image, folder } = req.body;
-      if (!image) {
-        return res.status(400).json({ error: 'Image data is required.' });
+      const { image, media, video, folder } = req.body;
+      const mediaPayload = media || image || video;
+      if (!mediaPayload) {
+        return res.status(400).json({ error: 'Media payload is required.' });
       }
-      const imageUrl = await uploadToCloudinaryIfConfigured(image, folder || 'sof_umer_uploads');
+      const mediaUrl = await uploadToCloudinaryIfConfigured(mediaPayload, folder || 'sof_umer_uploads');
       return res.json({
-        url: imageUrl,
-        isCloudinary: isCloudinaryConfigured && imageUrl.startsWith('http')
+        url: mediaUrl,
+        isCloudinary: isCloudinaryConfigured && mediaUrl.startsWith('http')
       });
     } catch (err: any) {
-      console.error('[Upload] Error processing image upload:', err);
-      return res.status(500).json({ error: err.message || 'Image upload failed' });
+      console.error('[Upload] Error processing media upload:', err);
+      return res.status(500).json({ error: err.message || 'Media upload failed' });
     }
   });
 
@@ -3135,6 +3137,15 @@ async function startServer() {
         }
       }
 
+      let processedVideo = propertyData.video || propertyData.videoUrl || '';
+      if (processedVideo && typeof processedVideo === 'string') {
+        try {
+          processedVideo = await uploadToCloudinaryIfConfigured(processedVideo, 'sof_umer/properties');
+        } catch (videoErr) {
+          console.error('[CloudinaryUploadError] Video upload failed:', videoErr);
+        }
+      }
+
       const planDays = (requestedPlan === 'starter' || requestedPlan === 'basic') ? 3 : requestedPlan === 'premium' ? 7 : requestedPlan === 'vip' ? 30 : 0;
       const computedExpiresAt = planDays > 0 ? new Date(Date.now() + planDays * 24 * 60 * 60 * 1000).toISOString() : (propertyData.promotionExpiresAt || undefined);
 
@@ -3209,6 +3220,8 @@ async function startServer() {
         ...propertyData,
         images: processedImages,
         coverImage: processedCoverImage,
+        video: processedVideo,
+        videoUrl: processedVideo,
         createdBy,
         createdByName,
         createdByEmail,
@@ -3406,6 +3419,13 @@ async function startServer() {
       }
       if (updates.coverImage && typeof updates.coverImage === 'string') {
         updates.coverImage = await uploadToCloudinaryIfConfigured(updates.coverImage, 'sof_umer/properties');
+      }
+      if (updates.video && typeof updates.video === 'string') {
+        updates.video = await uploadToCloudinaryIfConfigured(updates.video, 'sof_umer/properties');
+        updates.videoUrl = updates.video;
+      } else if (updates.videoUrl && typeof updates.videoUrl === 'string') {
+        updates.videoUrl = await uploadToCloudinaryIfConfigured(updates.videoUrl, 'sof_umer/properties');
+        updates.video = updates.videoUrl;
       }
 
       localDb.properties[idx] = { ...property, ...updates };

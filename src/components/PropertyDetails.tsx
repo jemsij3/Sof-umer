@@ -43,6 +43,8 @@ import {
   Check,
   Package,
   Star,
+  Video,
+  Film,
   Trash2
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
@@ -416,6 +418,24 @@ export default function PropertyDetails({
                     <img src={img} alt="Thumb" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                   </button>
                 ))}
+              </div>
+            )}
+
+            {/* Video Showcase / Tour */}
+            {((property as any).video || (property as any).videoUrl) && (
+              <div className="bg-[#0d0d12]/90 rounded-3xl p-5 border border-white/10 shadow-xl text-[#F5F5F4] space-y-3">
+                <div className="flex items-center gap-2 text-amber-400 font-bold text-xs uppercase tracking-wider">
+                  <Video className="w-4 h-4 text-amber-500" />
+                  <span>Video Tour / Showcase</span>
+                </div>
+                <div className="rounded-2xl overflow-hidden border border-white/10 bg-black max-h-[380px] flex justify-center">
+                  <video
+                    src={(property as any).video || (property as any).videoUrl}
+                    controls
+                    preload="metadata"
+                    className="w-full max-h-[380px] object-contain"
+                  />
+                </div>
               </div>
             )}
           </div>

@@ -11,7 +11,8 @@ import {
 import { 
   X, Building, DollarSign, Plus, Trash2, Camera, Upload, Car, ShoppingBag, 
   Briefcase, Wrench, Calendar, Info, Check, ArrowRight, ArrowLeft, Eye, 
-  Zap, Crown, ShieldCheck, CreditCard, Sparkles, Star, Tag, MapPin, Phone, User as UserIcon, Store, Package
+  Zap, Crown, ShieldCheck, CreditCard, Sparkles, Star, Tag, MapPin, Phone, User as UserIcon, Store, Package,
+  Video, Film, Play, AlertCircle, Loader2, CheckCircle2, ArrowUp, ArrowDown
 } from 'lucide-react';
 
 interface CreateListingModalProps {
@@ -1380,21 +1381,187 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (!files || files.length === 0) return;
-
-    for (let i = 0; i < files.length; i++) {
-      const file = files[i];
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const base64String = reader.result as string;
-        if (base64String && !imagesList.includes(base64String)) {
-          setImagesList(prev => [...prev, base64String]);
-        }
-      };
-      reader.readAsDataURL(file);
+    if (e.target.files) {
+      handlePhotoFilesChange(e.target.files);
     }
     e.target.value = '';
+  };
+
+  // Photo Optimization & Handlers
+  const [photoError, setPhotoError] = useState('');
+  const [isCompressingPhotos, setIsCompressingPhotos] = useState(false);
+
+  const compressImage = (file: File, maxDimension = 1920, quality = 0.85): Promise<string> => {
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          let width = img.width;
+          let height = img.height;
+
+          if (width > maxDimension || height > maxDimension) {
+            if (width > height) {
+              height = Math.round((height * maxDimension) / width);
+              width = maxDimension;
+            } else {
+              width = Math.round((width * maxDimension) / height);
+              height = maxDimension;
+            }
+          }
+
+          const canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          if (ctx) {
+            ctx.drawImage(img, 0, 0, width, height);
+            resolve(canvas.toDataURL('image/jpeg', quality));
+          } else {
+            resolve(e.target?.result as string);
+          }
+        };
+        img.onerror = () => resolve(e.target?.result as string);
+        img.src = e.target?.result as string;
+      };
+      reader.onerror = () => resolve('');
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const handlePhotoFilesChange = async (filesList: FileList | null) => {
+    if (!filesList || filesList.length === 0) return;
+    setPhotoError('');
+
+    const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    const validExts = ['jpg', 'jpeg', 'png', 'webp'];
+    const maxPhotos = 10;
+    const maxSizeBytes = 10 * 1024 * 1024; // 10 MB
+
+    const filesArray = Array.from(filesList);
+
+    if (imagesList.length + filesArray.length > maxPhotos) {
+      setPhotoError(t('media.max_photos_exceeded') || `Maximum ${maxPhotos} photos allowed per listing.`);
+      return;
+    }
+
+    for (const file of filesArray) {
+      const ext = file.name.split('.').pop()?.toLowerCase();
+      if (!validTypes.includes(file.type) && !validExts.includes(ext || '')) {
+        setPhotoError(t('media.image_format_invalid') || 'Invalid image format. Supported formats: JPG, JPEG, PNG, WebP.');
+        return;
+      }
+      if (file.size > maxSizeBytes) {
+        setPhotoError(t('media.image_size_exceeded') || 'Image file size exceeds 10 MB limit.');
+        return;
+      }
+    }
+
+    setIsCompressingPhotos(true);
+    try {
+      const compressedResults = await Promise.all(
+        filesArray.map(file => compressImage(file))
+      );
+      const validCompressed = compressedResults.filter(Boolean);
+      setImagesList(prev => [...prev, ...validCompressed].slice(0, maxPhotos));
+    } catch (err) {
+      console.error('Error compressing photos:', err);
+      setPhotoError('Failed to process one or more photo files.');
+    } finally {
+      setIsCompressingPhotos(false);
+    }
+  };
+
+  const handleSetCoverPhoto = (idx: number) => {
+    if (idx === 0) return;
+    setImagesList(prev => {
+      const copy = [...prev];
+      const selected = copy.splice(idx, 1)[0];
+      return [selected, ...copy];
+    });
+  };
+
+  const handleMovePhoto = (idx: number, direction: 'left' | 'right') => {
+    const targetIdx = direction === 'left' ? idx - 1 : idx + 1;
+    if (targetIdx < 0 || targetIdx >= imagesList.length) return;
+    setImagesList(prev => {
+      const copy = [...prev];
+      const temp = copy[idx];
+      copy[idx] = copy[targetIdx];
+      copy[targetIdx] = temp;
+      return copy;
+    });
+  };
+
+  // Video Optimization & Handlers
+  const [videoError, setVideoError] = useState('');
+  const [isVideoUploading, setIsVideoUploading] = useState(false);
+
+  const handleVideoFileChange = async (file: File | null) => {
+    setVideoError('');
+    if (!file) return;
+
+    const validFormats = ['video/mp4', 'video/quicktime', 'video/webm'];
+    const ext = file.name.split('.').pop()?.toLowerCase();
+    const validExts = ['mp4', 'mov', 'webm'];
+
+    if (!validFormats.includes(file.type) && !validExts.includes(ext || '')) {
+      setVideoError(t('media.video_format_invalid') || 'Unsupported video format. Supported: MP4, MOV, WebM.');
+      return;
+    }
+
+    const maxSizeBytes = 50 * 1024 * 1024; // 50 MB
+    if (file.size > maxSizeBytes) {
+      setVideoError(t('media.video_max_size_exceeded') || 'Video file size exceeds maximum limit of 50 MB.');
+      return;
+    }
+
+    setIsVideoUploading(true);
+    try {
+      const tempUrl = URL.createObjectURL(file);
+      const videoEl = document.createElement('video');
+      videoEl.preload = 'metadata';
+      videoEl.src = tempUrl;
+
+      await new Promise<void>((resolve, reject) => {
+        videoEl.onloadedmetadata = () => {
+          URL.revokeObjectURL(tempUrl);
+          if (videoEl.duration > 30.5) {
+            reject(new Error(t('media.video_max_duration_exceeded') || 'Video duration exceeds maximum allowed limit of 30 seconds.'));
+          } else {
+            resolve();
+          }
+        };
+        videoEl.onerror = () => {
+          URL.revokeObjectURL(tempUrl);
+          reject(new Error('Unable to read video metadata. Please select a valid video file.'));
+        };
+      });
+
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64Vid = reader.result as string;
+        setFieldsState(prev => ({
+          ...prev,
+          video: base64Vid,
+          videoUrl: base64Vid
+        }));
+        setIsVideoUploading(false);
+      };
+      reader.readAsDataURL(file);
+    } catch (err: any) {
+      setIsVideoUploading(false);
+      setVideoError(err.message || 'Error processing video file.');
+    }
+  };
+
+  const handleRemoveVideo = () => {
+    setVideoError('');
+    setFieldsState(prev => ({
+      ...prev,
+      video: '',
+      videoUrl: ''
+    }));
   };
 
   const getSubcatDesc = (cat: string, sub: string) => {
@@ -1582,6 +1749,9 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
         area: majorCategory === 'Properties' ? Number(fieldsState.area || 0) : 0,
         amenities: finalAmenities,
         images: imagesList.length > 0 ? imagesList : ['https://images.unsplash.com/photo-1613490493576-7fde63acd811?auto=format&fit=crop&w=1200&q=80'],
+        coverImage: imagesList[0] || '',
+        video: fieldsState.video || fieldsState.videoUrl || '',
+        videoUrl: fieldsState.video || fieldsState.videoUrl || '',
         ownerId: currentUser.role === 'admin' ? (fieldsState.ownerId || '') : currentUser.id,
         ownerName: currentUser.role === 'admin' ? (fieldsState.ownerName || 'Property Owner') : (fieldsState.ownerName || currentUser.fullName || 'Anonymous'),
         contactPhone: fieldsState.contactPhone || (currentUser.role === 'admin' ? '' : '+251911223344'),
@@ -1952,33 +2122,61 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
                     if (field.type === 'images') {
                       return (
                         <div key={field.id} className="col-span-full space-y-4">
-                          <label className="block text-[11px] font-bold text-[#F5F5F4]/70 uppercase tracking-wider">
-                            {d.imgLabel} *
-                          </label>
-                          <p className="text-[10px] text-[#F5F5F4]/40 font-light">{d.imgDesc}</p>
+                          <div className="flex flex-wrap items-center justify-between gap-2">
+                            <div>
+                              <label className="block text-[11px] font-bold text-[#F5F5F4]/70 uppercase tracking-wider">
+                                {t('media.photos_limit_title') || 'Photos & Media (Max 10 Photos, 1 Video)'} *
+                              </label>
+                              <p className="text-[10px] text-[#F5F5F4]/40 font-light mt-0.5">
+                                {t('media.reorder_hint') || 'The first photo is your Cover Photo. Reorder or set any photo as cover.'}
+                              </p>
+                            </div>
+                            <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full border ${imagesList.length >= 10 ? 'bg-rose-500/10 text-rose-400 border-rose-500/20' : 'bg-amber-500/10 text-amber-400 border-amber-500/20'}`}>
+                              {imagesList.length} / 10 {t('photos') || 'Photos'}
+                            </span>
+                          </div>
+
+                          {/* Error Banner */}
+                          {photoError && (
+                            <div className="p-3 bg-rose-500/10 border border-rose-500/20 rounded-xl flex items-center gap-2 text-rose-300 text-xs">
+                              <AlertCircle className="w-4 h-4 shrink-0 text-rose-400" />
+                              <span>{photoError}</span>
+                            </div>
+                          )}
 
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div className="bg-zinc-900/60 border border-white/10 rounded-2xl p-5 flex flex-col justify-center items-center text-center group hover:border-amber-500/30 transition duration-300">
-                              <Camera className="w-8 h-8 text-amber-500/50 group-hover:text-amber-500 transition mb-2" />
-                              <span className="text-xs font-bold text-white/90 block mb-1">{d.deviceUpload}</span>
-                              <span className="text-[10px] text-white/40 block mb-3">{d.deviceUploadSub}</span>
-                              
-                              <label className="px-4 py-2 bg-zinc-800 text-white hover:bg-zinc-700 rounded-xl text-xs font-bold transition duration-200 cursor-pointer inline-flex items-center gap-2 border border-white/10">
-                                <Upload className="w-3.5 h-3.5 text-amber-400" />
-                                <span>{d.uploadBtn}</span>
-                                <input
-                                  type="file"
-                                  multiple
-                                  accept="image/*"
-                                  onChange={handleFileChange}
-                                  className="hidden"
-                                />
-                              </label>
+                            {/* Device File Picker Dropzone */}
+                            <div className="bg-zinc-900/80 border border-white/10 rounded-2xl p-5 flex flex-col justify-center items-center text-center group hover:border-amber-500/40 transition duration-300 relative">
+                              {isCompressingPhotos ? (
+                                <div className="flex flex-col items-center py-4">
+                                  <Loader2 className="w-8 h-8 text-amber-500 animate-spin mb-2" />
+                                  <span className="text-xs font-bold text-amber-400">Optimizing & compressing photos...</span>
+                                </div>
+                              ) : (
+                                <>
+                                  <Camera className="w-8 h-8 text-amber-500/60 group-hover:text-amber-500 transition mb-2" />
+                                  <span className="text-xs font-bold text-white/90 block mb-1">{d.deviceUpload || 'Upload Photos'}</span>
+                                  <span className="text-[10px] text-white/40 block mb-3">JPG, JPEG, PNG, WebP (Max 10MB each)</span>
+                                  
+                                  <label className="px-4 py-2 bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/30 hover:border-amber-500/50 rounded-xl text-xs font-bold transition duration-200 cursor-pointer inline-flex items-center gap-2">
+                                    <Upload className="w-3.5 h-3.5 text-amber-400" />
+                                    <span>{d.uploadBtn || 'Select Photos'}</span>
+                                    <input
+                                      type="file"
+                                      multiple
+                                      accept="image/jpeg,image/jpg,image/png,image/webp"
+                                      onChange={handleFileChange}
+                                      className="hidden"
+                                    />
+                                  </label>
+                                </>
+                              )}
                             </div>
 
-                            <div className="space-y-3">
+                            {/* URL & Stock Photo Input */}
+                            <div className="space-y-3 bg-zinc-900/40 border border-white/5 p-4 rounded-2xl">
                               <label className="block text-[11px] font-bold text-[#F5F5F4]/70 uppercase tracking-wider">
-                                {d.imgUrlLabel}
+                                {d.imgUrlLabel || 'Or Add Photo URL'}
                               </label>
                               
                               <div className="flex gap-2">
@@ -1986,7 +2184,7 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
                                   type="text"
                                   value={imageInput}
                                   onChange={e => setImageInput(e.target.value)}
-                                  placeholder={d.imgUrlPlaceholder}
+                                  placeholder={d.imgUrlPlaceholder || 'https://...'}
                                   className="flex-1 p-2.5 bg-zinc-900 border border-white/10 focus:border-amber-500/60 rounded-xl text-xs text-white focus:outline-none transition placeholder-zinc-600 font-mono"
                                 />
                                 <button
@@ -1994,42 +2192,202 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
                                   onClick={handleAddImage}
                                   className="px-3.5 py-2.5 bg-amber-500 text-black font-bold text-xs rounded-xl hover:bg-amber-400 transition cursor-pointer"
                                 >
-                                  {d.addBtn}
+                                  {d.addBtn || 'Add'}
                                 </button>
                               </div>
 
                               <div className="flex items-center justify-between pt-1 border-t border-white/5">
-                                <span className="text-[10px] text-white/40 italic">{d.needStock}</span>
+                                <span className="text-[10px] text-white/40 italic">{d.needStock || 'Need sample images?'}</span>
                                 <button
                                   type="button"
                                   onClick={handleQuickAddImagePlaceholder}
                                   className="px-3 py-1 bg-white/5 hover:bg-white/10 border border-white/5 rounded-lg text-[10px] font-bold text-amber-400 transition cursor-pointer"
                                 >
-                                  ⚡ {d.quickBtn}
+                                  ⚡ {d.quickBtn || 'Quick Add'}
                                 </button>
                               </div>
                             </div>
                           </div>
 
-                          {/* Thumbnail Previews */}
+                          {/* Enhanced Thumbnail Previews with Cover Badge & Reordering */}
                           {imagesList.length > 0 && (
-                            <div className="pt-2">
-                              <label className="block text-[10px] font-bold text-white/50 uppercase tracking-widest mb-2">
-                                {d.addedPhotos} ({imagesList.length})
-                              </label>
-                              <div className="flex flex-wrap gap-3">
+                            <div className="pt-2 space-y-2">
+                              <div className="flex items-center justify-between">
+                                <label className="block text-[10px] font-bold text-white/60 uppercase tracking-widest">
+                                  {d.addedPhotos || 'Selected Photos'} ({imagesList.length}/10)
+                                </label>
+                                <span className="text-[10px] text-amber-400/80">★ First photo is Cover Photo</span>
+                              </div>
+
+                              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
                                 {imagesList.map((img, i) => (
-                                  <div key={i} className="relative w-24 h-20 rounded-xl overflow-hidden border border-white/10 shadow-lg group">
-                                    <img src={img} alt="preview" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
-                                    <button
-                                      type="button"
-                                      onClick={() => handleRemoveImage(i)}
-                                      className="absolute inset-0 bg-black/70 opacity-0 group-hover:opacity-100 flex items-center justify-center text-rose-400 transition duration-200 cursor-pointer"
-                                    >
-                                      <Trash2 className="w-5 h-5" />
-                                    </button>
+                                  <div 
+                                    key={i} 
+                                    className={`relative rounded-2xl overflow-hidden border transition shadow-lg group bg-zinc-950 ${
+                                      i === 0 ? 'border-amber-500 ring-2 ring-amber-500/20' : 'border-white/10 hover:border-white/30'
+                                    }`}
+                                  >
+                                    <div className="h-24 w-full overflow-hidden">
+                                      <img src={img} alt={`Preview ${i + 1}`} className="w-full h-full object-cover group-hover:scale-105 transition duration-300" referrerPolicy="no-referrer" />
+                                    </div>
+
+                                    {/* Cover Badge */}
+                                    {i === 0 ? (
+                                      <div className="absolute top-1.5 left-1.5 bg-amber-500 text-black px-2 py-0.5 rounded-md text-[9px] font-bold flex items-center gap-1 shadow">
+                                        <Star className="w-2.5 h-2.5 fill-black" />
+                                        <span>{t('media.cover_photo') || 'Cover Photo'}</span>
+                                      </div>
+                                    ) : (
+                                      <button
+                                        type="button"
+                                        onClick={() => handleSetCoverPhoto(i)}
+                                        className="absolute top-1.5 left-1.5 bg-black/70 hover:bg-amber-500 hover:text-black text-white px-2 py-0.5 rounded-md text-[9px] font-bold border border-white/20 transition cursor-pointer"
+                                      >
+                                        {t('media.set_as_cover') || 'Set as Cover'}
+                                      </button>
+                                    )}
+
+                                    {/* Control Overlay */}
+                                    <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center gap-1.5 transition duration-200">
+                                      {i > 0 && (
+                                        <button
+                                          type="button"
+                                          onClick={() => handleMovePhoto(i, 'left')}
+                                          title="Move Left"
+                                          className="p-1.5 bg-zinc-800/90 hover:bg-amber-500 hover:text-black text-white rounded-lg transition cursor-pointer"
+                                        >
+                                          <ArrowLeft className="w-3.5 h-3.5" />
+                                        </button>
+                                      )}
+                                      {i < imagesList.length - 1 && (
+                                        <button
+                                          type="button"
+                                          onClick={() => handleMovePhoto(i, 'right')}
+                                          title="Move Right"
+                                          className="p-1.5 bg-zinc-800/90 hover:bg-amber-500 hover:text-black text-white rounded-lg transition cursor-pointer"
+                                        >
+                                          <ArrowRight className="w-3.5 h-3.5" />
+                                        </button>
+                                      )}
+                                      <button
+                                        type="button"
+                                        onClick={() => handleRemoveImage(i)}
+                                        title="Remove"
+                                        className="p-1.5 bg-rose-500/80 hover:bg-rose-600 text-white rounded-lg transition cursor-pointer"
+                                      >
+                                        <Trash2 className="w-3.5 h-3.5" />
+                                      </button>
+                                    </div>
                                   </div>
                                 ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    }
+
+                    // Dedicated Video Showcase Uploader
+                    if (field.id === 'video' || field.id === 'videoUrl') {
+                      const currentVid = fieldsState.video || fieldsState.videoUrl || '';
+                      return (
+                        <div key={field.id} className="col-span-full space-y-3 bg-zinc-900/40 border border-white/10 p-5 rounded-2xl">
+                          <div className="flex items-center justify-between">
+                            <label className="block text-[11px] font-bold text-[#F5F5F4]/80 uppercase tracking-wider flex items-center gap-2">
+                              <Video className="w-4 h-4 text-amber-500" />
+                              <span>Video Tour / Showcase (Optional, Max 30s, 50MB)</span>
+                            </label>
+                            <span className="text-[10px] text-amber-400 font-mono bg-amber-500/10 px-2.5 py-0.5 rounded-full border border-amber-500/20">
+                              MP4, MOV, WebM
+                            </span>
+                          </div>
+
+                          {/* Video Error Banner */}
+                          {videoError && (
+                            <div className="p-3 bg-rose-500/10 border border-rose-500/20 rounded-xl flex items-center gap-2 text-rose-300 text-xs">
+                              <AlertCircle className="w-4 h-4 shrink-0 text-rose-400" />
+                              <span>{videoError}</span>
+                            </div>
+                          )}
+
+                          {isVideoUploading ? (
+                            <div className="p-6 bg-zinc-950 border border-amber-500/30 rounded-2xl flex flex-col items-center justify-center text-center space-y-2">
+                              <Loader2 className="w-8 h-8 text-amber-500 animate-spin" />
+                              <span className="text-xs font-bold text-white">{t('media.video_uploading') || 'Processing & Uploading Video...'}</span>
+                              <span className="text-[10px] text-white/40">Validating duration (max 30s) & preparing stream...</span>
+                            </div>
+                          ) : currentVid ? (
+                            <div className="bg-zinc-950 rounded-2xl overflow-hidden border border-amber-500/30 p-3 space-y-3">
+                              <div className="flex items-center justify-between">
+                                <span className="text-xs font-bold text-amber-400 flex items-center gap-1.5">
+                                  <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                                  <span>Video Uploaded & Ready</span>
+                                </span>
+                                <div className="flex items-center gap-2">
+                                  <label className="px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white rounded-lg text-xs font-bold transition cursor-pointer flex items-center gap-1 border border-white/10">
+                                    <Upload className="w-3.5 h-3.5 text-amber-400" />
+                                    <span>{t('media.replace_video') || 'Replace'}</span>
+                                    <input
+                                      type="file"
+                                      accept="video/mp4,video/quicktime,video/webm"
+                                      onChange={e => e.target.files?.[0] && handleVideoFileChange(e.target.files[0])}
+                                      className="hidden"
+                                    />
+                                  </label>
+                                  <button
+                                    type="button"
+                                    onClick={handleRemoveVideo}
+                                    className="px-3 py-1.5 bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/30 rounded-lg text-xs font-bold transition cursor-pointer flex items-center gap-1"
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                    <span>{t('media.remove_video') || 'Remove'}</span>
+                                  </button>
+                                </div>
+                              </div>
+                              <div className="rounded-xl overflow-hidden bg-black max-h-64 flex justify-center">
+                                <video
+                                  src={currentVid}
+                                  controls
+                                  className="max-h-64 w-full object-contain"
+                                />
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              {/* Direct File Selector */}
+                              <div className="border-2 border-dashed border-white/15 hover:border-amber-500/50 bg-zinc-950/60 rounded-2xl p-5 flex flex-col items-center justify-center text-center group transition">
+                                <Film className="w-8 h-8 text-amber-500/60 group-hover:text-amber-500 transition mb-2" />
+                                <span className="text-xs font-bold text-white mb-0.5">Upload Video File</span>
+                                <span className="text-[10px] text-white/40 mb-3">Max 30s duration, 50MB file size</span>
+                                
+                                <label className="px-4 py-2 bg-amber-500 text-black hover:bg-amber-400 font-bold rounded-xl text-xs transition cursor-pointer inline-flex items-center gap-2 shadow-lg">
+                                  <Upload className="w-3.5 h-3.5" />
+                                  <span>{t('media.upload_video_btn') || 'Select Video File'}</span>
+                                  <input
+                                    type="file"
+                                    accept="video/mp4,video/quicktime,video/webm"
+                                    onChange={e => e.target.files?.[0] && handleVideoFileChange(e.target.files[0])}
+                                    className="hidden"
+                                  />
+                                </label>
+                              </div>
+
+                              {/* Video URL Fallback Input */}
+                              <div className="space-y-2 flex flex-col justify-center">
+                                <label className="block text-[10px] font-bold text-white/50 uppercase tracking-wider">
+                                  Or Paste Direct Video URL
+                                </label>
+                                <input
+                                  type="text"
+                                  value={currentVid}
+                                  placeholder="https://example.com/video.mp4"
+                                  onChange={e => {
+                                    setVideoError('');
+                                    handleFieldChange(field.id, e.target.value);
+                                  }}
+                                  className="w-full p-3 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white focus:outline-none transition placeholder-zinc-600 font-mono"
+                                />
+                                <span className="text-[10px] text-white/30 italic">Supports direct MP4/WebM video links.</span>
                               </div>
                             </div>
                           )}

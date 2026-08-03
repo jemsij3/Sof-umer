@@ -3554,6 +3554,22 @@ export const staticTranslations: TranslationKey[] = [
   { key: "reviews.no_ratings_yet", en: "No ratings yet.", om: "Hamma yoonaatti sadarkaan hin kennamne.", am: "እስካሁን ምንም ደረጃዎች የሉም።", category: "Reviews" },
   { key: "reviews.success_pending", en: "Thank you! Your review has been submitted and is pending approval.", om: "Galatoomaa! Yaadni keessan galmaa'ee mirkaneessa eegaa jira.", am: "እናመሰግናለን! ግምገማዎ ቀርቧል እና ማረጋገጫ በመጠባበቅ ላይ ነው።", category: "Reviews" },
   { key: "reviews.error_empty", en: "Please enter a review comment.", om: "Maloomaaatii yaada keessan barreessaa.", am: "እባክዎን የግምገማ አስተያየት ያስገቡ።", category: "Reviews" },
-  { key: "reviews.verified_reviews_count", en: "verified review(s) for this listing", om: "yaada(os) mirkanaa'e beeksisa kanaaf", am: "የተረጋገጡ ግምገማዎች ለዚህ ማስታወቂያ", category: "Reviews" }
+  { key: "reviews.verified_reviews_count", en: "verified review(s) for this listing", om: "yaada(os) mirkanaa'e beeksisa kanaaf", am: "የተረጋገጡ ግምገማዎች ለዚህ ማስታወቂያ", category: "Reviews" },
+
+  // Media Upload Namespace Keys
+  { key: "media.photos_limit_title", en: "Photos & Media (Max 10 Photos, 1 Video)", om: "Suulii & Miidiyaa (Murtii Fakkii 10, Viidiyoo 1)", am: "ፎቶዎች እና ሚዲያ (ከፍተኛ 10 ፎቶዎች፣ 1 ቪዲዮ)", category: "Media" },
+  { key: "media.max_photos_exceeded", en: "Maximum 10 photos allowed per listing.", om: "Beeksisa tokkoof fakkii 10 ol heyyamamu hin danda'amu.", am: "በአንድ ማስታወቂያ ቢበዛ 10 ፎቶዎች ብቻ ይፈቀዳሉ።", category: "Media" },
+  { key: "media.image_size_exceeded", en: "Image file size exceeds 10 MB limit.", om: "Hangatni fakkii 10 MB irra darbaa.", am: "የፎቶው መጠን ከ 10 MB ይበልጣል።", category: "Media" },
+  { key: "media.image_format_invalid", en: "Invalid image format. Supported: JPG, JPEG, PNG, WebP.", om: "Bifa fakkii sirrii miti. Kan deeggaramu: JPG, JPEG, PNG, WebP.", am: "ትክክለኛ ያልሆነ የፎቶ ቅርጸት። የሚደገፉት: JPG, JPEG, PNG, WebP.", category: "Media" },
+  { key: "media.video_max_size_exceeded", en: "Video file size exceeds maximum limit of 50 MB.", om: "Hangatni viidiyoo 50 MB irra darbaa.", am: "የቪዲዮው መጠን ከ 50 MB ይበልጣል።", category: "Media" },
+  { key: "media.video_max_duration_exceeded", en: "Video duration exceeds maximum allowed limit of 30 seconds.", om: "Turtii viidiyoo sekondii 30 irra darbaa.", am: "የቪዲዮው ርዝመት ከተፈቀደው 30 ሰከንድ ይበልጣል።", category: "Media" },
+  { key: "media.video_format_invalid", en: "Unsupported video format. Supported: MP4, MOV, WebM.", om: "Bifa viidiyoo hin deeggaramne. Kan deeggaramu: MP4, MOV, WebM.", am: "የማይደገፍ የቪዲዮ ቅርጸት። የሚደገፉት: MP4, MOV, WebM.", category: "Media" },
+  { key: "media.cover_photo", en: "Cover Photo", om: "Fakkii Fuula Durammee", am: "የሽፋን ፎቶ", category: "Media" },
+  { key: "media.set_as_cover", en: "Set as Cover", om: "Fuula Durammee Taasisi", am: "የሽፋን ፎቶ አድርግ", category: "Media" },
+  { key: "media.upload_video_btn", en: "Upload Video", om: "Viidiyoo Fe'i", am: "ቪዲዮ ይስቀሉ", category: "Media" },
+  { key: "media.remove_video", en: "Remove Video", om: "Viidiyoo Haqi", am: "ቪዲዮ አስወግድ", category: "Media" },
+  { key: "media.replace_video", en: "Replace Video", om: "Viidiyoo Jijjiiri", am: "ቪዲዮ በቀይር", category: "Media" },
+  { key: "media.video_uploading", "en": "Processing & Uploading Video...", om: "Viidiyoo qopheessaa & fe'aa jira...", am: "ቪዲዮ በማዘጋጀት እና በመጫን ላይ...", category: "Media" },
+  { key: "media.reorder_hint", en: "The first photo is your listing's Cover Photo. Reorder photos or set any photo as cover.", om: "Fakkiin jalqabaa fakkii fuula durammee beeksisa keessanii ti. Fakkiiwwan tartiibessi ykn fuula durammee taasisi.", am: "መጀመሪያ ላይ ያለው ፎቶ የማስታወቂያዎ ሽፋን ፎቶ ነው። ፎቶዎችን በቅደም ተከተል ያስቀምጡ።", category: "Media" }
 ];
 
