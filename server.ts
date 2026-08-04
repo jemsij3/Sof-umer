@@ -1905,8 +1905,18 @@ async function startServer() {
   });
 
   const requireAuth = (req: express.Request, res: express.Response, next: express.NextFunction) => {
-    if (!(req as any).user) {
+    const user = (req as any).user;
+    if (!user) {
       return res.status(401).json({ error: 'Authentication required.' });
+    }
+    if (user.status === 'suspended' || user.status === 'banned') {
+      const reason = user.status === 'banned' ? user.banReason : user.suspendReason;
+      const statusLabel = user.status === 'banned' ? 'banned' : 'suspended';
+      return res.status(403).json({
+        error: `Your account is ${statusLabel}.${reason ? ' Reason: ' + reason : ''}`,
+        accountStatus: user.status,
+        statusReason: reason
+      });
     }
     next();
   };
@@ -2803,8 +2813,14 @@ async function startServer() {
     let isNew = false;
     
     if (user) {
-      if (user.status === 'suspended') {
-        return res.status(403).json({ error: 'This account has been suspended by the administrator.' });
+      if (user.status === 'suspended' || user.status === 'banned') {
+        const reason = user.status === 'banned' ? user.banReason : user.suspendReason;
+        const statusLabel = user.status === 'banned' ? 'banned' : 'suspended';
+        return res.status(403).json({
+          error: `This account has been ${statusLabel} by the administrator.${reason ? ' Reason: ' + reason : ''}`,
+          accountStatus: user.status,
+          statusReason: reason
+        });
       }
       if (normAuthEmail === 'jemaljima@gmail.com') {
         let updated = false;
@@ -4166,11 +4182,22 @@ async function startServer() {
 
   app.post('/api/receipts', async (req, res) => {
     const receiptData = req.body;
+    
+    let processedReceiptUrl = receiptData.receiptUrlOrFile;
+    if (processedReceiptUrl && (processedReceiptUrl.startsWith('data:image/') || processedReceiptUrl.startsWith('data:application/pdf'))) {
+      try {
+        processedReceiptUrl = await uploadToCloudinaryIfConfigured(processedReceiptUrl, 'sof_umer/receipts');
+      } catch (err) {
+        console.error('[ReceiptUploadError] Cloudinary upload failed:', err);
+      }
+    }
+
     const newReceipt: PaymentReceipt = {
       id: 'rcpt-' + Date.now(),
       status: 'Pending',
       submittedAt: new Date().toISOString(),
-      ...receiptData
+      ...receiptData,
+      receiptUrlOrFile: processedReceiptUrl
     };
     localDb.receipts.push(newReceipt);
 

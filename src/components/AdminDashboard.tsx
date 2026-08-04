@@ -2494,6 +2494,18 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
                   <h3 className="text-xl font-serif font-bold text-white">User Accounts Control Desk</h3>
                   <p className="text-xs text-white/40 mt-1">Search, audit profiles, adjust roles, verify documentation, and toggle active status.</p>
                 </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      fetchModerationLogs();
+                      setShowModerationLogs(true);
+                    }}
+                    className="px-3.5 py-2 bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/30 rounded-xl text-xs font-bold flex items-center gap-1.5 cursor-pointer transition"
+                  >
+                    <FileText className="w-4 h-4" /> Moderation Audit Log
+                  </button>
+                </div>
               </div>
 
               {/* Filter Controls */}
@@ -7316,6 +7328,479 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
 
         </div>
       </div>
+
+      {/* --- MODERATION MODALS --- */}
+
+      {/* 1. VIEW USER PROFILE MODAL */}
+      {viewingUser && (
+        <div className="fixed inset-0 z-[9999] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-[#12121a] border border-white/10 rounded-3xl max-w-xl w-full p-6 space-y-6 shadow-2xl relative">
+            <div className="flex justify-between items-start border-b border-white/10 pb-4">
+              <div>
+                <span className="text-[10px] font-mono font-bold text-amber-500 uppercase tracking-widest">User Profile Details</span>
+                <h3 className="text-xl font-serif font-bold text-white mt-1">{viewingUser.fullName}</h3>
+                <p className="text-xs text-white/50">{viewingUser.email}</p>
+              </div>
+              <button
+                onClick={() => setViewingUser(null)}
+                className="p-2 bg-white/5 hover:bg-white/10 text-white rounded-xl cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4 text-xs">
+              <div className="bg-black/40 p-3 rounded-2xl border border-white/5">
+                <span className="text-[10px] text-white/40 uppercase font-mono block">System Role</span>
+                <span className="font-bold text-amber-400 capitalize">{viewingUser.role}</span>
+              </div>
+              <div className="bg-black/40 p-3 rounded-2xl border border-white/5">
+                <span className="text-[10px] text-white/40 uppercase font-mono block">Account Status</span>
+                <span className={`font-bold capitalize ${viewingUser.status === 'active' ? 'text-emerald-400' : viewingUser.status === 'suspended' ? 'text-amber-400' : 'text-rose-400'}`}>
+                  {viewingUser.status || 'active'}
+                </span>
+              </div>
+              <div className="bg-black/40 p-3 rounded-2xl border border-white/5">
+                <span className="text-[10px] text-white/40 uppercase font-mono block">Phone Number</span>
+                <span className="font-mono text-white">{viewingUser.phone || 'N/A'}</span>
+              </div>
+              <div className="bg-black/40 p-3 rounded-2xl border border-white/5">
+                <span className="text-[10px] text-white/40 uppercase font-mono block">Verification Badge</span>
+                <span className="font-mono text-white uppercase">{viewingUser.verificationStatus || 'unverified'}</span>
+              </div>
+            </div>
+
+            {(viewingUser.suspendReason || viewingUser.banReason) && (
+              <div className="bg-rose-500/10 border border-rose-500/20 p-4 rounded-2xl text-xs space-y-1">
+                <span className="font-bold text-rose-400 uppercase tracking-wider text-[10px]">Restriction Reason</span>
+                <p className="text-white/80">{viewingUser.banReason || viewingUser.suspendReason}</p>
+              </div>
+            )}
+
+            {/* Warnings Summary */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <h4 className="text-xs font-bold text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
+                  <AlertTriangle className="w-4 h-4" /> Warning History ({viewingUser.warnings?.length || 0})
+                </h4>
+              </div>
+              {viewingUser.warnings && viewingUser.warnings.length > 0 ? (
+                <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
+                  {viewingUser.warnings.map((w: any, idx: number) => (
+                    <div key={idx} className="bg-black/50 border border-amber-500/20 p-3 rounded-xl text-xs space-y-1">
+                      <div className="flex justify-between items-center">
+                        <span className="font-bold text-amber-300">{w.reason}</span>
+                        <span className="text-[10px] font-mono text-white/40">{w.dateIssued ? new Date(w.dateIssued).toLocaleDateString() : 'N/A'}</span>
+                      </div>
+                      {w.note && <p className="text-[11px] text-white/70 italic">Admin Note: {w.note}</p>}
+                      <p className="text-[9px] font-mono text-white/30">Issued by: {w.adminName || 'Admin'}</p>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-xs text-white/30 italic">No official warnings issued to this account.</p>
+              )}
+            </div>
+
+            <div className="flex justify-end gap-2 pt-2 border-t border-white/10">
+              <button
+                onClick={() => setViewingUser(null)}
+                className="px-5 py-2.5 bg-white/10 hover:bg-white/20 text-white rounded-xl text-xs font-bold cursor-pointer"
+              >
+                Close Profile
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 2. SEND WARNING MODAL */}
+      {warningModalUser && (
+        <div className="fixed inset-0 z-[9999] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-[#12121a] border border-amber-500/30 rounded-3xl max-w-md w-full p-6 space-y-5 shadow-2xl">
+            <div className="flex justify-between items-start border-b border-white/10 pb-3">
+              <div>
+                <span className="text-[10px] font-mono font-bold text-amber-400 uppercase tracking-widest flex items-center gap-1">
+                  <AlertTriangle className="w-3.5 h-3.5" /> Issue Official Warning
+                </span>
+                <h3 className="text-lg font-bold text-white mt-0.5">{warningModalUser.fullName}</h3>
+                <p className="text-xs text-white/40">{warningModalUser.email}</p>
+              </div>
+              <button onClick={() => setWarningModalUser(null)} className="p-1.5 text-white/50 hover:text-white rounded-lg">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSendUserWarning} className="space-y-4">
+              <div>
+                <label className="block text-[10px] font-bold text-white/60 uppercase mb-1">Warning Reason *</label>
+                <select
+                  value={warningReason}
+                  onChange={e => setWarningReason(e.target.value)}
+                  className="w-full p-3 bg-black/50 border border-white/10 rounded-xl text-xs text-white focus:outline-none focus:border-amber-500"
+                >
+                  <option value="Policy Violation">Policy Violation</option>
+                  <option value="Inappropriate Content / Spam">Inappropriate Content / Spam</option>
+                  <option value="Misleading Listing Information">Misleading Listing Information</option>
+                  <option value="Unresponsive Seller">Unresponsive Seller</option>
+                  <option value="Custom">Custom Reason...</option>
+                </select>
+              </div>
+
+              {warningReason === 'Custom' && (
+                <div>
+                  <label className="block text-[10px] font-bold text-white/60 uppercase mb-1">Specify Custom Reason *</label>
+                  <input
+                    type="text"
+                    required
+                    value={customWarningReason}
+                    onChange={e => setCustomWarningReason(e.target.value)}
+                    placeholder="Enter specific violation details..."
+                    className="w-full p-3 bg-black/50 border border-white/10 rounded-xl text-xs text-white focus:outline-none focus:border-amber-500"
+                  />
+                </div>
+              )}
+
+              <div>
+                <label className="block text-[10px] font-bold text-white/60 uppercase mb-1">Optional Admin Note</label>
+                <textarea
+                  rows={2}
+                  value={warningNote}
+                  onChange={e => setWarningNote(e.target.value)}
+                  placeholder="Additional context or guidance for the user..."
+                  className="w-full p-3 bg-black/50 border border-white/10 rounded-xl text-xs text-white focus:outline-none focus:border-amber-500 resize-none"
+                />
+              </div>
+
+              <div className="bg-amber-500/10 border border-amber-500/20 p-3 rounded-xl text-[11px] text-amber-300">
+                ⚠️ Sending a warning will create an in-app notification for this user and record it in the warning history.
+              </div>
+
+              <div className="flex gap-2 justify-end pt-2">
+                <button
+                  type="button"
+                  onClick={() => setWarningModalUser(null)}
+                  className="px-4 py-2 bg-white/5 hover:bg-white/10 text-white rounded-xl text-xs font-bold cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={warningSubmitting}
+                  className="px-5 py-2 bg-amber-500 hover:bg-amber-400 text-black font-bold text-xs rounded-xl cursor-pointer"
+                >
+                  {warningSubmitting ? 'Sending...' : 'Send Warning'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* 3. VIEW WARNING HISTORY MODAL */}
+      {warningHistoryUser && (
+        <div className="fixed inset-0 z-[9999] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-[#12121a] border border-amber-500/30 rounded-3xl max-w-lg w-full p-6 space-y-4 shadow-2xl">
+            <div className="flex justify-between items-start border-b border-white/10 pb-3">
+              <div>
+                <span className="text-[10px] font-mono font-bold text-amber-400 uppercase tracking-widest flex items-center gap-1">
+                  <AlertTriangle className="w-3.5 h-3.5" /> Warning History Log
+                </span>
+                <h3 className="text-lg font-bold text-white mt-0.5">{warningHistoryUser.fullName}</h3>
+                <p className="text-xs text-white/40">{warningHistoryUser.email}</p>
+              </div>
+              <button onClick={() => setWarningHistoryUser(null)} className="p-1.5 text-white/50 hover:text-white rounded-lg">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-3 max-h-80 overflow-y-auto pr-1">
+              {warningHistoryUser.warnings && warningHistoryUser.warnings.length > 0 ? (
+                warningHistoryUser.warnings.map((w: any, idx: number) => (
+                  <div key={idx} className="bg-black/60 border border-amber-500/20 p-4 rounded-2xl space-y-1.5 text-xs">
+                    <div className="flex justify-between items-center">
+                      <span className="font-bold text-amber-300 text-sm">{w.reason}</span>
+                      <span className="text-[10px] font-mono text-white/40">
+                        {w.dateIssued ? new Date(w.dateIssued).toLocaleString() : 'Date N/A'}
+                      </span>
+                    </div>
+                    {w.note && (
+                      <p className="text-xs text-white/80 bg-white/5 p-2 rounded-xl">
+                        <strong className="text-amber-400 font-mono">Admin Note:</strong> {w.note}
+                      </p>
+                    )}
+                    <div className="flex justify-between items-center text-[10px] text-white/30 font-mono pt-1">
+                      <span>Admin: {w.adminName || 'Administrator'}</span>
+                      <span>ID: {w.id || `warn-${idx}`}</span>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <p className="text-xs text-white/30 italic text-center py-6">No warning records found for this user.</p>
+              )}
+            </div>
+
+            <div className="flex justify-end pt-2 border-t border-white/10">
+              <button
+                onClick={() => setWarningHistoryUser(null)}
+                className="px-5 py-2 bg-white/10 hover:bg-white/20 text-white rounded-xl text-xs font-bold cursor-pointer"
+              >
+                Close Log
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 4. CHANGE ACCOUNT STATUS MODAL */}
+      {statusModalUser && (
+        <div className="fixed inset-0 z-[9999] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-[#12121a] border border-white/10 rounded-3xl max-w-md w-full p-6 space-y-5 shadow-2xl">
+            <div className="flex justify-between items-start border-b border-white/10 pb-3">
+              <div>
+                <span className="text-[10px] font-mono font-bold text-amber-500 uppercase tracking-widest">
+                  Moderate Account Status
+                </span>
+                <h3 className="text-lg font-bold text-white mt-0.5">{statusModalUser.fullName}</h3>
+                <p className="text-xs text-white/40">{statusModalUser.email}</p>
+              </div>
+              <button onClick={() => setStatusModalUser(null)} className="p-1.5 text-white/50 hover:text-white rounded-lg">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleUpdateUserStatus} className="space-y-4">
+              <div>
+                <label className="block text-[10px] font-bold text-white/60 uppercase mb-1">Target Account Status *</label>
+                <div className="grid grid-cols-3 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setTargetStatus('suspended')}
+                    className={`py-2 px-3 rounded-xl text-xs font-bold uppercase transition cursor-pointer ${targetStatus === 'suspended' ? 'bg-amber-500 text-black border-amber-500' : 'bg-black/50 text-white/60 border border-white/10'}`}
+                  >
+                    Suspend
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setTargetStatus('banned')}
+                    className={`py-2 px-3 rounded-xl text-xs font-bold uppercase transition cursor-pointer ${targetStatus === 'banned' ? 'bg-rose-500 text-white border-rose-500' : 'bg-black/50 text-white/60 border border-white/10'}`}
+                  >
+                    Ban
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setTargetStatus('active')}
+                    className={`py-2 px-3 rounded-xl text-xs font-bold uppercase transition cursor-pointer ${targetStatus === 'active' ? 'bg-emerald-500 text-black border-emerald-500' : 'bg-black/50 text-white/60 border border-white/10'}`}
+                  >
+                    Reactivate
+                  </button>
+                </div>
+              </div>
+
+              {targetStatus !== 'active' && (
+                <>
+                  <div>
+                    <label className="block text-[10px] font-bold text-white/60 uppercase mb-1">Reason *</label>
+                    <select
+                      value={statusReason}
+                      onChange={e => setStatusReason(e.target.value)}
+                      className="w-full p-3 bg-black/50 border border-white/10 rounded-xl text-xs text-white focus:outline-none"
+                    >
+                      <option value="Terms of Service Violation">Terms of Service Violation</option>
+                      <option value="Fraudulent Activity / Scam">Fraudulent Activity / Scam</option>
+                      <option value="Multiple Spam Complaints">Multiple Spam Complaints</option>
+                      <option value="Custom">Custom Reason...</option>
+                    </select>
+                  </div>
+
+                  {statusReason === 'Custom' && (
+                    <div>
+                      <label className="block text-[10px] font-bold text-white/60 uppercase mb-1">Specify Reason *</label>
+                      <input
+                        type="text"
+                        required
+                        value={customStatusReason}
+                        onChange={e => setCustomStatusReason(e.target.value)}
+                        placeholder="Enter restriction reason..."
+                        className="w-full p-3 bg-black/50 border border-white/10 rounded-xl text-xs text-white focus:outline-none"
+                      />
+                    </div>
+                  )}
+
+                  <div>
+                    <label className="block text-[10px] font-bold text-white/60 uppercase mb-1">Optional Admin Note</label>
+                    <textarea
+                      rows={2}
+                      value={statusNote}
+                      onChange={e => setStatusNote(e.target.value)}
+                      placeholder="Internal moderation notes..."
+                      className="w-full p-3 bg-black/50 border border-white/10 rounded-xl text-xs text-white focus:outline-none resize-none"
+                    />
+                  </div>
+                </>
+              )}
+
+              <div className={`p-3 rounded-xl text-[11px] font-mono ${targetStatus === 'active' ? 'bg-emerald-500/10 text-emerald-300 border border-emerald-500/20' : 'bg-rose-500/10 text-rose-300 border border-rose-500/20'}`}>
+                {targetStatus === 'active' 
+                  ? '✅ Lifting restrictions will allow this user to log back into their account.'
+                  : `🛑 ${targetStatus.toUpperCase()} users will be immediately prevented from logging in with a clear status error.`}
+              </div>
+
+              <div className="flex gap-2 justify-end pt-2">
+                <button
+                  type="button"
+                  onClick={() => setStatusModalUser(null)}
+                  className="px-4 py-2 bg-white/5 hover:bg-white/10 text-white rounded-xl text-xs font-bold cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={statusSubmitting}
+                  className={`px-5 py-2 font-bold text-xs rounded-xl cursor-pointer ${targetStatus === 'active' ? 'bg-emerald-500 text-black hover:bg-emerald-400' : 'bg-rose-500 text-white hover:bg-rose-400'}`}
+                >
+                  {statusSubmitting ? 'Updating...' : `Confirm ${targetStatus.toUpperCase()}`}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* 5. DELETE USER CONFIRMATION MODAL */}
+      {deletingUserModal && (
+        <div className="fixed inset-0 z-[9999] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-[#12121a] border border-rose-500/30 rounded-3xl max-w-md w-full p-6 space-y-5 shadow-2xl">
+            <div className="flex justify-between items-start border-b border-white/10 pb-3">
+              <div>
+                <span className="text-[10px] font-mono font-bold text-rose-400 uppercase tracking-widest flex items-center gap-1">
+                  <Trash2 className="w-3.5 h-3.5" /> Permanent Account Deletion
+                </span>
+                <h3 className="text-lg font-bold text-white mt-0.5">{deletingUserModal.fullName}</h3>
+                <p className="text-xs text-white/40">{deletingUserModal.email}</p>
+              </div>
+              <button onClick={() => setDeletingUserModal(null)} className="p-1.5 text-white/50 hover:text-white rounded-lg">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleDeleteUserSubmit} className="space-y-4">
+              <div className="bg-rose-500/10 border border-rose-500/20 p-3.5 rounded-2xl text-xs text-rose-300 space-y-1">
+                <p className="font-bold">⚠️ Warning: Irreversible Action</p>
+                <p className="text-[11px] text-white/70">
+                  This will permanently wipe this user account from the system database. Type <span className="font-mono text-amber-400 font-bold">{deletingUserModal.email}</span> to confirm.
+                </p>
+              </div>
+
+              <div>
+                <label className="block text-[10px] font-bold text-white/60 uppercase mb-1">Confirmation Email *</label>
+                <input
+                  type="text"
+                  required
+                  value={deleteConfirmInput}
+                  onChange={e => setDeleteConfirmInput(e.target.value)}
+                  placeholder={`Type "${deletingUserModal.email}"`}
+                  className="w-full p-3 bg-black/50 border border-white/10 rounded-xl text-xs text-white focus:outline-none focus:border-rose-500 font-mono"
+                />
+              </div>
+
+              <div className="flex gap-2 justify-end pt-2">
+                <button
+                  type="button"
+                  onClick={() => { setDeletingUserModal(null); setDeleteConfirmInput(''); }}
+                  className="px-4 py-2 bg-white/5 hover:bg-white/10 text-white rounded-xl text-xs font-bold cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={deleteSubmitting || deleteConfirmInput !== deletingUserModal.email}
+                  className="px-5 py-2 bg-rose-600 hover:bg-rose-500 disabled:opacity-40 text-white font-bold text-xs rounded-xl cursor-pointer"
+                >
+                  {deleteSubmitting ? 'Deleting...' : 'Permanently Delete User'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* 6. MODERATION AUDIT LOG MODAL */}
+      {showModerationLogs && (
+        <div className="fixed inset-0 z-[9999] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-[#12121a] border border-white/10 rounded-3xl max-w-3xl w-full p-6 space-y-5 shadow-2xl max-h-[85vh] flex flex-col">
+            <div className="flex justify-between items-center border-b border-white/10 pb-4">
+              <div>
+                <span className="text-[10px] font-mono font-bold text-amber-400 uppercase tracking-widest flex items-center gap-1.5">
+                  <ShieldAlert className="w-4 h-4 text-amber-500" /> Moderation Audit Activity Log
+                </span>
+                <p className="text-xs text-white/50 mt-0.5">Record of all administrative actions, warnings, suspensions, and bans.</p>
+              </div>
+              <button onClick={() => setShowModerationLogs(false)} className="p-2 bg-white/5 hover:bg-white/10 text-white rounded-xl cursor-pointer">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto pr-1 space-y-2">
+              {moderationLogs && moderationLogs.length > 0 ? (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-xs text-left text-white">
+                    <thead className="bg-white/5 text-[10px] font-mono uppercase text-white/40">
+                      <tr>
+                        <th className="p-2.5">Date / Time</th>
+                        <th className="p-2.5">Admin</th>
+                        <th className="p-2.5">Target User</th>
+                        <th className="p-2.5">Action</th>
+                        <th className="p-2.5">Reason / Note</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-white/5">
+                      {moderationLogs.map((log: any, idx: number) => (
+                        <tr key={log.id || idx} className="hover:bg-white/[0.02]">
+                          <td className="p-2.5 font-mono text-[10px] text-white/50 whitespace-nowrap">
+                            {new Date(log.timestamp).toLocaleString()}
+                          </td>
+                          <td className="p-2.5 font-bold text-amber-400">{log.adminName || 'Admin'}</td>
+                          <td className="p-2.5">
+                            <span className="font-bold block">{log.targetUserName || 'User'}</span>
+                            <span className="text-[10px] text-white/40 font-mono">{log.targetUserEmail}</span>
+                          </td>
+                          <td className="p-2.5">
+                            <span className={`px-2 py-0.5 rounded text-[9px] font-extrabold uppercase ${
+                              log.action === 'warn' ? 'bg-amber-500/20 text-amber-300' :
+                              log.action === 'suspend' || log.action === 'ban' ? 'bg-rose-500/20 text-rose-300' :
+                              log.action === 'unsuspend' || log.action === 'unban' ? 'bg-emerald-500/20 text-emerald-300' :
+                              'bg-white/10 text-white/60'
+                            }`}>
+                              {log.action}
+                            </span>
+                          </td>
+                          <td className="p-2.5 text-white/80 max-w-xs">
+                            {log.reason && <p className="font-medium">{log.reason}</p>}
+                            {log.note && <p className="text-[10px] text-white/50 italic">{log.note}</p>}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <p className="text-xs text-white/30 italic text-center py-10">No moderation audit entries logged yet.</p>
+              )}
+            </div>
+
+            <div className="flex justify-end pt-3 border-t border-white/10">
+              <button
+                onClick={() => setShowModerationLogs(false)}
+                className="px-5 py-2.5 bg-amber-500 text-black font-bold text-xs rounded-xl cursor-pointer"
+              >
+                Close Audit Log
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }

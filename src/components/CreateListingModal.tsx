@@ -1036,7 +1036,7 @@ function getFieldsForSelection(majorCategory: string, subcategory: string): Fiel
         { id: 'gender', label: 'Gender', type: 'select', options: ['Unisex', 'Men', 'Women', 'Kids'], colSpan: 'half' },
         { id: 'condition', label: 'Condition', type: 'select', options: ['New', 'Used - Like New', 'Used - Good'], colSpan: 'half' },
         { id: 'quantity', label: 'Quantity', type: 'number', placeholder: '1', colSpan: 'half' },
-        { id: 'price', label: 'Price (ETB)', type: 'number', placeholder: 'e.g., 1500', required: true, colSpan: 'half' },
+        { id: 'price', label: 'Price', type: 'number', placeholder: 'e.g., 1500', required: true, colSpan: 'half' },
         { id: 'negotiable', label: 'Negotiable', type: 'select', options: ['No', 'Yes'], colSpan: 'half' },
         { id: 'location', label: 'Location', type: 'text', placeholder: 'e.g., Bole, Addis Ababa', required: true, colSpan: 'full' },
         { id: 'description', label: 'Description', type: 'textarea', placeholder: 'Describe key features, condition, style...', required: true, colSpan: 'full' },
@@ -1053,7 +1053,7 @@ function getFieldsForSelection(majorCategory: string, subcategory: string): Fiel
         { id: 'color', label: 'Color', type: 'text', placeholder: 'e.g., Space Gray, Titanium, Black', colSpan: 'half' },
         { id: 'condition', label: 'Condition', type: 'select', options: ['New', 'Refurbished', 'Used - Like New', 'Used - Good'], colSpan: 'half' },
         { id: 'quantity', label: 'Quantity', type: 'number', placeholder: '1', colSpan: 'half' },
-        { id: 'price', label: 'Price (ETB)', type: 'number', placeholder: 'e.g., 85000', required: true, colSpan: 'half' },
+        { id: 'price', label: 'Price', type: 'number', placeholder: 'e.g., 85000', required: true, colSpan: 'half' },
         { id: 'negotiable', label: 'Negotiable', type: 'select', options: ['No', 'Yes'], colSpan: 'half' },
         { id: 'location', label: 'Location', type: 'text', placeholder: 'e.g., Mexico, Addis Ababa', required: true, colSpan: 'full' },
         { id: 'description', label: 'Description', type: 'textarea', placeholder: 'Describe specifications, battery health, accessories included...', required: true, colSpan: 'full' },
@@ -1068,7 +1068,7 @@ function getFieldsForSelection(majorCategory: string, subcategory: string): Fiel
         { id: 'color', label: 'Color', type: 'text', placeholder: 'e.g., Beige, Brown, Black', colSpan: 'half' },
         { id: 'condition', label: 'Condition', type: 'select', options: ['New', 'Used - Like New', 'Used - Good'], colSpan: 'half' },
         { id: 'quantity', label: 'Quantity', type: 'number', placeholder: '1', colSpan: 'half' },
-        { id: 'price', label: 'Price (ETB)', type: 'number', placeholder: 'e.g., 45000', required: true, colSpan: 'half' },
+        { id: 'price', label: 'Price', type: 'number', placeholder: 'e.g., 45000', required: true, colSpan: 'half' },
         { id: 'negotiable', label: 'Negotiable', type: 'select', options: ['No', 'Yes'], colSpan: 'half' },
         { id: 'location', label: 'Location', type: 'text', placeholder: 'e.g., CMC, Addis Ababa', required: true, colSpan: 'full' },
         { id: 'description', label: 'Description', type: 'textarea', placeholder: 'Describe dimensions, style, comfort, condition...', required: true, colSpan: 'full' },
@@ -1081,7 +1081,7 @@ function getFieldsForSelection(majorCategory: string, subcategory: string): Fiel
       { id: 'brand', label: 'Brand', type: 'text', placeholder: 'e.g., Brand name', colSpan: 'half' },
       { id: 'condition', label: 'Condition', type: 'select', options: ['New', 'Used - Like New', 'Used - Good'], colSpan: 'half' },
       { id: 'quantity', label: 'Quantity', type: 'number', placeholder: '1', colSpan: 'half' },
-      { id: 'price', label: 'Price (ETB)', type: 'number', placeholder: 'e.g., 2500', required: true, colSpan: 'half' },
+      { id: 'price', label: 'Price', type: 'number', placeholder: 'e.g., 2500', required: true, colSpan: 'half' },
       { id: 'negotiable', label: 'Negotiable', type: 'select', options: ['No', 'Yes'], colSpan: 'half' },
       { id: 'location', label: 'Location', type: 'text', placeholder: 'e.g., Bole, Addis Ababa', required: true, colSpan: 'full' },
       { id: 'description', label: 'Description', type: 'textarea', placeholder: 'Describe key features, condition, benefits...', required: true, colSpan: 'full' },
@@ -1098,7 +1098,7 @@ function getFieldsForSelection(majorCategory: string, subcategory: string): Fiel
         { id: 'purpose', label: 'Purpose', type: 'select', options: ['Sale', 'Rent', 'Buy'], colSpan: 'half' },
         { id: 'area', label: 'Area (m²)', type: 'number', placeholder: 'e.g., 500', required: true, colSpan: 'half' },
         { id: 'ownershipStatus', label: 'Ownership / Title Deed', type: 'select', options: ['Title Deed (Carta)', 'Map (Karta)', 'Leasehold'], colSpan: 'half' },
-        { id: 'price', label: 'Price (ETB)', type: 'number', placeholder: 'e.g., 2500000', required: true, colSpan: 'half' },
+        { id: 'price', label: 'Price', type: 'number', placeholder: 'e.g., 2500000', required: true, colSpan: 'half' },
         { id: 'location', label: 'Location', type: 'text', placeholder: 'e.g., Bole, Addis Ababa', required: true, colSpan: 'full' },
         { id: 'contactPhone', label: 'Phone Number', type: 'text', placeholder: 'e.g., +251911223344', required: true, colSpan: 'half' },
         { id: 'contactEmail', label: 'Email', type: 'text', placeholder: 'e.g., contact@sofumer.com', required: true, colSpan: 'half' },
@@ -1116,7 +1116,7 @@ function getFieldsForSelection(majorCategory: string, subcategory: string): Fiel
         { id: 'area', label: 'Area (m²)', type: 'number', placeholder: 'e.g., 200', required: true, colSpan: 'half' },
         { id: 'parking', label: 'Parking Available', type: 'select', options: ['Yes', 'No'], colSpan: 'half' },
         { id: 'floorLevel', label: 'Floor Level', type: 'text', placeholder: 'e.g., Ground Floor, 3rd Floor', colSpan: 'half' },
-        { id: 'price', label: 'Price (ETB)', type: 'number', placeholder: 'e.g., 50000', required: true, colSpan: 'half' },
+        { id: 'price', label: 'Price', type: 'number', placeholder: 'e.g., 50000', required: true, colSpan: 'half' },
         { id: 'location', label: 'Location', type: 'text', placeholder: 'e.g., Kazanchis, Addis Ababa', required: true, colSpan: 'full' },
         { id: 'contactPhone', label: 'Phone Number', type: 'text', placeholder: 'e.g., +251911223344', required: true, colSpan: 'half' },
         { id: 'contactEmail', label: 'Email', type: 'text', placeholder: 'e.g., contact@sofumer.com', required: true, colSpan: 'half' },
@@ -1133,7 +1133,7 @@ function getFieldsForSelection(majorCategory: string, subcategory: string): Fiel
       { id: 'bathrooms', label: 'Bathrooms', type: 'number', placeholder: 'e.g., 2', colSpan: 'half' },
       { id: 'furnished', label: 'Furnished Status', type: 'select', options: ['Unfurnished', 'Furnished', 'Semi-Furnished'], colSpan: 'half' },
       { id: 'area', label: 'Area (m²)', type: 'number', placeholder: 'e.g., 150', required: true, colSpan: 'half' },
-      { id: 'price', label: 'Price (ETB)', type: 'number', placeholder: 'e.g., 25000', required: true, colSpan: 'half' },
+      { id: 'price', label: 'Price', type: 'number', placeholder: 'e.g., 25000', required: true, colSpan: 'half' },
       { id: 'location', label: 'Location', type: 'text', placeholder: 'e.g., Bole, Addis Ababa', required: true, colSpan: 'full' },
       { id: 'contactPhone', label: 'Phone Number', type: 'text', placeholder: 'e.g., +251911223344', required: true, colSpan: 'half' },
       { id: 'contactEmail', label: 'Email', type: 'text', placeholder: 'e.g., contact@sofumer.com', required: true, colSpan: 'half' },
@@ -1150,7 +1150,7 @@ function getFieldsForSelection(majorCategory: string, subcategory: string): Fiel
         { id: 'title', label: 'Part / Accessory Title', type: 'text', placeholder: 'e.g., Toyota Engine Belt / Alloy Rims 17"', required: true, colSpan: 'full' },
         { id: 'brand', label: 'Brand / Manufacturer', type: 'text', placeholder: 'e.g., Toyota, Michelin, Bosch', colSpan: 'half' },
         { id: 'condition', label: 'Condition', type: 'select', options: ['New', 'Used - Foreign', 'Used - Local'], colSpan: 'half' },
-        { id: 'price', label: 'Price (ETB)', type: 'number', placeholder: 'e.g., 5000', required: true, colSpan: 'half' },
+        { id: 'price', label: 'Price', type: 'number', placeholder: 'e.g., 5000', required: true, colSpan: 'half' },
         { id: 'location', label: 'Location', type: 'text', placeholder: 'e.g., Kera, Addis Ababa', required: true, colSpan: 'half' },
         { id: 'contactPhone', label: 'Phone Number', type: 'text', placeholder: 'e.g., +251911223344', required: true, colSpan: 'half' },
         { id: 'contactEmail', label: 'Email', type: 'text', placeholder: 'e.g., seller@sofumer.com', required: true, colSpan: 'half' },
@@ -1170,7 +1170,7 @@ function getFieldsForSelection(majorCategory: string, subcategory: string): Fiel
       { id: 'mileage', label: 'Mileage (km)', type: 'number', placeholder: 'e.g., 45000', colSpan: 'half' },
       { id: 'color', label: 'Color', type: 'text', placeholder: 'e.g., Black, Silver, White', colSpan: 'half' },
       { id: 'condition', label: 'Condition', type: 'select', options: ['New', 'Used - Foreign', 'Used - Local'], colSpan: 'half' },
-      { id: 'price', label: 'Price (ETB)', type: 'number', placeholder: 'e.g., 2800000', required: true, colSpan: 'half' },
+      { id: 'price', label: 'Price', type: 'number', placeholder: 'e.g., 2800000', required: true, colSpan: 'half' },
       { id: 'location', label: 'Location', type: 'text', placeholder: 'e.g., Bole, Addis Ababa', required: true, colSpan: 'full' },
       { id: 'description', label: 'Description', type: 'textarea', placeholder: 'Describe vehicle features, accident history, service records...', required: true, colSpan: 'full' },
       { id: 'images', label: 'Photos', type: 'images', colSpan: 'full' },
@@ -1184,7 +1184,7 @@ function getFieldsForSelection(majorCategory: string, subcategory: string): Fiel
       { id: 'title', label: 'Job Title', type: 'text', placeholder: 'e.g., Senior Full Stack Developer / Accountant', required: true, colSpan: 'full' },
       { id: 'jobType', label: 'Employment Type', type: 'select', options: ['Full-time', 'Part-time', 'Internship', 'Freelance', 'Remote'], colSpan: 'half' },
       { id: 'sector', label: 'Sector / Industry', type: 'text', placeholder: 'e.g., Technology, Banking, Hospitality, Construction', required: true, colSpan: 'half' },
-      { id: 'salaryRange', label: 'Salary Range', type: 'text', placeholder: 'e.g., 20,000 - 35,000 ETB / Negotiable', colSpan: 'half' },
+      { id: 'salaryRange', label: 'Salary Range', type: 'text', placeholder: 'e.g., 20,000 - 35,000 / month (Negotiable)', colSpan: 'half' },
       { id: 'qualification', label: 'Education Required', type: 'text', placeholder: 'e.g., Bachelor\'s Degree in Computer Science', colSpan: 'half' },
       { id: 'experience', label: 'Experience Required', type: 'text', placeholder: 'e.g., 2-4 years', required: true, colSpan: 'half' },
       { id: 'location', label: 'Location', type: 'text', placeholder: 'e.g., Bole, Addis Ababa', required: true, colSpan: 'half' },
@@ -1202,7 +1202,7 @@ function getFieldsForSelection(majorCategory: string, subcategory: string): Fiel
       { id: 'title', label: 'Service Title', type: 'text', placeholder: 'e.g., Professional House Cleaning & Gardening Service', required: true, colSpan: 'full' },
       { id: 'propertyType', label: 'Service Category', type: 'text', placeholder: 'e.g., Cleaning, Repair, Moving, Tutoring, Plumbing', required: true, colSpan: 'half' },
       { id: 'pricingUnit', label: 'Pricing Unit', type: 'select', options: ['Fixed Rate', 'Hourly Rate', 'Daily Rate', 'Per Job / Negotiable'], colSpan: 'half' },
-      { id: 'price', label: 'Price / Rate (ETB)', type: 'number', placeholder: 'e.g., 500', colSpan: 'half' },
+      { id: 'price', label: 'Price / Rate', type: 'number', placeholder: 'e.g., 500', colSpan: 'half' },
       { id: 'experience', label: 'Years of Experience', type: 'text', placeholder: 'e.g., 5+ Years', colSpan: 'half' },
       { id: 'coverageArea', label: 'Coverage Area', type: 'text', placeholder: 'e.g., All Addis Ababa', colSpan: 'half' },
       { id: 'location', label: 'Base Location', type: 'text', placeholder: 'e.g., Sarbet, Addis Ababa', required: true, colSpan: 'half' },
@@ -1249,7 +1249,7 @@ function getFieldsForSelection(majorCategory: string, subcategory: string): Fiel
   // Default Fallback
   return [
     { id: 'title', label: 'Listing Title', type: 'text', placeholder: 'e.g., Title of your listing', required: true, colSpan: 'full' },
-    { id: 'price', label: 'Price (ETB)', type: 'number', placeholder: 'e.g., 500', colSpan: 'half' },
+    { id: 'price', label: 'Price', type: 'number', placeholder: 'e.g., 500', colSpan: 'half' },
     { id: 'location', label: 'Location', type: 'text', placeholder: 'e.g., Bole, Addis Ababa', required: true, colSpan: 'half' },
     { id: 'contactPhone', label: 'Phone Number', type: 'text', placeholder: 'e.g., +251911223344', required: true, colSpan: 'half' },
     { id: 'contactEmail', label: 'Email', type: 'text', placeholder: 'e.g., contact@sofumer.com', required: true, colSpan: 'half' },
@@ -1310,7 +1310,7 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
     description: '',
     location: '',
     price: '',
-    contactPhone: '+251911223344',
+    contactPhone: '',
     ownerName: '',
     contactEmail: '',
     video: ''
@@ -1327,7 +1327,7 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
       description: prev.description || '',
       location: prev.location || '',
       price: prev.price || '',
-      contactPhone: prev.contactPhone || '+251911223344',
+      contactPhone: prev.contactPhone || '',
       ownerName: prev.ownerName || '',
       contactEmail: prev.contactEmail || '',
       video: prev.video || ''
@@ -1342,14 +1342,14 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
           ...prev,
           ownerName: prev.ownerName || '',
           contactEmail: prev.contactEmail || '',
-          contactPhone: prev.contactPhone && prev.contactPhone !== '+251911223344' ? prev.contactPhone : ''
+          contactPhone: prev.contactPhone || ''
         }));
       } else {
         setFieldsState(prev => ({
           ...prev,
           ownerName: prev.ownerName || currentUser.fullName || '',
           contactEmail: prev.contactEmail || currentUser.email || '',
-          contactPhone: prev.contactPhone || currentUser.phone || '+251911223344'
+          contactPhone: prev.contactPhone || currentUser.phone || ''
         }));
       }
     }
