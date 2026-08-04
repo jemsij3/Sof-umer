@@ -301,12 +301,118 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
   const [listingCatFilter, setListingCatFilter] = useState<string>('all');
   const [listingStatusFilter, setListingStatusFilter] = useState<'all' | 'pending' | 'promoted' | 'promotion_requested' | 'verified' | 'rejected'>('all');
   const [editingProp, setEditingProp] = useState<Property | null>(null);
+  const [adminEditorTab, setAdminEditorTab] = useState<'basic' | 'category' | 'location' | 'owner' | 'media' | 'wholesale' | 'management'>('basic');
+  const [adminNewImageUrl, setAdminNewImageUrl] = useState('');
+  
   const [propForm, setPropForm] = useState({
-    title: '', description: '', price: 0, currency: 'ETB' as Property['currency'],
-    location: '', propertyType: '', majorCategory: 'Properties' as Property['majorCategory'],
-    ownerName: '', contactPhone: '', contactEmail: '',
-    verificationStatus: 'pending' as 'pending' | 'verified' | 'rejected'
+    title: '',
+    description: '',
+    price: 0,
+    currency: 'ETB' as Property['currency'],
+    negotiable: 'No',
+    quantity: 1,
+    condition: 'New',
+    brand: '',
+    model: '',
+    storageSpec: '',
+    color: '',
+    majorCategory: 'Properties' as Property['majorCategory'],
+    propertyType: '',
+    location: '',
+    region: '',
+    city: '',
+    ownerName: '',
+    contactEmail: '',
+    contactPhone: '',
+    ownerBusinessName: '',
+    images: [] as string[],
+    coverImage: '',
+    videoUrl: '',
+    sellingType: 'Retail',
+    retailPrice: 0,
+    wholesalePrice: 0,
+    wholesaleUnit: 'Piece',
+    minimumOrderQuantity: 1,
+    availableQuantity: 1,
+    businessType: 'Wholesaler',
+    deliveryOptions: [] as string[],
+    wholesaleNotes: '',
+    verificationStatus: 'pending' as 'pending' | 'verified' | 'rejected',
+    approvalStatus: 'approved' as 'approved' | 'pending' | 'rejected',
+    isFeatured: false,
+    isTopAd: false,
+    boostPlan: 'free',
+    promotionExpiresAt: '',
+    isArchived: false
   });
+
+  const handleAdminAddPhoto = () => {
+    if (adminNewImageUrl.trim()) {
+      setPropForm(prev => ({
+        ...prev,
+        images: [...prev.images, adminNewImageUrl.trim()],
+        coverImage: prev.images.length === 0 ? adminNewImageUrl.trim() : prev.coverImage
+      }));
+      setAdminNewImageUrl('');
+    }
+  };
+
+  const handleAdminFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      if (typeof reader.result === 'string') {
+        const res = reader.result;
+        setPropForm(prev => ({
+          ...prev,
+          images: [...prev.images, res],
+          coverImage: prev.images.length === 0 ? res : prev.coverImage
+        }));
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleAdminMovePhoto = (index: number, direction: 'left' | 'right') => {
+    setPropForm(prev => {
+      const arr = [...prev.images];
+      const targetIdx = direction === 'left' ? index - 1 : index + 1;
+      if (targetIdx < 0 || targetIdx >= arr.length) return prev;
+      const temp = arr[index];
+      arr[index] = arr[targetIdx];
+      arr[targetIdx] = temp;
+      return { ...prev, images: arr };
+    });
+  };
+
+  const handleAdminSetCoverPhoto = (index: number) => {
+    setPropForm(prev => {
+      const arr = [...prev.images];
+      if (index <= 0 || index >= arr.length) return prev;
+      const [selected] = arr.splice(index, 1);
+      arr.unshift(selected);
+      return { ...prev, images: arr, coverImage: selected };
+    });
+  };
+
+  const handleAdminRemovePhoto = (index: number) => {
+    setPropForm(prev => {
+      const arr = prev.images.filter((_, i) => i !== index);
+      return { ...prev, images: arr, coverImage: arr[0] || '' };
+    });
+  };
+
+  const handleAdminToggleDelivery = (opt: string) => {
+    setPropForm(prev => {
+      const current = Array.isArray(prev.deliveryOptions) ? [...prev.deliveryOptions] : [];
+      if (current.includes(opt)) {
+        return { ...prev, deliveryOptions: current.filter(o => o !== opt) };
+      } else {
+        return { ...prev, deliveryOptions: [...current, opt] };
+      }
+    });
+  };
 
   // Helper to extract FAQ text regardless of string vs object localization
   const getFaqText = (val: any) => {
@@ -1291,13 +1397,29 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
     e.preventDefault();
     if (!editingProp) return;
     try {
+      const payload = {
+        ...propForm,
+        isNegotiable: propForm.negotiable === 'Yes',
+        coverImage: propForm.images[0] || propForm.coverImage || '',
+        price: Number(propForm.price || 0),
+        quantity: Number(propForm.quantity || 1),
+        retailPrice: Number(propForm.retailPrice || propForm.price || 0),
+        wholesalePrice: Number(propForm.wholesalePrice || 0),
+        minimumOrderQuantity: Number(propForm.minimumOrderQuantity || 1),
+        availableQuantity: Number(propForm.availableQuantity || propForm.quantity || 1),
+        video: propForm.videoUrl,
+        videoUrl: propForm.videoUrl,
+        isVerifiedListing: propForm.verificationStatus === 'verified',
+        approvalStatus: propForm.verificationStatus === 'verified' ? 'approved' : propForm.verificationStatus === 'rejected' ? 'rejected' : propForm.approvalStatus
+      };
+
       const res = await fetch(`/api/properties/${editingProp.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('sof_umer_token')}`
         },
-        body: JSON.stringify(propForm)
+        body: JSON.stringify(payload)
       });
       if (res.ok) {
         setEditingProp(null);
@@ -2645,114 +2767,650 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
                 </select>
               </div>
 
-              {/* Listing Editing Modal */}
+              {/* Enhanced Comprehensive Admin Listing Editor Modal */}
               {editingProp && (
-                <form onSubmit={handleSaveProperty} className="bg-white/5 p-5 border border-white/10 rounded-2xl space-y-4">
-                  <h4 className="text-xs font-bold text-amber-500 uppercase tracking-widest flex items-center gap-1">
-                    <Edit2 className="w-3.5 h-3.5" /> Modify Listing Parameters ({extractString(editingProp.title)})
-                  </h4>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div className="sm:col-span-2">
-                      <label className="block text-[10px] text-white/40 font-bold mb-1">Listing Title</label>
-                      <input
-                        type="text"
-                        required
-                        value={propForm.title}
-                        onChange={e => setPropForm({ ...propForm, title: e.target.value })}
-                        className="w-full px-3 py-2 bg-black/40 border border-white/5 rounded-xl text-xs"
-                      />
-                    </div>
+                <form onSubmit={handleSaveProperty} className="bg-[#12121e] p-6 border border-amber-500/30 rounded-3xl space-y-6 shadow-2xl">
+                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-white/10 pb-4">
                     <div>
-                      <label className="block text-[10px] text-white/40 font-bold mb-1">Price</label>
-                      <input
-                        type="number"
-                        required
-                        value={propForm.price}
-                        onChange={e => setPropForm({ ...propForm, price: Number(e.target.value) })}
-                        className="w-full px-3 py-2 bg-black/40 border border-white/5 rounded-xl text-xs"
-                      />
+                      <h4 className="text-sm font-bold text-amber-400 uppercase tracking-wider flex items-center gap-2">
+                        <Edit2 className="w-4 h-4 text-amber-400" />
+                        <span>Admin Listing Editor & Management</span>
+                      </h4>
+                      <p className="text-xs text-white/50 mt-0.5 font-mono">
+                        ID: {editingProp.id} • {extractString(editingProp.title)}
+                      </p>
                     </div>
-                    <div>
-                      <label className="block text-[10px] text-white/40 font-bold mb-1">Currency</label>
-                      <select
-                        value={propForm.currency}
-                        onChange={e => setPropForm({ ...propForm, currency: e.target.value as any })}
-                        className="w-full px-3 py-2 bg-[#12121a] border border-white/5 rounded-xl text-xs"
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setEditingProp(null)}
+                        className="px-3.5 py-1.5 bg-white/5 hover:bg-white/10 text-white/70 rounded-xl text-xs font-bold transition cursor-pointer"
                       >
-                        <option value="ETB">ETB (Ethiopian Birr)</option>
-                        <option value="USD">USD (US Dollar)</option>
-                        <option value="EUR">EUR</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-[10px] text-white/40 font-bold mb-1">Location</label>
-                      <input
-                        type="text"
-                        required
-                        value={propForm.location}
-                        onChange={e => setPropForm({ ...propForm, location: e.target.value })}
-                        className="w-full px-3 py-2 bg-black/40 border border-white/5 rounded-xl text-xs"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-[10px] text-white/40 font-bold mb-1">Major Category</label>
-                      <select
-                        value={propForm.majorCategory}
-                        onChange={e => setPropForm({ ...propForm, majorCategory: e.target.value as any })}
-                        className="w-full px-3 py-2 bg-[#12121a] border border-white/5 rounded-xl text-xs"
+                        Cancel
+                      </button>
+                      <button
+                        type="submit"
+                        className="px-5 py-1.5 bg-amber-500 hover:bg-amber-400 text-black font-extrabold rounded-xl text-xs uppercase tracking-wider transition cursor-pointer shadow-lg"
                       >
-                        <option value="Properties">Properties</option>
-                        <option value="Jobs">Jobs</option>
-                        <option value="Services">Services</option>
-                        <option value="Products">Products</option>
-                        <option value="Local Businesses">Local Businesses</option>
-                        <option value="Community">Community</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-[10px] text-white/40 font-bold mb-1">Owner Name</label>
-                      <input
-                        type="text"
-                        required
-                        value={propForm.ownerName}
-                        onChange={e => setPropForm({ ...propForm, ownerName: e.target.value })}
-                        className="w-full px-3 py-2 bg-black/40 border border-white/5 rounded-xl text-xs"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-[10px] text-white/40 font-bold mb-1">Owner Email</label>
-                      <input
-                        type="email"
-                        required
-                        value={propForm.contactEmail}
-                        onChange={e => setPropForm({ ...propForm, contactEmail: e.target.value })}
-                        className="w-full px-3 py-2 bg-black/40 border border-white/5 rounded-xl text-xs"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-[10px] text-white/40 font-bold mb-1">Contact Phone</label>
-                      <input
-                        type="text"
-                        required
-                        value={propForm.contactPhone}
-                        onChange={e => setPropForm({ ...propForm, contactPhone: e.target.value })}
-                        className="w-full px-3 py-2 bg-black/40 border border-white/5 rounded-xl text-xs"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-[10px] text-white/40 font-bold mb-1">Verification Status</label>
-                      <select
-                        value={propForm.verificationStatus}
-                        onChange={e => setPropForm({ ...propForm, verificationStatus: e.target.value as any })}
-                        className="w-full px-3 py-2 bg-[#12121a] border border-white/5 rounded-xl text-xs text-white"
-                      >
-                        <option value="pending">Pending Audit</option>
-                        <option value="verified">Verified</option>
-                        <option value="rejected">Rejected</option>
-                      </select>
+                        Save Parameters
+                      </button>
                     </div>
                   </div>
-                  <div className="flex gap-2 justify-end">
+
+                  {/* Editor Section Navigation Tabs */}
+                  <div className="flex flex-wrap gap-2 border-b border-white/10 pb-3">
+                    {[
+                      { id: 'basic', label: '📌 Basic Info' },
+                      { id: 'category', label: '📂 Category' },
+                      { id: 'location', label: '📍 Location' },
+                      { id: 'owner', label: '👤 Owner Details' },
+                      { id: 'media', label: `🖼️ Media (${propForm.images.length})` },
+                      { id: 'wholesale', label: '📦 Wholesale & Retail' },
+                      { id: 'management', label: '⚙️ Status & Moderation' }
+                    ].map(tab => (
+                      <button
+                        key={tab.id}
+                        type="button"
+                        onClick={() => setAdminEditorTab(tab.id as any)}
+                        className={`px-3.5 py-2 rounded-xl text-xs font-bold transition cursor-pointer ${
+                          adminEditorTab === tab.id
+                            ? 'bg-amber-500 text-black shadow-md'
+                            : 'bg-white/5 text-white/60 hover:text-white hover:bg-white/10'
+                        }`}
+                      >
+                        {tab.label}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Tab 1: Basic Info */}
+                  {adminEditorTab === 'basic' && (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                      <div className="sm:col-span-2 md:col-span-3">
+                        <label className="block text-[10px] text-white/50 font-bold uppercase mb-1">Listing Title *</label>
+                        <input
+                          type="text"
+                          required
+                          value={propForm.title}
+                          onChange={e => setPropForm({ ...propForm, title: e.target.value })}
+                          className="w-full px-3.5 py-2.5 bg-black/50 border border-white/10 rounded-xl text-xs text-white focus:border-amber-500 focus:outline-none"
+                        />
+                      </div>
+
+                      <div className="sm:col-span-2 md:col-span-3">
+                        <label className="block text-[10px] text-white/50 font-bold uppercase mb-1">Description</label>
+                        <textarea
+                          rows={4}
+                          value={propForm.description}
+                          onChange={e => setPropForm({ ...propForm, description: e.target.value })}
+                          className="w-full px-3.5 py-2.5 bg-black/50 border border-white/10 rounded-xl text-xs text-white focus:border-amber-500 focus:outline-none"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-[10px] text-white/50 font-bold uppercase mb-1">Price *</label>
+                        <input
+                          type="number"
+                          required
+                          value={propForm.price}
+                          onChange={e => setPropForm({ ...propForm, price: Number(e.target.value) })}
+                          className="w-full px-3.5 py-2.5 bg-black/50 border border-white/10 rounded-xl text-xs text-white font-mono focus:border-amber-500 focus:outline-none"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-[10px] text-white/50 font-bold uppercase mb-1">Currency</label>
+                        <select
+                          value={propForm.currency}
+                          onChange={e => setPropForm({ ...propForm, currency: e.target.value as any })}
+                          className="w-full px-3.5 py-2.5 bg-[#0c0c14] border border-white/10 rounded-xl text-xs text-white focus:border-amber-500 focus:outline-none"
+                        >
+                          <option value="ETB">ETB (Ethiopian Birr)</option>
+                          <option value="USD">USD (US Dollar)</option>
+                          <option value="EUR">EUR</option>
+                          <option value="SAR">SAR</option>
+                          <option value="AED">AED</option>
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block text-[10px] text-white/50 font-bold uppercase mb-1">Negotiable</label>
+                        <select
+                          value={propForm.negotiable}
+                          onChange={e => setPropForm({ ...propForm, negotiable: e.target.value })}
+                          className="w-full px-3.5 py-2.5 bg-[#0c0c14] border border-white/10 rounded-xl text-xs text-white focus:border-amber-500 focus:outline-none"
+                        >
+                          <option value="Yes">Yes (Negotiable Badge Shown)</option>
+                          <option value="No">No (Fixed Price, Badge Hidden)</option>
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block text-[10px] text-white/50 font-bold uppercase mb-1">Condition</label>
+                        <select
+                          value={propForm.condition}
+                          onChange={e => setPropForm({ ...propForm, condition: e.target.value })}
+                          className="w-full px-3.5 py-2.5 bg-[#0c0c14] border border-white/10 rounded-xl text-xs text-white focus:border-amber-500 focus:outline-none"
+                        >
+                          <option value="New">New</option>
+                          <option value="Used - Like New">Used - Like New</option>
+                          <option value="Used - Good">Used - Good</option>
+                          <option value="Refurbished">Refurbished</option>
+                          <option value="Used - Foreign">Used - Foreign</option>
+                          <option value="Used - Local">Used - Local</option>
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block text-[10px] text-white/50 font-bold uppercase mb-1">Brand</label>
+                        <input
+                          type="text"
+                          value={propForm.brand}
+                          onChange={e => setPropForm({ ...propForm, brand: e.target.value })}
+                          className="w-full px-3.5 py-2.5 bg-black/50 border border-white/10 rounded-xl text-xs text-white focus:border-amber-500 focus:outline-none"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-[10px] text-white/50 font-bold uppercase mb-1">Model</label>
+                        <input
+                          type="text"
+                          value={propForm.model}
+                          onChange={e => setPropForm({ ...propForm, model: e.target.value })}
+                          className="w-full px-3.5 py-2.5 bg-black/50 border border-white/10 rounded-xl text-xs text-white focus:border-amber-500 focus:outline-none"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-[10px] text-white/50 font-bold uppercase mb-1">Storage / Specification</label>
+                        <input
+                          type="text"
+                          value={propForm.storageSpec}
+                          onChange={e => setPropForm({ ...propForm, storageSpec: e.target.value })}
+                          placeholder="e.g. 128GB / 8GB RAM or 250m²"
+                          className="w-full px-3.5 py-2.5 bg-black/50 border border-white/10 rounded-xl text-xs text-white focus:border-amber-500 focus:outline-none"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-[10px] text-white/50 font-bold uppercase mb-1">Color</label>
+                        <input
+                          type="text"
+                          value={propForm.color}
+                          onChange={e => setPropForm({ ...propForm, color: e.target.value })}
+                          className="w-full px-3.5 py-2.5 bg-black/50 border border-white/10 rounded-xl text-xs text-white focus:border-amber-500 focus:outline-none"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-[10px] text-white/50 font-bold uppercase mb-1">Quantity Available</label>
+                        <input
+                          type="number"
+                          value={propForm.quantity}
+                          onChange={e => setPropForm({ ...propForm, quantity: Number(e.target.value) })}
+                          className="w-full px-3.5 py-2.5 bg-black/50 border border-white/10 rounded-xl text-xs text-white font-mono focus:border-amber-500 focus:outline-none"
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Tab 2: Category & Classification */}
+                  {adminEditorTab === 'category' && (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-[10px] text-white/50 font-bold uppercase mb-1">Major Category *</label>
+                        <select
+                          value={propForm.majorCategory}
+                          onChange={e => setPropForm({ ...propForm, majorCategory: e.target.value as any })}
+                          className="w-full px-3.5 py-2.5 bg-[#0c0c14] border border-white/10 rounded-xl text-xs text-white focus:border-amber-500 focus:outline-none"
+                        >
+                          <option value="Properties">Properties</option>
+                          <option value="Vehicles">Vehicles</option>
+                          <option value="Jobs">Jobs</option>
+                          <option value="Services">Services</option>
+                          <option value="Products">Products</option>
+                          <option value="Local Businesses">Local Businesses</option>
+                          <option value="Community">Community</option>
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block text-[10px] text-white/50 font-bold uppercase mb-1">Subcategory / Property Type</label>
+                        <input
+                          type="text"
+                          value={propForm.propertyType}
+                          onChange={e => setPropForm({ ...propForm, propertyType: e.target.value })}
+                          placeholder="e.g. Smartphones, Apartment, SUV..."
+                          className="w-full px-3.5 py-2.5 bg-black/50 border border-white/10 rounded-xl text-xs text-white focus:border-amber-500 focus:outline-none"
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Tab 3: Location Details */}
+                  {adminEditorTab === 'location' && (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                      <div className="sm:col-span-2 md:col-span-3">
+                        <label className="block text-[10px] text-white/50 font-bold uppercase mb-1">Full Location / Address *</label>
+                        <textarea
+                          rows={2}
+                          required
+                          value={propForm.location}
+                          onChange={e => setPropForm({ ...propForm, location: e.target.value })}
+                          className="w-full px-3.5 py-2.5 bg-black/50 border border-white/10 rounded-xl text-xs text-white focus:border-amber-500 focus:outline-none"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-[10px] text-white/50 font-bold uppercase mb-1">Region / State</label>
+                        <input
+                          type="text"
+                          value={propForm.region}
+                          onChange={e => setPropForm({ ...propForm, region: e.target.value })}
+                          placeholder="e.g. Oromia, Addis Ababa..."
+                          className="w-full px-3.5 py-2.5 bg-black/50 border border-white/10 rounded-xl text-xs text-white focus:border-amber-500 focus:outline-none"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-[10px] text-white/50 font-bold uppercase mb-1">City / Subcity</label>
+                        <input
+                          type="text"
+                          value={propForm.city}
+                          onChange={e => setPropForm({ ...propForm, city: e.target.value })}
+                          placeholder="e.g. Adama, Bole..."
+                          className="w-full px-3.5 py-2.5 bg-black/50 border border-white/10 rounded-xl text-xs text-white focus:border-amber-500 focus:outline-none"
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Tab 4: Owner Information */}
+                  {adminEditorTab === 'owner' && (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-[10px] text-white/50 font-bold uppercase mb-1">Owner Name *</label>
+                        <input
+                          type="text"
+                          required
+                          value={propForm.ownerName}
+                          onChange={e => setPropForm({ ...propForm, ownerName: e.target.value })}
+                          className="w-full px-3.5 py-2.5 bg-black/50 border border-white/10 rounded-xl text-xs text-white focus:border-amber-500 focus:outline-none"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-[10px] text-white/50 font-bold uppercase mb-1">Owner Email *</label>
+                        <input
+                          type="email"
+                          required
+                          value={propForm.contactEmail}
+                          onChange={e => setPropForm({ ...propForm, contactEmail: e.target.value })}
+                          className="w-full px-3.5 py-2.5 bg-black/50 border border-white/10 rounded-xl text-xs text-white focus:border-amber-500 focus:outline-none"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-[10px] text-white/50 font-bold uppercase mb-1">Contact Phone *</label>
+                        <input
+                          type="text"
+                          required
+                          value={propForm.contactPhone}
+                          onChange={e => setPropForm({ ...propForm, contactPhone: e.target.value })}
+                          className="w-full px-3.5 py-2.5 bg-black/50 border border-white/10 rounded-xl text-xs text-white focus:border-amber-500 focus:outline-none"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-[10px] text-white/50 font-bold uppercase mb-1">Business / Company Name</label>
+                        <input
+                          type="text"
+                          value={propForm.ownerBusinessName}
+                          onChange={e => setPropForm({ ...propForm, ownerBusinessName: e.target.value })}
+                          className="w-full px-3.5 py-2.5 bg-black/50 border border-white/10 rounded-xl text-xs text-white focus:border-amber-500 focus:outline-none"
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Tab 5: Media Management */}
+                  {adminEditorTab === 'media' && (
+                    <div className="space-y-5">
+                      {/* Add Image Controls */}
+                      <div className="bg-black/40 p-4 border border-white/10 rounded-2xl space-y-3">
+                        <label className="block text-[10px] font-bold text-white/60 uppercase tracking-wider">
+                          Add New Photo to Gallery
+                        </label>
+                        <div className="flex flex-col sm:flex-row gap-2">
+                          <input
+                            type="text"
+                            placeholder="Paste Photo URL (https://...)"
+                            value={adminNewImageUrl}
+                            onChange={e => setAdminNewImageUrl(e.target.value)}
+                            className="flex-1 px-3.5 py-2 bg-black/50 border border-white/10 rounded-xl text-xs text-white focus:border-amber-500 focus:outline-none"
+                          />
+                          <button
+                            type="button"
+                            onClick={handleAdminAddPhoto}
+                            className="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-black font-bold text-xs rounded-xl transition cursor-pointer"
+                          >
+                            Add URL
+                          </button>
+                          <label className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white font-bold text-xs rounded-xl border border-white/10 transition cursor-pointer flex items-center justify-center gap-1">
+                            <Upload className="w-3.5 h-3.5 text-amber-400" />
+                            <span>Upload File</span>
+                            <input
+                              type="file"
+                              accept="image/*"
+                              onChange={handleAdminFileUpload}
+                              className="hidden"
+                            />
+                          </label>
+                        </div>
+                      </div>
+
+                      {/* Photo Thumbnails */}
+                      <div>
+                        <label className="block text-[10px] font-bold text-white/60 uppercase tracking-widest mb-2">
+                          Current Photos ({propForm.images.length})
+                        </label>
+                        {propForm.images.length === 0 ? (
+                          <p className="text-xs text-white/30 italic py-4 text-center">No photos attached to this listing.</p>
+                        ) : (
+                          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                            {propForm.images.map((img, i) => (
+                              <div key={i} className="relative group rounded-2xl overflow-hidden border border-white/10 bg-black h-28 flex items-center justify-center">
+                                <img src={img} alt={`Photo ${i}`} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                                {i === 0 ? (
+                                  <span className="absolute top-1.5 left-1.5 bg-amber-500 text-black px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider">
+                                    Primary Cover
+                                  </span>
+                                ) : (
+                                  <button
+                                    type="button"
+                                    onClick={() => handleAdminSetCoverPhoto(i)}
+                                    className="absolute top-1.5 left-1.5 bg-black/80 hover:bg-amber-500 hover:text-black text-white px-2 py-0.5 rounded-md text-[9px] font-bold border border-white/20 transition cursor-pointer opacity-0 group-hover:opacity-100"
+                                  >
+                                    Set as Cover
+                                  </button>
+                                )}
+
+                                <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center gap-1.5 transition">
+                                  {i > 0 && (
+                                    <button
+                                      type="button"
+                                      onClick={() => handleAdminMovePhoto(i, 'left')}
+                                      className="p-1.5 bg-zinc-800 text-white hover:bg-amber-500 hover:text-black rounded-lg transition cursor-pointer"
+                                      title="Move Left"
+                                    >
+                                      <ArrowLeft className="w-3.5 h-3.5" />
+                                    </button>
+                                  )}
+                                  {i < propForm.images.length - 1 && (
+                                    <button
+                                      type="button"
+                                      onClick={() => handleAdminMovePhoto(i, 'right')}
+                                      className="p-1.5 bg-zinc-800 text-white hover:bg-amber-500 hover:text-black rounded-lg transition cursor-pointer"
+                                      title="Move Right"
+                                    >
+                                      <ArrowRight className="w-3.5 h-3.5" />
+                                    </button>
+                                  )}
+                                  <button
+                                    type="button"
+                                    onClick={() => handleAdminRemovePhoto(i)}
+                                    className="p-1.5 bg-rose-500 text-white hover:bg-rose-600 rounded-lg transition cursor-pointer"
+                                    title="Remove Photo"
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                  </button>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Video Link */}
+                      <div className="bg-black/40 p-4 border border-white/10 rounded-2xl space-y-2">
+                        <label className="block text-[10px] font-bold text-white/60 uppercase tracking-wider">
+                          Video URL / Direct Video File
+                        </label>
+                        <div className="flex gap-2">
+                          <input
+                            type="text"
+                            placeholder="https://example.com/video.mp4"
+                            value={propForm.videoUrl}
+                            onChange={e => setPropForm({ ...propForm, videoUrl: e.target.value })}
+                            className="flex-1 px-3.5 py-2 bg-black/50 border border-white/10 rounded-xl text-xs text-white focus:border-amber-500 focus:outline-none font-mono"
+                          />
+                          {propForm.videoUrl && (
+                            <button
+                              type="button"
+                              onClick={() => setPropForm({ ...propForm, videoUrl: '' })}
+                              className="px-3 py-2 bg-rose-500/20 text-rose-300 hover:bg-rose-500/30 rounded-xl text-xs font-bold transition cursor-pointer"
+                            >
+                              Remove Video
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Tab 6: Retail & Wholesale */}
+                  {adminEditorTab === 'wholesale' && (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                      <div>
+                        <label className="block text-[10px] text-white/50 font-bold uppercase mb-1">Selling Type</label>
+                        <select
+                          value={propForm.sellingType}
+                          onChange={e => setPropForm({ ...propForm, sellingType: e.target.value })}
+                          className="w-full px-3.5 py-2.5 bg-[#0c0c14] border border-white/10 rounded-xl text-xs text-white focus:border-amber-500 focus:outline-none"
+                        >
+                          <option value="Retail">Retail Only</option>
+                          <option value="Wholesale">Wholesale Only</option>
+                          <option value="Retail & Wholesale">Retail & Wholesale</option>
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block text-[10px] text-white/50 font-bold uppercase mb-1">Retail Price</label>
+                        <input
+                          type="number"
+                          value={propForm.retailPrice || propForm.price}
+                          onChange={e => setPropForm({ ...propForm, retailPrice: Number(e.target.value), price: Number(e.target.value) })}
+                          className="w-full px-3.5 py-2.5 bg-black/50 border border-white/10 rounded-xl text-xs text-white font-mono focus:border-amber-500 focus:outline-none"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-[10px] text-white/50 font-bold uppercase mb-1">Wholesale Price</label>
+                        <input
+                          type="number"
+                          value={propForm.wholesalePrice}
+                          onChange={e => setPropForm({ ...propForm, wholesalePrice: Number(e.target.value) })}
+                          className="w-full px-3.5 py-2.5 bg-black/50 border border-white/10 rounded-xl text-xs text-white font-mono focus:border-amber-500 focus:outline-none"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-[10px] text-white/50 font-bold uppercase mb-1">Unit of Sale</label>
+                        <select
+                          value={propForm.wholesaleUnit}
+                          onChange={e => setPropForm({ ...propForm, wholesaleUnit: e.target.value })}
+                          className="w-full px-3.5 py-2.5 bg-[#0c0c14] border border-white/10 rounded-xl text-xs text-white focus:border-amber-500 focus:outline-none"
+                        >
+                          <option value="Piece">Piece / Single Unit</option>
+                          <option value="Box">Box / Package</option>
+                          <option value="Kg">Kg / Kilogram</option>
+                          <option value="Dozen">Dozen (12 pcs)</option>
+                          <option value="Set">Set / Pair</option>
+                          <option value="Meter">Meter</option>
+                          <option value="Ton">Ton / Metric Ton</option>
+                          <option value="Carton">Carton / Crate</option>
+                          <option value="Bag">Bag / Sack</option>
+                          <option value="Other">Other Unit</option>
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block text-[10px] text-white/50 font-bold uppercase mb-1">Minimum Order Quantity (MOQ)</label>
+                        <input
+                          type="number"
+                          value={propForm.minimumOrderQuantity}
+                          onChange={e => setPropForm({ ...propForm, minimumOrderQuantity: Number(e.target.value) })}
+                          className="w-full px-3.5 py-2.5 bg-black/50 border border-white/10 rounded-xl text-xs text-white font-mono focus:border-amber-500 focus:outline-none"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-[10px] text-white/50 font-bold uppercase mb-1">Business Type</label>
+                        <select
+                          value={propForm.businessType}
+                          onChange={e => setPropForm({ ...propForm, businessType: e.target.value })}
+                          className="w-full px-3.5 py-2.5 bg-[#0c0c14] border border-white/10 rounded-xl text-xs text-white focus:border-amber-500 focus:outline-none"
+                        >
+                          <option value="Manufacturer">Manufacturer</option>
+                          <option value="Wholesaler">Wholesaler</option>
+                          <option value="Distributor">Distributor</option>
+                          <option value="Importer">Importer</option>
+                          <option value="Exporter">Exporter</option>
+                          <option value="Authorized Dealer">Authorized Dealer</option>
+                          <option value="Local Supplier">Local Supplier</option>
+                          <option value="Farmer">Farmer</option>
+                          <option value="Cooperative">Cooperative</option>
+                          <option value="Other">Other</option>
+                        </select>
+                      </div>
+
+                      <div className="sm:col-span-2 md:col-span-3">
+                        <label className="block text-[10px] text-white/50 font-bold uppercase mb-2">Delivery Options</label>
+                        <div className="flex flex-wrap gap-2">
+                          {['Pickup', 'Local Delivery', 'Nationwide Shipping', 'Express Delivery'].map(opt => {
+                            const isSelected = Array.isArray(propForm.deliveryOptions) && propForm.deliveryOptions.includes(opt);
+                            return (
+                              <button
+                                key={opt}
+                                type="button"
+                                onClick={() => handleAdminToggleDelivery(opt)}
+                                className={`px-3.5 py-2 rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-1.5 border ${
+                                  isSelected
+                                    ? 'bg-amber-500 text-black border-amber-400'
+                                    : 'bg-black/40 text-white/60 border-white/10 hover:text-white'
+                                }`}
+                              >
+                                {isSelected ? '✓' : '+'} {opt}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+
+                      <div className="sm:col-span-2 md:col-span-3">
+                        <label className="block text-[10px] text-white/50 font-bold uppercase mb-1">Wholesale Terms & Notes</label>
+                        <textarea
+                          rows={2}
+                          value={propForm.wholesaleNotes}
+                          onChange={e => setPropForm({ ...propForm, wholesaleNotes: e.target.value })}
+                          placeholder="e.g. Payment terms, bulk volume discounts, delivery lead times..."
+                          className="w-full px-3.5 py-2.5 bg-black/50 border border-white/10 rounded-xl text-xs text-white focus:border-amber-500 focus:outline-none"
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Tab 7: Status & Moderation */}
+                  {adminEditorTab === 'management' && (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                      <div>
+                        <label className="block text-[10px] text-white/50 font-bold uppercase mb-1">Verification Status</label>
+                        <select
+                          value={propForm.verificationStatus}
+                          onChange={e => setPropForm({ ...propForm, verificationStatus: e.target.value as any })}
+                          className="w-full px-3.5 py-2.5 bg-[#0c0c14] border border-white/10 rounded-xl text-xs text-white focus:border-amber-500 focus:outline-none"
+                        >
+                          <option value="pending">Pending Audit</option>
+                          <option value="verified">Verified Listing</option>
+                          <option value="rejected">Rejected Post</option>
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block text-[10px] text-white/50 font-bold uppercase mb-1">Approval Status</label>
+                        <select
+                          value={propForm.approvalStatus}
+                          onChange={e => setPropForm({ ...propForm, approvalStatus: e.target.value as any })}
+                          className="w-full px-3.5 py-2.5 bg-[#0c0c14] border border-white/10 rounded-xl text-xs text-white focus:border-amber-500 focus:outline-none"
+                        >
+                          <option value="approved">Approved</option>
+                          <option value="pending">Pending Review</option>
+                          <option value="rejected">Rejected</option>
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block text-[10px] text-white/50 font-bold uppercase mb-1">Boost Plan</label>
+                        <select
+                          value={propForm.boostPlan}
+                          onChange={e => setPropForm({ ...propForm, boostPlan: e.target.value })}
+                          className="w-full px-3.5 py-2.5 bg-[#0c0c14] border border-white/10 rounded-xl text-xs text-white focus:border-amber-500 focus:outline-none"
+                        >
+                          <option value="free">Free / Normal</option>
+                          <option value="starter">Starter Plan</option>
+                          <option value="basic">Basic Boost</option>
+                          <option value="premium">Premium Banner</option>
+                          <option value="vip">VIP Elite Pin</option>
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block text-[10px] text-white/50 font-bold uppercase mb-1">Promotion Expiry Date</label>
+                        <input
+                          type="date"
+                          value={propForm.promotionExpiresAt}
+                          onChange={e => setPropForm({ ...propForm, promotionExpiresAt: e.target.value })}
+                          className="w-full px-3.5 py-2.5 bg-black/50 border border-white/10 rounded-xl text-xs text-white focus:border-amber-500 focus:outline-none font-mono"
+                        />
+                      </div>
+
+                      <div className="flex items-center gap-3 pt-4">
+                        <label className="flex items-center gap-2 text-xs font-bold text-white cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={propForm.isFeatured}
+                            onChange={e => setPropForm({ ...propForm, isFeatured: e.target.checked })}
+                            className="w-4 h-4 rounded text-amber-500 accent-amber-500"
+                          />
+                          <span>Featured Listing</span>
+                        </label>
+
+                        <label className="flex items-center gap-2 text-xs font-bold text-white cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={propForm.isTopAd}
+                            onChange={e => setPropForm({ ...propForm, isTopAd: e.target.checked })}
+                            className="w-4 h-4 rounded text-amber-500 accent-amber-500"
+                          />
+                          <span>Top Ad</span>
+                        </label>
+                      </div>
+
+                      <div className="flex items-center gap-3 pt-4">
+                        <label className="flex items-center gap-2 text-xs font-bold text-white cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={propForm.isArchived}
+                            onChange={e => setPropForm({ ...propForm, isArchived: e.target.checked })}
+                            className="w-4 h-4 rounded text-rose-500 accent-rose-500"
+                          />
+                          <span className="text-rose-400">Archived / Deactivated</span>
+                        </label>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="flex gap-2 justify-end pt-4 border-t border-white/10">
                     <button
                       type="button"
                       onClick={() => setEditingProp(null)}
@@ -2762,7 +3420,7 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
                     </button>
                     <button
                       type="submit"
-                      className="px-5 py-2 bg-amber-500 hover:bg-amber-400 text-black rounded-xl text-xs font-bold cursor-pointer"
+                      className="px-6 py-2 bg-amber-500 hover:bg-amber-400 text-black font-extrabold rounded-xl text-xs uppercase tracking-wider cursor-pointer shadow-lg transition"
                     >
                       Save Parameters
                     </button>
@@ -2834,16 +3492,45 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
                                 setPropForm({
                                   title: extractString(p.title),
                                   description: extractString(p.description),
-                                  price: p.price,
-                                  currency: p.currency,
-                                  location: extractString(p.location),
-                                  propertyType: p.propertyType || '',
+                                  price: p.price || 0,
+                                  currency: p.currency || 'ETB',
+                                  negotiable: p.isNegotiable === true || String(p.negotiable).toLowerCase() === 'yes' ? 'Yes' : 'No',
+                                  quantity: (p as any).quantity || (p as any).availableQuantity || 1,
+                                  condition: p.condition || 'New',
+                                  brand: p.brand || '',
+                                  model: (p as any).model || '',
+                                  storageSpec: (p as any).storageSpec || (p as any).specifications || '',
+                                  color: (p as any).color || '',
                                   majorCategory: p.majorCategory || 'Properties',
+                                  propertyType: p.propertyType || '',
+                                  location: extractString(p.location),
+                                  region: (p as any).region || '',
+                                  city: (p as any).city || '',
                                   ownerName: p.ownerName || '',
-                                  contactPhone: p.contactPhone || '',
-                                  contactEmail: p.contactEmail || '',
-                                  verificationStatus: p.verificationStatus || 'pending'
+                                  contactEmail: p.contactEmail || p.ownerEmail || '',
+                                  contactPhone: p.contactPhone || p.ownerPhone || '',
+                                  ownerBusinessName: p.ownerBusinessName || '',
+                                  images: Array.isArray(p.images) ? [...p.images] : [],
+                                  coverImage: p.coverImage || (p.images?.[0] || ''),
+                                  videoUrl: p.videoUrl || p.video || '',
+                                  sellingType: (p as any).sellingType || 'Retail',
+                                  retailPrice: (p as any).retailPrice || p.price || 0,
+                                  wholesalePrice: (p as any).wholesalePrice || 0,
+                                  wholesaleUnit: (p as any).wholesaleUnit || 'Piece',
+                                  minimumOrderQuantity: (p as any).minimumOrderQuantity || 1,
+                                  availableQuantity: (p as any).availableQuantity || 1,
+                                  businessType: (p as any).businessType || 'Wholesaler',
+                                  deliveryOptions: Array.isArray((p as any).deliveryOptions) ? [...(p as any).deliveryOptions] : [],
+                                  wholesaleNotes: (p as any).wholesaleNotes || '',
+                                  verificationStatus: p.verificationStatus || 'pending',
+                                  approvalStatus: p.approvalStatus || 'approved',
+                                  isFeatured: !!p.isFeatured,
+                                  isTopAd: !!p.isTopAd,
+                                  boostPlan: p.boostPlan || 'free',
+                                  promotionExpiresAt: p.promotionExpiresAt ? new Date(p.promotionExpiresAt).toISOString().slice(0, 10) : '',
+                                  isArchived: !!(p as any).isArchived
                                 });
+                                setAdminEditorTab('basic');
                               }}
                               className="p-2 bg-white/5 hover:bg-white/10 border border-white/5 text-white/60 hover:text-amber-500 rounded-xl transition cursor-pointer"
                               title="Edit"

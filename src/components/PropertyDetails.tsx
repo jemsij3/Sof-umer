@@ -193,6 +193,11 @@ export default function PropertyDetails({
     if (!valStr || (valStr === '0' && ['Bedrooms', 'Bathrooms', 'Toilet'].includes(label))) return;
     const normKey = label.toLowerCase().trim();
 
+    if (normKey === 'negotiable') {
+      const lower = valStr.toLowerCase();
+      if (lower === 'no' || lower === 'false') return;
+    }
+
     if (allowedKeys && !allowedKeys.includes(normKey)) return;
 
     if (!addedKeys.has(normKey)) {
@@ -474,17 +479,20 @@ export default function PropertyDetails({
               </p>
             </div>
 
-            <div className="flex items-center gap-2">
-              <span className="px-3.5 py-1.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-xs font-bold uppercase tracking-wider flex items-center gap-1.5">
-                <Handshake className="w-4 h-4" />
-                <span>{getTranslatedOption('Negotiable', currentLanguage) || t('negotiable')}</span>
-              </span>
-              {property.area > 0 && (
-                <span className="px-3 py-1.5 rounded-full bg-white/5 text-white/60 border border-white/5 text-xs font-mono">
-                  ~{Math.round(property.price / property.area).toLocaleString()} {property.currency}/m²
+            {/* Negotiable Badge - Only show if seller selected Yes */}
+            {(property.isNegotiable === true || String(property.negotiable).toLowerCase() === 'yes' || property.amenities?.some(a => a.toLowerCase() === 'negotiable: yes' || a.toLowerCase() === 'negotiable: true')) && (
+              <div className="flex items-center gap-2">
+                <span className="px-3.5 py-1.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-xs font-bold uppercase tracking-wider flex items-center gap-1.5">
+                  <Handshake className="w-4 h-4" />
+                  <span>{getTranslatedOption('Negotiable', currentLanguage) || t('negotiable')}</span>
                 </span>
-              )}
-            </div>
+                {property.area > 0 && (
+                  <span className="px-3 py-1.5 rounded-full bg-white/5 text-white/60 border border-white/5 text-xs font-mono">
+                    ~{Math.round(property.price / property.area).toLocaleString()} {property.currency}/m²
+                  </span>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Wholesale Details Block if available */}

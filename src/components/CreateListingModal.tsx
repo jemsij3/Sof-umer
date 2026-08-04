@@ -995,6 +995,13 @@ function buildCleanAmenities(
   for (const field of activeFields) {
     if (skipKeys.has(field.id)) continue;
     const rawVal = fieldsState[field.id];
+    
+    // Skip negotiable if 'No' or false
+    if (field.id === 'negotiable') {
+      const negStr = String(rawVal || '').toLowerCase().trim();
+      if (!rawVal || negStr === 'no' || negStr === 'false') continue;
+    }
+
     if (rawVal === undefined || rawVal === null) continue;
     const valStr = String(rawVal).trim();
     if (!valStr || (valStr === '0' && ['bedrooms', 'bathrooms', 'toilet', 'area'].includes(field.id))) continue;
@@ -1349,6 +1356,25 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
   }, [currentUser]);
 
   const activeFields = getFieldsForSelection(majorCategory, subcategory);
+
+  // Pre-fill default option for select fields (such as condition and negotiable) if not explicitly set
+  useEffect(() => {
+    if (activeFields && activeFields.length > 0) {
+      setFieldsState(prev => {
+        let changed = false;
+        const next = { ...prev };
+        for (const f of activeFields) {
+          if (f.type === 'select' && f.options && f.options.length > 0) {
+            if (next[f.id] === undefined || next[f.id] === '') {
+              next[f.id] = f.options[0];
+              changed = true;
+            }
+          }
+        }
+        return changed ? next : prev;
+      });
+    }
+  }, [subcategory, majorCategory]);
 
   const handleFieldChange = (id: string, value: any) => {
     setFieldsState(prev => ({
@@ -1748,7 +1774,15 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
         price: fieldsState.price === '' ? 0 : Number(fieldsState.price || 0),
         currency,
         brand: fieldsState.brand || '',
-        condition: fieldsState.condition || '',
+        condition: (fieldsState.condition !== undefined && fieldsState.condition !== '') ? fieldsState.condition : (activeFields.find(f => f.id === 'condition')?.options?.[0] || 'New'),
+        negotiable: fieldsState.negotiable || 'No',
+        isNegotiable: (fieldsState.negotiable || 'No') === 'Yes',
+        model: fieldsState.model || '',
+        color: fieldsState.color || '',
+        storageSpec: fieldsState.storageSpec || fieldsState.specifications || '',
+        region: fieldsState.region || '',
+        city: fieldsState.city || '',
+        quantity: fieldsState.quantity ? Number(fieldsState.quantity) : 1,
         bedrooms: majorCategory === 'Properties' ? Number(fieldsState.bedrooms || 0) : 0,
         bathrooms: majorCategory === 'Properties' ? Number(fieldsState.bathrooms || 0) : 0,
         area: majorCategory === 'Properties' ? Number(fieldsState.area || 0) : 0,

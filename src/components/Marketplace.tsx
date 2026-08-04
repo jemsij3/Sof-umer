@@ -1989,6 +1989,12 @@ function PropertyCard({ property, onSelect, favorites, onToggleFav, onReport, t,
             📦 {t('wholesale.wholesale') || 'Wholesale'}
           </span>
         )}
+
+        {(property.isNegotiable === true || String(property.negotiable).toLowerCase() === 'yes') && (
+          <span className="text-[9px] font-bold uppercase tracking-wider px-2.5 py-1.5 rounded-xl shadow-md bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 backdrop-blur-md">
+            🤝 {getTranslatedOption('Negotiable', currentLanguage) || 'Negotiable'}
+          </span>
+        )}
       </div>
 
       {/* Save favorite toggle */}
