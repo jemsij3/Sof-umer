@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../lib/AppContext';
-import { Building2, Eye, EyeOff, Lock, Mail, User as UserIcon, ArrowLeft, ArrowRight, ShieldCheck, Sparkles, Compass, RefreshCw, Key, Copy, Check, QrCode, Smartphone, Download, AlertTriangle } from 'lucide-react';
+import { Building2, Eye, EyeOff, Lock, Mail, User as UserIcon, ArrowLeft, ArrowRight, ShieldCheck, Sparkles, Compass, RefreshCw, Key, Copy, Check, QrCode, Smartphone, Download, AlertTriangle, Globe, ChevronDown } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
 interface AuthScreenProps {
@@ -8,7 +8,25 @@ interface AuthScreenProps {
 }
 
 export default function AuthScreen({ initialMode }: AuthScreenProps) {
-  const { setCurrentUser, setToken, t, sessionExpired, setSessionExpired, currentLanguage, systemSettings } = useApp();
+  const { setCurrentUser, setToken, t, sessionExpired, setSessionExpired, currentLanguage, setLanguage, systemSettings } = useApp();
+  
+  const [showLangDropdown, setShowLangDropdown] = useState(false);
+
+  const getHeroHeading = () => {
+    const rawTitle = systemSettings?.heroTitle;
+    if (!rawTitle || rawTitle === 'The Smart Way to Discover, Connect & Grow' || rawTitle === 'login_hero_heading' || rawTitle === 'auth_connecting_markets') {
+      return t('login_hero_heading') || 'The Smart Way to Discover, Connect & Grow';
+    }
+    return t(rawTitle) || rawTitle;
+  };
+
+  const getHeroSubheading = () => {
+    const rawDesc = systemSettings?.heroDescription;
+    if (!rawDesc || rawDesc === 'Buy, sell, rent, hire, and connect with confidence through verified listings, trusted businesses, and secure services—all in one modern marketplace.' || rawDesc === 'login_hero_subheading' || rawDesc === 'auth_intro_desc') {
+      return t('login_hero_subheading') || 'Buy, sell, rent, hire, and connect with confidence through verified listings, trusted businesses, and secure services—all in one modern marketplace.';
+    }
+    return t(rawDesc) || rawDesc;
+  };
   
   // Use 'splash' as default if no initial mode is provided
   const [mode, setMode] = useState<'splash' | 'welcome' | 'login' | 'signup' | 'forgot' | 'verify' | 'reset' | 'twoFactor'>(
@@ -577,6 +595,45 @@ export default function AuthScreen({ initialMode }: AuthScreenProps) {
                 </span>
               </div>
 
+              {/* Language Selector floating widget on Welcome Screen */}
+              <div className="absolute top-8 right-8 z-30">
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() => setShowLangDropdown(!showLangDropdown)}
+                    className="flex items-center gap-2 px-3.5 py-2 bg-black/60 hover:bg-black/80 border border-white/20 rounded-full text-xs font-semibold text-white backdrop-blur-md transition cursor-pointer shadow-xl"
+                  >
+                    <Globe className="w-3.5 h-3.5 text-amber-400" />
+                    <span className="uppercase font-bold tracking-wider">{currentLanguage}</span>
+                    <ChevronDown className={`w-3 h-3 text-white/60 transition-transform ${showLangDropdown ? 'rotate-180 text-amber-400' : ''}`} />
+                  </button>
+                  {showLangDropdown && (
+                    <div className="absolute right-0 mt-2 w-40 bg-[#121218] border border-amber-500/30 rounded-2xl shadow-2xl overflow-hidden z-50 py-1 backdrop-blur-xl">
+                      {[
+                        { code: 'en', label: 'English' },
+                        { code: 'om', label: 'Afaan Oromoo' },
+                        { code: 'am', label: 'አማርኛ' }
+                      ].map(l => (
+                        <button
+                          key={l.code}
+                          type="button"
+                          onClick={() => {
+                            setLanguage(l.code);
+                            setShowLangDropdown(false);
+                          }}
+                          className={`w-full text-left px-4 py-2.5 text-xs transition flex items-center justify-between cursor-pointer ${
+                            currentLanguage === l.code ? 'text-amber-400 font-bold bg-amber-500/10' : 'text-white/70 hover:text-white hover:bg-white/5'
+                          }`}
+                        >
+                          <span>{l.label}</span>
+                          {currentLanguage === l.code && <Check className="w-3.5 h-3.5 text-amber-400" />}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+
               {/* Taglines inside image */}
               <div className="absolute bottom-12 left-8 md:left-12 z-20 max-w-md hidden md:block">
                 <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-500/10 border border-amber-500/20 rounded-full text-amber-500 text-xs font-semibold mb-4 backdrop-blur-md">
@@ -584,7 +641,7 @@ export default function AuthScreen({ initialMode }: AuthScreenProps) {
                   <span>{systemSettings?.appName || 'SOF-UMER'} Marketplace</span>
                 </div>
                 <h2 className="text-3xl font-serif text-white font-normal leading-snug">
-                  {systemSettings?.heroTitle || 'The Smart Way to Discover, Connect & Grow'}
+                  {getHeroHeading()}
                 </h2>
               </div>
             </div>
@@ -609,10 +666,10 @@ export default function AuthScreen({ initialMode }: AuthScreenProps) {
 
                 <div className="space-y-4">
                   <h3 className="text-3xl md:text-4xl font-serif font-semibold text-white tracking-tight leading-tight">
-                    {systemSettings?.heroTitle || 'The Smart Way to Discover, Connect & Grow'}
+                    {getHeroHeading()}
                   </h3>
                   <p className="text-sm md:text-base text-white/50 leading-relaxed font-light">
-                    {systemSettings?.heroDescription || 'Buy, sell, rent, hire, and connect with confidence through verified listings, trusted businesses, and secure services—all in one modern marketplace.'}
+                    {getHeroSubheading()}
                   </p>
                 </div>
 

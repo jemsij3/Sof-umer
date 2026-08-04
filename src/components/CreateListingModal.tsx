@@ -2449,6 +2449,29 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
                       );
                     }
 
+                    // Location input enhancement for long addresses
+                    if (field.id === 'location') {
+                      return (
+                        <div key={field.id} className={spanClass}>
+                          <label className="block text-[11px] font-bold text-[#F5F5F4]/70 uppercase tracking-wider mb-1 flex items-center justify-between">
+                            <span className="flex items-center gap-1.5">
+                              <MapPin className="w-3.5 h-3.5 text-amber-500" />
+                              {getTranslatedFieldLabel(field.label, currentLanguage)} {field.required && '*'}
+                            </span>
+                            <span className="text-[10px] text-amber-400/80 font-normal normal-case">Full address (multi-line auto-wrap)</span>
+                          </label>
+                          <textarea
+                            rows={2}
+                            required={field.required}
+                            value={val}
+                            placeholder={field.placeholder || 'e.g., Bole Sub City, Woreda 03, Near Edna Mall, Addis Ababa'}
+                            onChange={e => handleFieldChange(field.id, e.target.value)}
+                            className="w-full p-3 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white focus:outline-none transition placeholder-zinc-600 font-light resize-y min-h-[52px] leading-relaxed break-words whitespace-pre-wrap"
+                          />
+                        </div>
+                      );
+                    }
+
                     // Standard text / number inputs
                     return (
                       <div key={field.id} className={spanClass}>
@@ -2723,10 +2746,12 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
                         <h3 className="font-serif text-lg font-bold text-white line-clamp-1">
                           {fieldsState.title || d.untitled}
                         </h3>
-                        <p className="text-xs text-white/50 flex items-center gap-1 mt-1">
-                          <MapPin className="w-3.5 h-3.5 text-amber-500 shrink-0" />
-                          <span>{fieldsState.location || d.noLocation}</span>
-                        </p>
+                        <div className="text-xs text-white/70 flex items-start gap-1.5 mt-1.5 leading-relaxed bg-white/5 p-2 rounded-xl border border-white/5">
+                          <MapPin className="w-3.5 h-3.5 text-amber-500 shrink-0 mt-0.5" />
+                          <span className="whitespace-pre-wrap break-words flex-1 text-white/90 leading-snug">
+                            {fieldsState.location || d.noLocation}
+                          </span>
+                        </div>
                       </div>
                       <div className="text-right">
                         {(fieldsState.sellingType || 'Retail') === 'Wholesale' ? (
