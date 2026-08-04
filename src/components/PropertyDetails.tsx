@@ -517,7 +517,7 @@ export default function PropertyDetails({
             </div>
 
             {/* Negotiable Badge - Only show if seller selected Yes */}
-            {(property.isNegotiable === true || String(property.negotiable).toLowerCase() === 'yes' || property.amenities?.some(a => a.toLowerCase() === 'negotiable: yes' || a.toLowerCase() === 'negotiable: true')) && (
+            {((property as any).isNegotiable === true || String((property as any).negotiable).toLowerCase() === 'yes' || property.amenities?.some(a => a.toLowerCase() === 'negotiable: yes' || a.toLowerCase() === 'negotiable: true')) && (
               <div className="flex items-center gap-2">
                 <span className="px-3.5 py-1.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-xs font-bold uppercase tracking-wider flex items-center gap-1.5">
                   <Handshake className="w-4 h-4" />

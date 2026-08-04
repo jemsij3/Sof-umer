@@ -11,7 +11,7 @@ import {
   Calendar, MapPin, ChevronRight, HelpCircle as HelpIcon, BellRing,
   Camera, Image as ImageIcon, Folder, FolderKanban, ChevronDown,
   Mail, Phone, RotateCcw, Zap, LogOut, Gift, Monitor, Smartphone, Upload, XCircle, Save, Globe,
-  Ban, PauseCircle, AlertTriangle, Download, ZoomIn, ZoomOut, History, UserX
+  Ban, PauseCircle, AlertTriangle, Download, ZoomIn, ZoomOut, History, UserX, ArrowLeft, ArrowRight
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { EmployeeAdminsModule } from './EmployeeAdminsModule';

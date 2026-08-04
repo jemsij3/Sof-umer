@@ -1669,57 +1669,78 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
 
   const walletBalance = currentUser?.walletBalance || 0;
 
-  // Step 3 Validation before previewing
-  const handleValidateStep3 = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (currentUser?.role === 'admin') {
-      if (!fieldsState.ownerName || String(fieldsState.ownerName).trim() === '') {
-        setError(d.ownerNameVal);
-        return;
-      }
-      if (!fieldsState.contactPhone || String(fieldsState.contactPhone).trim() === '') {
-        setError(d.ownerPhoneVal);
-        return;
-      }
-      if (!fieldsState.contactEmail || String(fieldsState.contactEmail).trim() === '') {
-        setError(d.ownerEmailVal);
-        return;
-      }
-    }
-
-    for (const field of activeFields) {
-      if (field.type !== 'images') {
-        if (currentUser?.role === 'admin' && (field.id === 'contactPhone' || field.id === 'contactEmail' || field.id === 'ownerName')) {
-          continue;
+    const st = fieldsState.sellingType || 'Retail';
+    
+    // Step 3 Validation before previewing
+    const handleValidateStep3 = (e: React.FormEvent) => {
+      e.preventDefault();
+      
+      if (currentUser?.role === 'admin' && st !== 'Wholesale') {
+        if (!fieldsState.ownerName || String(fieldsState.ownerName).trim() === '') {
+          setError(d.ownerNameVal);
+          return;
         }
-        if (field.id === 'price' && fieldsState.sellingType === 'Wholesale') {
-          continue;
+        if (!fieldsState.contactPhone || String(fieldsState.contactPhone).trim() === '') {
+          setError(d.ownerPhoneVal);
+          return;
         }
-        const val = fieldsState[field.id];
-        if (field.required && (!val || String(val).trim() === '')) {
-          const translatedLabel = getTranslatedFieldLabel(field.label, currentLanguage);
-          setError(`${d.fieldReqVal} ${translatedLabel}`);
+        if (!fieldsState.contactEmail || String(fieldsState.contactEmail).trim() === '') {
+          setError(d.ownerEmailVal);
           return;
         }
       }
-    }
 
-    // Wholesale validation
-    const st = fieldsState.sellingType || 'Retail';
-    if (st === 'Wholesale' || st === 'Retail & Wholesale') {
-      if (!fieldsState.wholesalePrice || Number(fieldsState.wholesalePrice) <= 0) {
-        setError('Please enter a valid Wholesale Price.');
+      for (const field of activeFields) {
+        if (field.type !== 'images') {
+          if (currentUser?.role === 'admin' && (field.id === 'contactPhone' || field.id === 'contactEmail' || field.id === 'ownerName')) {
+            continue;
+          }
+          if (st === 'Wholesale') {
+            const excludeForWholesale = [
+              'price', 'negotiable', 'bedrooms', 'bathrooms', 'toilet', 'area', 
+              'floorLevel', 'parking', 'ownershipStatus', 'furnished', 'propertyType',
+              'contactPhone', 'contactEmail', 'ownerName'
+            ];
+            if (excludeForWholesale.includes(field.id)) continue;
+          }
+
+          const val = fieldsState[field.id];
+          if (field.required && (!val || String(val).trim() === '')) {
+            const translatedLabel = getTranslatedFieldLabel(field.label, currentLanguage);
+            setError(`${d.fieldReqVal} ${translatedLabel}`);
+            return;
+          }
+        }
+      }
+
+      // Photos validation
+      if (!imagesList || imagesList.length === 0) {
+        setError('Please upload or add at least one photo for your listing.');
         return;
       }
-      if (!fieldsState.minimumOrderQuantity || Number(fieldsState.minimumOrderQuantity) < 1) {
-        setError('Please enter a valid Minimum Order Quantity (MOQ >= 1).');
-        return;
-      }
-    }
 
-    setError('');
-    setCurrentStep(4); // Advance to Preview
-  };
+      // Wholesale validation
+      if (st === 'Wholesale' || st === 'Retail & Wholesale') {
+        if (!fieldsState.wholesalePrice || Number(fieldsState.wholesalePrice) <= 0) {
+          setError('Please enter a valid Wholesale Price.');
+          return;
+        }
+        if (!fieldsState.minimumOrderQuantity || Number(fieldsState.minimumOrderQuantity) < 1) {
+          setError('Please enter a valid Minimum Order Quantity (MOQ >= 1).');
+          return;
+        }
+      }
+
+      if (st === 'Wholesale') {
+        if (!fieldsState.contactPhone || String(fieldsState.contactPhone).trim() === '') {
+          setError('Please enter a Contact Phone Number for supplier inquiries.');
+          return;
+        }
+      }
+
+      setError('');
+      setCurrentStep(4); // Advance to Preview
+    };
 
   // Final submission of listing and promotion purchase
   const handleFinalPublish = async () => {
@@ -2076,8 +2097,46 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
                   <p className="text-[10px] text-white/40 font-light">{d.specSubtext}</p>
                 </div>
 
-                {/* Admin-only Property Owner Contact Details */}
-                {currentUser?.role === 'admin' && (
+                {/* Selling Type Selector - Prominently placed at top of Step 3 */}
+                <div className="bg-amber-500/10 border border-amber-500/30 p-4 rounded-2xl space-y-2">
+                  <div className="flex items-center justify-between">
+                    <label className="block text-xs font-bold text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
+                      <Tag className="w-4 h-4 text-amber-500" />
+                      <span>{t('wholesale.selling_type') || 'Selling Type'} *</span>
+                    </label>
+                    <span className="text-[10px] text-amber-300/70">Select listing format</span>
+                  </div>
+                  <div className="grid grid-cols-3 gap-2.5">
+                    {(['Retail', 'Wholesale', 'Retail & Wholesale'] as const).map(st => {
+                      const labelKey = st === 'Retail' ? 'wholesale.retail' : st === 'Wholesale' ? 'wholesale.wholesale' : 'wholesale.retail_and_wholesale';
+                      const isSelected = (fieldsState.sellingType || 'Retail') === st;
+                      return (
+                        <button
+                          key={st}
+                          type="button"
+                          onClick={() => handleFieldChange('sellingType', st)}
+                          className={`p-3 rounded-xl border text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer ${
+                            isSelected
+                              ? 'bg-amber-500 text-black border-amber-500 shadow-md scale-[1.01]'
+                              : 'bg-zinc-900 border-white/10 text-white/80 hover:border-amber-500/40 hover:text-white'
+                          }`}
+                        >
+                          <input
+                            type="radio"
+                            name="sellingType"
+                            checked={isSelected}
+                            onChange={() => {}}
+                            className="accent-black pointer-events-none hidden sm:inline"
+                          />
+                          <span className="text-center">{t(labelKey) || st}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Admin-only Property Owner Contact Details (Hidden for Wholesale) */}
+                {currentUser?.role === 'admin' && (fieldsState.sellingType || 'Retail') !== 'Wholesale' && (
                   <div className="bg-amber-500/10 border border-amber-500/30 p-4 rounded-2xl space-y-3">
                     <div className="flex items-center gap-2">
                       <UserIcon className="w-4 h-4 text-amber-500" />
@@ -2158,8 +2217,21 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5 bg-zinc-900/20 p-5 rounded-2xl border border-white/5">
                   {activeFields
-                    .filter(field => !(currentUser?.role === 'admin' && (field.id === 'contactPhone' || field.id === 'contactEmail' || field.id === 'ownerName')))
-                    .filter(field => !(field.id === 'price' && fieldsState.sellingType === 'Wholesale'))
+                    .filter(field => {
+                      const selType = fieldsState.sellingType || 'Retail';
+                      if (selType === 'Wholesale') {
+                        const excludeForWholesale = [
+                          'price', 'negotiable', 'bedrooms', 'bathrooms', 'toilet', 'area', 
+                          'floorLevel', 'parking', 'ownershipStatus', 'furnished', 'propertyType',
+                          'contactPhone', 'contactEmail', 'ownerName'
+                        ];
+                        if (excludeForWholesale.includes(field.id)) return false;
+                      }
+                      if (currentUser?.role === 'admin' && (field.id === 'contactPhone' || field.id === 'contactEmail' || field.id === 'ownerName')) {
+                        return false;
+                      }
+                      return true;
+                    })
                     .map(field => {
                     const val = fieldsState[field.id] !== undefined ? fieldsState[field.id] : '';
                     const spanClass = field.colSpan === 'full' ? 'col-span-full' : 'col-span-1';
@@ -2525,222 +2597,225 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
                   })}
                 </div>
 
-                {/* Wholesale Selling Enhancement Section */}
-                <div className="bg-amber-500/5 border border-amber-500/20 p-5 rounded-2xl space-y-4 mt-5">
-                  <div className="flex items-center gap-2 text-amber-400 font-bold text-xs uppercase tracking-wider">
-                    <Package className="w-4 h-4 text-amber-500" />
-                    <span>{t('wholesale.wholesale_config_title') || '📦 Wholesale Information'}</span>
-                  </div>
-
-                  <div className="space-y-2">
-                    <label className="block text-[11px] font-bold text-white/80 uppercase tracking-wider">
-                      {t('wholesale.selling_type') || 'Selling Type'} *
-                    </label>
-                    <div className="grid grid-cols-3 gap-3">
-                      {(['Retail', 'Wholesale', 'Retail & Wholesale'] as const).map(st => {
-                        const labelKey = st === 'Retail' ? 'wholesale.retail' : st === 'Wholesale' ? 'wholesale.wholesale' : 'wholesale.retail_and_wholesale';
-                        return (
-                          <button
-                            key={st}
-                            type="button"
-                            onClick={() => handleFieldChange('sellingType', st)}
-                            className={`p-3 rounded-xl border text-xs font-semibold transition flex items-center justify-center gap-2 cursor-pointer ${
-                              (fieldsState.sellingType || 'Retail') === st
-                                ? 'bg-amber-500 text-black border-amber-500 font-bold shadow-md'
-                                : 'bg-zinc-900 border-white/10 text-white/80 hover:border-amber-500/40'
-                            }`}
-                          >
-                            <input
-                              type="radio"
-                              name="sellingType"
-                              checked={(fieldsState.sellingType || 'Retail') === st}
-                              onChange={() => {}}
-                              className="accent-black pointer-events-none"
-                            />
-                            <span>{t(labelKey) || st}</span>
-                          </button>
-                        );
-                      })}
+                {/* Wholesale Information Section - Rendered when Selling Type is Wholesale or Retail & Wholesale */}
+                {((fieldsState.sellingType || 'Retail') === 'Wholesale' || (fieldsState.sellingType || 'Retail') === 'Retail & Wholesale') && (
+                  <div className="bg-amber-500/5 border border-amber-500/20 p-5 rounded-2xl space-y-4">
+                    <div className="flex items-center gap-2 text-amber-400 font-bold text-xs uppercase tracking-wider">
+                      <Package className="w-4 h-4 text-amber-500" />
+                      <span>{t('wholesale.wholesale_config_title') || '📦 Wholesale Information'}</span>
                     </div>
-                  </div>
 
-                  {((fieldsState.sellingType || 'Retail') === 'Wholesale' || (fieldsState.sellingType || 'Retail') === 'Retail & Wholesale') && (
-                    <div className="space-y-4 pt-3 border-t border-amber-500/15 animate-in fade-in duration-200">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {/* Business Type */}
-                        <div>
-                          <label className="block text-[11px] font-bold text-white/80 uppercase tracking-wider mb-1">
-                            🏢 {t('wholesale.business_type') || 'Business Type'} *
-                          </label>
-                          <select
-                            value={fieldsState.businessType || 'Wholesaler'}
-                            onChange={e => handleFieldChange('businessType', e.target.value)}
-                            className="w-full p-3 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white focus:outline-none transition"
-                          >
-                            {[
-                              { value: 'Manufacturer', key: 'wholesale.manufacturer' },
-                              { value: 'Wholesaler', key: 'wholesale.wholesaler' },
-                              { value: 'Distributor', key: 'wholesale.distributor' },
-                              { value: 'Importer', key: 'wholesale.importer' },
-                              { value: 'Exporter', key: 'wholesale.exporter' },
-                              { value: 'Authorized Dealer', key: 'wholesale.authorized_dealer' },
-                              { value: 'Local Supplier', key: 'wholesale.local_supplier' },
-                              { value: 'Farmer', key: 'wholesale.farmer' },
-                              { value: 'Cooperative', key: 'wholesale.cooperative' },
-                              { value: 'Other', key: 'wholesale.other' }
-                            ].map(bt => (
-                              <option key={bt.value} value={bt.value}>
-                                {t(bt.key) || bt.value}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-1">
+                      {/* Business Type */}
+                      <div>
+                        <label className="block text-[11px] font-bold text-white/80 uppercase tracking-wider mb-1">
+                          🏢 {t('wholesale.business_type') || 'Business Type'} *
+                        </label>
+                        <select
+                          value={fieldsState.businessType || 'Wholesaler'}
+                          onChange={e => handleFieldChange('businessType', e.target.value)}
+                          className="w-full p-3 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white focus:outline-none transition"
+                        >
+                          {[
+                            { value: 'Manufacturer', key: 'wholesale.manufacturer' },
+                            { value: 'Wholesaler', key: 'wholesale.wholesaler' },
+                            { value: 'Distributor', key: 'wholesale.distributor' },
+                            { value: 'Importer', key: 'wholesale.importer' },
+                            { value: 'Exporter', key: 'wholesale.exporter' },
+                            { value: 'Authorized Dealer', key: 'wholesale.authorized_dealer' },
+                            { value: 'Local Supplier', key: 'wholesale.local_supplier' },
+                            { value: 'Farmer', key: 'wholesale.farmer' },
+                            { value: 'Cooperative', key: 'wholesale.cooperative' },
+                            { value: 'Other', key: 'wholesale.other' }
+                          ].map(bt => (
+                            <option key={bt.value} value={bt.value}>
+                              {t(bt.key) || bt.value}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
 
-                        {/* Unit of Sale */}
-                        <div>
-                          <label className="block text-[11px] font-bold text-white/80 uppercase tracking-wider mb-1">
-                            📏 {t('wholesale.unit_of_sale') || 'Unit of Sale'} *
-                          </label>
-                          <select
-                            value={fieldsState.wholesaleUnit || 'Piece'}
-                            onChange={e => handleFieldChange('wholesaleUnit', e.target.value)}
-                            className="w-full p-3 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white focus:outline-none transition"
-                          >
-                            {[
-                              { value: 'Piece', key: 'wholesale.unit_piece' },
-                              { value: 'Box', key: 'wholesale.unit_box' },
-                              { value: 'Carton', key: 'wholesale.unit_carton' },
-                              { value: 'Pack', key: 'wholesale.unit_pack' },
-                              { value: 'Dozen', key: 'wholesale.unit_dozen' },
-                              { value: 'Pair', key: 'wholesale.unit_pair' },
-                              { value: 'Bag', key: 'wholesale.unit_bag' },
-                              { value: 'Sack', key: 'wholesale.unit_sack' },
-                              { value: 'Bundle', key: 'wholesale.unit_bundle' },
-                              { value: 'Roll', key: 'wholesale.unit_roll' },
-                              { value: 'Bottle', key: 'wholesale.unit_bottle' },
-                              { value: 'Kilogram (Kg)', key: 'wholesale.unit_kg' },
-                              { value: 'Gram', key: 'wholesale.unit_gram' },
-                              { value: 'Liter', key: 'wholesale.unit_liter' },
-                              { value: 'Meter', key: 'wholesale.unit_meter' },
-                              { value: 'Ton', key: 'wholesale.unit_ton' },
-                              { value: 'Other', key: 'wholesale.unit_other' }
-                            ].map(u => (
-                              <option key={u.value} value={u.value}>
-                                {t(u.key) || u.value}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
+                      {/* Unit of Sale */}
+                      <div>
+                        <label className="block text-[11px] font-bold text-white/80 uppercase tracking-wider mb-1">
+                          📏 {t('wholesale.unit_of_sale') || 'Unit of Sale'} *
+                        </label>
+                        <select
+                          value={fieldsState.wholesaleUnit || 'Piece'}
+                          onChange={e => handleFieldChange('wholesaleUnit', e.target.value)}
+                          className="w-full p-3 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white focus:outline-none transition"
+                        >
+                          {[
+                            { value: 'Piece', key: 'wholesale.unit_piece' },
+                            { value: 'Box', key: 'wholesale.unit_box' },
+                            { value: 'Carton', key: 'wholesale.unit_carton' },
+                            { value: 'Pack', key: 'wholesale.unit_pack' },
+                            { value: 'Dozen', key: 'wholesale.unit_dozen' },
+                            { value: 'Pair', key: 'wholesale.unit_pair' },
+                            { value: 'Bag', key: 'wholesale.unit_bag' },
+                            { value: 'Sack', key: 'wholesale.unit_sack' },
+                            { value: 'Bundle', key: 'wholesale.unit_bundle' },
+                            { value: 'Roll', key: 'wholesale.unit_roll' },
+                            { value: 'Bottle', key: 'wholesale.unit_bottle' },
+                            { value: 'Kilogram (Kg)', key: 'wholesale.unit_kg' },
+                            { value: 'Gram', key: 'wholesale.unit_gram' },
+                            { value: 'Liter', key: 'wholesale.unit_liter' },
+                            { value: 'Meter', key: 'wholesale.unit_meter' },
+                            { value: 'Ton', key: 'wholesale.unit_ton' },
+                            { value: 'Other', key: 'wholesale.unit_other' }
+                          ].map(u => (
+                            <option key={u.value} value={u.value}>
+                              {t(u.key) || u.value}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
 
-                        {/* Wholesale Price */}
-                        <div>
-                          <label className="block text-[11px] font-bold text-white/80 uppercase tracking-wider mb-1">
-                            💰 {t('wholesale.wholesale_price') || 'Wholesale Price (Per Unit)'} ({currency}) *
-                          </label>
-                          <div className="relative">
-                            <span className="absolute left-3 top-3 text-xs text-amber-500 font-bold">{currency}</span>
-                            <input
-                              type="number"
-                              min="0"
-                              required
-                              placeholder="e.g. 500"
-                              value={fieldsState.wholesalePrice !== undefined ? fieldsState.wholesalePrice : ''}
-                              onChange={e => handleFieldChange('wholesalePrice', e.target.value === '' ? '' : Number(e.target.value))}
-                              className="w-full pl-12 pr-3 py-3 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white focus:outline-none transition"
-                            />
-                          </div>
-                        </div>
-
-                        {/* Minimum Order Quantity */}
-                        <div>
-                          <label className="block text-[11px] font-bold text-white/80 uppercase tracking-wider mb-1">
-                            📦 {t('wholesale.minimum_order_quantity') || 'Minimum Order Quantity (MOQ)'} *
-                          </label>
-                          <input
-                            type="number"
-                            min="1"
-                            required
-                            placeholder="e.g. 10"
-                            value={fieldsState.minimumOrderQuantity !== undefined ? fieldsState.minimumOrderQuantity : ''}
-                            onChange={e => handleFieldChange('minimumOrderQuantity', e.target.value === '' ? '' : Number(e.target.value))}
-                            className="w-full p-3 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white focus:outline-none transition"
-                          />
-                        </div>
-
-                        {/* Available Quantity */}
-                        <div>
-                          <label className="block text-[11px] font-bold text-white/80 uppercase tracking-wider mb-1">
-                            📊 {t('wholesale.available_quantity') || 'Available Quantity (Optional)'}
-                          </label>
+                      {/* Wholesale Price */}
+                      <div>
+                        <label className="block text-[11px] font-bold text-white/80 uppercase tracking-wider mb-1">
+                          💰 {t('wholesale.wholesale_price') || 'Wholesale Price (Per Unit)'} ({currency}) *
+                        </label>
+                        <div className="relative">
+                          <span className="absolute left-3 top-3 text-xs text-amber-500 font-bold">{currency}</span>
                           <input
                             type="number"
                             min="0"
+                            required
                             placeholder="e.g. 500"
-                            value={fieldsState.availableQuantity !== undefined ? fieldsState.availableQuantity : ''}
-                            onChange={e => handleFieldChange('availableQuantity', e.target.value === '' ? '' : Number(e.target.value))}
-                            className="w-full p-3 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white focus:outline-none transition"
+                            value={fieldsState.wholesalePrice !== undefined ? fieldsState.wholesalePrice : ''}
+                            onChange={e => handleFieldChange('wholesalePrice', e.target.value === '' ? '' : Number(e.target.value))}
+                            className="w-full pl-12 pr-3 py-3 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white focus:outline-none transition font-medium"
                           />
-                          <span className="text-[10px] text-white/40 italic mt-1 block">e.g., 500 Pieces, 100 Kg, 50 Cartons</span>
                         </div>
                       </div>
 
-                      {/* Delivery Options */}
-                      <div className="space-y-2 pt-2">
-                        <label className="block text-[11px] font-bold text-white/80 uppercase tracking-wider">
-                          🚚 {t('wholesale.delivery_options') || 'Delivery Options'}
+                      {/* Minimum Order Quantity */}
+                      <div>
+                        <label className="block text-[11px] font-bold text-white/80 uppercase tracking-wider mb-1">
+                          📦 {t('wholesale.minimum_order_quantity') || 'Minimum Order Quantity (MOQ)'} *
                         </label>
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                          {[
-                            { id: 'Store Pickup', key: 'wholesale.delivery_pickup', label: 'Store Pickup' },
-                            { id: 'Local Delivery', key: 'wholesale.delivery_local', label: 'Local Delivery' },
-                            { id: 'Nationwide Delivery', key: 'wholesale.delivery_nationwide', label: 'Nationwide Delivery' }
-                          ].map(item => {
-                            const currentDel: string[] = Array.isArray(fieldsState.deliveryOptions) ? fieldsState.deliveryOptions : [];
-                            const isChecked = currentDel.includes(item.id);
-                            return (
-                              <label
-                                key={item.id}
-                                className={`p-2.5 rounded-xl border text-[11px] font-medium flex items-center gap-2 cursor-pointer transition ${
-                                  isChecked
-                                    ? 'bg-amber-500/20 border-amber-500 text-amber-300'
-                                    : 'bg-zinc-900/80 border-white/10 text-white/70 hover:border-white/20'
-                                }`}
-                              >
-                                <input
-                                  type="checkbox"
-                                  checked={isChecked}
-                                  onChange={e => {
-                                    if (e.target.checked) {
-                                      handleFieldChange('deliveryOptions', [...currentDel, item.id]);
-                                    } else {
-                                      handleFieldChange('deliveryOptions', currentDel.filter(d => d !== item.id));
-                                    }
-                                  }}
-                                  className="accent-amber-500 rounded"
-                                />
-                                <span>{t(item.key) || item.label}</span>
-                              </label>
-                            );
-                          })}
-                        </div>
-                      </div>
-
-                      {/* Wholesale Terms (Optional) */}
-                      <div className="space-y-1 pt-1">
-                        <label className="block text-[11px] font-bold text-white/80 uppercase tracking-wider">
-                          📝 {t('wholesale.wholesale_notes') || 'Wholesale Terms (Optional)'}
-                        </label>
-                        <textarea
-                          rows={2}
-                          placeholder={t('wholesale.notes_placeholder') || 'Example: Wholesale price applies to orders of 20 cartons or more.'}
-                          value={fieldsState.wholesaleNotes || ''}
-                          onChange={e => handleFieldChange('wholesaleNotes', e.target.value)}
-                          className="w-full p-3 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white focus:outline-none transition resize-none font-light placeholder-zinc-600"
+                        <input
+                          type="number"
+                          min="1"
+                          required
+                          placeholder="e.g. 10"
+                          value={fieldsState.minimumOrderQuantity !== undefined ? fieldsState.minimumOrderQuantity : ''}
+                          onChange={e => handleFieldChange('minimumOrderQuantity', e.target.value === '' ? '' : Number(e.target.value))}
+                          className="w-full p-3 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white focus:outline-none transition font-medium"
                         />
                       </div>
+
+                      {/* Available Quantity */}
+                      <div>
+                        <label className="block text-[11px] font-bold text-white/80 uppercase tracking-wider mb-1">
+                          📊 {t('wholesale.available_quantity') || 'Available Quantity (Optional)'}
+                        </label>
+                        <input
+                          type="number"
+                          min="0"
+                          placeholder="e.g. 500"
+                          value={fieldsState.availableQuantity !== undefined ? fieldsState.availableQuantity : ''}
+                          onChange={e => handleFieldChange('availableQuantity', e.target.value === '' ? '' : Number(e.target.value))}
+                          className="w-full p-3 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white focus:outline-none transition"
+                        />
+                        <span className="text-[10px] text-white/40 italic mt-1 block">e.g., 500 Pieces, 100 Kg, 50 Cartons</span>
+                      </div>
                     </div>
-                  )}
-                </div>
+
+                    {/* Delivery Options */}
+                    <div className="space-y-2 pt-2 border-t border-amber-500/15">
+                      <label className="block text-[11px] font-bold text-white/80 uppercase tracking-wider">
+                        🚚 {t('wholesale.delivery_options') || 'Delivery Options'}
+                      </label>
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                        {[
+                          { id: 'Store Pickup', key: 'wholesale.delivery_pickup', label: 'Store Pickup' },
+                          { id: 'Local Delivery', key: 'wholesale.delivery_local', label: 'Local Delivery' },
+                          { id: 'Nationwide Delivery', key: 'wholesale.delivery_nationwide', label: 'Nationwide Delivery' }
+                        ].map(item => {
+                          const currentDel: string[] = Array.isArray(fieldsState.deliveryOptions) ? fieldsState.deliveryOptions : [];
+                          const isChecked = currentDel.includes(item.id);
+                          return (
+                            <label
+                              key={item.id}
+                              className={`p-2.5 rounded-xl border text-[11px] font-medium flex items-center gap-2 cursor-pointer transition ${
+                                isChecked
+                                  ? 'bg-amber-500/20 border-amber-500 text-amber-300'
+                                  : 'bg-zinc-900/80 border-white/10 text-white/70 hover:border-white/20'
+                              }`}
+                            >
+                              <input
+                                type="checkbox"
+                                checked={isChecked}
+                                onChange={e => {
+                                  if (e.target.checked) {
+                                    handleFieldChange('deliveryOptions', [...currentDel, item.id]);
+                                  } else {
+                                    handleFieldChange('deliveryOptions', currentDel.filter(d => d !== item.id));
+                                  }
+                                }}
+                                className="accent-amber-500 rounded"
+                              />
+                              <span>{t(item.key) || item.label}</span>
+                            </label>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* Supplier Contact Info for Wholesale listings */}
+                    {fieldsState.sellingType === 'Wholesale' && (
+                      <div className="space-y-3 pt-3 border-t border-amber-500/15">
+                        <div className="flex items-center gap-2 text-amber-400 font-bold text-xs uppercase tracking-wider">
+                          <Store className="w-4 h-4 text-amber-500" />
+                          <span>Supplier Contact Information *</span>
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          <div>
+                            <label className="block text-[10px] font-bold text-white/80 uppercase mb-1">
+                              Business / Company Name
+                            </label>
+                            <input
+                              type="text"
+                              placeholder="e.g. Biftu Bari Wholesale Trading"
+                              value={fieldsState.ownerBusinessName || ''}
+                              onChange={e => handleFieldChange('ownerBusinessName', e.target.value)}
+                              className="w-full p-2.5 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white focus:outline-none transition"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-[10px] font-bold text-white/80 uppercase mb-1">
+                              Contact Phone Number *
+                            </label>
+                            <input
+                              type="text"
+                              required
+                              placeholder="e.g. +251911223344"
+                              value={fieldsState.contactPhone || ''}
+                              onChange={e => handleFieldChange('contactPhone', e.target.value)}
+                              className="w-full p-2.5 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white focus:outline-none transition"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Wholesale Terms (Optional) */}
+                    <div className="space-y-1 pt-1 border-t border-amber-500/15">
+                      <label className="block text-[11px] font-bold text-white/80 uppercase tracking-wider">
+                        📝 {t('wholesale.wholesale_notes') || 'Wholesale Terms (Optional)'}
+                      </label>
+                      <textarea
+                        rows={2}
+                        placeholder={t('wholesale.notes_placeholder') || 'Example: Wholesale price applies to orders of 20 cartons or more.'}
+                        value={fieldsState.wholesaleNotes || ''}
+                        onChange={e => handleFieldChange('wholesaleNotes', e.target.value)}
+                        className="w-full p-3 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white focus:outline-none transition resize-none font-light placeholder-zinc-600"
+                      />
+                    </div>
+                  </div>
+                )}
               </form>
             )}
 
