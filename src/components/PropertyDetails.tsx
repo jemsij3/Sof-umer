@@ -45,7 +45,9 @@ import {
   Star,
   Video,
   Film,
-  Trash2
+  Trash2,
+  Globe,
+  Copy
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -110,6 +112,9 @@ export default function PropertyDetails({
   const [reviewComment, setReviewComment] = useState<string>('');
   const [reviewSubmitting, setReviewSubmitting] = useState<boolean>(false);
   const [reviewMsg, setReviewMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
+  // Address copy feedback state
+  const [addressCopied, setAddressCopied] = useState(false);
 
   const isFavorite = favorites.includes(property.id);
 
@@ -731,21 +736,95 @@ export default function PropertyDetails({
 
           {/* ORDER 7: Location */}
           <div className="bg-[#0d0d12]/90 rounded-3xl p-6 md:p-8 border border-white/5 shadow-lg text-left text-[#F5F5F4]">
-            <h3 className="text-lg font-serif font-bold text-white mb-3.5">
-              {t('location_on_map')}
-            </h3>
-            <div className="w-full h-64 bg-[#12121a] rounded-2xl overflow-hidden border border-white/5 relative">
-              <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#F5F5F4_1px,transparent_1px)] [background-size:16px_16px]"></div>
-              <div className="absolute top-1/3 left-0 w-full h-4 bg-white/5"></div>
-              <div className="absolute left-1/3 top-0 w-4 h-full bg-white/5"></div>
-              
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center">
-                <div className="bg-gradient-to-tr from-amber-500 to-amber-600 text-black p-3 rounded-full shadow-2xl border-2 border-[#0d0d12] animate-bounce">
-                  <MapPin className="w-5 h-5 text-black" />
-                </div>
-                <span className="bg-black text-amber-500 font-bold text-[10px] uppercase tracking-wider px-3 py-1.5 rounded-full border border-white/10 shadow mt-2.5 whitespace-nowrap">
-                  {getTranslatedLocation(property.location, currentLanguage)}
+            <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
+              <h3 className="text-lg font-serif font-bold text-white flex items-center gap-2">
+                <MapPin className="w-5 h-5 text-amber-500 shrink-0" />
+                <span>{t('location_on_map')}</span>
+              </h3>
+              {(property.region || property.city) && (
+                <span className="text-xs text-white/50 font-medium">
+                  {[property.city, property.region].filter(Boolean).join(', ')}
                 </span>
+              )}
+            </div>
+
+            {/* Map Canvas Container */}
+            <div className="w-full h-64 md:h-72 bg-[#12121a] rounded-2xl overflow-hidden border border-white/10 relative shadow-inner group">
+              {/* Background Grid & Road Simulation */}
+              <div className="absolute inset-0 opacity-20 bg-[radial-gradient(#F5F5F4_1.5px,transparent_1.5px)] [background-size:20px_20px]"></div>
+              <div className="absolute top-1/3 left-0 w-full h-5 bg-amber-500/10 border-y border-amber-500/10"></div>
+              <div className="absolute left-1/3 top-0 w-5 h-full bg-amber-500/10 border-x border-amber-500/10"></div>
+              <div className="absolute top-2/3 left-0 w-full h-3 bg-white/5"></div>
+              <div className="absolute left-2/3 top-0 w-3 h-full bg-white/5"></div>
+
+              {/* Centered Map Pin with Ping Animation (Clean - No overlapping text banner inside canvas) */}
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center pointer-events-none z-10">
+                <div className="relative flex items-center justify-center">
+                  <div className="absolute w-12 h-12 rounded-full bg-amber-500/25 animate-ping"></div>
+                  <div className="relative bg-gradient-to-tr from-amber-500 to-amber-600 text-black p-3.5 rounded-full shadow-2xl border-2 border-[#0d0d12] animate-bounce">
+                    <MapPin className="w-6 h-6 text-black" />
+                  </div>
+                </div>
+                <span className="mt-2 text-[10px] font-black uppercase tracking-widest text-amber-400 bg-black/90 backdrop-blur-md px-3 py-1 rounded-full border border-amber-500/30 shadow-lg">
+                  GPS Pin
+                </span>
+              </div>
+
+              {/* Floating Google Maps Button */}
+              <a
+                href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(getTranslatedLocation(property.location, currentLanguage))}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="absolute top-3 right-3 bg-black/85 hover:bg-black text-amber-400 hover:text-amber-300 text-xs font-bold px-3 py-2 rounded-xl border border-amber-500/30 backdrop-blur-md shadow-lg flex items-center gap-1.5 transition z-20 cursor-pointer"
+              >
+                <Globe className="w-3.5 h-3.5 text-amber-400" />
+                <span>Open Google Maps</span>
+              </a>
+            </div>
+
+            {/* Address Banner Container - Positioned Safely Outside / Below Map Container */}
+            <div className="mt-4 bg-[#12121a] border border-white/10 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-md">
+              <div className="flex items-start gap-3 min-w-0">
+                <div className="p-2.5 bg-amber-500/10 text-amber-400 rounded-xl border border-amber-500/20 shrink-0 mt-0.5">
+                  <MapPin className="w-4 h-4" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <span className="text-[10px] uppercase font-extrabold tracking-widest text-amber-500/80 block mb-0.5">
+                    Property Location Address
+                  </span>
+                  <p className="text-sm font-bold text-white leading-relaxed break-words">
+                    {getTranslatedLocation(property.location, currentLanguage)}
+                  </p>
+                  {(property.region || property.city) && (
+                    <div className="flex flex-wrap gap-1.5 mt-2">
+                      {property.region && (
+                        <span className="px-2.5 py-0.5 bg-white/5 border border-white/10 text-white/70 text-[10px] font-bold rounded-md">
+                          Region: {property.region}
+                        </span>
+                      )}
+                      {property.city && (
+                        <span className="px-2.5 py-0.5 bg-white/5 border border-white/10 text-white/70 text-[10px] font-bold rounded-md">
+                          City: {property.city}
+                        </span>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-white/5">
+                <button
+                  type="button"
+                  onClick={() => {
+                    navigator.clipboard.writeText(getTranslatedLocation(property.location, currentLanguage));
+                    setAddressCopied(true);
+                    setTimeout(() => setAddressCopied(false), 2000);
+                  }}
+                  className="px-3.5 py-2 bg-white/5 hover:bg-white/10 text-white/90 hover:text-white border border-white/10 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer"
+                >
+                  <Copy className="w-3.5 h-3.5 text-amber-400" />
+                  <span>{addressCopied ? 'Copied!' : 'Copy Address'}</span>
+                </button>
               </div>
             </div>
           </div>
