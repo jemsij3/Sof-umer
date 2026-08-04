@@ -116,6 +116,38 @@ export default function PropertyDetails({
   // Address copy feedback state
   const [addressCopied, setAddressCopied] = useState(false);
 
+  // Construct complete address combining all location parameters (e.g. City, Region, Building, Landmark)
+  const fullAddressText = useMemo(() => {
+    const parts: string[] = [];
+    const mainLoc = getTranslatedLocation(property.location, currentLanguage);
+    if (mainLoc && mainLoc.trim()) parts.push(mainLoc.trim());
+    if (property.address && property.address.trim() && !parts.some(p => p.toLowerCase().includes(property.address!.toLowerCase()))) {
+      parts.push(property.address.trim());
+    }
+    if (property.landmark && property.landmark.trim() && !parts.some(p => p.toLowerCase().includes(property.landmark!.toLowerCase()))) {
+      parts.push(property.landmark.trim());
+    }
+    if (property.city && property.city.trim() && !parts.some(p => p.toLowerCase().includes(property.city!.toLowerCase()))) {
+      parts.push(property.city.trim());
+    }
+    if (property.region && property.region.trim() && !parts.some(p => p.toLowerCase().includes(property.region!.toLowerCase()))) {
+      parts.push(property.region.trim());
+    }
+    return parts.join(', ');
+  }, [property.location, property.address, property.landmark, property.city, property.region, currentLanguage]);
+
+  // Construct precise Google Maps query link
+  const googleMapsUrl = useMemo(() => {
+    if (property.latitude && property.longitude) {
+      return `https://www.google.com/maps/search/?api=1&query=${property.latitude},${property.longitude}`;
+    }
+    const queryBase = fullAddressText || getTranslatedLocation(property.location, currentLanguage);
+    const finalQuery = queryBase.toLowerCase().includes('ethiopia')
+      ? queryBase
+      : (queryBase ? `${queryBase}, Ethiopia` : 'Ethiopia');
+    return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(finalQuery)}`;
+  }, [property.latitude, property.longitude, fullAddressText, property.location, currentLanguage]);
+
   const isFavorite = favorites.includes(property.id);
 
   // Compute seller active listings
@@ -772,7 +804,7 @@ export default function PropertyDetails({
 
               {/* Floating Google Maps Button */}
               <a
-                href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(getTranslatedLocation(property.location, currentLanguage))}`}
+                href={googleMapsUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="absolute top-3 right-3 bg-black/85 hover:bg-black text-amber-400 hover:text-amber-300 text-xs font-bold px-3 py-2 rounded-xl border border-amber-500/30 backdrop-blur-md shadow-lg flex items-center gap-1.5 transition z-20 cursor-pointer"
@@ -793,18 +825,23 @@ export default function PropertyDetails({
                     Property Location Address
                   </span>
                   <p className="text-sm font-bold text-white leading-relaxed break-words">
-                    {getTranslatedLocation(property.location, currentLanguage)}
+                    {fullAddressText || getTranslatedLocation(property.location, currentLanguage)}
                   </p>
-                  {(property.region || property.city) && (
+                  {(property.region || property.city || property.landmark || property.address) && (
                     <div className="flex flex-wrap gap-1.5 mt-2">
-                      {property.region && (
-                        <span className="px-2.5 py-0.5 bg-white/5 border border-white/10 text-white/70 text-[10px] font-bold rounded-md">
-                          Region: {property.region}
+                      {property.landmark && (
+                        <span className="px-2.5 py-0.5 bg-amber-500/10 border border-amber-500/20 text-amber-300 text-[10px] font-bold rounded-md">
+                          Landmark: {property.landmark}
                         </span>
                       )}
                       {property.city && (
                         <span className="px-2.5 py-0.5 bg-white/5 border border-white/10 text-white/70 text-[10px] font-bold rounded-md">
                           City: {property.city}
+                        </span>
+                      )}
+                      {property.region && (
+                        <span className="px-2.5 py-0.5 bg-white/5 border border-white/10 text-white/70 text-[10px] font-bold rounded-md">
+                          Region: {property.region}
                         </span>
                       )}
                     </div>
@@ -816,7 +853,7 @@ export default function PropertyDetails({
                 <button
                   type="button"
                   onClick={() => {
-                    navigator.clipboard.writeText(getTranslatedLocation(property.location, currentLanguage));
+                    navigator.clipboard.writeText(fullAddressText || getTranslatedLocation(property.location, currentLanguage));
                     setAddressCopied(true);
                     setTimeout(() => setAddressCopied(false), 2000);
                   }}

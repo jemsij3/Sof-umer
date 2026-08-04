@@ -96,6 +96,12 @@ export interface Property {
   description: string;
   images: string[];
   location: string;
+  region?: string;
+  city?: string;
+  address?: string;
+  landmark?: string;
+  latitude?: number;
+  longitude?: number;
   propertyType: string; // Sub-category/type, e.g. Apartments, Houses, Full-time, Tech, Electronics
   category: string; // e.g. Buy, Rent, Full-time, Remote, For Sale, Hourly
   majorCategory?: 'Properties' | 'Vehicles' | 'Jobs' | 'Services' | 'Products' | 'Local Businesses' | 'Community';
