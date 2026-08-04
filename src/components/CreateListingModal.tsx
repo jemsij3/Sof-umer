@@ -1666,6 +1666,9 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
         if (currentUser?.role === 'admin' && (field.id === 'contactPhone' || field.id === 'contactEmail' || field.id === 'ownerName')) {
           continue;
         }
+        if (field.id === 'price' && fieldsState.sellingType === 'Wholesale') {
+          continue;
+        }
         const val = fieldsState[field.id];
         if (field.required && (!val || String(val).trim() === '')) {
           const translatedLabel = getTranslatedFieldLabel(field.label, currentLanguage);
@@ -1770,10 +1773,11 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
         isVerifiedListing: currentUser?.role === 'admin',
         subCategoryId: computedSubcatId || undefined,
         sellingType: fieldsState.sellingType || 'Retail',
-        businessType: (fieldsState.sellingType === 'Wholesale' || fieldsState.sellingType === 'Retail & Wholesale') ? (fieldsState.businessType || 'Wholesaler / Distributor') : undefined,
+        businessType: (fieldsState.sellingType === 'Wholesale' || fieldsState.sellingType === 'Retail & Wholesale') ? (fieldsState.businessType || 'Wholesaler') : undefined,
         wholesalePrice: (fieldsState.sellingType === 'Wholesale' || fieldsState.sellingType === 'Retail & Wholesale') && fieldsState.wholesalePrice ? Number(fieldsState.wholesalePrice) : undefined,
         minimumOrderQuantity: (fieldsState.sellingType === 'Wholesale' || fieldsState.sellingType === 'Retail & Wholesale') && fieldsState.minimumOrderQuantity ? Number(fieldsState.minimumOrderQuantity) : undefined,
-        wholesaleUnit: (fieldsState.sellingType === 'Wholesale' || fieldsState.sellingType === 'Retail & Wholesale') ? (fieldsState.wholesaleUnit || 'Pieces (Pcs)') : undefined,
+        wholesaleUnit: (fieldsState.sellingType === 'Wholesale' || fieldsState.sellingType === 'Retail & Wholesale') ? (fieldsState.wholesaleUnit || 'Piece') : undefined,
+        availableQuantity: (fieldsState.sellingType === 'Wholesale' || fieldsState.sellingType === 'Retail & Wholesale') && fieldsState.availableQuantity ? Number(fieldsState.availableQuantity) : undefined,
         deliveryOptions: (fieldsState.sellingType === 'Wholesale' || fieldsState.sellingType === 'Retail & Wholesale') && Array.isArray(fieldsState.deliveryOptions) ? fieldsState.deliveryOptions : [],
         wholesaleNotes: (fieldsState.sellingType === 'Wholesale' || fieldsState.sellingType === 'Retail & Wholesale') ? (fieldsState.wholesaleNotes || '') : undefined
       };
@@ -2121,6 +2125,7 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5 bg-zinc-900/20 p-5 rounded-2xl border border-white/5">
                   {activeFields
                     .filter(field => !(currentUser?.role === 'admin' && (field.id === 'contactPhone' || field.id === 'contactEmail' || field.id === 'ownerName')))
+                    .filter(field => !(field.id === 'price' && fieldsState.sellingType === 'Wholesale'))
                     .map(field => {
                     const val = fieldsState[field.id] !== undefined ? fieldsState[field.id] : '';
                     const spanClass = field.colSpan === 'full' ? 'col-span-full' : 'col-span-1';
@@ -2467,7 +2472,7 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
                 <div className="bg-amber-500/5 border border-amber-500/20 p-5 rounded-2xl space-y-4 mt-5">
                   <div className="flex items-center gap-2 text-amber-400 font-bold text-xs uppercase tracking-wider">
                     <Package className="w-4 h-4 text-amber-500" />
-                    <span>📦 {t('wholesale.wholesale_config_title') || 'Selling Type & Wholesale Configuration'}</span>
+                    <span>{t('wholesale.wholesale_config_title') || '📦 Wholesale Information'}</span>
                   </div>
 
                   <div className="space-y-2">
@@ -2511,43 +2516,69 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
                             🏢 {t('wholesale.business_type') || 'Business Type'} *
                           </label>
                           <select
-                            value={fieldsState.businessType || 'Wholesaler / Supplier'}
+                            value={fieldsState.businessType || 'Wholesaler'}
                             onChange={e => handleFieldChange('businessType', e.target.value)}
                             className="w-full p-3 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white focus:outline-none transition"
                           >
-                            <option value="Manufacturer">{t('wholesale.manufacturer') || 'Manufacturer'}</option>
-                            <option value="Importer">{t('wholesale.importer') || 'Importer'}</option>
-                            <option value="Wholesaler / Supplier">{t('wholesale.wholesaler') || 'Wholesaler / Supplier'}</option>
-                            <option value="Authorized Agent">{t('wholesale.authorized_agent') || 'Authorized Agent'}</option>
-                            <option value="Local Supplier">{t('wholesale.local_supplier') || 'Local Supplier'}</option>
+                            {[
+                              { value: 'Manufacturer', key: 'wholesale.manufacturer' },
+                              { value: 'Wholesaler', key: 'wholesale.wholesaler' },
+                              { value: 'Distributor', key: 'wholesale.distributor' },
+                              { value: 'Importer', key: 'wholesale.importer' },
+                              { value: 'Exporter', key: 'wholesale.exporter' },
+                              { value: 'Authorized Dealer', key: 'wholesale.authorized_dealer' },
+                              { value: 'Local Supplier', key: 'wholesale.local_supplier' },
+                              { value: 'Farmer', key: 'wholesale.farmer' },
+                              { value: 'Cooperative', key: 'wholesale.cooperative' },
+                              { value: 'Other', key: 'wholesale.other' }
+                            ].map(bt => (
+                              <option key={bt.value} value={bt.value}>
+                                {t(bt.key) || bt.value}
+                              </option>
+                            ))}
                           </select>
                         </div>
 
-                        {/* Wholesale Unit */}
+                        {/* Unit of Sale */}
                         <div>
                           <label className="block text-[11px] font-bold text-white/80 uppercase tracking-wider mb-1">
-                            📏 {t('wholesale.wholesale_unit') || 'Wholesale Unit'} *
+                            📏 {t('wholesale.unit_of_sale') || 'Unit of Sale'} *
                           </label>
                           <select
-                            value={fieldsState.wholesaleUnit || 'Pieces (Pcs)'}
+                            value={fieldsState.wholesaleUnit || 'Piece'}
                             onChange={e => handleFieldChange('wholesaleUnit', e.target.value)}
                             className="w-full p-3 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white focus:outline-none transition"
                           >
-                            <option value="Pieces (Pcs)">{t('wholesale.unit_pieces') || 'Pieces (Pcs)'}</option>
-                            <option value="Cartons / Boxes">{t('wholesale.unit_cartons') || 'Cartons / Boxes'}</option>
-                            <option value="Kilograms (Kg)">{t('wholesale.unit_kilograms') || 'Kilograms (Kg)'}</option>
-                            <option value="Tons">{t('wholesale.unit_tons') || 'Tons'}</option>
-                            <option value="Meters">{t('wholesale.unit_meters') || 'Meters'}</option>
-                            <option value="Sets">{t('wholesale.unit_sets') || 'Sets'}</option>
-                            <option value="Pairs">{t('wholesale.unit_pairs') || 'Pairs'}</option>
-                            <option value="Dozens">{t('wholesale.unit_dozens') || 'Dozens'}</option>
+                            {[
+                              { value: 'Piece', key: 'wholesale.unit_piece' },
+                              { value: 'Box', key: 'wholesale.unit_box' },
+                              { value: 'Carton', key: 'wholesale.unit_carton' },
+                              { value: 'Pack', key: 'wholesale.unit_pack' },
+                              { value: 'Dozen', key: 'wholesale.unit_dozen' },
+                              { value: 'Pair', key: 'wholesale.unit_pair' },
+                              { value: 'Bag', key: 'wholesale.unit_bag' },
+                              { value: 'Sack', key: 'wholesale.unit_sack' },
+                              { value: 'Bundle', key: 'wholesale.unit_bundle' },
+                              { value: 'Roll', key: 'wholesale.unit_roll' },
+                              { value: 'Bottle', key: 'wholesale.unit_bottle' },
+                              { value: 'Kilogram (Kg)', key: 'wholesale.unit_kg' },
+                              { value: 'Gram', key: 'wholesale.unit_gram' },
+                              { value: 'Liter', key: 'wholesale.unit_liter' },
+                              { value: 'Meter', key: 'wholesale.unit_meter' },
+                              { value: 'Ton', key: 'wholesale.unit_ton' },
+                              { value: 'Other', key: 'wholesale.unit_other' }
+                            ].map(u => (
+                              <option key={u.value} value={u.value}>
+                                {t(u.key) || u.value}
+                              </option>
+                            ))}
                           </select>
                         </div>
 
                         {/* Wholesale Price */}
                         <div>
                           <label className="block text-[11px] font-bold text-white/80 uppercase tracking-wider mb-1">
-                            💰 {t('wholesale.wholesale_price') || 'Wholesale Price'} ({currency}) *
+                            💰 {t('wholesale.wholesale_price') || 'Wholesale Price (Per Unit)'} ({currency}) *
                           </label>
                           <div className="relative">
                             <span className="absolute left-3 top-3 text-xs text-amber-500 font-bold">{currency}</span>
@@ -2578,6 +2609,22 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
                             className="w-full p-3 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white focus:outline-none transition"
                           />
                         </div>
+
+                        {/* Available Quantity */}
+                        <div>
+                          <label className="block text-[11px] font-bold text-white/80 uppercase tracking-wider mb-1">
+                            📊 {t('wholesale.available_quantity') || 'Available Quantity (Optional)'}
+                          </label>
+                          <input
+                            type="number"
+                            min="0"
+                            placeholder="e.g. 500"
+                            value={fieldsState.availableQuantity !== undefined ? fieldsState.availableQuantity : ''}
+                            onChange={e => handleFieldChange('availableQuantity', e.target.value === '' ? '' : Number(e.target.value))}
+                            className="w-full p-3 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white focus:outline-none transition"
+                          />
+                          <span className="text-[10px] text-white/40 italic mt-1 block">e.g., 500 Pieces, 100 Kg, 50 Cartons</span>
+                        </div>
                       </div>
 
                       {/* Delivery Options */}
@@ -2585,13 +2632,11 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
                         <label className="block text-[11px] font-bold text-white/80 uppercase tracking-wider">
                           🚚 {t('wholesale.delivery_options') || 'Delivery Options'}
                         </label>
-                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                           {[
                             { id: 'Store Pickup', key: 'wholesale.delivery_pickup', label: 'Store Pickup' },
                             { id: 'Local Delivery', key: 'wholesale.delivery_local', label: 'Local Delivery' },
-                            { id: 'Nationwide Shipping', key: 'wholesale.delivery_nationwide', label: 'Nationwide Shipping' },
-                            { id: 'Buyer Pays Shipping', key: 'wholesale.delivery_buyer_pays', label: 'Buyer Pays Shipping' },
-                            { id: 'Free Shipping for Bulk Orders', key: 'wholesale.delivery_free_bulk', label: 'Free Shipping for Bulk Orders' }
+                            { id: 'Nationwide Delivery', key: 'wholesale.delivery_nationwide', label: 'Nationwide Delivery' }
                           ].map(item => {
                             const currentDel: string[] = Array.isArray(fieldsState.deliveryOptions) ? fieldsState.deliveryOptions : [];
                             const isChecked = currentDel.includes(item.id);
@@ -2623,14 +2668,14 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
                         </div>
                       </div>
 
-                      {/* Wholesale Notes / Terms */}
+                      {/* Wholesale Terms (Optional) */}
                       <div className="space-y-1 pt-1">
                         <label className="block text-[11px] font-bold text-white/80 uppercase tracking-wider">
-                          📝 {t('wholesale.wholesale_notes') || 'Additional Wholesale Terms / Notes'}
+                          📝 {t('wholesale.wholesale_notes') || 'Wholesale Terms (Optional)'}
                         </label>
                         <textarea
                           rows={2}
-                          placeholder={t('wholesale.notes_placeholder') || 'e.g. 50% advance payment required, lead time 3-5 days for bulk orders...'}
+                          placeholder={t('wholesale.notes_placeholder') || 'Example: Wholesale price applies to orders of 20 cartons or more.'}
                           value={fieldsState.wholesaleNotes || ''}
                           onChange={e => handleFieldChange('wholesaleNotes', e.target.value)}
                           className="w-full p-3 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white focus:outline-none transition resize-none font-light placeholder-zinc-600"
@@ -2684,13 +2729,27 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
                         </p>
                       </div>
                       <div className="text-right">
-                        <span className="text-lg font-extrabold text-amber-400 font-mono block">
-                          {fieldsState.price ? `${Number(fieldsState.price).toLocaleString()} ${currency}` : d.contactPrice}
-                        </span>
-                        {((fieldsState.sellingType || 'Retail') === 'Wholesale' || (fieldsState.sellingType || 'Retail') === 'Retail & Wholesale') && fieldsState.wholesalePrice && (
-                          <span className="text-[10px] text-amber-300 font-bold block mt-0.5">
-                            Wholesale: {Number(fieldsState.wholesalePrice).toLocaleString()} {currency} (MOQ: {fieldsState.minimumOrderQuantity || 1} {fieldsState.wholesaleUnit || 'Pcs'})
-                          </span>
+                        {(fieldsState.sellingType || 'Retail') === 'Wholesale' ? (
+                          <>
+                            <span className="text-lg font-extrabold text-amber-400 font-mono block">
+                              {fieldsState.wholesalePrice ? `${Number(fieldsState.wholesalePrice).toLocaleString()} ${currency}` : d.contactPrice}
+                              <span className="text-xs font-normal text-amber-300/80 ml-1">/ {fieldsState.wholesaleUnit || 'Piece'}</span>
+                            </span>
+                            <span className="text-[10px] text-amber-300/90 font-bold block mt-0.5">
+                              MOQ: {fieldsState.minimumOrderQuantity || 1} {fieldsState.wholesaleUnit || 'Piece'}s
+                            </span>
+                          </>
+                        ) : (
+                          <>
+                            <span className="text-lg font-extrabold text-amber-400 font-mono block">
+                              {fieldsState.price ? `${Number(fieldsState.price).toLocaleString()} ${currency}` : d.contactPrice}
+                            </span>
+                            {(fieldsState.sellingType || 'Retail') === 'Retail & Wholesale' && fieldsState.wholesalePrice && (
+                              <span className="text-[10px] text-amber-300 font-bold block mt-0.5">
+                                Wholesale: {Number(fieldsState.wholesalePrice).toLocaleString()} {currency} / {fieldsState.wholesaleUnit || 'Piece'} (MOQ: {fieldsState.minimumOrderQuantity || 1})
+                              </span>
+                            )}
+                          </>
                         )}
                       </div>
                     </div>
@@ -2701,9 +2760,14 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
                           <Package className="w-3.5 h-3.5 text-amber-400" />
                           <span>{fieldsState.sellingType} &bull; {fieldsState.businessType || 'Wholesaler'}</span>
                         </div>
-                        <span className="text-[10px] text-amber-400/80 font-mono">
-                          MOQ: {fieldsState.minimumOrderQuantity || 1} {fieldsState.wholesaleUnit || 'Pcs'}
-                        </span>
+                        <div className="text-[10px] text-amber-400/80 font-mono text-right">
+                          <span>MOQ: {fieldsState.minimumOrderQuantity || 1} {fieldsState.wholesaleUnit || 'Piece'}</span>
+                          {fieldsState.availableQuantity ? (
+                            <span className="ml-2 font-semibold text-amber-300">
+                              &bull; Stock: {fieldsState.availableQuantity} {fieldsState.wholesaleUnit || 'Piece'}s
+                            </span>
+                          ) : null}
+                        </div>
                       </div>
                     )}
 

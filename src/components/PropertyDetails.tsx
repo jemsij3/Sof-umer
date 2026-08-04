@@ -508,9 +508,14 @@ export default function PropertyDetails({
                       const bt = (property as any).businessType;
                       if (bt === 'Manufacturer') return t('wholesale.manufacturer') || bt;
                       if (bt === 'Importer') return t('wholesale.importer') || bt;
-                      if (bt === 'Wholesaler / Supplier' || bt === 'Wholesaler / Distributor') return t('wholesale.wholesaler') || bt;
-                      if (bt === 'Authorized Agent') return t('wholesale.authorized_agent') || bt;
+                      if (bt === 'Exporter') return t('wholesale.exporter') || bt;
+                      if (bt === 'Wholesaler' || bt === 'Wholesaler / Supplier' || bt === 'Wholesaler / Distributor') return t('wholesale.wholesaler') || bt;
+                      if (bt === 'Distributor') return t('wholesale.distributor') || bt;
+                      if (bt === 'Authorized Dealer') return t('wholesale.authorized_dealer') || bt;
                       if (bt === 'Local Supplier') return t('wholesale.local_supplier') || bt;
+                      if (bt === 'Farmer') return t('wholesale.farmer') || bt;
+                      if (bt === 'Cooperative') return t('wholesale.cooperative') || bt;
+                      if (bt === 'Other') return t('wholesale.other') || bt;
                       return bt || t('wholesale.wholesaler') || 'Wholesaler';
                     })()}
                   </span>
@@ -526,28 +531,47 @@ export default function PropertyDetails({
                 <div className="bg-black/40 p-3.5 rounded-2xl border border-white/5">
                   <span className="text-[10px] text-white/50 uppercase font-bold block mb-1">{t('wholesale.moq') || 'Min. Order (MOQ)'}</span>
                   <span className="text-xs font-bold text-white font-mono">
-                    {(property as any).minimumOrderQuantity || 1} {((property as any).wholesaleUnit || 'Pcs').replace(/\s*\(.*\)/, '')}
+                    {(property as any).minimumOrderQuantity || 1} {((property as any).wholesaleUnit || 'Piece').replace(/\s*\(.*\)/, '')}
                   </span>
                 </div>
 
                 <div className="bg-black/40 p-3.5 rounded-2xl border border-white/5">
-                  <span className="text-[10px] text-white/50 uppercase font-bold block mb-1">{t('wholesale.wholesale_unit') || 'Wholesale Unit'}</span>
+                  <span className="text-[10px] text-white/50 uppercase font-bold block mb-1">{t('wholesale.unit_of_sale') || 'Unit of Sale'}</span>
                   <span className="text-xs font-bold text-white">
                     {(() => {
                       const wu = (property as any).wholesaleUnit;
+                      if (wu === 'Piece') return t('wholesale.unit_piece') || wu;
+                      if (wu === 'Box') return t('wholesale.unit_box') || wu;
+                      if (wu === 'Carton') return t('wholesale.unit_carton') || wu;
+                      if (wu === 'Pack') return t('wholesale.unit_pack') || wu;
+                      if (wu === 'Dozen') return t('wholesale.unit_dozen') || wu;
+                      if (wu === 'Pair') return t('wholesale.unit_pair') || wu;
+                      if (wu === 'Bag') return t('wholesale.unit_bag') || wu;
+                      if (wu === 'Sack') return t('wholesale.unit_sack') || wu;
+                      if (wu === 'Bundle') return t('wholesale.unit_bundle') || wu;
+                      if (wu === 'Roll') return t('wholesale.unit_roll') || wu;
+                      if (wu === 'Bottle') return t('wholesale.unit_bottle') || wu;
+                      if (wu === 'Kilogram (Kg)') return t('wholesale.unit_kg') || wu;
+                      if (wu === 'Gram') return t('wholesale.unit_gram') || wu;
+                      if (wu === 'Liter') return t('wholesale.unit_liter') || wu;
+                      if (wu === 'Meter') return t('wholesale.unit_meter') || wu;
+                      if (wu === 'Ton') return t('wholesale.unit_ton') || wu;
+                      if (wu === 'Other') return t('wholesale.unit_other') || wu;
                       if (wu === 'Pieces (Pcs)') return t('wholesale.unit_pieces') || wu;
                       if (wu === 'Cartons / Boxes') return t('wholesale.unit_cartons') || wu;
                       if (wu === 'Kilograms (Kg)') return t('wholesale.unit_kilograms') || wu;
-                      if (wu === 'Tons') return t('wholesale.unit_tons') || wu;
-                      if (wu === 'Meters') return t('wholesale.unit_meters') || wu;
-                      if (wu === 'Sets') return t('wholesale.unit_sets') || wu;
-                      if (wu === 'Pairs') return t('wholesale.unit_pairs') || wu;
-                      if (wu === 'Dozens') return t('wholesale.unit_dozens') || wu;
-                      return wu || t('wholesale.unit_pieces') || 'Pieces';
+                      return wu || t('wholesale.unit_piece') || 'Piece';
                     })()}
                   </span>
                 </div>
               </div>
+
+              {(property as any).availableQuantity !== undefined && (property as any).availableQuantity !== null && (property as any).availableQuantity !== '' && (
+                <div className="pt-2 border-t border-white/10 flex items-center gap-2">
+                  <span className="text-[11px] font-bold text-white/60 uppercase tracking-wider">📊 {t('wholesale.available_quantity') || 'Available Quantity'}:</span>
+                  <span className="text-xs font-mono font-bold text-amber-300">{(property as any).availableQuantity} {((property as any).wholesaleUnit || 'Piece').replace(/\s*\(.*\)/, '')}s</span>
+                </div>
+              )}
 
               {Array.isArray((property as any).deliveryOptions) && (property as any).deliveryOptions.length > 0 && (
                 <div className="pt-2 border-t border-white/10">
