@@ -844,7 +844,13 @@ const getInitialData = () => {
     supportTickets,
     faqs: initialFaqs,
     offers: [] as PropertyOffer[],
-    reviews: [] as Review[]
+    reviews: [] as Review[],
+    appSettings: {
+      siteName: 'SOF-UMER Marketplace',
+      supportEmail: 'support@sofumer.com',
+      supportPhone: '+251 911 000 000',
+      maintenanceMode: false
+    }
   };
 };
 
@@ -1102,7 +1108,7 @@ async function loadFromMongo(): Promise<boolean> {
       fetchAppSettings()
     ]);
 
-    const prevLocal = localDb || ({} as any);
+    const prevLocal: any = localDb || {};
 
     localDb = {
       users: mergeCollection(users, prevLocal.users || [], 'id'),
@@ -1213,25 +1219,39 @@ const applyDataSanityAndMigrations = () => {
   // 2. Safely deduplicate users by normalized email, merging fields to preserve updated passwords and verification status
   const uniqueUsersMap = new Map<string, ServerUser>();
   const usersWithoutEmail: ServerUser[] = [];
+  const defaultSeedHash = '$2b$10$8M.OZ7bfDTd8e724T1tSneytfS2iE4nLdSr27YVOBgkIJVdL7ENvC';
 
   for (const u of localDb.users) {
     if (u.email) {
-      const existing = uniqueUsersMap.get(u.email);
+      const normE = normalizeEmail(u.email);
+      const existing = uniqueUsersMap.get(normE);
       if (!existing) {
-        uniqueUsersMap.set(u.email, u);
+        uniqueUsersMap.set(normE, u);
       } else {
-        // Merge user details: preserve passwordHash if present in either
-        if (!existing.passwordHash && u.passwordHash) {
-          existing.passwordHash = u.passwordHash;
+        // Collect all password hashes in history so no hash is ever lost
+        const combinedHistory = Array.from(new Set([
+          ...(existing.passwordHistory || []),
+          ...(u.passwordHistory || []),
+          existing.passwordHash,
+          u.passwordHash
+        ].filter(Boolean) as string[]));
+        existing.passwordHistory = combinedHistory;
+
+        // Determine which passwordHash should be active:
+        // Favor non-default/updated passwordHash from 'u' if existing holds the default seed hash
+        if (u.passwordHash) {
+          if (!existing.passwordHash || (existing.passwordHash === defaultSeedHash && u.passwordHash !== defaultSeedHash)) {
+            existing.passwordHash = u.passwordHash;
+          } else if (u.tokenVersion && u.tokenVersion > (existing.tokenVersion || 1)) {
+            existing.passwordHash = u.passwordHash;
+          }
         }
-        if (u.passwordHistory && u.passwordHistory.length > 0) {
-          existing.passwordHistory = Array.from(new Set([...(existing.passwordHistory || []), ...u.passwordHistory]));
-        }
+
         if (u.isVerified && !existing.isVerified) {
           existing.isVerified = true;
           existing.verificationStatus = 'verified';
         }
-        if (u.role === 'admin') existing.role = 'admin';
+        if (u.role === 'admin' || (u.role as string) === 'owner' || (u.role as string) === 'superadmin') existing.role = 'admin';
         if (u.tokenVersion && u.tokenVersion > (existing.tokenVersion || 1)) {
           existing.tokenVersion = u.tokenVersion;
         }
@@ -1248,14 +1268,14 @@ const applyDataSanityAndMigrations = () => {
 
   // 3. Ensure Jemal (Owner Admin) remains active & admin without wiping custom password!
   const jemalEmail = 'jemaljima@gmail.com';
-  let jemalUser = localDb.users.find(u => u.email && u.email === jemalEmail);
+  let jemalUser = localDb.users.find(u => u.email && normalizeEmail(u.email) === jemalEmail);
   if (!jemalUser) {
     jemalUser = getInitialData().users[0];
     localDb.users.unshift(jemalUser);
   }
   if (jemalUser) {
     if (!jemalUser.passwordHash) {
-      jemalUser.passwordHash = '$2b$10$8M.OZ7bfDTd8e724T1tSneytfS2iE4nLdSr27YVOBgkIJVdL7ENvC';
+      jemalUser.passwordHash = defaultSeedHash;
     }
     jemalUser.failedLoginAttempts = 0;
     jemalUser.lockoutUntil = undefined;
@@ -1913,7 +1933,11 @@ async function startServer() {
           return next();
         }
         const targetUserId = decoded.userId || decoded.id;
-        const user = localDb.users.find(u => u.id === targetUserId);
+        let user = localDb.users.find(u => u.id === targetUserId);
+        if (!user && decoded.email) {
+          const targetEmail = normalizeEmail(decoded.email);
+          user = localDb.users.find(u => u.email && normalizeEmail(u.email) === targetEmail);
+        }
         if (user) {
           if (user.status === 'suspended' || user.status === 'banned') {
             const reason = user.status === 'banned' ? user.banReason : user.suspendReason;
@@ -1997,16 +2021,54 @@ async function startServer() {
     const normPhone = normalizePhone(rawInput);
     const normUsername = rawInput.toLowerCase();
 
-    const user = localDb.users.find(u => 
+    // Find all candidate users matching input by normalized email, username, or phone
+    const candidateUsers = localDb.users.filter(u => 
       (u.username && u.username.toLowerCase() === normUsername) ||
-      (u.email && u.email.toLowerCase() === normEmail) ||
+      (u.email && normalizeEmail(u.email) === normEmail) ||
       (u.phone && normalizePhone(u.phone) === normPhone)
     );
 
-    if (!user) {
+    if (!candidateUsers || candidateUsers.length === 0) {
       return res.status(401).json({ error: 'Invalid credentials. Please check your username, email, or password.' });
     }
 
+    // Attempt password match across candidate users and their password histories
+    let user: ServerUser | undefined = undefined;
+    let isMatch = false;
+
+    for (const candidate of candidateUsers) {
+      if (!candidate.passwordHash) continue;
+
+      // 1. Direct check against current candidate passwordHash
+      const directMatch = await bcrypt.compare(password, candidate.passwordHash);
+      if (directMatch) {
+        user = candidate;
+        isMatch = true;
+        break;
+      }
+
+      // 2. Fallback check against candidate passwordHistory (recovers desynchronized hashes)
+      if (candidate.passwordHistory && Array.isArray(candidate.passwordHistory)) {
+        for (const oldHash of candidate.passwordHistory) {
+          if (oldHash) {
+            const historyMatch = await bcrypt.compare(password, oldHash);
+            if (historyMatch) {
+              candidate.passwordHash = oldHash; // Restore active passwordHash to matching hash
+              user = candidate;
+              isMatch = true;
+              await saveDb();
+              break;
+            }
+          }
+        }
+      }
+      if (isMatch) break;
+    }
+
+    // Fallback candidate for failed login attempt counter tracking
+    if (!user) {
+      user = candidateUsers[0];
+    }
 
     // Check temporary lockout
     if (user.lockoutUntil && new Date(user.lockoutUntil) > new Date()) {
@@ -2029,11 +2091,9 @@ async function startServer() {
       }
     }
 
-    if (!user.passwordHash) {
+    if (!user.passwordHash && !isMatch) {
       return res.status(401).json({ error: 'Please sign in using Google, Phone OTP, or set a password via Password Reset.' });
     }
-
-    const isMatch = await bcrypt.compare(password, user.passwordHash);
 
     if (!isMatch) {
       user.failedLoginAttempts = (user.failedLoginAttempts || 0) + 1;
