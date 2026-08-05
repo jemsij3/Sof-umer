@@ -2551,6 +2551,15 @@ export default function UserDashboard({
                                             Change Security Password
                                           </button>
                                         </form>
+
+                                        {currentUser && (
+                                          <div className="pt-6 border-t border-white/10">
+                                            <TwoFactorSecurityModule 
+                                              currentUser={currentUser} 
+                                              onUserUpdated={(updatedUser) => setCurrentUser(updatedUser)} 
+                                            />
+                                          </div>
+                                        )}
                                       </div>
                                     )}
 
