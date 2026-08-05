@@ -1957,41 +1957,31 @@ interface PropertyCardProps {
 
 function PropertyCard({ property, onSelect, favorites, onToggleFav, onReport, t, currentLanguage }: PropertyCardProps) {
   const isFavorite = favorites.includes(property.id);
+  const isVerifiedSupplier = property.verificationStatus === 'verified' || property.isVerifiedListing === true || property.ownerId === 'usr-admin';
+  const sellingType = (property as any).sellingType || 'Retail';
 
   return (
-    <div className="bg-[#0d0d12]/80 rounded-3xl overflow-hidden border border-white/5 hover:border-white/20 transition-all duration-300 flex flex-col group relative shadow-lg hover:shadow-2xl">
-      {/* Category & Wholesale Tag overlay */}
-      <div className="absolute top-4 left-4 z-10 flex flex-wrap gap-1.5 items-center max-w-[70%]">
-        {(() => {
-          if (!property.category) return null;
-          const catLower = (property.category || '').toLowerCase().trim();
-          let badgeText = '';
-          if (catLower === 'buy' || catLower === 'for sale' || catLower === 'sale') {
-            badgeText = t('cat_buy') || 'For Sale';
-          } else if (catLower === 'rent' || catLower === 'for rent') {
-            badgeText = t('cat_rent') || 'For Rent';
-          } else if (
-            catLower !== (property.propertyType || '').toLowerCase().trim() &&
-            catLower !== (property.majorCategory || '').toLowerCase().trim()
-          ) {
-            badgeText = property.category;
-          }
-          if (!badgeText) return null;
-          return (
-            <span className="text-[9px] font-black uppercase tracking-widest px-3 py-1.5 rounded-xl shadow-md bg-[#050505]/80 backdrop-blur-md text-amber-500 border border-white/10">
-              {badgeText}
-            </span>
-          );
-        })()}
+    <div className="bg-[#0d0d12]/80 rounded-3xl overflow-hidden border border-white/5 hover:border-amber-500/30 transition-all duration-300 flex flex-col group relative shadow-lg hover:shadow-2xl">
+      {/* Category & Selling Type Badges */}
+      <div className="absolute top-4 left-4 z-10 flex flex-wrap gap-1.5 items-center max-w-[75%]">
+        <span className={`text-[9px] font-black uppercase tracking-wider px-2.5 py-1 rounded-xl shadow-md backdrop-blur-md ${
+          sellingType === 'Wholesale' ? 'bg-amber-500 text-black border border-amber-400' :
+          sellingType === 'Retail & Wholesale' ? 'bg-gradient-to-r from-amber-500 to-emerald-500 text-black border border-amber-300' :
+          'bg-blue-600/90 text-white border border-blue-400/30'
+        }`}>
+          {sellingType === 'Wholesale' ? '📦 Wholesale' :
+           sellingType === 'Retail & Wholesale' ? '🛒📦 Retail & Wholesale' :
+           '🛒 Retail'}
+        </span>
 
-        {((property as any).sellingType === 'Wholesale' || (property as any).sellingType === 'Retail & Wholesale') && (
-          <span className="text-[9px] font-black uppercase tracking-widest px-2.5 py-1.5 rounded-xl shadow-md bg-amber-500 text-black border border-amber-400 font-sans">
-            📦 {t('wholesale.wholesale') || 'Wholesale'}
+        {isVerifiedSupplier && (
+          <span className="text-[9px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-xl shadow-md bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 backdrop-blur-md">
+            ✓ Verified
           </span>
         )}
 
         {((property as any).isNegotiable === true || String((property as any).negotiable).toLowerCase() === 'yes') && (
-          <span className="text-[9px] font-bold uppercase tracking-wider px-2.5 py-1.5 rounded-xl shadow-md bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 backdrop-blur-md">
+          <span className="text-[9px] font-bold uppercase tracking-wider px-2 py-1 rounded-xl shadow-md bg-amber-500/20 text-amber-300 border border-amber-500/30 backdrop-blur-md">
             🤝 {getTranslatedOption('Negotiable', currentLanguage) || 'Negotiable'}
           </span>
         )}
@@ -2017,92 +2007,88 @@ function PropertyCard({ property, onSelect, favorites, onToggleFav, onReport, t,
           className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
           referrerPolicy="no-referrer"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent pointer-events-none" />
       </div>
 
       {/* Property Details Text */}
-      <div className="p-6 flex-1 flex flex-col justify-between">
+      <div className="p-5 flex-1 flex flex-col justify-between">
         <div>
           {/* Price & Currency */}
-          <div className="flex justify-between items-baseline mb-3">
-            <p className="text-xl font-bold text-[#F5F5F4] tracking-tight font-mono">
-              {(property.price || 0).toLocaleString()} <span className="text-amber-500/80 text-xs font-bold uppercase tracking-wider ml-1">{property.currency || 'ETB'}</span>
-            </p>
-            <span className="text-[9px] font-black text-white/50 border border-white/5 bg-white/5 px-2.5 py-1 rounded-full uppercase tracking-wider">
-              {property.propertyType 
-                ? getTranslatedPropertyType(extractString(property.propertyType, currentLanguage), currentLanguage) 
-                : getTranslatedCategoryName(extractString(property.majorCategory, currentLanguage), currentLanguage)}
-            </span>
+          <div className="mb-2">
+            <div className="flex justify-between items-baseline">
+              <p className="text-xl font-bold text-[#F5F5F4] tracking-tight font-mono">
+                {(property.price || 0).toLocaleString()} <span className="text-amber-500/80 text-xs font-bold uppercase tracking-wider ml-1">{property.currency || 'ETB'}</span>
+              </p>
+              <span className="text-[9px] font-black text-white/50 border border-white/5 bg-white/5 px-2.5 py-0.5 rounded-full uppercase tracking-wider">
+                {property.propertyType 
+                  ? getTranslatedPropertyType(extractString(property.propertyType, currentLanguage), currentLanguage) 
+                  : getTranslatedCategoryName(extractString(property.majorCategory, currentLanguage), currentLanguage)}
+              </span>
+            </div>
+
+            {/* Wholesale Price / MOQ sub-line */}
+            {(sellingType === 'Wholesale' || sellingType === 'Retail & Wholesale') && (property as any).wholesalePrice && (
+              <div className="flex items-center gap-2 mt-1 text-[11px] font-mono">
+                <span className="text-emerald-400 font-extrabold">
+                  Wholesale: {Number((property as any).wholesalePrice).toLocaleString()} {property.currency || 'ETB'} / {((property as any).wholesaleUnit || 'Piece').replace(/\s*\(.*\)/, '')}
+                </span>
+                {(property as any).minimumOrderQuantity && (
+                  <span className="text-white/40 text-[10px]">
+                    (MOQ: {(property as any).minimumOrderQuantity})
+                  </span>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Title */}
           <h4
             onClick={() => onSelect(property)}
-            className="font-serif text-lg text-[#F5F5F4] hover:text-amber-500 leading-snug mb-2.5 cursor-pointer line-clamp-1 transition duration-300 font-semibold"
+            className="font-serif text-base text-[#F5F5F4] hover:text-amber-500 leading-snug mb-2 cursor-pointer line-clamp-1 transition duration-300 font-semibold"
           >
             {extractString(property.title, currentLanguage)}
           </h4>
 
-          {/* Location */}
-          <p className="text-xs text-[#F5F5F4]/50 flex items-center gap-1.5 mb-5 font-light">
-            <MapPin className="w-4 h-4 text-amber-500 shrink-0" />
-            <span className="truncate">{extractString(property.location, currentLanguage)}</span>
-          </p>
+          {/* Seller / Business Name & Location */}
+          <div className="space-y-1 mb-4">
+            <p className="text-[11px] text-amber-400/90 font-semibold flex items-center gap-1 font-mono">
+              <Building className="w-3 h-3 text-amber-500 shrink-0" />
+              <span className="truncate">{(property as any).ownerBusinessName || property.ownerName || 'Verified Seller'}</span>
+              {isVerifiedSupplier && <CheckCircle2 className="w-3 h-3 text-emerald-400 shrink-0" />}
+            </p>
+            <p className="text-xs text-[#F5F5F4]/50 flex items-center gap-1.5 font-light">
+              <MapPin className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+              <span className="truncate">{extractString(property.location, currentLanguage)}</span>
+            </p>
+          </div>
         </div>
 
-        {/* Specs row */}
-        <div className="border-t border-white/5 pt-4.5 mt-auto">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3 text-white/60 text-xs font-light">
-              {(() => {
-                const effMajor = getEffectiveMajorCategory(property);
-                if (effMajor === 'Properties') {
-                  return (
-                    <>
-                      {property.bedrooms > 0 && (
-                        <span className="flex items-center gap-1 text-[#F5F5F4]/70">
-                          <BedDouble className="w-4 h-4 text-white/30" />
-                          {property.bedrooms} {t('bed')}
-                        </span>
-                      )}
-                      {property.bathrooms > 0 && (
-                        <span className="flex items-center gap-1 text-[#F5F5F4]/70">
-                          <Bath className="w-4 h-4 text-white/30" />
-                          {property.bathrooms} {t('bath')}
-                        </span>
-                      )}
-                      {property.area > 0 && (
-                        <span className="flex items-center gap-1 text-[#F5F5F4]/70">
-                          <Maximize className="w-4 h-4 text-white/30" />
-                          {property.area} m²
-                        </span>
-                      )}
-                    </>
-                  );
-                } else {
-                  return (
-                    <span className="text-[10px] uppercase font-bold tracking-wider text-amber-500 bg-amber-500/10 px-2.5 py-1 rounded-full">
-                      {getTranslatedPropertyType(property.propertyType || effMajor, currentLanguage)}
-                    </span>
-                  );
-                }
-              })()}
-            </div>
+        {/* Action Row */}
+        <div className="border-t border-white/5 pt-3.5 mt-auto">
+          <div className="flex items-center justify-between gap-2">
+            <button
+              onClick={onReport}
+              className="p-2 text-white/40 hover:text-red-400 rounded-xl hover:bg-white/5 transition cursor-pointer shrink-0"
+              title="Report listing"
+            >
+              <ShieldAlert className="w-4 h-4" />
+            </button>
 
-            {/* View Details Button / Flag Report Button */}
-            <div className="flex items-center gap-2">
-              <button
-                onClick={onReport}
-                className="p-2 text-white/40 hover:text-red-400 rounded-xl hover:bg-white/5 transition cursor-pointer"
-                title="Report listing"
-              >
-                <ShieldAlert className="w-4 h-4" />
-              </button>
+            <div className="flex items-center gap-1.5 flex-1 justify-end min-w-0">
+              {(sellingType === 'Wholesale' || sellingType === 'Retail & Wholesale') && (
+                <button
+                  onClick={() => onSelect(property)}
+                  className="bg-amber-500/15 hover:bg-amber-500/25 text-amber-400 font-bold px-3 py-2 rounded-xl text-[10px] uppercase tracking-wider transition cursor-pointer border border-amber-500/30 truncate"
+                >
+                  Quote
+                </button>
+              )}
+
               <button
                 onClick={() => onSelect(property)}
-                className="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black font-bold px-4.5 py-2 rounded-xl text-[10px] uppercase tracking-wider transition-all duration-300 hover:scale-[1.03] cursor-pointer shadow-md shadow-amber-500/5"
+                className="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black font-bold px-3.5 py-2 rounded-xl text-[10px] uppercase tracking-wider transition-all duration-300 hover:scale-[1.02] cursor-pointer shadow-md shadow-amber-500/5 truncate"
               >
-                {t('details_btn')}
+                {sellingType === 'Wholesale' ? 'Contact Supplier' : 'Contact Seller'}
               </button>
             </div>
           </div>
