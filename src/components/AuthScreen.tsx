@@ -28,9 +28,9 @@ export default function AuthScreen({ initialMode }: AuthScreenProps) {
     return t(rawDesc) || rawDesc;
   };
   
-  // Use 'splash' as default if no initial mode is provided
+  // Use 'login' as default if no initial mode is provided to ensure immediate access
   const [mode, setMode] = useState<'splash' | 'welcome' | 'login' | 'signup' | 'forgot' | 'verify' | 'reset' | 'twoFactor'>(
-    initialMode || 'splash'
+    initialMode || 'login'
   );
   
   const [email, setEmail] = useState('');

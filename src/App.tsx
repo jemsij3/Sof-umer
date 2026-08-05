@@ -227,7 +227,7 @@ function MainAppLayout() {
     return (
       <>
         <style>{getThemeCSS(systemSettings?.themeName || 'cosmic-slate')}</style>
-        <AuthScreen />
+        <AuthScreen initialMode={authMode || 'login'} />
       </>
     );
   }

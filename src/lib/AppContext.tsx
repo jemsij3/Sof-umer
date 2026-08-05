@@ -418,8 +418,11 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       if (currentUser) {
         const matchingUser = activeUsers.find(u => u.id === currentUser.id || (u.email && currentUser.email && u.email.toLowerCase() === currentUser.email.toLowerCase()));
         if (matchingUser) {
-          setCurrentUserState(matchingUser);
-          localStorage.setItem('sof_umer_user', JSON.stringify(matchingUser));
+          const matchingStr = JSON.stringify(matchingUser);
+          if (matchingStr !== JSON.stringify(currentUser)) {
+            setCurrentUserState(matchingUser);
+            localStorage.setItem('sof_umer_user', matchingStr);
+          }
         }
       }
 
@@ -446,15 +449,14 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [translations]);
 
-  // Re-fetch when user changes
+  // Re-fetch initial data and start background polling interval
   useEffect(() => {
     refreshData();
-    // Poll notifications/receipts every 10 seconds for real-time feel
     const interval = setInterval(() => {
       refreshData();
-    }, 10000);
+    }, 15000);
     return () => clearInterval(interval);
-  }, [currentUser]);
+  }, [currentUser?.id]);
 
   // Translate helper - Single Source of Truth: Admin Translation Dictionary -> staticTranslations -> Categories / Fields Fallback
   const t = (key: string): string => {

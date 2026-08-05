@@ -184,6 +184,21 @@ async function connectMongo(): Promise<boolean> {
   }
   try {
     console.log('[Storage] Connecting to MongoDB instance...');
+    mongoose.set('bufferCommands', false);
+
+    mongoose.connection.on('connected', () => {
+      isMongoConnected = true;
+      console.log('[Storage] MongoDB connection event: connected');
+    });
+    mongoose.connection.on('disconnected', () => {
+      isMongoConnected = false;
+      console.warn('[Storage] MongoDB connection event: disconnected');
+    });
+    mongoose.connection.on('error', (err) => {
+      isMongoConnected = false;
+      console.error('[Storage] MongoDB connection error event:', err);
+    });
+
     await mongoose.connect(MONGODB_URI, {
       serverSelectionTimeoutMS: 5000,
     });
@@ -939,29 +954,20 @@ async function syncCollectionToMongo<T extends Record<string, any>>(
   items: T[],
   idKey: string = 'id'
 ) {
-  if (!isMongoConnected || !items) return;
+  if (!isMongoConnected || !items || items.length === 0) return;
   try {
-    if (items.length > 0) {
-      const bulkOps = items.map(item => {
-        const filter: Record<string, any> = {};
-        filter[idKey] = item[idKey];
-        return {
-          updateOne: {
-            filter,
-            update: { $set: item },
-            upsert: true
-          }
-        };
-      });
-      await model.bulkWrite(bulkOps as any);
-
-      const validKeys = items.map(i => i[idKey]).filter(Boolean);
-      const deleteFilter: Record<string, any> = {};
-      deleteFilter[idKey] = { $nin: validKeys };
-      await model.deleteMany(deleteFilter);
-    } else {
-      await model.deleteMany({});
-    }
+    const bulkOps = items.map(item => {
+      const filter: Record<string, any> = {};
+      filter[idKey] = item[idKey];
+      return {
+        updateOne: {
+          filter,
+          update: { $set: item },
+          upsert: true
+        }
+      };
+    });
+    await model.bulkWrite(bulkOps as any, { ordered: false });
   } catch (err) {
     console.error(`[Storage] Error syncing collection ${model.modelName} to MongoDB:`, err);
   }
@@ -1021,6 +1027,28 @@ async function fetchAppSettings(): Promise<any> {
   return doc;
 }
 
+function mergeCollection<T extends Record<string, any>>(mongoItems: T[], localItems: T[], idKey: string = 'id'): T[] {
+  const map = new Map<string, T>();
+  if (Array.isArray(mongoItems)) {
+    for (const item of mongoItems) {
+      if (item && item[idKey]) map.set(String(item[idKey]), item);
+    }
+  }
+  if (Array.isArray(localItems)) {
+    for (const item of localItems) {
+      if (item && item[idKey]) {
+        const existing = map.get(String(item[idKey]));
+        if (!existing) {
+          map.set(String(item[idKey]), item);
+        } else {
+          map.set(String(item[idKey]), { ...existing, ...item });
+        }
+      }
+    }
+  }
+  return Array.from(map.values());
+}
+
 async function loadFromMongo(): Promise<boolean> {
   if (!isMongoConnected) return false;
   try {
@@ -1074,28 +1102,30 @@ async function loadFromMongo(): Promise<boolean> {
       fetchAppSettings()
     ]);
 
+    const prevLocal = localDb || ({} as any);
+
     localDb = {
-      users: users as any,
-      properties: properties as any,
-      paymentMethods: paymentMethods as any,
-      receipts: receipts as any,
-      inquiries: inquiries as any,
-      advertisements: advertisements as any,
-      reports: reports as any,
-      notifications: notifications as any,
-      categories: categories as any,
-      appFeatures: appFeatures as any,
-      jobOpenings: jobOpenings as any,
-      supportTickets: supportTickets as any,
-      offers: offers as any,
-      languages: languages as any,
-      translations: translations as any,
-      faqs: faqs as any,
-      reviews: reviews as any,
-      appSettings: appSettingsDoc ? (appSettingsDoc as any).data : (getInitialData() as any).appSettings
+      users: mergeCollection(users, prevLocal.users || [], 'id'),
+      properties: mergeCollection(properties, prevLocal.properties || [], 'id'),
+      paymentMethods: mergeCollection(paymentMethods, prevLocal.paymentMethods || [], 'id'),
+      receipts: mergeCollection(receipts, prevLocal.receipts || [], 'id'),
+      inquiries: mergeCollection(inquiries, prevLocal.inquiries || [], 'id'),
+      advertisements: mergeCollection(advertisements, prevLocal.advertisements || [], 'id'),
+      reports: mergeCollection(reports, prevLocal.reports || [], 'id'),
+      notifications: mergeCollection(notifications, prevLocal.notifications || [], 'id'),
+      categories: mergeCollection(categories, prevLocal.categories || [], 'id'),
+      appFeatures: mergeCollection(appFeatures, prevLocal.appFeatures || [], 'id'),
+      jobOpenings: mergeCollection(jobOpenings, prevLocal.jobOpenings || [], 'id'),
+      supportTickets: mergeCollection(supportTickets, prevLocal.supportTickets || [], 'id'),
+      offers: mergeCollection(offers, prevLocal.offers || [], 'id'),
+      languages: mergeCollection(languages, prevLocal.languages || [], 'code'),
+      translations: mergeCollection(translations, prevLocal.translations || [], 'key'),
+      faqs: mergeCollection(faqs, prevLocal.faqs || [], 'id'),
+      reviews: mergeCollection(reviews, prevLocal.reviews || [], 'id'),
+      appSettings: appSettingsDoc && appSettingsDoc.data ? appSettingsDoc.data : (prevLocal.appSettings || getInitialData().appSettings)
     } as any;
 
-    console.log(`[Storage] Successfully loaded from MongoDB: ${localDb.users.length} users, ${localDb.properties.length} properties.`);
+    console.log(`[Storage] Successfully loaded & merged from MongoDB: ${localDb.users.length} users, ${localDb.properties.length} properties.`);
     return true;
   } catch (err) {
     console.error('[Storage] Error loading from MongoDB:', err);
@@ -1407,24 +1437,23 @@ let savePromise: Promise<void> = Promise.resolve();
 
 const saveDb = (): Promise<void> => {
   savePromise = savePromise.then(async () => {
-    if (isMongoConnected) {
-      await saveToMongo();
-      // sof_umer_db.json is NEVER read or written when MongoDB is connected!
-      return;
-    }
-
+    // 1. Always write to local JSON file first for instant disk persistence
     try {
       const jsonString = JSON.stringify(localDb, null, 2);
       const tempFile = `${DB_FILE}.tmp`;
       await fs.writeFile(tempFile, jsonString, 'utf-8');
       await fs.rename(tempFile, DB_FILE);
     } catch (err) {
-      console.error('Failed atomic saveDb, falling back to direct write:', err);
       try {
         await fs.writeFile(DB_FILE, JSON.stringify(localDb, null, 2), 'utf-8');
       } catch (e2) {
         console.error('CRITICAL: Fallback saveDb failed:', e2);
       }
+    }
+
+    // 2. Sync to MongoDB asynchronously if connected
+    if (isMongoConnected) {
+      await saveToMongo().catch(e => console.error('[Storage] Async saveToMongo error:', e));
     }
   }).catch(err => {
     console.error('Error in saveDb queue:', err);
