@@ -253,143 +253,11 @@ const getInitialData = () => {
       createdAt: new Date().toISOString(),
       tokenVersion: 1,
       loginHistory: [],
-      passwordHash: '$2b$10$8M.OZ7bfDTd8e724T1tSneytfS2iE4nLdSr27YVOBgkIJVdL7ENvC' // Default hashed password: Password123!
+      passwordHash: '$2b$10$Sc12y5ULkuPATEe.OngOf.oHgYaN0D5xLVM1MYYXZYMJ/z9/AY4GS' // Default hashed password: Password123!
     }
   ];
 
-  const properties: Property[] = [
-    {
-      id: 'prop-sample-1',
-      title: JSON.stringify({
-        en: 'Modern Luxury Villa with Garden in Bole',
-        om: 'Viillaa Ammayyaa Boodo Qabu Bole Keessatti',
-        am: 'ዘመናዊ የቅንጦት ቪላ ከጓሮ ጋር ቦሌ'
-      }),
-      description: JSON.stringify({
-        en: 'Beautiful 4-bedroom villa with master suite, modern kitchen, private parking for 3 cars, and lush garden located in prime Bole area.',
-        om: 'Viillaa bareeda ciisa 4 qabu, kuffana ammayyaa, mooraa konkolaataa 3 fi boqonnaa qabu Bole keessatti.',
-        am: 'አራት መኝታ ቤት ያለው ቪላ፣ ዘመናዊ ወጥ ቤት፣ የ3 መኪና ማቆሚያ እና ውብ ጓሮ ያለው ቦሌ።'
-      }),
-      images: ['https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=800&q=80'],
-      location: 'Bole, Addis Ababa',
-      propertyType: 'Houses & Villas',
-      category: 'For Sale',
-      majorCategory: 'Properties',
-      price: 28500000,
-      currency: 'ETB',
-      bedrooms: 4,
-      bathrooms: 3,
-      area: 350,
-      amenities: ['Garden', 'Parking', 'Security System', 'Balcony'],
-      ownerId: 'usr-jemal',
-      ownerName: 'Jemal jimma',
-      contactPhone: '+251911000000',
-      contactEmail: 'jemaljima@gmail.com',
-      isFeatured: true,
-      isRecommended: true,
-      isVerifiedListing: true,
-      verificationStatus: 'verified',
-      approvalStatus: 'approved',
-      createdAt: new Date().toISOString()
-    },
-    {
-      id: 'prop-sample-2',
-      title: JSON.stringify({
-        en: 'Toyota Land Cruiser V8 2023 - Executive Edition',
-        om: 'Konkolaataa Toyota Land Cruiser V8 2023',
-        am: 'ቶዮታ ላንድ ክሩዘር V8 2023 - ኤክስኪዩቲቭ'
-      }),
-      description: JSON.stringify({
-        en: 'Brand new Toyota Land Cruiser V8, zero mileage, automatic transmission, fully loaded leather seats, sun roof, and local custom clearance.',
-        om: 'Konkolaataa V8 haaraa, kaffaltii qophii guutuu, ootomaatiikii, seera biyyooleessaa guutuu.',
-        am: 'አዲስ ቶዮታ ላንድ ክሩዘር V8፣ ዜሮ ኪሎሜትር፣ አውቶማቲክ፣ የቆዳ ወንበር፣ የፀሐይ ጣሪያ።'
-      }),
-      images: ['https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&w=800&q=80'],
-      location: 'Kazanchis, Addis Ababa',
-      propertyType: 'Cars',
-      category: 'For Sale',
-      majorCategory: 'Vehicles',
-      price: 35000000,
-      currency: 'ETB',
-      amenities: ['Automatic', 'Leather Seats', 'Sunroof', '4WD'],
-      brand: 'Toyota',
-      condition: 'New',
-      ownerId: 'usr-jemal',
-      ownerName: 'Jemal jimma',
-      contactPhone: '+251911000000',
-      contactEmail: 'jemaljima@gmail.com',
-      isFeatured: true,
-      isRecommended: true,
-      isVerifiedListing: true,
-      verificationStatus: 'verified',
-      approvalStatus: 'approved',
-      createdAt: new Date().toISOString()
-    },
-    {
-      id: 'prop-sample-3',
-      title: JSON.stringify({
-        en: 'Senior Full-Stack Engineer (React & Node.js)',
-        om: 'Injiniera Saftweerii Ol-aanaa (Full-Stack)',
-        am: 'ከፍተኛ የሶፍትዌር መሐንዲስ (Full-Stack)'
-      }),
-      description: JSON.stringify({
-        en: 'SOF-UMER Tech team is hiring a Senior Full-Stack Software Engineer to build scalable Ethiopian cloud services. Competitive salary in USD/ETB.',
-        om: 'Garee SOF-UMER Tech Injiniera Saftweerii ol-aanaa barbaada. Mindaa gaarii fi faayidaa addaa waliin.',
-        am: 'ሶፍ ኡመር ቴክ ከፍተኛ የሶፍትዌር መሐንዲስ ይፈልጋል። ተወዳዳሪ ደሞዝ እና ጥቅማጥቅሞች።'
-      }),
-      images: ['https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=800&q=80'],
-      location: 'Addis Ababa',
-      propertyType: 'IT & Software',
-      category: 'Full Time',
-      majorCategory: 'Jobs',
-      price: 120000,
-      currency: 'ETB',
-      amenities: ['Full Time', 'Remote Allowed', 'Health Insurance'],
-      ownerId: 'usr-jemal',
-      ownerName: 'Jemal jimma',
-      contactPhone: '+251911000000',
-      contactEmail: 'jemaljima@gmail.com',
-      isFeatured: false,
-      isRecommended: true,
-      isVerifiedListing: true,
-      verificationStatus: 'verified',
-      approvalStatus: 'approved',
-      createdAt: new Date().toISOString()
-    },
-    {
-      id: 'prop-sample-4',
-      title: JSON.stringify({
-        en: 'iPhone 15 Pro Max 512GB Natural Titanium',
-        om: 'Bilbila iPhone 15 Pro Max 512GB Haaraa',
-        am: 'አይፎን 15 ፕሮ ማክስ 512ጂቢ አዲስ'
-      }),
-      description: JSON.stringify({
-        en: 'Original iPhone 15 Pro Max 512GB in sealed box, global version with 1 year Apple warranty included.',
-        om: 'Bilbila iPhone 15 Pro Max guutuu fi haaraa sanduuqa keessatti, waraqaa waadaa waggaa 1 waliin.',
-        am: 'ኦሪጅናል አይፎን 15 ፕሮ ማክስ 512ጂቢ በታሸገ ሳጥን ውስጥ፣ ከ1 ዓመት ዋስትና ጋር።'
-      }),
-      images: ['https://images.unsplash.com/photo-1695048133142-1a20484d2569?auto=format&fit=crop&w=800&q=80'],
-      location: 'Bole Medhanealem, Addis Ababa',
-      propertyType: 'Mobile Phones & Tablets',
-      category: 'For Sale',
-      majorCategory: 'Products',
-      price: 175000,
-      currency: 'ETB',
-      amenities: ['Brand New', 'Sealed', 'Apple Warranty'],
-      brand: 'Apple',
-      condition: 'New',
-      ownerId: 'usr-jemal',
-      ownerName: 'Jemal jimma',
-      contactPhone: '+251911000000',
-      contactEmail: 'jemaljima@gmail.com',
-      isFeatured: false,
-      isRecommended: false,
-      isVerifiedListing: true,
-      verificationStatus: 'verified',
-      approvalStatus: 'approved',
-      createdAt: new Date().toISOString()
-    }
-  ];
+  const properties: Property[] = [];
 
   const paymentMethods: PaymentMethod[] = [
     {
@@ -1219,7 +1087,7 @@ const applyDataSanityAndMigrations = () => {
   // 2. Safely deduplicate users by normalized email, merging fields to preserve updated passwords and verification status
   const uniqueUsersMap = new Map<string, ServerUser>();
   const usersWithoutEmail: ServerUser[] = [];
-  const defaultSeedHash = '$2b$10$8M.OZ7bfDTd8e724T1tSneytfS2iE4nLdSr27YVOBgkIJVdL7ENvC';
+  const defaultSeedHash = '$2b$10$Sc12y5ULkuPATEe.OngOf.oHgYaN0D5xLVM1MYYXZYMJ/z9/AY4GS';
 
   for (const u of localDb.users) {
     if (u.email) {
@@ -1288,6 +1156,7 @@ const applyDataSanityAndMigrations = () => {
   if (!localDb.properties || !Array.isArray(localDb.properties)) {
     localDb.properties = [];
   } else {
+    localDb.properties = localDb.properties.filter(p => !p.id.startsWith('prop-sample-'));
     localDb.properties.forEach(p => {
       if (!p.verificationStatus) {
         p.verificationStatus = 'pending';
