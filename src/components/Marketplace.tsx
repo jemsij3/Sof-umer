@@ -8,7 +8,7 @@ import {
   X, AlertCircle, Home, Car, Smartphone, Laptop, Sofa, Shirt, FileText, 
   Hammer, Factory, Wheat, Footprints, GraduationCap, Activity, Utensils, 
   CalendarDays, Gamepad2, Baby, Recycle, TrendingUp, Clock, Flame, Info, CheckCircle2,
-  Folder, ChevronDown, Wallet, Plus, Package, Phone
+  Folder, ChevronDown, Wallet, Plus
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
@@ -1957,117 +1957,6 @@ interface PropertyCardProps {
 
 function PropertyCard({ property, onSelect, favorites, onToggleFav, onReport, t, currentLanguage }: PropertyCardProps) {
   const isFavorite = favorites.includes(property.id);
-  const rawSellingType = String((property as any).sellingType || 'retail').toLowerCase().trim();
-  const isWholesale = rawSellingType === 'wholesale';
-
-  if (isWholesale) {
-    const moq = (property as any).minimumOrderQuantity || 1;
-    const unit = (property as any).wholesaleUnit || 'Piece';
-    const price = (property as any).wholesalePrice || property.price;
-    const stock = (property as any).availableQuantity;
-    const company = (property as any).ownerBusinessName || property.ownerName || 'Supplier';
-    const delivery = Array.isArray((property as any).deliveryOptions) && (property as any).deliveryOptions.length > 0
-      ? (property as any).deliveryOptions.join(', ')
-      : null;
-
-    return (
-      <div className="bg-[#0d0d12]/80 rounded-3xl overflow-hidden border border-amber-500/10 hover:border-amber-500/35 transition-all duration-300 flex flex-col group relative shadow-lg hover:shadow-2xl text-left">
-        {/* Save favorite toggle */}
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onToggleFav(property.id);
-          }}
-          className="absolute top-4 right-4 z-10 p-2 rounded-xl bg-black/60 hover:bg-black/85 backdrop-blur-md border border-white/5 transition duration-300 group cursor-pointer"
-          aria-label="Toggle Favorite"
-        >
-          <Heart className={`w-3.5 h-3.5 transition duration-300 ${isFavorite ? 'text-rose-500 fill-rose-500 scale-110' : 'text-white/60 group-hover:text-white'}`} />
-        </button>
-
-        {/* Listing Image */}
-        <div className="h-48 overflow-hidden relative bg-[#0c0c10] cursor-pointer" onClick={() => onSelect(property)}>
-          <img
-            src={property.images?.[0] || 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?auto=format&fit=crop&w=800&q=80'}
-            alt={extractString(property.title, currentLanguage) || 'Listing Image'}
-            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-            referrerPolicy="no-referrer"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent pointer-events-none" />
-          <div className="absolute top-4 left-4 bg-amber-500 text-black font-black text-[9px] uppercase tracking-widest px-2.5 py-1.5 rounded-lg border border-amber-400 shadow font-sans">
-            📦 {t('wholesale.wholesale') || 'Wholesale'}
-          </div>
-        </div>
-
-        {/* Wholesale Card Body */}
-        <div className="p-5 flex-1 flex flex-col justify-between">
-          <div className="space-y-2.5">
-            {/* Title */}
-            <h4
-              onClick={() => onSelect(property)}
-              className="font-serif text-base text-[#F5F5F4] hover:text-amber-500 leading-snug cursor-pointer line-clamp-2 transition duration-300 font-semibold"
-            >
-              {extractString(property.title, currentLanguage)}
-            </h4>
-
-            {/* Wholesale details grid */}
-            <div className="bg-amber-500/5 border border-amber-500/10 p-3 rounded-2xl space-y-1.5 text-xs text-white/80 font-medium">
-              <div className="flex items-center gap-1.5 text-[#F5F5F4] font-semibold truncate">
-                <Building className="w-3.5 h-3.5 text-amber-500 shrink-0" />
-                <span className="truncate">{company}</span>
-              </div>
-
-              <div className="flex items-center gap-1.5">
-                <Package className="w-3.5 h-3.5 text-amber-500 shrink-0" />
-                <span>MOQ: <span className="text-white font-bold">{moq} {unit}s</span></span>
-              </div>
-
-              <div className="flex items-center gap-1.5">
-                <span className="text-amber-500 font-bold font-mono text-[14px] shrink-0">💰</span>
-                <span>Price: <span className="text-amber-400 font-bold font-mono">{property.currency || 'ETB'} {price.toLocaleString()}</span> / {unit}</span>
-              </div>
-
-              {stock !== undefined && stock !== null && stock !== '' && (
-                <div className="flex items-center gap-1.5">
-                  <span className="text-amber-500 font-bold shrink-0">📊</span>
-                  <span>Stock: <span className="text-white font-bold">{stock} {unit}s</span></span>
-                </div>
-              )}
-
-              {delivery && (
-                <div className="flex items-center gap-1.5 truncate">
-                  <span className="text-amber-500 font-bold shrink-0">🚚</span>
-                  <span className="truncate">{delivery}</span>
-                </div>
-              )}
-
-              <div className="flex items-center gap-1.5 truncate text-[#F5F5F4]/60">
-                <MapPin className="w-3.5 h-3.5 text-amber-500 shrink-0" />
-                <span className="truncate">{extractString(property.location, currentLanguage)}</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Action button */}
-          <div className="mt-4 pt-4 border-t border-white/5 flex gap-2 items-center">
-            <button
-              onClick={onReport}
-              className="p-2 text-white/40 hover:text-red-400 rounded-xl hover:bg-white/5 transition cursor-pointer shrink-0"
-              title="Report listing"
-            >
-              <ShieldAlert className="w-4 h-4" />
-            </button>
-            <button
-              onClick={() => onSelect(property)}
-              className="flex-1 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black font-extrabold py-2.5 rounded-xl text-[10px] uppercase tracking-wider transition-all duration-300 hover:scale-[1.01] cursor-pointer shadow-md text-center flex items-center justify-center gap-1.5"
-            >
-              <Phone className="w-3.5 h-3.5 fill-black" />
-              <span>Contact Supplier</span>
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="bg-[#0d0d12]/80 rounded-3xl overflow-hidden border border-white/5 hover:border-white/20 transition-all duration-300 flex flex-col group relative shadow-lg hover:shadow-2xl">
@@ -2075,15 +1964,15 @@ function PropertyCard({ property, onSelect, favorites, onToggleFav, onReport, t,
       <div className="absolute top-4 left-4 z-10 flex flex-wrap gap-1.5 items-center max-w-[70%]">
         {(() => {
           if (!property.category) return null;
-          const catLower = (property.category || "").toLowerCase().trim();
-          let badgeText = "";
-          if (catLower === "buy" || catLower === "for sale" || catLower === "sale") {
-            badgeText = t("cat_buy") || "For Sale";
-          } else if (catLower === "rent" || catLower === "for rent") {
-            badgeText = t("cat_rent") || "For Rent";
+          const catLower = (property.category || '').toLowerCase().trim();
+          let badgeText = '';
+          if (catLower === 'buy' || catLower === 'for sale' || catLower === 'sale') {
+            badgeText = t('cat_buy') || 'For Sale';
+          } else if (catLower === 'rent' || catLower === 'for rent') {
+            badgeText = t('cat_rent') || 'For Rent';
           } else if (
-            catLower !== (property.propertyType || "").toLowerCase().trim() &&
-            catLower !== (property.majorCategory || "").toLowerCase().trim()
+            catLower !== (property.propertyType || '').toLowerCase().trim() &&
+            catLower !== (property.majorCategory || '').toLowerCase().trim()
           ) {
             badgeText = property.category;
           }
@@ -2095,15 +1984,15 @@ function PropertyCard({ property, onSelect, favorites, onToggleFav, onReport, t,
           );
         })()}
 
-        {((property as any).sellingType === "Wholesale" || (property as any).sellingType === "Retail & Wholesale") && (
+        {((property as any).sellingType === 'Wholesale' || (property as any).sellingType === 'Retail & Wholesale') && (
           <span className="text-[9px] font-black uppercase tracking-widest px-2.5 py-1.5 rounded-xl shadow-md bg-amber-500 text-black border border-amber-400 font-sans">
-            📦 {t("wholesale.wholesale") || "Wholesale"}
+            📦 {t('wholesale.wholesale') || 'Wholesale'}
           </span>
         )}
 
-        {((property as any).isNegotiable === true || String((property as any).negotiable).toLowerCase() === "yes") && (
+        {((property as any).isNegotiable === true || String((property as any).negotiable).toLowerCase() === 'yes') && (
           <span className="text-[9px] font-bold uppercase tracking-wider px-2.5 py-1.5 rounded-xl shadow-md bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 backdrop-blur-md">
-            🤝 {getTranslatedOption("Negotiable", currentLanguage) || "Negotiable"}
+            🤝 {getTranslatedOption('Negotiable', currentLanguage) || 'Negotiable'}
           </span>
         )}
       </div>
@@ -2117,14 +2006,14 @@ function PropertyCard({ property, onSelect, favorites, onToggleFav, onReport, t,
         className="absolute top-4 right-4 z-10 p-2.5 rounded-xl bg-black/60 hover:bg-black/85 backdrop-blur-md border border-white/5 transition duration-300 group cursor-pointer"
         aria-label="Toggle Favorite"
       >
-        <Heart className={`w-4 h-4 transition duration-300 ${isFavorite ? "text-rose-500 fill-rose-500 scale-110" : "text-white/60 group-hover:text-white"}`} />
+        <Heart className={`w-4 h-4 transition duration-300 ${isFavorite ? 'text-rose-500 fill-rose-500 scale-110' : 'text-white/60 group-hover:text-white'}`} />
       </button>
 
       {/* Listing Image */}
       <div className="h-56 overflow-hidden relative bg-[#0c0c10] cursor-pointer" onClick={() => onSelect(property)}>
         <img
-          src={property.images?.[0] || "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?auto=format&fit=crop&w=800&q=80"}
-          alt={extractString(property.title, currentLanguage) || "Listing Image"}
+          src={property.images?.[0] || 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?auto=format&fit=crop&w=800&q=80'}
+          alt={extractString(property.title, currentLanguage) || 'Listing Image'}
           className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
           referrerPolicy="no-referrer"
         />
@@ -2137,7 +2026,7 @@ function PropertyCard({ property, onSelect, favorites, onToggleFav, onReport, t,
           {/* Price & Currency */}
           <div className="flex justify-between items-baseline mb-3">
             <p className="text-xl font-bold text-[#F5F5F4] tracking-tight font-mono">
-              {(property.price || 0).toLocaleString()} <span className="text-amber-500/80 text-xs font-bold uppercase tracking-wider ml-1">{property.currency || "ETB"}</span>
+              {(property.price || 0).toLocaleString()} <span className="text-amber-500/80 text-xs font-bold uppercase tracking-wider ml-1">{property.currency || 'ETB'}</span>
             </p>
             <span className="text-[9px] font-black text-white/50 border border-white/5 bg-white/5 px-2.5 py-1 rounded-full uppercase tracking-wider">
               {property.propertyType 
@@ -2167,19 +2056,19 @@ function PropertyCard({ property, onSelect, favorites, onToggleFav, onReport, t,
             <div className="flex items-center gap-3 text-white/60 text-xs font-light">
               {(() => {
                 const effMajor = getEffectiveMajorCategory(property);
-                if (effMajor === "Properties") {
+                if (effMajor === 'Properties') {
                   return (
                     <>
                       {property.bedrooms > 0 && (
                         <span className="flex items-center gap-1 text-[#F5F5F4]/70">
                           <BedDouble className="w-4 h-4 text-white/30" />
-                          {property.bedrooms} {t("bed")}
+                          {property.bedrooms} {t('bed')}
                         </span>
                       )}
                       {property.bathrooms > 0 && (
                         <span className="flex items-center gap-1 text-[#F5F5F4]/70">
                           <Bath className="w-4 h-4 text-white/30" />
-                          {property.bathrooms} {t("bath")}
+                          {property.bathrooms} {t('bath')}
                         </span>
                       )}
                       {property.area > 0 && (
@@ -2213,7 +2102,7 @@ function PropertyCard({ property, onSelect, favorites, onToggleFav, onReport, t,
                 onClick={() => onSelect(property)}
                 className="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black font-bold px-4.5 py-2 rounded-xl text-[10px] uppercase tracking-wider transition-all duration-300 hover:scale-[1.03] cursor-pointer shadow-md shadow-amber-500/5"
               >
-                {t("details_btn")}
+                {t('details_btn')}
               </button>
             </div>
           </div>

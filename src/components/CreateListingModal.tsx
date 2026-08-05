@@ -1675,53 +1675,6 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
     const handleValidateStep3 = (e: React.FormEvent) => {
       e.preventDefault();
       
-      if (st === 'Wholesale') {
-        if (!fieldsState.title || String(fieldsState.title).trim() === '') {
-          setError('Please enter an Item Title.');
-          return;
-        }
-        if (!fieldsState.location || String(fieldsState.location).trim() === '') {
-          setError('Please enter a Location.');
-          return;
-        }
-        if (!fieldsState.description || String(fieldsState.description).trim() === '') {
-          setError('Please enter a Description.');
-          return;
-        }
-        if (!fieldsState.businessType || String(fieldsState.businessType).trim() === '') {
-          setError('Please select a Business Type.');
-          return;
-        }
-        if (!fieldsState.wholesaleUnit || String(fieldsState.wholesaleUnit).trim() === '') {
-          setError('Please select a Unit of Sale.');
-          return;
-        }
-        if (!fieldsState.wholesalePrice || Number(fieldsState.wholesalePrice) <= 0) {
-          setError('Please enter a valid Wholesale Price.');
-          return;
-        }
-        if (!fieldsState.minimumOrderQuantity || Number(fieldsState.minimumOrderQuantity) < 1) {
-          setError('Please enter a valid Minimum Order Quantity (MOQ >= 1).');
-          return;
-        }
-        if (!fieldsState.ownerBusinessName || String(fieldsState.ownerBusinessName).trim() === '') {
-          setError('Please enter a Business / Company Name.');
-          return;
-        }
-        if (!fieldsState.contactPhone || String(fieldsState.contactPhone).trim() === '') {
-          setError('Please enter a Contact Phone Number.');
-          return;
-        }
-        if (!imagesList || imagesList.length === 0) {
-          setError('Please upload or add at least one photo for your listing.');
-          return;
-        }
-
-        setError('');
-        setCurrentStep(4); // Advance to Preview
-        return;
-      }
-
       if (currentUser?.role === 'admin' && st !== 'Wholesale') {
         if (!fieldsState.ownerName || String(fieldsState.ownerName).trim() === '') {
           setError(d.ownerNameVal);
@@ -1767,13 +1720,20 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
       }
 
       // Wholesale validation
-      if (st === 'Retail & Wholesale') {
+      if (st === 'Wholesale' || st === 'Retail & Wholesale') {
         if (!fieldsState.wholesalePrice || Number(fieldsState.wholesalePrice) <= 0) {
           setError('Please enter a valid Wholesale Price.');
           return;
         }
         if (!fieldsState.minimumOrderQuantity || Number(fieldsState.minimumOrderQuantity) < 1) {
           setError('Please enter a valid Minimum Order Quantity (MOQ >= 1).');
+          return;
+        }
+      }
+
+      if (st === 'Wholesale') {
+        if (!fieldsState.contactPhone || String(fieldsState.contactPhone).trim() === '') {
+          setError('Please enter a Contact Phone Number for supplier inquiries.');
           return;
         }
       }
@@ -2255,637 +2215,7 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
                   </div>
                 )}
 
-                {(fieldsState.sellingType || 'Retail') === 'Wholesale' ? (
-                  <div className="space-y-6">
-                    {/* SECTION 1: Product Information */}
-                    <div className="bg-zinc-900/40 p-5 rounded-2xl border border-white/5 space-y-4">
-                      <div className="flex items-center gap-2 text-amber-400 font-bold text-xs uppercase tracking-wider border-b border-white/5 pb-2">
-                        <ShoppingBag className="w-4 h-4 text-amber-500" />
-                        <span>Product Information</span>
-                      </div>
-
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {/* Item Title * */}
-                        <div className="col-span-full">
-                          <label className="block text-[11px] font-bold text-[#F5F5F4]/70 uppercase tracking-wider mb-1">
-                            Item Title *
-                          </label>
-                          <input
-                            type="text"
-                            required
-                            value={fieldsState.title || ''}
-                            onChange={e => handleFieldChange('title', e.target.value)}
-                            placeholder="e.g., Premium Cotton T-Shirts Wholesale"
-                            className="w-full p-3 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white focus:outline-none transition placeholder-zinc-600 font-light"
-                          />
-                        </div>
-
-                        {/* Brand (Optional) */}
-                        <div>
-                          <label className="block text-[11px] font-bold text-[#F5F5F4]/70 uppercase tracking-wider mb-1">
-                            Brand (Optional)
-                          </label>
-                          <input
-                            type="text"
-                            value={fieldsState.brand || ''}
-                            onChange={e => handleFieldChange('brand', e.target.value)}
-                            placeholder="e.g., Brand name (optional)"
-                            className="w-full p-3 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white focus:outline-none transition placeholder-zinc-600 font-light"
-                          />
-                        </div>
-
-                        {/* Size (Optional) */}
-                        <div>
-                          <label className="block text-[11px] font-bold text-[#F5F5F4]/70 uppercase tracking-wider mb-1">
-                            Size (Optional)
-                          </label>
-                          <input
-                            type="text"
-                            value={fieldsState.size || ''}
-                            onChange={e => handleFieldChange('size', e.target.value)}
-                            placeholder="e.g., S, M, L, XL (optional)"
-                            className="w-full p-3 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white focus:outline-none transition placeholder-zinc-600 font-light"
-                          />
-                        </div>
-
-                        {/* Color (Optional) */}
-                        <div>
-                          <label className="block text-[11px] font-bold text-[#F5F5F4]/70 uppercase tracking-wider mb-1">
-                            Color (Optional)
-                          </label>
-                          <input
-                            type="text"
-                            value={fieldsState.color || ''}
-                            onChange={e => handleFieldChange('color', e.target.value)}
-                            placeholder="e.g., Black, Blue, White (optional)"
-                            className="w-full p-3 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white focus:outline-none transition placeholder-zinc-600 font-light"
-                          />
-                        </div>
-
-                        {/* Material (Optional) */}
-                        <div>
-                          <label className="block text-[11px] font-bold text-[#F5F5F4]/70 uppercase tracking-wider mb-1">
-                            Material (Optional)
-                          </label>
-                          <input
-                            type="text"
-                            value={fieldsState.material || ''}
-                            onChange={e => handleFieldChange('material', e.target.value)}
-                            placeholder="e.g., Cotton, Polyester (optional)"
-                            className="w-full p-3 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white focus:outline-none transition placeholder-zinc-600 font-light"
-                          />
-                        </div>
-
-                        {/* Condition * */}
-                        <div>
-                          <label className="block text-[11px] font-bold text-[#F5F5F4]/70 uppercase tracking-wider mb-1">
-                            Condition *
-                          </label>
-                          <select
-                            value={fieldsState.condition || 'New'}
-                            onChange={e => handleFieldChange('condition', e.target.value)}
-                            className="w-full p-3 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white focus:outline-none transition"
-                          >
-                            <option value="New">New</option>
-                            <option value="Used - Like New">Used - Like New</option>
-                            <option value="Used - Good">Used - Good</option>
-                          </select>
-                        </div>
-
-                        {/* Gender (Optional, ONLY if Clothing category requires it) */}
-                        {subcategory === 'Clothing & Fashion' && (
-                          <div>
-                            <label className="block text-[11px] font-bold text-[#F5F5F4]/70 uppercase tracking-wider mb-1">
-                              Gender (Optional)
-                            </label>
-                            <select
-                              value={fieldsState.gender || 'Unisex'}
-                              onChange={e => handleFieldChange('gender', e.target.value)}
-                              className="w-full p-3 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white focus:outline-none transition"
-                            >
-                              <option value="Unisex">Unisex</option>
-                              <option value="Men">Men</option>
-                              <option value="Women">Women</option>
-                              <option value="Kids">Kids</option>
-                            </select>
-                          </div>
-                        )}
-
-                        {/* Location * */}
-                        <div className="col-span-full">
-                          <label className="block text-[11px] font-bold text-[#F5F5F4]/70 uppercase tracking-wider mb-1 flex items-center justify-between">
-                            <span className="flex items-center gap-1.5">
-                              <MapPin className="w-3.5 h-3.5 text-amber-500" />
-                              Location *
-                            </span>
-                          </label>
-                          <textarea
-                            rows={2}
-                            required
-                            value={fieldsState.location || ''}
-                            onChange={e => handleFieldChange('location', e.target.value)}
-                            placeholder="e.g., Bole, Addis Ababa, Ethiopia"
-                            className="w-full p-3 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white focus:outline-none transition placeholder-zinc-600 font-light resize-y min-h-[52px] leading-relaxed break-words whitespace-pre-wrap"
-                          />
-                        </div>
-
-                        {/* Description * */}
-                        <div className="col-span-full">
-                          <label className="block text-[11px] font-bold text-[#F5F5F4]/70 uppercase tracking-wider mb-1">
-                            Description *
-                          </label>
-                          <textarea
-                            rows={4}
-                            required
-                            value={fieldsState.description || ''}
-                            onChange={e => handleFieldChange('description', e.target.value)}
-                            placeholder="Describe key features, condition, benefits..."
-                            className="w-full p-3 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white focus:outline-none transition placeholder-zinc-600 font-light"
-                          />
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* SECTION 2: Photos & Media (inline rendering of existing elements) */}
-                    <div className="bg-zinc-900/40 p-5 rounded-2xl border border-white/5 space-y-4">
-                      <div className="flex items-center gap-2 text-amber-400 font-bold text-xs uppercase tracking-wider border-b border-white/5 pb-2">
-                        <Camera className="w-4 h-4 text-amber-500" />
-                        <span>Photos & Media</span>
-                      </div>
-
-                      <div className="space-y-4">
-                        <div className="flex flex-wrap items-center justify-between gap-2">
-                          <div>
-                            <label className="block text-[11px] font-bold text-[#F5F5F4]/70 uppercase tracking-wider">
-                              Photos & Media (Max 10 Photos, 1 Video) *
-                            </label>
-                            <p className="text-[10px] text-[#F5F5F4]/40 font-light mt-0.5">
-                              The first photo is your Cover Photo. Reorder or set any photo as cover.
-                            </p>
-                          </div>
-                          <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full border ${imagesList.length >= 10 ? 'bg-rose-500/10 text-rose-400 border-rose-500/20' : 'bg-amber-500/10 text-amber-400 border-amber-500/20'}`}>
-                            {imagesList.length} / 10 Photos
-                          </span>
-                        </div>
-
-                        {photoError && (
-                          <div className="p-3 bg-rose-500/10 border border-rose-500/20 rounded-xl flex items-center gap-2 text-rose-300 text-xs">
-                            <AlertCircle className="w-4 h-4 shrink-0 text-rose-400" />
-                            <span>{photoError}</span>
-                          </div>
-                        )}
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          {/* Device File Picker Dropzone */}
-                          <div className="bg-zinc-900/80 border border-white/10 rounded-2xl p-5 flex flex-col justify-center items-center text-center group hover:border-amber-500/40 transition duration-300 relative">
-                            {isCompressingPhotos ? (
-                              <div className="flex flex-col items-center py-4">
-                                <Loader2 className="w-8 h-8 text-amber-500 animate-spin mb-2" />
-                                <span className="text-xs font-bold text-amber-400">Optimizing & compressing photos...</span>
-                              </div>
-                            ) : (
-                              <>
-                                <Camera className="w-8 h-8 text-amber-500/60 group-hover:text-amber-500 transition mb-2" />
-                                <span className="text-xs font-bold text-white/90 block mb-1">Device File Upload</span>
-                                <span className="text-[10px] text-white/40 block mb-3">JPG, JPEG, PNG, WebP</span>
-
-                                <label className="px-4 py-2 bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/30 hover:border-amber-500/50 rounded-xl text-xs font-bold transition duration-200 cursor-pointer inline-flex items-center gap-2">
-                                  <Upload className="w-3.5 h-3.5 text-amber-400" />
-                                  <span>From Device</span>
-                                  <input
-                                    type="file"
-                                    multiple
-                                    accept="image/jpeg,image/jpg,image/png,image/webp"
-                                    onChange={handleFileChange}
-                                    className="hidden"
-                                  />
-                                </label>
-                              </>
-                            )}
-                          </div>
-
-                          {/* URL & Stock Photo Input */}
-                          <div className="space-y-3 bg-zinc-900/40 border border-white/5 p-4 rounded-2xl">
-                            <label className="block text-[11px] font-bold text-[#F5F5F4]/70 uppercase tracking-wider">
-                              Image Web URL
-                            </label>
-
-                            <div className="flex gap-2">
-                              <input
-                                type="text"
-                                value={imageInput}
-                                onChange={e => setImageInput(e.target.value)}
-                                placeholder="Paste direct image link..."
-                                className="flex-1 p-2.5 bg-zinc-900 border border-white/10 focus:border-amber-500/60 rounded-xl text-xs text-white focus:outline-none transition placeholder-zinc-600 font-mono"
-                              />
-                              <button
-                                type="button"
-                                onClick={handleAddImage}
-                                className="px-3.5 py-2.5 bg-amber-500 text-black font-bold text-xs rounded-xl hover:bg-amber-400 transition cursor-pointer"
-                              >
-                                Add
-                              </button>
-                            </div>
-
-                            <div className="flex items-center justify-between pt-1 border-t border-white/5">
-                              <span className="text-[10px] text-white/40 italic">Need sample images?</span>
-                              <button
-                                type="button"
-                                onClick={handleQuickAddImagePlaceholder}
-                                className="px-3 py-1 bg-white/5 hover:bg-white/10 border border-white/5 rounded-lg text-[10px] font-bold text-amber-400 transition cursor-pointer"
-                              >
-                                ⚡ Quick Add
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Selected photos previews */}
-                        {imagesList.length > 0 && (
-                          <div className="pt-2 space-y-2">
-                            <div className="flex items-center justify-between">
-                              <label className="block text-[10px] font-bold text-white/60 uppercase tracking-widest">
-                                Selected Photos ({imagesList.length}/10)
-                              </label>
-                              <span className="text-[10px] text-amber-400/80">★ First photo is Cover Photo</span>
-                            </div>
-
-                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
-                              {imagesList.map((img, i) => (
-                                <div
-                                  key={i}
-                                  className={`relative rounded-2xl overflow-hidden border transition shadow-lg group bg-zinc-950 ${
-                                    i === 0 ? 'border-amber-500 ring-2 ring-amber-500/20' : 'border-white/10 hover:border-white/30'
-                                  }`}
-                                >
-                                  <div className="h-24 w-full overflow-hidden">
-                                    <img src={img} alt={`Preview ${i + 1}`} className="w-full h-full object-cover group-hover:scale-105 transition duration-300" referrerPolicy="no-referrer" />
-                                  </div>
-
-                                  {/* Cover Badge */}
-                                  {i === 0 ? (
-                                    <div className="absolute top-1.5 left-1.5 bg-amber-500 text-black px-2 py-0.5 rounded-md text-[9px] font-bold flex items-center gap-1 shadow">
-                                      <Star className="w-2.5 h-2.5 fill-black" />
-                                      <span>Cover Photo</span>
-                                    </div>
-                                  ) : (
-                                    <button
-                                      type="button"
-                                      onClick={() => handleSetCoverPhoto(i)}
-                                      className="absolute top-1.5 left-1.5 bg-black/70 hover:bg-amber-500 hover:text-black text-white px-2 py-0.5 rounded-md text-[9px] font-bold border border-white/20 transition cursor-pointer"
-                                    >
-                                      Set as Cover
-                                    </button>
-                                  )}
-
-                                  {/* Control Overlay */}
-                                  <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center gap-1.5 transition duration-200">
-                                    {i > 0 && (
-                                      <button
-                                        type="button"
-                                        onClick={() => handleMovePhoto(i, 'left')}
-                                        title="Move Left"
-                                        className="p-1.5 bg-zinc-800/90 hover:bg-amber-500 hover:text-black text-white rounded-lg transition cursor-pointer"
-                                      >
-                                        <ArrowLeft className="w-3.5 h-3.5" />
-                                      </button>
-                                    )}
-                                    {i < imagesList.length - 1 && (
-                                      <button
-                                        type="button"
-                                        onClick={() => handleMovePhoto(i, 'right')}
-                                        title="Move Right"
-                                        className="p-1.5 bg-zinc-800/90 hover:bg-amber-500 hover:text-black text-white rounded-lg transition cursor-pointer"
-                                      >
-                                        <ArrowRight className="w-3.5 h-3.5" />
-                                      </button>
-                                    )}
-                                    <button
-                                      type="button"
-                                      onClick={() => handleRemoveImage(i)}
-                                      title="Remove"
-                                      className="p-1.5 bg-rose-500/80 hover:bg-rose-600 text-white rounded-lg transition cursor-pointer"
-                                    >
-                                      <Trash2 className="w-3.5 h-3.5" />
-                                    </button>
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Video Showcase */}
-                      <div className="mt-4 pt-4 border-t border-white/5 space-y-3">
-                        <div className="flex items-center justify-between">
-                          <label className="block text-[11px] font-bold text-[#F5F5F4]/80 uppercase tracking-wider flex items-center gap-2">
-                            <Video className="w-4 h-4 text-amber-500" />
-                            <span>Video Tour / Showcase (Optional, Max 30s, 50MB)</span>
-                          </label>
-                          <span className="text-[10px] text-amber-400 font-mono bg-amber-500/10 px-2.5 py-0.5 rounded-full border border-amber-500/20">
-                            MP4, MOV, WebM
-                          </span>
-                        </div>
-
-                        {videoError && (
-                          <div className="p-3 bg-rose-500/10 border border-rose-500/20 rounded-xl flex items-center gap-2 text-rose-300 text-xs">
-                            <AlertCircle className="w-4 h-4 shrink-0 text-rose-400" />
-                            <span>{videoError}</span>
-                          </div>
-                        )}
-
-                        {isVideoUploading ? (
-                          <div className="p-6 bg-zinc-950 border border-amber-500/30 rounded-2xl flex flex-col items-center justify-center text-center space-y-2">
-                            <Loader2 className="w-8 h-8 text-amber-500 animate-spin" />
-                            <span className="text-xs font-bold text-white">Processing & Uploading Video...</span>
-                          </div>
-                        ) : (fieldsState.video || fieldsState.videoUrl) ? (
-                          <div className="bg-zinc-950 rounded-2xl overflow-hidden border border-amber-500/30 p-3 space-y-3">
-                            <div className="flex items-center justify-between">
-                              <span className="text-xs font-bold text-amber-400 flex items-center gap-1.5">
-                                <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                                <span>Video Uploaded & Ready</span>
-                              </span>
-                              <div className="flex items-center gap-2">
-                                <label className="px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white rounded-lg text-xs font-bold transition cursor-pointer flex items-center gap-1 border border-white/10">
-                                  <Upload className="w-3.5 h-3.5 text-amber-400" />
-                                  <span>Replace</span>
-                                  <input
-                                    type="file"
-                                    accept="video/mp4,video/quicktime,video/webm"
-                                    onChange={e => e.target.files?.[0] && handleVideoFileChange(e.target.files[0])}
-                                    className="hidden"
-                                  />
-                                </label>
-                                <button
-                                  type="button"
-                                  onClick={handleRemoveVideo}
-                                  className="px-3 py-1.5 bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/30 rounded-lg text-xs font-bold transition cursor-pointer flex items-center gap-1"
-                                >
-                                  <Trash2 className="w-3.5 h-3.5" />
-                                  <span>Remove</span>
-                                </button>
-                              </div>
-                            </div>
-                            <div className="rounded-xl overflow-hidden bg-black max-h-64 flex justify-center">
-                              <video
-                                src={fieldsState.video || fieldsState.videoUrl}
-                                controls
-                                className="max-h-64 w-full object-contain"
-                              />
-                            </div>
-                          </div>
-                        ) : (
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div className="border-2 border-dashed border-white/15 hover:border-amber-500/50 bg-zinc-950/60 rounded-2xl p-5 flex flex-col items-center justify-center text-center group transition">
-                              <Film className="w-8 h-8 text-amber-500/60 group-hover:text-amber-500 transition mb-2" />
-                              <span className="text-xs font-bold text-white mb-0.5">Upload Video File</span>
-                              <span className="text-[10px] text-white/40 mb-3">Max 30s duration, 50MB file size</span>
-
-                              <label className="px-4 py-2 bg-amber-500 text-black hover:bg-amber-400 font-bold rounded-xl text-xs transition cursor-pointer inline-flex items-center gap-2 shadow-lg">
-                                <Upload className="w-3.5 h-3.5" />
-                                <span>Select Video File</span>
-                                <input
-                                  type="file"
-                                  accept="video/mp4,video/quicktime,video/webm"
-                                  onChange={e => e.target.files?.[0] && handleVideoFileChange(e.target.files[0])}
-                                  className="hidden"
-                                />
-                              </label>
-                            </div>
-
-                            <div className="space-y-2 flex flex-col justify-center">
-                              <label className="block text-[10px] font-bold text-white/50 uppercase tracking-wider">
-                                Or Paste Direct Video URL
-                              </label>
-                              <input
-                                type="text"
-                                value={fieldsState.video || fieldsState.videoUrl || ''}
-                                placeholder="https://example.com/video.mp4"
-                                onChange={e => {
-                                  setVideoError('');
-                                  handleFieldChange('video', e.target.value);
-                                }}
-                                className="w-full p-3 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white focus:outline-none transition placeholder-zinc-600 font-mono"
-                              />
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* SECTION 3: Wholesale Details */}
-                    <div className="bg-[#0f0e0c] p-5 rounded-2xl border border-amber-500/10 space-y-4">
-                      <div className="flex items-center gap-2 text-amber-400 font-bold text-xs uppercase tracking-wider border-b border-amber-500/10 pb-2">
-                        <Package className="w-4 h-4 text-amber-500" />
-                        <span>📦 Wholesale Details</span>
-                      </div>
-
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {/* Business Type * */}
-                        <div>
-                          <label className="block text-[11px] font-bold text-white/80 uppercase tracking-wider mb-1">
-                            Business Type *
-                          </label>
-                          <select
-                            value={fieldsState.businessType || 'Wholesaler / Supplier'}
-                            onChange={e => handleFieldChange('businessType', e.target.value)}
-                            className="w-full p-3 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white focus:outline-none transition"
-                          >
-                            <option value="Manufacturer">Manufacturer</option>
-                            <option value="Wholesaler / Supplier">Wholesaler / Supplier</option>
-                            <option value="Distributor">Distributor</option>
-                            <option value="Importer">Importer</option>
-                            <option value="Exporter">Exporter</option>
-                            <option value="Authorized Dealer">Authorized Dealer</option>
-                            <option value="Local Supplier">Local Supplier</option>
-                            <option value="Farmer">Farmer</option>
-                            <option value="Cooperative">Cooperative</option>
-                            <option value="Other">Other</option>
-                          </select>
-                        </div>
-
-                        {/* Unit of Sale * */}
-                        <div>
-                          <label className="block text-[11px] font-bold text-white/80 uppercase tracking-wider mb-1">
-                            Unit of Sale *
-                          </label>
-                          <select
-                            value={fieldsState.wholesaleUnit || 'Piece'}
-                            onChange={e => handleFieldChange('wholesaleUnit', e.target.value)}
-                            className="w-full p-3 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white focus:outline-none transition"
-                          >
-                            <option value="Piece">Piece</option>
-                            <option value="Box">Box</option>
-                            <option value="Carton">Carton</option>
-                            <option value="Pack">Pack</option>
-                            <option value="Dozen">Dozen</option>
-                            <option value="Pair">Pair</option>
-                            <option value="Bag">Bag</option>
-                            <option value="Sack">Sack</option>
-                            <option value="Bundle">Bundle</option>
-                            <option value="Roll">Roll</option>
-                            <option value="Bottle">Bottle</option>
-                            <option value="Kg">Kg</option>
-                            <option value="Gram">Gram</option>
-                            <option value="Liter">Liter</option>
-                            <option value="Meter">Meter</option>
-                            <option value="Ton">Ton</option>
-                            <option value="Other">Other</option>
-                          </select>
-                        </div>
-
-                        {/* Wholesale Price * */}
-                        <div>
-                          <label className="block text-[11px] font-bold text-white/80 uppercase tracking-wider mb-1">
-                            Wholesale Price * ({currency})
-                          </label>
-                          <div className="relative">
-                            <span className="absolute left-3 top-3 text-xs text-amber-500 font-bold">{currency}</span>
-                            <input
-                              type="number"
-                              min="0"
-                              required
-                              value={fieldsState.wholesalePrice !== undefined ? fieldsState.wholesalePrice : ''}
-                              onChange={e => handleFieldChange('wholesalePrice', e.target.value === '' ? '' : Number(e.target.value))}
-                              placeholder="e.g., 300"
-                              className="w-full pl-12 pr-3 py-3 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white focus:outline-none transition font-medium font-mono"
-                            />
-                          </div>
-                        </div>
-
-                        {/* Minimum Order Quantity (MOQ) * */}
-                        <div>
-                          <label className="block text-[11px] font-bold text-white/80 uppercase tracking-wider mb-1">
-                            Minimum Order Quantity (MOQ) *
-                          </label>
-                          <input
-                            type="number"
-                            min="1"
-                            required
-                            value={fieldsState.minimumOrderQuantity !== undefined ? fieldsState.minimumOrderQuantity : ''}
-                            onChange={e => handleFieldChange('minimumOrderQuantity', e.target.value === '' ? '' : Number(e.target.value))}
-                            placeholder="e.g., 50"
-                            className="w-full p-3 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white focus:outline-none transition font-medium font-mono"
-                          />
-                        </div>
-
-                        {/* Available Quantity */}
-                        <div>
-                          <label className="block text-[11px] font-bold text-white/80 uppercase tracking-wider mb-1">
-                            Available Quantity
-                          </label>
-                          <input
-                            type="number"
-                            min="0"
-                            value={fieldsState.availableQuantity !== undefined ? fieldsState.availableQuantity : ''}
-                            onChange={e => handleFieldChange('availableQuantity', e.target.value === '' ? '' : Number(e.target.value))}
-                            placeholder="e.g., 500"
-                            className="w-full p-3 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white focus:outline-none transition font-mono"
-                          />
-                        </div>
-                      </div>
-
-                      {/* Delivery Options */}
-                      <div className="space-y-2 pt-2 border-t border-amber-500/15">
-                        <label className="block text-[11px] font-bold text-white/80 uppercase tracking-wider">
-                          Delivery Options
-                        </label>
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                          {[
-                            { id: 'Store Pickup', label: 'Store Pickup' },
-                            { id: 'Local Delivery', label: 'Local Delivery' },
-                            { id: 'Nationwide Shipping', label: 'Nationwide Shipping' }
-                          ].map(item => {
-                            const currentDel: string[] = Array.isArray(fieldsState.deliveryOptions) ? fieldsState.deliveryOptions : [];
-                            const isChecked = currentDel.includes(item.id);
-                            return (
-                              <label
-                                key={item.id}
-                                className={`p-2.5 rounded-xl border text-[11px] font-medium flex items-center gap-2 cursor-pointer transition ${
-                                  isChecked
-                                    ? 'bg-amber-500/20 border-amber-500 text-amber-300'
-                                    : 'bg-zinc-900/80 border-white/10 text-white/70 hover:border-white/20'
-                                }`}
-                              >
-                                <input
-                                  type="checkbox"
-                                  checked={isChecked}
-                                  onChange={e => {
-                                    if (e.target.checked) {
-                                      handleFieldChange('deliveryOptions', [...currentDel, item.id]);
-                                    } else {
-                                      handleFieldChange('deliveryOptions', currentDel.filter(d => d !== item.id));
-                                    }
-                                  }}
-                                  className="accent-amber-500 rounded"
-                                />
-                                <span>{item.label}</span>
-                              </label>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* SECTION 4: Supplier Information */}
-                    <div className="bg-zinc-900/40 p-5 rounded-2xl border border-white/5 space-y-4">
-                      <div className="flex items-center gap-2 text-amber-400 font-bold text-xs uppercase tracking-wider border-b border-white/5 pb-2">
-                        <Store className="w-4 h-4 text-amber-500" />
-                        <span>Supplier Information</span>
-                      </div>
-
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {/* Business / Company Name */}
-                        <div>
-                          <label className="block text-[11px] font-bold text-white/80 uppercase tracking-wider mb-1">
-                            Business / Company Name *
-                          </label>
-                          <input
-                            type="text"
-                            required
-                            value={fieldsState.ownerBusinessName || ''}
-                            onChange={e => handleFieldChange('ownerBusinessName', e.target.value)}
-                            placeholder="e.g., Sof Fashion Supplier"
-                            className="w-full p-3 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white focus:outline-none transition placeholder-zinc-600"
-                          />
-                        </div>
-
-                        {/* Contact Phone Number */}
-                        <div>
-                          <label className="block text-[11px] font-bold text-white/80 uppercase tracking-wider mb-1">
-                            Contact Phone Number *
-                          </label>
-                          <input
-                            type="text"
-                            required
-                            value={fieldsState.contactPhone || ''}
-                            onChange={e => handleFieldChange('contactPhone', e.target.value)}
-                            placeholder="e.g., +251911223344"
-                            className="w-full p-3 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white focus:outline-none transition placeholder-zinc-600 font-mono font-light"
-                          />
-                        </div>
-
-                        {/* Additional Wholesale Terms / Notes (Optional) */}
-                        <div className="col-span-full">
-                          <label className="block text-[11px] font-bold text-white/80 uppercase tracking-wider mb-1">
-                            Additional Wholesale Terms / Notes (Optional)
-                          </label>
-                          <textarea
-                            rows={2}
-                            value={fieldsState.wholesaleNotes || ''}
-                            onChange={e => handleFieldChange('wholesaleNotes', e.target.value)}
-                            placeholder="e.g., Bulk discount available for order quantities above 1000 pieces. Lead time is 5 business days."
-                            className="w-full p-3 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white focus:outline-none transition placeholder-zinc-600 font-light resize-none"
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ) : (
-                  <>
-<div className="grid grid-cols-1 md:grid-cols-2 gap-5 bg-zinc-900/20 p-5 rounded-2xl border border-white/5">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5 bg-zinc-900/20 p-5 rounded-2xl border border-white/5">
                   {activeFields
                     .filter(field => {
                       const selType = fieldsState.sellingType || 'Retail';
@@ -3486,9 +2816,7 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
                     </div>
                   </div>
                 )}
-
-                  </>
-                )}</form>
+              </form>
             )}
 
             {/* STEP 4: LIVE PREVIEW MODE */}
@@ -3502,201 +2830,123 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
                   <span className="text-[10px] text-amber-300/70">{d.previewSubtext}</span>
                 </div>
 
-                {fieldsState.sellingType === 'Wholesale' ? (
-                  <div className="bg-zinc-900/60 rounded-2xl border border-white/10 overflow-hidden shadow-xl max-w-xl mx-auto text-left">
-                    <div className="relative h-52 bg-zinc-800">
-                      <img
-                        src={imagesList[0] || 'https://images.unsplash.com/photo-1613490493576-7fde63acd811?auto=format&fit=crop&w=1200&q=80'}
-                        alt="Listing Preview"
-                        className="w-full h-full object-cover"
-                        referrerPolicy="no-referrer"
-                      />
-                      <div className="absolute top-3 left-3 bg-black/70 backdrop-blur-md px-3 py-1 rounded-full text-[10px] font-bold text-amber-400 uppercase tracking-wider border border-white/10">
-                        🏢 WHOLESALE CATALOGUE
-                      </div>
-                      {imagesList.length > 1 && (
-                        <div className="absolute bottom-3 right-3 bg-black/80 px-2.5 py-1 rounded-md text-[10px] font-bold text-white flex items-center gap-1">
-                          <Camera className="w-3 h-3 text-amber-400" />
-                          <span>{imagesList.length} {d.photosCount}</span>
-                        </div>
-                      )}
+                <div className="bg-zinc-900/60 rounded-2xl border border-white/10 overflow-hidden shadow-xl max-w-xl mx-auto">
+                  <div className="relative h-52 bg-zinc-800">
+                    <img 
+                      src={imagesList[0] || 'https://images.unsplash.com/photo-1613490493576-7fde63acd811?auto=format&fit=crop&w=1200&q=80'} 
+                      alt="Listing Preview" 
+                      className="w-full h-full object-cover"
+                      referrerPolicy="no-referrer"
+                    />
+                    <div className="absolute top-3 left-3 bg-black/70 backdrop-blur-md px-3 py-1 rounded-full text-[10px] font-bold text-amber-400 uppercase tracking-wider border border-white/10">
+                      {getTranslatedCategoryName(majorCategory, currentLanguage)} &bull; {getTranslatedSubcategoryName(subcategory, currentLanguage)}
                     </div>
+                    {imagesList.length > 1 && (
+                      <div className="absolute bottom-3 right-3 bg-black/80 px-2.5 py-1 rounded-md text-[10px] font-bold text-white flex items-center gap-1">
+                        <Camera className="w-3 h-3 text-amber-400" />
+                        <span>{imagesList.length} {d.photosCount}</span>
+                      </div>
+                    )}
+                  </div>
 
-                    <div className="p-5 space-y-4">
+                  <div className="p-5 space-y-4">
+                    <div className="flex justify-between items-start gap-4">
                       <div>
-                        <h3 className="font-serif text-lg font-bold text-white line-clamp-2">
+                        <h3 className="font-serif text-lg font-bold text-white line-clamp-1">
                           {fieldsState.title || d.untitled}
                         </h3>
-                      </div>
-
-                      {/* Wholesale details in Alibaba/Jiji style */}
-                      <div className="bg-amber-500/5 border border-amber-500/20 p-4 rounded-xl space-y-2 text-xs text-[#F5F5F4]">
-                        <div className="flex items-center gap-2">
-                          <Building className="w-4 h-4 text-amber-500 shrink-0" />
-                          <span className="font-bold text-white">{fieldsState.ownerBusinessName || 'Supplier Business Name'}</span>
-                        </div>
-
-                        <div className="flex items-center gap-2">
-                          <Package className="w-4 h-4 text-amber-500 shrink-0" />
-                          <span>MOQ: <span className="font-bold text-white">{fieldsState.minimumOrderQuantity || 1} {fieldsState.wholesaleUnit || 'Piece'}s</span></span>
-                        </div>
-
-                        <div className="flex items-center gap-2">
-                          <span className="text-amber-500 font-bold font-mono">💰</span>
-                          <span>Price: <span className="font-bold text-amber-400">{currency} {fieldsState.wholesalePrice || 0}</span> / {fieldsState.wholesaleUnit || 'Piece'}</span>
-                        </div>
-
-                        {fieldsState.availableQuantity ? (
-                          <div className="flex items-center gap-2">
-                            <span className="text-amber-500 font-bold">📊</span>
-                            <span>Stock: <span className="font-bold text-white">{fieldsState.availableQuantity} {fieldsState.wholesaleUnit || 'Piece'}s</span></span>
-                          </div>
-                        ) : null}
-
-                        {Array.isArray(fieldsState.deliveryOptions) && fieldsState.deliveryOptions.length > 0 ? (
-                          <div className="flex items-center gap-2">
-                            <span className="text-amber-500 font-bold">🚚</span>
-                            <span>Delivery: <span className="font-bold text-white">{fieldsState.deliveryOptions.join(', ')}</span></span>
-                          </div>
-                        ) : null}
-
-                        <div className="flex items-center gap-2">
-                          <MapPin className="w-4 h-4 text-amber-500 shrink-0" />
-                          <span className="truncate">{fieldsState.location || d.noLocation}</span>
-                        </div>
-                      </div>
-
-                      {/* Button Contact Supplier */}
-                      <div className="pt-2">
-                        <button
-                          type="button"
-                          className="w-full py-3 bg-amber-500 text-black font-extrabold text-xs rounded-xl hover:bg-amber-400 uppercase tracking-wider transition cursor-default flex items-center justify-center gap-2"
-                        >
-                          <Phone className="w-4 h-4 fill-black" />
-                          <span>Contact Supplier</span>
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="bg-zinc-900/60 rounded-2xl border border-white/10 overflow-hidden shadow-xl max-w-xl mx-auto">
-                    <div className="relative h-52 bg-zinc-800">
-                      <img
-                        src={imagesList[0] || 'https://images.unsplash.com/photo-1613490493576-7fde63acd811?auto=format&fit=crop&w=1200&q=80'}
-                        alt="Listing Preview"
-                        className="w-full h-full object-cover"
-                        referrerPolicy="no-referrer"
-                      />
-                      <div className="absolute top-3 left-3 bg-black/70 backdrop-blur-md px-3 py-1 rounded-full text-[10px] font-bold text-amber-400 uppercase tracking-wider border border-white/10">
-                        {getTranslatedCategoryName(majorCategory, currentLanguage)} &bull; {getTranslatedSubcategoryName(subcategory, currentLanguage)}
-                      </div>
-                      {imagesList.length > 1 && (
-                        <div className="absolute bottom-3 right-3 bg-black/80 px-2.5 py-1 rounded-md text-[10px] font-bold text-white flex items-center gap-1">
-                          <Camera className="w-3 h-3 text-amber-400" />
-                          <span>{imagesList.length} {d.photosCount}</span>
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="p-5 space-y-4">
-                      <div className="flex justify-between items-start gap-4">
-                        <div>
-                          <h3 className="font-serif text-lg font-bold text-white line-clamp-1">
-                            {fieldsState.title || d.untitled}
-                          </h3>
-                          <div className="text-xs text-white/70 flex items-start gap-1.5 mt-1.5 leading-relaxed bg-white/5 p-2 rounded-xl border border-white/5">
-                            <MapPin className="w-3.5 h-3.5 text-amber-500 shrink-0 mt-0.5" />
-                            <span className="whitespace-pre-wrap break-words flex-1 text-white/90 leading-snug">
-                              {fieldsState.location || d.noLocation}
-                            </span>
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          {(fieldsState.sellingType || 'Retail') === 'Wholesale' ? (
-                            <>
-                              <span className="text-lg font-extrabold text-amber-400 font-mono block">
-                                {fieldsState.wholesalePrice ? `${Number(fieldsState.wholesalePrice).toLocaleString()} ${currency}` : d.contactPrice}
-                                <span className="text-xs font-normal text-amber-300/80 ml-1">/ {fieldsState.wholesaleUnit || 'Piece'}</span>
-                              </span>
-                              <span className="text-[10px] text-amber-300/90 font-bold block mt-0.5">
-                                MOQ: {fieldsState.minimumOrderQuantity || 1} {fieldsState.wholesaleUnit || 'Piece'}s
-                              </span>
-                            </>
-                          ) : (
-                            <>
-                              <span className="text-lg font-extrabold text-amber-400 font-mono block">
-                                {fieldsState.price ? `${Number(fieldsState.price).toLocaleString()} ${currency}` : d.contactPrice}
-                              </span>
-                              {(fieldsState.sellingType || 'Retail') === 'Retail & Wholesale' && fieldsState.wholesalePrice && (
-                                <span className="text-[10px] text-amber-300 font-bold block mt-0.5">
-                                  Wholesale: {Number(fieldsState.wholesalePrice).toLocaleString()} {currency} / {fieldsState.wholesaleUnit || 'Piece'} (MOQ: {fieldsState.minimumOrderQuantity || 1})
-                                </span>
-                              )}
-                            </>
-                          )}
-                        </div>
-                      </div>
-
-                      {((fieldsState.sellingType || 'Retail') === 'Wholesale' || (fieldsState.sellingType || 'Retail') === 'Retail & Wholesale') && (
-                        <div className="bg-amber-500/10 border border-amber-500/20 p-2.5 rounded-xl flex items-center justify-between text-[11px] text-amber-300">
-                          <div className="flex items-center gap-1.5 font-bold">
-                            <Package className="w-3.5 h-3.5 text-amber-400" />
-                            <span>{fieldsState.sellingType} &bull; {fieldsState.businessType || 'Wholesaler'}</span>
-                          </div>
-                          <div className="text-[10px] text-amber-400/80 font-mono text-right">
-                            <span>MOQ: {fieldsState.minimumOrderQuantity || 1} {fieldsState.wholesaleUnit || 'Piece'}</span>
-                            {fieldsState.availableQuantity ? (
-                              <span className="ml-2 font-semibold text-amber-300">
-                                &bull; Stock: {fieldsState.availableQuantity} {fieldsState.wholesaleUnit || 'Piece'}s
-                              </span>
-                            ) : null}
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Specifications Grid */}
-                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 pt-2 border-t border-white/5">
-                        {buildCleanAmenities(majorCategory, subcategory, fieldsState, activeFields).map((spec, idx) => (
-                          <div key={idx} className="bg-white/5 border border-white/10 px-2.5 py-1.5 rounded-lg text-[10px] text-white/80 font-medium truncate">
-                            ✨ {spec}
-                          </div>
-                        ))}
-                      </div>
-
-                      {/* Description Snippet */}
-                      <div className="text-xs text-white/60 line-clamp-2 pt-1 border-t border-white/5">
-                        {fieldsState.description || d.noDesc}
-                      </div>
-
-                      {/* Seller Contact Info Preview */}
-                      <div className="bg-black/40 p-3 rounded-xl border border-white/5 flex items-center justify-between text-xs">
-                        <div className="flex items-center gap-2.5">
-                          {fieldsState.ownerAvatar ? (
-                            <img src={fieldsState.ownerAvatar} alt={fieldsState.ownerName || 'Owner'} className="w-8 h-8 rounded-full object-cover border border-amber-500/30" />
-                          ) : (
-                            <div className="w-8 h-8 rounded-full bg-amber-500/20 text-amber-400 font-extrabold flex items-center justify-center text-xs border border-amber-500/30">
-                              {(fieldsState.ownerName || currentUser?.fullName || 'O').charAt(0).toUpperCase()}
-                            </div>
-                          )}
-                          <div>
-                            <span className="font-bold text-white block text-[11px]">
-                              {fieldsState.ownerName || (currentUser?.role === 'admin' ? 'Property Owner' : currentUser?.fullName)}
-                            </span>
-                            <span className="text-[10px] text-amber-400/80 block font-mono">
-                              {fieldsState.ownerBusinessName || (currentUser?.role === 'admin' ? 'Public Listing Owner' : d.verifiedPublisher)}
-                            </span>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-1.5 text-amber-400 font-mono font-bold text-xs bg-amber-500/10 px-3 py-1.5 rounded-lg border border-amber-500/20">
-                          <Phone className="w-3.5 h-3.5" />
-                          <span>
-                            {fieldsState.contactPhone || (currentUser?.role === 'admin' ? 'Owner Phone' : (currentUser?.phone || '+251911...'))}
+                        <div className="text-xs text-white/70 flex items-start gap-1.5 mt-1.5 leading-relaxed bg-white/5 p-2 rounded-xl border border-white/5">
+                          <MapPin className="w-3.5 h-3.5 text-amber-500 shrink-0 mt-0.5" />
+                          <span className="whitespace-pre-wrap break-words flex-1 text-white/90 leading-snug">
+                            {fieldsState.location || d.noLocation}
                           </span>
                         </div>
                       </div>
+                      <div className="text-right">
+                        {(fieldsState.sellingType || 'Retail') === 'Wholesale' ? (
+                          <>
+                            <span className="text-lg font-extrabold text-amber-400 font-mono block">
+                              {fieldsState.wholesalePrice ? `${Number(fieldsState.wholesalePrice).toLocaleString()} ${currency}` : d.contactPrice}
+                              <span className="text-xs font-normal text-amber-300/80 ml-1">/ {fieldsState.wholesaleUnit || 'Piece'}</span>
+                            </span>
+                            <span className="text-[10px] text-amber-300/90 font-bold block mt-0.5">
+                              MOQ: {fieldsState.minimumOrderQuantity || 1} {fieldsState.wholesaleUnit || 'Piece'}s
+                            </span>
+                          </>
+                        ) : (
+                          <>
+                            <span className="text-lg font-extrabold text-amber-400 font-mono block">
+                              {fieldsState.price ? `${Number(fieldsState.price).toLocaleString()} ${currency}` : d.contactPrice}
+                            </span>
+                            {(fieldsState.sellingType || 'Retail') === 'Retail & Wholesale' && fieldsState.wholesalePrice && (
+                              <span className="text-[10px] text-amber-300 font-bold block mt-0.5">
+                                Wholesale: {Number(fieldsState.wholesalePrice).toLocaleString()} {currency} / {fieldsState.wholesaleUnit || 'Piece'} (MOQ: {fieldsState.minimumOrderQuantity || 1})
+                              </span>
+                            )}
+                          </>
+                        )}
+                      </div>
+                    </div>
+
+                    {((fieldsState.sellingType || 'Retail') === 'Wholesale' || (fieldsState.sellingType || 'Retail') === 'Retail & Wholesale') && (
+                      <div className="bg-amber-500/10 border border-amber-500/20 p-2.5 rounded-xl flex items-center justify-between text-[11px] text-amber-300">
+                        <div className="flex items-center gap-1.5 font-bold">
+                          <Package className="w-3.5 h-3.5 text-amber-400" />
+                          <span>{fieldsState.sellingType} &bull; {fieldsState.businessType || 'Wholesaler'}</span>
+                        </div>
+                        <div className="text-[10px] text-amber-400/80 font-mono text-right">
+                          <span>MOQ: {fieldsState.minimumOrderQuantity || 1} {fieldsState.wholesaleUnit || 'Piece'}</span>
+                          {fieldsState.availableQuantity ? (
+                            <span className="ml-2 font-semibold text-amber-300">
+                              &bull; Stock: {fieldsState.availableQuantity} {fieldsState.wholesaleUnit || 'Piece'}s
+                            </span>
+                          ) : null}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Specifications Grid */}
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 pt-2 border-t border-white/5">
+                      {buildCleanAmenities(majorCategory, subcategory, fieldsState, activeFields).map((spec, idx) => (
+                        <div key={idx} className="bg-white/5 border border-white/10 px-2.5 py-1.5 rounded-lg text-[10px] text-white/80 font-medium truncate">
+                          ✨ {spec}
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Description Snippet */}
+                    <div className="text-xs text-white/60 line-clamp-2 pt-1 border-t border-white/5">
+                      {fieldsState.description || d.noDesc}
+                    </div>
+
+                    {/* Seller Contact Info Preview */}
+                    <div className="bg-black/40 p-3 rounded-xl border border-white/5 flex items-center justify-between text-xs">
+                      <div className="flex items-center gap-2.5">
+                        {fieldsState.ownerAvatar ? (
+                          <img src={fieldsState.ownerAvatar} alt={fieldsState.ownerName || 'Owner'} className="w-8 h-8 rounded-full object-cover border border-amber-500/30" />
+                        ) : (
+                          <div className="w-8 h-8 rounded-full bg-amber-500/20 text-amber-400 font-extrabold flex items-center justify-center text-xs border border-amber-500/30">
+                            {(fieldsState.ownerName || currentUser?.fullName || 'O').charAt(0).toUpperCase()}
+                          </div>
+                        )}
+                        <div>
+                          <span className="font-bold text-white block text-[11px]">
+                            {fieldsState.ownerName || (currentUser?.role === 'admin' ? 'Property Owner' : currentUser?.fullName)}
+                          </span>
+                          <span className="text-[10px] text-amber-400/80 block font-mono">
+                            {fieldsState.ownerBusinessName || (currentUser?.role === 'admin' ? 'Public Listing Owner' : d.verifiedPublisher)}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-1.5 text-amber-400 font-mono font-bold text-xs bg-amber-500/10 px-3 py-1.5 rounded-lg border border-amber-500/20">
+                        <Phone className="w-3.5 h-3.5" />
+                        <span>
+                          {fieldsState.contactPhone || (currentUser?.role === 'admin' ? 'Owner Phone' : (currentUser?.phone || '+251911...'))}
+                        </span>
+                      </div>
                     </div>
                   </div>
-                )}
+                </div>
               </div>
             )}
 

@@ -1383,20 +1383,24 @@ const applyDataSanityAndMigrations = () => {
 };
 
 const loadDb = async () => {
-  const mongoConnected = await connectMongo();
-  if (mongoConnected) {
-    const loaded = await loadFromMongo();
-    if (loaded) {
-      applyDataSanityAndMigrations();
-      await saveDb();
-      return;
-    }
-  }
-
-  console.log('[Storage] Operating on persistent file database source.');
+  console.log('[Storage] Loading database file/seed source for instant availability...');
   await loadFromFileSeed();
   applyDataSanityAndMigrations();
-  await saveDb();
+
+  if (MONGODB_URI) {
+    console.log('[Storage] Initiating background connection to MongoDB...');
+    connectMongo().then(async (connected) => {
+      if (connected) {
+        const loaded = await loadFromMongo();
+        if (loaded) {
+          applyDataSanityAndMigrations();
+          console.log('[Storage] Background MongoDB synchronization completed successfully.');
+        }
+      }
+    }).catch(err => {
+      console.error('[Storage] Background MongoDB connection error:', err);
+    });
+  }
 };
 
 let savePromise: Promise<void> = Promise.resolve();
@@ -2066,44 +2070,25 @@ async function startServer() {
       localDb.notifications.push(newNotif as any);
     }
 
-    // 2FA Security Check (Mandatory for Admin accounts, or accounts with twoFactorEnabled: true)
+    // 2FA Security Check (Enforced when twoFactorEnabled is explicitly enabled for the account)
     const isAdmin = isUserAdmin(user);
     const has2FA = Boolean(user.twoFactorEnabled);
 
-    if (has2FA || isAdmin) {
+    if (has2FA) {
       const temp2faToken = jwt.sign(
         { userId: user.id, purpose: '2fa_login', rememberMe: Boolean(rememberMe) },
         JWT_SECRET,
         { expiresIn: '10m' }
       );
 
-      let setupData = null;
-      if (isAdmin && !has2FA) {
-        let rawSecret = decryptSecret(user.tempTwoFactorSecret || '');
-        if (!rawSecret) {
-          rawSecret = authenticator.generateSecret();
-          user.tempTwoFactorSecret = encryptSecret(rawSecret);
-        }
-        const otpauth = authenticator.keyuri(user.email, 'Sof Umer Admin', rawSecret);
-        const qrCodeUrl = await QRCode.toDataURL(otpauth);
-        setupData = {
-          secret: rawSecret,
-          qrCodeUrl,
-          otpauthUri: otpauth
-        };
-      }
-
       await saveDb();
 
       return res.json({
         requires2FA: true,
-        requires2FASetup: isAdmin && !has2FA,
+        requires2FASetup: false,
         tempToken: temp2faToken,
         email: user.email,
-        setupData,
-        message: isAdmin && !has2FA
-          ? 'Two-Factor Authentication (2FA) is mandatory for Administrator accounts. Please scan the QR code and enter the 6-digit code to complete sign-in.'
-          : 'Google Authenticator 2FA verification is required.'
+        message: 'Google Authenticator 2FA verification is required.'
       });
     }
 
@@ -2334,7 +2319,7 @@ async function startServer() {
     }
   });
 
-  // 4. Disable Two-Factor Authentication (User optional, blocked for Admin)
+  // 4. Disable Two-Factor Authentication
   app.post('/api/auth/2fa/disable', requireAuth, async (req, res) => {
     try {
       const user = (req as any).user as ServerUser;
@@ -2342,11 +2327,6 @@ async function startServer() {
 
       const dbUser = localDb.users.find(u => u.id === user.id);
       if (!dbUser) return res.status(404).json({ error: 'User not found.' });
-
-      // Admin 2FA mandatory rule
-      if (dbUser.role === 'admin' || dbUser.isEmployee) {
-        return res.status(403).json({ error: 'Two-Factor Authentication is mandatory for Administrators and cannot be disabled.' });
-      }
 
       if (!password) {
         return res.status(400).json({ error: 'Account password is required to disable 2FA.' });
@@ -3173,17 +3153,17 @@ async function startServer() {
     res.json((localDb as any).moderationLogs || []);
   });
 
-  // Properties Endpoints
-  app.get('/api/properties', async (req, res) => {
-    res.json(localDb.properties);
+  // Properties & Listings Endpoints
+  app.get(['/api/properties', '/api/listings'], async (req, res) => {
+    res.json(localDb.properties || []);
   });
 
-  app.get('/api/properties/my-listings', requireAuth, async (req, res) => {
+  app.get(['/api/properties/my-listings', '/api/listings/my-listings'], requireAuth, async (req, res) => {
     const user = (req as any).user;
     const userEmailLower = user.email ? user.email.toLowerCase() : '';
     const normPhone = user.phone ? normalizePhone(user.phone) : '';
 
-    const myListings = localDb.properties.filter(p => {
+    const myListings = (localDb.properties || []).filter(p => {
       if (p.ownerId === user.id) return true;
       if (userEmailLower && (((p as any).ownerEmail && (p as any).ownerEmail.toLowerCase() === userEmailLower) || (p.contactEmail && p.contactEmail.toLowerCase() === userEmailLower))) return true;
       if (normPhone && (((p as any).ownerPhone && normalizePhone((p as any).ownerPhone) === normPhone) || (p.contactPhone && normalizePhone(p.contactPhone) === normPhone))) return true;
@@ -3193,7 +3173,13 @@ async function startServer() {
     res.json(myListings);
   });
 
-  app.post('/api/properties', async (req, res) => {
+  app.get(['/api/properties/:id', '/api/listings/:id'], async (req, res) => {
+    const prop = (localDb.properties || []).find(p => p.id === req.params.id);
+    if (!prop) return res.status(404).json({ error: 'Listing not found' });
+    res.json(prop);
+  });
+
+  app.post(['/api/properties', '/api/listings'], async (req, res) => {
     let authUser: ServerUser | undefined = undefined;
     const propertyData = req.body || {};
 
@@ -3477,7 +3463,7 @@ async function startServer() {
     }
   });
 
-  app.put('/api/properties/:id', requireAuth, async (req, res) => {
+  app.put(['/api/properties/:id', '/api/listings/:id'], requireAuth, async (req, res) => {
     const { id } = req.params;
     const updates = req.body;
     const currentUser = (req as any).user;
@@ -3646,7 +3632,28 @@ async function startServer() {
       await saveDb();
       return res.json(localDb.properties[idx]);
     }
-    res.status(404).json({ error: 'Property not found' });
+    res.status(404).json({ error: 'Listing not found' });
+  });
+
+  app.delete(['/api/properties/:id', '/api/listings/:id'], requireAuth, async (req, res) => {
+    const { id } = req.params;
+    const currentUser = (req as any).user;
+    const idx = (localDb.properties || []).findIndex(p => p.id === id);
+    if (idx !== -1) {
+      const property = localDb.properties[idx];
+      const isOwner = property.ownerId === currentUser.id ||
+        (currentUser.email && (((property as any).ownerEmail && (property as any).ownerEmail.toLowerCase() === currentUser.email.toLowerCase()) || (property.contactEmail && property.contactEmail.toLowerCase() === currentUser.email.toLowerCase()))) ||
+        (currentUser.phone && (((property as any).ownerPhone && normalizePhone((property as any).ownerPhone) === normalizePhone(currentUser.phone)) || (property.contactPhone && normalizePhone(property.contactPhone) === normalizePhone(currentUser.phone))));
+
+      if (!isUserAdmin(currentUser) && !isOwner) {
+        return res.status(403).json({ error: 'You are not authorized to delete this listing.' });
+      }
+
+      localDb.properties.splice(idx, 1);
+      await saveDb();
+      return res.json({ success: true, message: 'Listing deleted successfully.' });
+    }
+    res.status(404).json({ error: 'Listing not found' });
   });
 
   // Wallet Endpoints
