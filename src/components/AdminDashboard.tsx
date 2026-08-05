@@ -2862,10 +2862,11 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
                       <div>
                         <label className="block text-[10px] text-white/50 font-bold uppercase mb-1">Price *</label>
                         <input
-                          type="number"
+                          type="text"
+                          inputMode="text"
                           required
                           value={propForm.price}
-                          onChange={e => setPropForm({ ...propForm, price: Number(e.target.value) })}
+                          onChange={e => setPropForm({ ...propForm, price: e.target.value as any })}
                           className="w-full px-3.5 py-2.5 bg-black/50 border border-white/10 rounded-xl text-xs text-white font-mono focus:border-amber-500 focus:outline-none"
                         />
                       </div>
@@ -2957,9 +2958,10 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
                       <div>
                         <label className="block text-[10px] text-white/50 font-bold uppercase mb-1">Quantity Available</label>
                         <input
-                          type="number"
+                          type="text"
+                          inputMode="text"
                           value={propForm.quantity}
-                          onChange={e => setPropForm({ ...propForm, quantity: Number(e.target.value) })}
+                          onChange={e => setPropForm({ ...propForm, quantity: e.target.value as any })}
                           className="w-full px-3.5 py-2.5 bg-black/50 border border-white/10 rounded-xl text-xs text-white font-mono focus:border-amber-500 focus:outline-none"
                         />
                       </div>
@@ -3229,9 +3231,10 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
                       <div>
                         <label className="block text-[10px] text-white/50 font-bold uppercase mb-1">Retail Price</label>
                         <input
-                          type="number"
+                          type="text"
+                          inputMode="text"
                           value={propForm.retailPrice || propForm.price}
-                          onChange={e => setPropForm({ ...propForm, retailPrice: Number(e.target.value), price: Number(e.target.value) })}
+                          onChange={e => setPropForm({ ...propForm, retailPrice: e.target.value as any, price: e.target.value as any })}
                           className="w-full px-3.5 py-2.5 bg-black/50 border border-white/10 rounded-xl text-xs text-white font-mono focus:border-amber-500 focus:outline-none"
                         />
                       </div>
@@ -3239,9 +3242,10 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
                       <div>
                         <label className="block text-[10px] text-white/50 font-bold uppercase mb-1">Wholesale Price</label>
                         <input
-                          type="number"
+                          type="text"
+                          inputMode="text"
                           value={propForm.wholesalePrice}
-                          onChange={e => setPropForm({ ...propForm, wholesalePrice: Number(e.target.value) })}
+                          onChange={e => setPropForm({ ...propForm, wholesalePrice: e.target.value as any })}
                           className="w-full px-3.5 py-2.5 bg-black/50 border border-white/10 rounded-xl text-xs text-white font-mono focus:border-amber-500 focus:outline-none"
                         />
                       </div>
@@ -3269,9 +3273,10 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
                       <div>
                         <label className="block text-[10px] text-white/50 font-bold uppercase mb-1">Minimum Order Quantity (MOQ)</label>
                         <input
-                          type="number"
+                          type="text"
+                          inputMode="text"
                           value={propForm.minimumOrderQuantity}
-                          onChange={e => setPropForm({ ...propForm, minimumOrderQuantity: Number(e.target.value) })}
+                          onChange={e => setPropForm({ ...propForm, minimumOrderQuantity: e.target.value as any })}
                           className="w-full px-3.5 py-2.5 bg-black/50 border border-white/10 rounded-xl text-xs text-white font-mono focus:border-amber-500 focus:outline-none"
                         />
                       </div>
@@ -3836,10 +3841,11 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
                   <div>
                     <label className="block text-[10px] font-bold uppercase text-white/40 mb-1">Max Free Listings / User</label>
                     <input
-                      type="number"
+                      type="text"
+                      inputMode="text"
                       value={systemSettings.freeListingSettings?.maxFreeListingsPerUser ?? 5}
                       onChange={async e => {
-                        const updatedFls = { ...(systemSettings.freeListingSettings || { enabled: true }), maxFreeListingsPerUser: Number(e.target.value) };
+                        const updatedFls = { ...(systemSettings.freeListingSettings || { enabled: true }), maxFreeListingsPerUser: e.target.value as any };
                         const updatedSys = { ...systemSettings, freeListingSettings: updatedFls };
                         setSystemSettings(updatedSys);
                         await updateSystemSettings(updatedSys);
@@ -4158,7 +4164,8 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
                               <div>
                                 <label className="block text-[8px] uppercase tracking-wider text-white/40 font-bold mb-0.5">Price ({pkg.currency || 'ETB'})</label>
                                 <input
-                                  type="number"
+                                  type="text"
+                                  inputMode="text"
                                   value={editingPkgPrice}
                                   onChange={e => setEditingPkgPrice(Number(e.target.value))}
                                   className="w-full px-2 py-1 bg-black/40 border border-white/10 text-xs text-amber-400 font-bold font-mono rounded focus:outline-none focus:border-amber-500"

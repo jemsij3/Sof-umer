@@ -1757,7 +1757,7 @@ export default function UserDashboard({
                       <form onSubmit={handleSaveListingEdit} className="space-y-4">
                         <div>
                           <label className="block text-[10px] font-bold text-white/40 uppercase mb-1 font-mono">Price (ETB)</label>
-                          <input type="number" value={editPrice} onChange={e => setEditPrice(Number(e.target.value))} className="w-full p-2.5 bg-black border border-white/10 text-xs text-white rounded-xl focus:outline-none" />
+                          <input type="text" inputMode="text" value={editPrice} onChange={e => setEditPrice(e.target.value as any)} className="w-full p-2.5 bg-black border border-white/10 text-xs text-white rounded-xl focus:outline-none" />
                         </div>
                         <div>
                           <label className="block text-[10px] font-bold text-white/40 uppercase mb-1 font-mono">Item Description</label>
@@ -1832,12 +1832,12 @@ export default function UserDashboard({
                         <div>
                           <label className="block text-[10px] font-bold text-white/40 uppercase mb-1.5 font-mono font-bold">Top-Up Amount (ETB)</label>
                           <input 
-                            type="number" 
+                            type="text" 
+                            inputMode="text"
                             required 
-                            min={50} 
                             value={topUpAmount} 
-                            onChange={e => setTopUpAmount(e.target.value !== '' ? Number(e.target.value) : '')} 
-                            placeholder="e.g. 500, 1000, 2500" 
+                            onChange={e => setTopUpAmount(e.target.value as any)} 
+                            placeholder="e.g. 500, 1000, 2500 ETB" 
                             className="w-full p-3 bg-black border border-white/10 text-xs text-white rounded-xl focus:outline-none focus:border-amber-500/30 font-mono"
                           />
                         </div>

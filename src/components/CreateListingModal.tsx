@@ -2585,11 +2585,12 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
                           {getTranslatedFieldLabel(field.label, currentLanguage)} {field.required && '*'}
                         </label>
                         <input
-                          type={field.type}
+                          type={field.type === 'number' ? 'text' : field.type}
+                          inputMode="text"
                           required={field.required}
                           value={val}
                           placeholder={field.placeholder}
-                          onChange={e => handleFieldChange(field.id, e.target.type === 'number' ? (e.target.value === '' ? '' : Number(e.target.value)) : e.target.value)}
+                          onChange={e => handleFieldChange(field.id, e.target.value)}
                           className="w-full p-3 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white focus:outline-none transition placeholder-zinc-600 font-light"
                         />
                       </div>
@@ -2679,12 +2680,12 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
                         <div className="relative">
                           <span className="absolute left-3 top-3 text-xs text-amber-500 font-bold">{currency}</span>
                           <input
-                            type="number"
-                            min="0"
+                            type="text"
+                            inputMode="text"
                             required
                             placeholder="e.g. 500"
                             value={fieldsState.wholesalePrice !== undefined ? fieldsState.wholesalePrice : ''}
-                            onChange={e => handleFieldChange('wholesalePrice', e.target.value === '' ? '' : Number(e.target.value))}
+                            onChange={e => handleFieldChange('wholesalePrice', e.target.value)}
                             className="w-full pl-12 pr-3 py-3 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white focus:outline-none transition font-medium"
                           />
                         </div>
@@ -2696,12 +2697,12 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
                           📦 {t('wholesale.minimum_order_quantity') || 'Minimum Order Quantity (MOQ)'} *
                         </label>
                         <input
-                          type="number"
-                          min="1"
+                          type="text"
+                          inputMode="text"
                           required
                           placeholder="e.g. 10"
                           value={fieldsState.minimumOrderQuantity !== undefined ? fieldsState.minimumOrderQuantity : ''}
-                          onChange={e => handleFieldChange('minimumOrderQuantity', e.target.value === '' ? '' : Number(e.target.value))}
+                          onChange={e => handleFieldChange('minimumOrderQuantity', e.target.value)}
                           className="w-full p-3 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white focus:outline-none transition font-medium"
                         />
                       </div>
@@ -2712,11 +2713,11 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
                           📊 {t('wholesale.available_quantity') || 'Available Quantity (Optional)'}
                         </label>
                         <input
-                          type="number"
-                          min="0"
+                          type="text"
+                          inputMode="text"
                           placeholder="e.g. 500"
                           value={fieldsState.availableQuantity !== undefined ? fieldsState.availableQuantity : ''}
-                          onChange={e => handleFieldChange('availableQuantity', e.target.value === '' ? '' : Number(e.target.value))}
+                          onChange={e => handleFieldChange('availableQuantity', e.target.value)}
                           className="w-full p-3 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white focus:outline-none transition"
                         />
                         <span className="text-[10px] text-white/40 italic mt-1 block">e.g., 500 Pieces, 100 Kg, 50 Cartons</span>

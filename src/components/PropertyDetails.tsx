@@ -35,6 +35,7 @@ import {
   AlertCircle, 
   X, 
   ExternalLink,
+  ChevronRight,
   DollarSign,
   Clock,
   Briefcase,
@@ -95,7 +96,7 @@ export default function PropertyDetails({
 
   // Make Offer Modal state
   const [offerModalOpen, setOfferModalOpen] = useState(false);
-  const [offerAmount, setOfferAmount] = useState<number | ''>(Math.round(property.price * 0.9));
+  const [offerAmount, setOfferAmount] = useState<string | number>(Math.round(property.price * 0.9));
   const [offerNote, setOfferNote] = useState('');
   const [offerSubmitting, setOfferSubmitting] = useState(false);
   const [offerError, setOfferError] = useState('');
@@ -118,7 +119,7 @@ export default function PropertyDetails({
 
   // Quote Request Modal state
   const [quoteModalOpen, setQuoteModalOpen] = useState(false);
-  const [quoteQuantity, setQuoteQuantity] = useState<number | ''>((property as any).minimumOrderQuantity || 1);
+  const [quoteQuantity, setQuoteQuantity] = useState<string | number>((property as any).minimumOrderQuantity || 1);
   const [quoteMessage, setQuoteMessage] = useState('');
   const [quotePhone, setQuotePhone] = useState(currentUser?.phone || '');
   const [quoteSubmitting, setQuoteSubmitting] = useState(false);
@@ -132,7 +133,7 @@ export default function PropertyDetails({
       else alert('Please log in to request a quote.');
       return;
     }
-    if (!quoteQuantity || Number(quoteQuantity) <= 0) {
+    if (!quoteQuantity || (typeof quoteQuantity === 'number' && quoteQuantity <= 0)) {
       setQuoteError('Please enter a valid quantity.');
       return;
     }
@@ -1547,11 +1548,11 @@ export default function PropertyDetails({
                       Required Quantity ({((property as any).wholesaleUnit || 'Piece')}s) *
                     </label>
                     <input
-                      type="number"
+                      type="text"
+                      inputMode="text"
                       required
-                      min={1}
                       value={quoteQuantity}
-                      onChange={e => setQuoteQuantity(e.target.value ? Number(e.target.value) : '')}
+                      onChange={e => setQuoteQuantity(e.target.value)}
                       className="w-full p-3.5 bg-[#12121a] border border-white/10 rounded-2xl text-white font-mono text-base font-bold focus:outline-none focus:border-amber-500"
                       placeholder={`Min order: ${(property as any).minimumOrderQuantity || 1}`}
                     />
@@ -1565,7 +1566,8 @@ export default function PropertyDetails({
                       Your Phone Number *
                     </label>
                     <input
-                      type="tel"
+                      type="text"
+                      inputMode="text"
                       required
                       value={quotePhone}
                       onChange={e => setQuotePhone(e.target.value)}
@@ -1775,13 +1777,13 @@ export default function PropertyDetails({
                       Your Offer Amount ({property.currency || 'ETB'}) *
                     </label>
                     <input
-                      type="number"
+                      type="text"
+                      inputMode="text"
                       required
-                      min={1}
                       value={offerAmount}
-                      onChange={e => setOfferAmount(e.target.value ? Number(e.target.value) : '')}
+                      onChange={e => setOfferAmount(e.target.value)}
                       className="w-full p-3.5 bg-[#12121a] border border-white/10 rounded-2xl text-white font-mono text-lg font-bold focus:outline-none focus:border-amber-500"
-                      placeholder="e.g. 500000"
+                      placeholder="e.g. 500,000 ETB or Negotiable"
                     />
                   </div>
 

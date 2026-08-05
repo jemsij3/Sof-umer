@@ -1320,9 +1320,10 @@ export default function Marketplace({
                         <div>
                           <label className="block text-[10px] font-bold text-white/40 uppercase tracking-widest mb-2">Min Price</label>
                           <input
-                            type="number"
+                            type="text"
+                            inputMode="text"
                             value={filterPriceMin}
-                            onChange={e => setFilterPriceMin(e.target.value === '' ? '' : Number(e.target.value))}
+                            onChange={e => setFilterPriceMin(e.target.value === '' ? '' : (isNaN(Number(e.target.value)) ? e.target.value as any : Number(e.target.value)))}
                             placeholder="Any price"
                             className="w-full p-3 bg-[#12121a] border border-white/5 rounded-2xl text-xs text-[#F5F5F4] placeholder-white/20 focus:outline-none focus:border-amber-500/50 transition"
                           />
@@ -1330,9 +1331,10 @@ export default function Marketplace({
                         <div>
                           <label className="block text-[10px] font-bold text-white/40 uppercase tracking-widest mb-2">Max Price</label>
                           <input
-                            type="number"
+                            type="text"
+                            inputMode="text"
                             value={filterPriceMax}
-                            onChange={e => setFilterPriceMax(e.target.value === '' ? '' : Number(e.target.value))}
+                            onChange={e => setFilterPriceMax(e.target.value === '' ? '' : (isNaN(Number(e.target.value)) ? e.target.value as any : Number(e.target.value)))}
                             placeholder="Any price"
                             className="w-full p-3 bg-[#12121a] border border-white/5 rounded-2xl text-xs text-[#F5F5F4] placeholder-white/20 focus:outline-none focus:border-amber-500/50 transition"
                           />
@@ -1740,9 +1742,10 @@ export default function Marketplace({
                         {t('min_price')}
                       </label>
                       <input
-                        type="number"
+                        type="text"
+                        inputMode="text"
                         value={priceMin}
-                        onChange={e => setPriceMin(e.target.value === '' ? '' : Number(e.target.value))}
+                        onChange={e => setPriceMin(e.target.value === '' ? '' : (isNaN(Number(e.target.value)) ? e.target.value as any : Number(e.target.value)))}
                         placeholder={t('any_value')}
                         className="w-full p-3 bg-[#12121a] border border-white/5 rounded-2xl text-xs text-[#F5F5F4] placeholder-white/20 focus:outline-none focus:border-amber-500/50 transition"
                       />
@@ -1753,9 +1756,10 @@ export default function Marketplace({
                         {t('max_price')}
                       </label>
                       <input
-                        type="number"
+                        type="text"
+                        inputMode="text"
                         value={priceMax}
-                        onChange={e => setPriceMax(e.target.value === '' ? '' : Number(e.target.value))}
+                        onChange={e => setPriceMax(e.target.value === '' ? '' : (isNaN(Number(e.target.value)) ? e.target.value as any : Number(e.target.value)))}
                         placeholder={t('any_value')}
                         className="w-full p-3 bg-[#12121a] border border-white/5 rounded-2xl text-xs text-[#F5F5F4] placeholder-white/20 focus:outline-none focus:border-amber-500/50 transition"
                       />
@@ -1767,9 +1771,10 @@ export default function Marketplace({
                         {t('min_bedrooms')}
                       </label>
                       <input
-                        type="number"
+                        type="text"
+                        inputMode="text"
                         value={bedsMin}
-                        onChange={e => setBedsMin(e.target.value === '' ? '' : Number(e.target.value))}
+                        onChange={e => setBedsMin(e.target.value === '' ? '' : (isNaN(Number(e.target.value)) ? e.target.value as any : Number(e.target.value)))}
                         placeholder={t('any_value')}
                         className="w-full p-3 bg-[#12121a] border border-white/5 rounded-2xl text-xs text-[#F5F5F4] placeholder-white/20 focus:outline-none focus:border-amber-500/50 transition"
                       />
@@ -1780,9 +1785,10 @@ export default function Marketplace({
                         {t('min_area')}
                       </label>
                       <input
-                        type="number"
+                        type="text"
+                        inputMode="text"
                         value={areaMin}
-                        onChange={e => setAreaMin(e.target.value === '' ? '' : Number(e.target.value))}
+                        onChange={e => setAreaMin(e.target.value === '' ? '' : (isNaN(Number(e.target.value)) ? e.target.value as any : Number(e.target.value)))}
                         placeholder={t('any_value')}
                         className="w-full p-3 bg-[#12121a] border border-white/5 rounded-2xl text-xs text-[#F5F5F4] placeholder-white/20 focus:outline-none focus:border-amber-500/50 transition"
                       />

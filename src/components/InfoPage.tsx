@@ -929,7 +929,8 @@ export default function InfoPage({ pageId, onBack, onOpenReportModalFromInfo }: 
                           <div>
                             <label className="block text-[9px] font-bold text-white/50 uppercase tracking-widest mb-1">Phone Number *</label>
                             <input 
-                              type="tel" 
+                              type="text" 
+                              inputMode="text"
                               required 
                               value={applyPhone} 
                               onChange={e => setApplyPhone(e.target.value)} 
