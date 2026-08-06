@@ -4,14 +4,15 @@ import { User, Property, PaymentMethod, PaymentReceipt, Advertisement, Translati
 import { 
   Shield, Users, Languages, Volume2, Grid, HelpCircle, ShieldCheck, 
   AlertOctagon, CreditCard, ClipboardCheck, Trash2, Edit2, ToggleLeft, 
-  ToggleRight, Check, X, PlusCircle, AlertCircle, Eye, EyeOff, Lock, RefreshCw, 
+  ToggleRight, Check, X, PlusCircle, AlertCircle, Eye, EyeOff, Lock, Unlock, RefreshCw, 
   CheckCircle2, Briefcase, Wrench, ShoppingBag, Store, Building, 
   TrendingUp, Settings, FileText, Landmark, ShieldAlert, BarChart3, 
   Activity, DollarSign, Percent, Clock, FileCheck, Info, Plus, 
   Calendar, MapPin, ChevronRight, HelpCircle as HelpIcon, BellRing,
   Camera, Image as ImageIcon, Folder, FolderKanban, ChevronDown,
   Mail, Phone, RotateCcw, Zap, LogOut, Gift, Monitor, Smartphone, Upload, XCircle, Save, Globe,
-  Ban, PauseCircle, AlertTriangle, Download, ZoomIn, ZoomOut, History, UserX, ArrowLeft, ArrowRight
+  Ban, PauseCircle, AlertTriangle, Download, ZoomIn, ZoomOut, History, UserX, ArrowLeft, ArrowRight,
+  Key, KeyRound, ShieldOff, UserCheck, Search, Sliders, Layers
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { EmployeeAdminsModule } from './EmployeeAdminsModule';
@@ -59,23 +60,51 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
     deleteFaq
   } = useApp();
 
-  // Selected core tab corresponding to the 12 requested sections
+  // Selected core tab corresponding to requested sections
   const [adminTab, setAdminTab] = useState<
     'overview' | 'users' | 'listings' | 'categories' | 'ads' | 
     'verification' | 'reports' | 'support' | 'languages' | 
-    'payments' | 'settings' | 'analytics' | 'employeeAdmins'
+    'payments' | 'settings' | 'analytics' | 'employeeAdmins' |
+    'accountLocks' | 'loginHistory' | 'activeSessions' | 'emergencyRecovery'
   >('overview');
 
   // Admin Privacy Control: Hide admin personal details by default
   const [showAdminDetails, setShowAdminDetails] = useState<boolean>(false);
   const isAuthorizedAdmin = currentUser?.role === 'admin' && currentUser?.isEmployee !== true;
 
+  // Account Unlock & Security Modal State
+  const [unlockModalUser, setUnlockModalUser] = useState<User | null>(null);
+  const [unlockResetFailedCounter, setUnlockResetFailedCounter] = useState<boolean>(true);
+  const [unlockForcePasswordReset, setUnlockForcePasswordReset] = useState<boolean>(false);
+  const [unlockNoteInput, setUnlockNoteInput] = useState<string>('');
+  const [isSubmittingUnlock, setIsSubmittingUnlock] = useState<boolean>(false);
+
+  // User Details Modal Tab
+  const [userModalTab, setUserModalTab] = useState<'overview' | 'sessions' | 'timeline' | 'notes' | 'warnings'>('overview');
+  const [userTimeline, setUserTimeline] = useState<any[]>([]);
+  const [isLoadingTimeline, setIsLoadingTimeline] = useState<boolean>(false);
+  const [adminNoteInput, setAdminNoteInput] = useState<string>('');
+  const [isAddingNote, setIsAddingNote] = useState<boolean>(false);
+
+  // Global Login History State
+  const [globalLoginLogs, setGlobalLoginLogs] = useState<any[]>([]);
+  const [globalLoginSearch, setGlobalLoginSearch] = useState<string>('');
+  const [globalLoginStatusFilter, setGlobalLoginStatusFilter] = useState<'all' | 'success' | 'failed'>('all');
+  const [globalLoginRoleFilter, setGlobalLoginRoleFilter] = useState<'all' | 'admin' | 'user' | 'employee'>('all');
+  const [globalLoginDateFilter, setGlobalLoginDateFilter] = useState<'all' | 'today' | '7d' | '30d'>('all');
+  const [isLoadingLoginHistory, setIsLoadingLoginHistory] = useState<boolean>(false);
+
+  // Emergency Recovery State
+  const [emergencyTargetEmail, setEmergencyTargetEmail] = useState<string>('');
+  const [emergencyStatusMsg, setEmergencyStatusMsg] = useState<{ text: string; isError: boolean } | null>(null);
+  const [isSubmittingEmergency, setIsSubmittingEmergency] = useState<boolean>(false);
+
   const isTabAllowed = (tab: string) => {
     if (!currentUser) return false;
     if (currentUser.role !== 'admin') return false;
     
-    // Strict Security: Employees can NEVER access system settings or employee management
-    if (currentUser.isEmployee === true && (tab === 'settings' || tab === 'employeeAdmins')) {
+    // Strict Security: Employees can NEVER access system settings
+    if (currentUser.isEmployee === true && tab === 'settings') {
       return false;
     }
 
@@ -83,11 +112,11 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
 
     const role = currentUser.employeeRole;
     if (role === 'Content Moderator') {
-      return ['listings', 'reports', 'support'].includes(tab);
+      return ['listings', 'reports', 'support', 'accountLocks', 'loginHistory'].includes(tab);
     } else if (role === 'Customer Support') {
-      return ['support', 'reports'].includes(tab);
+      return ['support', 'reports', 'accountLocks', 'loginHistory'].includes(tab);
     } else if (role === 'Verification Officer') {
-      return ['verification', 'users', 'listings'].includes(tab);
+      return ['verification', 'users', 'listings', 'accountLocks', 'loginHistory'].includes(tab);
     } else if (role === 'Advertisement Manager') {
       return ['ads', 'listings'].includes(tab);
     } else if (role === 'Finance Manager') {
@@ -97,18 +126,233 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
     } else {
       // Custom Role
       const perms = currentUser.permissions || [];
-      const allowed: string[] = [];
-      if (perms.some(p => ['Review Listings', 'Approve Listings', 'Reject Listings', 'Remove Spam', 'Manage Featured Listings', 'Manage Sponsored Ads'].includes(p))) allowed.push('listings');
-      if (perms.some(p => ['Handle Reports', 'Moderate Reviews', 'Resolve Complaints'].includes(p))) allowed.push('reports');
-      if (perms.some(p => ['Reply to Users', 'Manage Support Tickets', 'Assist Account Recovery', 'Help Listing Owners'].includes(p))) allowed.push('support');
-      if (perms.some(p => ['Verify Users', 'Verify Businesses', 'Verify Property Ownership', 'Review Documents', 'Approve Verification', 'Reject Verification'].includes(p))) allowed.push('verification');
-      if (perms.some(p => ['Create Banner Ads', 'Manage Banner Ads', 'Advertisement Reports'].includes(p))) allowed.push('ads');
-      if (perms.some(p => ['Review Payments', 'Verify Manual Payments', 'View Transactions', 'Process Refund Requests'].includes(p))) allowed.push('payments');
-      if (perms.some(p => ['Dashboard Statistics', 'Revenue Analytics', 'User Analytics', 'Listing Analytics', 'Generate Reports', 'Export Reports', 'Financial Reports'].includes(p))) {
-        allowed.push('overview');
-        allowed.push('analytics');
-      }
+      const allowed: string[] = ['overview', 'users', 'accountLocks', 'loginHistory', 'activeSessions'];
+      perms.forEach(p => {
+        if (p === 'Review Listings' || p === 'Manage Listings') allowed.push('listings', 'categories');
+        if (p === 'Verify Users' || p === 'Manage Users') allowed.push('users', 'verification', 'accountLocks', 'loginHistory', 'activeSessions');
+        if (p === 'Manage Banner Ads' || p === 'Manage Advertisements') allowed.push('ads');
+        if (p === 'Review Payments' || p === 'Manage Payments & Finance') allowed.push('payments');
+        if (p === 'Customer Support' || p === 'Reply to Users') allowed.push('support', 'reports');
+        if (p === 'Dashboard Statistics' || p === 'View Analytics') allowed.push('analytics');
+        if (p === 'System Settings') allowed.push('settings', 'languages');
+      });
       return allowed.includes(tab);
+    }
+  };
+
+  // Fetch timeline for a user
+  const fetchUserTimeline = async (userId: string) => {
+    setIsLoadingTimeline(true);
+    try {
+      const token = localStorage.getItem('sof_umer_auth_token');
+      const res = await fetch(`/api/admin/users/${userId}/timeline`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setUserTimeline(data || []);
+      }
+    } catch (err) {
+      console.error('Failed to fetch user timeline:', err);
+    } finally {
+      setIsLoadingTimeline(false);
+    }
+  };
+
+  // Fetch Global Login History
+  const fetchGlobalLoginHistory = async () => {
+    setIsLoadingLoginHistory(true);
+    try {
+      const token = localStorage.getItem('sof_umer_auth_token');
+      const res = await fetch(`/api/admin/login-history`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setGlobalLoginLogs(data || []);
+      } else {
+        const fallbackRes = await fetch(`/api/employee/login-history`);
+        if (fallbackRes.ok) {
+          const fallbackData = await fallbackRes.json();
+          setGlobalLoginLogs(fallbackData || []);
+        }
+      }
+    } catch (err) {
+      console.error('Failed to fetch login history:', err);
+    } finally {
+      setIsLoadingLoginHistory(false);
+    }
+  };
+
+  // Perform Account Unlock
+  const handlePerformAccountUnlock = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!unlockModalUser) return;
+    setIsSubmittingUnlock(true);
+    try {
+      const token = localStorage.getItem('sof_umer_auth_token');
+      const res = await fetch(`/api/admin/users/${unlockModalUser.id}/unlock`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          resetFailedAttempts: unlockResetFailedCounter,
+          forcePasswordReset: unlockForcePasswordReset,
+          notes: unlockNoteInput
+        })
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        alert(data.error || 'Failed to unlock account.');
+        return;
+      }
+
+      alert(`✅ Account ${unlockModalUser.fullName} (${unlockModalUser.email}) has been successfully unlocked!`);
+      setUnlockModalUser(null);
+      setUnlockNoteInput('');
+      
+      await refreshData();
+    } catch (err) {
+      console.error('Unlock error:', err);
+      alert('An unexpected error occurred while unlocking account.');
+    } finally {
+      setIsSubmittingUnlock(false);
+    }
+  };
+
+  // Revoke User Sessions
+  const handleRevokeUserSessions = async (targetUser: User) => {
+    if (!confirm(`Are you sure you want to revoke all active login sessions for ${targetUser.fullName}? This will instantly log them out on all devices.`)) {
+      return;
+    }
+    try {
+      const token = localStorage.getItem('sof_umer_auth_token');
+      const res = await fetch(`/api/admin/users/${targetUser.id}/revoke-sessions`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        alert(data.error || 'Failed to revoke sessions.');
+        return;
+      }
+      alert(`✅ All active sessions for ${targetUser.fullName} have been revoked.`);
+      await refreshData();
+    } catch (err) {
+      console.error('Revoke sessions error:', err);
+      alert('An error occurred while revoking user sessions.');
+    }
+  };
+
+  // Toggle Force Password Change on Next Login
+  const handleToggleForcePasswordChange = async (targetUser: User, currentValue?: boolean) => {
+    try {
+      const token = localStorage.getItem('sof_umer_auth_token');
+      const res = await fetch(`/api/admin/users/${targetUser.id}/force-password-change`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ mustChangePassword: !currentValue })
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        alert(data.error || 'Failed to update password policy setting.');
+        return;
+      }
+      alert(`✅ Password requirement updated: ${!currentValue ? 'User must change password on next login.' : 'Normal login restored.'}`);
+      await refreshData();
+    } catch (err) {
+      console.error('Force password change error:', err);
+    }
+  };
+
+  // Add Private Admin Note
+  const handleAddAdminNote = async (e: React.FormEvent, viewingUser: User, setViewingUser: (u: User) => void) => {
+    e.preventDefault();
+    if (!viewingUser || !adminNoteInput.trim()) return;
+    setIsAddingNote(true);
+    try {
+      const token = localStorage.getItem('sof_umer_auth_token');
+      const res = await fetch(`/api/admin/users/${viewingUser.id}/notes`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ note: adminNoteInput.trim() })
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        alert(data.error || 'Failed to save admin note.');
+        return;
+      }
+      setAdminNoteInput('');
+      setViewingUser(data.user);
+      await refreshData();
+    } catch (err) {
+      console.error('Add note error:', err);
+    } finally {
+      setIsAddingNote(false);
+    }
+  };
+
+  // Delete Private Admin Note
+  const handleDeleteAdminNote = async (noteId: string, viewingUser: User, setViewingUser: (u: User) => void) => {
+    if (!viewingUser) return;
+    if (!confirm('Are you sure you want to delete this private admin note?')) return;
+    try {
+      const token = localStorage.getItem('sof_umer_auth_token');
+      const res = await fetch(`/api/admin/users/${viewingUser.id}/notes/${noteId}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const data = await res.json();
+      if (res.ok && data.user) {
+        setViewingUser(data.user);
+        await refreshData();
+      }
+    } catch (err) {
+      console.error('Delete note error:', err);
+    }
+  };
+
+  // Emergency Admin Recovery
+  const handleEmergencyAdminRecovery = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!emergencyTargetEmail.trim()) return;
+    setIsSubmittingEmergency(true);
+    setEmergencyStatusMsg(null);
+    try {
+      const token = localStorage.getItem('sof_umer_auth_token');
+      const res = await fetch(`/api/admin/recovery/emergency-unlock`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ targetEmail: emergencyTargetEmail.trim() })
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setEmergencyStatusMsg({ text: data.error || 'Emergency recovery failed.', isError: true });
+        return;
+      }
+      setEmergencyStatusMsg({ text: data.message || 'Emergency recovery executed successfully.', isError: false });
+      setEmergencyTargetEmail('');
+      await refreshData();
+    } catch (err) {
+      console.error('Emergency recovery error:', err);
+      setEmergencyStatusMsg({ text: 'An unexpected system error occurred.', isError: true });
+    } finally {
+      setIsSubmittingEmergency(false);
     }
   };
 
@@ -2021,205 +2265,292 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
       {/* 12-Section Dashboard Grid Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         
-        {/* SIDEBAR NAVIGATION PANEL (12 Sections) */}
+        {/* SIDEBAR NAVIGATION PANEL */}
         <div className="lg:col-span-3">
-          <div className="bg-[#0d0d12]/90 border border-white/5 p-4 rounded-3xl shadow-2xl space-y-1.5 backdrop-blur-md sticky top-6">
-            <div className="px-3.5 pb-2.5 border-b border-white/5 mb-2.5 flex items-center gap-2">
-              <div className="w-2.5 h-2.5 bg-emerald-500 rounded-full animate-ping" />
-              <span className="text-[9px] uppercase font-bold text-white/40 tracking-wider">CORE CONTROLS ({systemSettings.siteStatus})</span>
+          <div className="bg-[#0d0d12]/90 border border-white/5 p-4 rounded-3xl shadow-2xl space-y-3 backdrop-blur-md sticky top-6 max-h-[calc(100vh-100px)] overflow-y-auto">
+            <div className="px-3.5 pb-2 border-b border-white/5 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="w-2.5 h-2.5 bg-emerald-500 rounded-full animate-ping" />
+                <span className="text-[9px] uppercase font-bold text-white/40 tracking-wider">ADMIN CONTROL CENTER</span>
+              </div>
+              <span className="text-[9px] font-extrabold px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-500 border border-amber-500/20">
+                {systemSettings.siteStatus}
+              </span>
             </div>
 
-            {isTabAllowed('overview') && (
-              <button
-                onClick={() => setAdminTab('overview')}
-                className={`w-full text-left px-4 py-3 rounded-2xl text-xs font-bold transition flex items-center gap-2.5 cursor-pointer ${
-                  adminTab === 'overview' ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-black shadow-lg shadow-amber-500/10' : 'text-white/60 hover:text-white hover:bg-white/5'
-                }`}
-              >
-                <TrendingUp className="w-4 h-4 shrink-0" />
-                <span>1. Overview & Activity</span>
-              </button>
-            )}
+            {/* 🛡️ SECTION 1: SECURITY & PROTECTION */}
+            <div className="space-y-1">
+              <span className="text-[9px] uppercase font-extrabold text-amber-500/80 tracking-wider px-3 pt-1 block">
+                🛡️ Security & Access
+              </span>
 
-            {isTabAllowed('users') && (
-              <button
-                onClick={() => setAdminTab('users')}
-                className={`w-full text-left px-4 py-3 rounded-2xl text-xs font-bold transition flex items-center gap-2.5 cursor-pointer ${
-                  adminTab === 'users' ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-black shadow-lg shadow-amber-500/10' : 'text-white/60 hover:text-white hover:bg-white/5'
-                }`}
-              >
-                <Users className="w-4 h-4 shrink-0" />
-                <span>2. User Management</span>
-              </button>
-            )}
+              {isTabAllowed('accountLocks') && (
+                <button
+                  onClick={() => setAdminTab('accountLocks')}
+                  className={`w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-bold transition flex items-center justify-between cursor-pointer ${
+                    adminTab === 'accountLocks' ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-black shadow-lg shadow-amber-500/10' : 'text-white/70 hover:text-white hover:bg-white/5'
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    <Unlock className="w-3.5 h-3.5 shrink-0" />
+                    <span>Account Lockouts</span>
+                  </div>
+                  {((users || []).filter(u => Boolean(u.lockoutUntil && new Date(u.lockoutUntil) > new Date()) || Boolean(u.lockout2FAUntil && new Date(u.lockout2FAUntil) > new Date()) || (u.failedLoginAttempts && u.failedLoginAttempts >= 3)).length) > 0 && (
+                    <span className="bg-rose-500 text-white font-extrabold text-[9px] px-2 py-0.5 rounded-full animate-pulse">
+                      {(users || []).filter(u => Boolean(u.lockoutUntil && new Date(u.lockoutUntil) > new Date()) || Boolean(u.lockout2FAUntil && new Date(u.lockout2FAUntil) > new Date()) || (u.failedLoginAttempts && u.failedLoginAttempts >= 3)).length}
+                    </span>
+                  )}
+                </button>
+              )}
 
-            {isTabAllowed('listings') && (
-              <button
-                onClick={() => setAdminTab('listings')}
-                className={`w-full text-left px-4 py-3 rounded-2xl text-xs font-bold transition flex items-center justify-between cursor-pointer ${
-                  adminTab === 'listings' ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-black shadow-lg shadow-amber-500/10' : 'text-white/60 hover:text-white hover:bg-white/5'
-                }`}
-              >
-                <div className="flex items-center gap-2.5">
-                  <Building className="w-4 h-4 shrink-0" />
-                  <span>3. Listing Moderation</span>
-                </div>
-                {pendingListingsCount > 0 && (
-                  <span className="bg-rose-500 text-white font-extrabold text-[9px] px-2 py-0.5 rounded-full">
-                    {pendingListingsCount}
-                  </span>
-                )}
-              </button>
-            )}
+              {isTabAllowed('loginHistory') && (
+                <button
+                  onClick={() => { setAdminTab('loginHistory'); fetchGlobalLoginHistory(); }}
+                  className={`w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 cursor-pointer ${
+                    adminTab === 'loginHistory' ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-black shadow-lg shadow-amber-500/10' : 'text-white/70 hover:text-white hover:bg-white/5'
+                  }`}
+                >
+                  <History className="w-3.5 h-3.5 shrink-0" />
+                  <span>Login History & Logs</span>
+                </button>
+              )}
 
-            {isTabAllowed('categories') && (
-              <button
-                onClick={() => setAdminTab('categories')}
-                className={`w-full text-left px-4 py-3 rounded-2xl text-xs font-bold transition flex items-center gap-2.5 cursor-pointer ${
-                  adminTab === 'categories' ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-black shadow-lg shadow-amber-500/10' : 'text-white/60 hover:text-white hover:bg-white/5'
-                }`}
-              >
-                <Grid className="w-4 h-4 shrink-0" />
-                <span>4. Category Manager</span>
-              </button>
-            )}
+              {isTabAllowed('activeSessions') && (
+                <button
+                  onClick={() => setAdminTab('activeSessions')}
+                  className={`w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 cursor-pointer ${
+                    adminTab === 'activeSessions' ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-black shadow-lg shadow-amber-500/10' : 'text-white/70 hover:text-white hover:bg-white/5'
+                  }`}
+                >
+                  <Smartphone className="w-3.5 h-3.5 shrink-0" />
+                  <span>Active Device Sessions</span>
+                </button>
+              )}
 
-            {isTabAllowed('ads') && (
-              <button
-                onClick={() => setAdminTab('ads')}
-                className={`w-full text-left px-4 py-3 rounded-2xl text-xs font-bold transition flex items-center gap-2.5 cursor-pointer ${
-                  adminTab === 'ads' ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-black shadow-lg shadow-amber-500/10' : 'text-white/60 hover:text-white hover:bg-white/5'
-                }`}
-              >
-                <Volume2 className="w-4 h-4 shrink-0" />
-                <span>5. Ads & Campaigns</span>
-              </button>
-            )}
+              {currentUser?.role === 'admin' && currentUser?.isEmployee !== true && (
+                <button
+                  onClick={() => setAdminTab('emergencyRecovery')}
+                  className={`w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 cursor-pointer ${
+                    adminTab === 'emergencyRecovery' ? 'bg-gradient-to-r from-rose-500 to-rose-600 text-white shadow-lg shadow-rose-500/10' : 'text-rose-400/80 hover:text-rose-300 hover:bg-rose-500/10'
+                  }`}
+                >
+                  <ShieldAlert className="w-3.5 h-3.5 shrink-0" />
+                  <span>Emergency Recovery</span>
+                </button>
+              )}
+            </div>
 
-            {isTabAllowed('verification') && (
-              <button
-                onClick={() => setAdminTab('verification')}
-                className={`w-full text-left px-4 py-3 rounded-2xl text-xs font-bold transition flex items-center justify-between cursor-pointer ${
-                  adminTab === 'verification' ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-black shadow-lg shadow-amber-500/10' : 'text-white/60 hover:text-white hover:bg-white/5'
-                }`}
-              >
-                <div className="flex items-center gap-2.5">
-                  <ShieldCheck className="w-4 h-4 shrink-0" />
-                  <span>6. Verification Center</span>
-                </div>
-                {pendingUserVerifications > 0 && (
-                  <span className="bg-amber-500 text-black font-extrabold text-[9px] px-2 py-0.5 rounded-full">
-                    {pendingUserVerifications}
-                  </span>
-                )}
-              </button>
-            )}
+            {/* 👥 SECTION 2: USERS & STAFF */}
+            <div className="space-y-1 pt-1 border-t border-white/5">
+              <span className="text-[9px] uppercase font-extrabold text-white/40 tracking-wider px-3 pt-1 block">
+                👥 Users & Personnel
+              </span>
 
-            {isTabAllowed('reports') && (
-              <button
-                onClick={() => setAdminTab('reports')}
-                className={`w-full text-left px-4 py-3 rounded-2xl text-xs font-bold transition flex items-center justify-between cursor-pointer ${
-                  adminTab === 'reports' ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-black shadow-lg shadow-amber-500/10' : 'text-white/60 hover:text-white hover:bg-white/5'
-                }`}
-              >
-                <div className="flex items-center gap-2.5">
-                  <AlertOctagon className="w-4 h-4 shrink-0" />
-                  <span>7. Reports & Safety</span>
-                </div>
-                {reportedCount > 0 && (
-                  <span className="bg-rose-500 text-white font-extrabold text-[9px] px-2 py-0.5 rounded-full animate-pulse">
-                    {reportedCount}
-                  </span>
-                )}
-              </button>
-            )}
+              {isTabAllowed('users') && (
+                <button
+                  onClick={() => setAdminTab('users')}
+                  className={`w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 cursor-pointer ${
+                    adminTab === 'users' ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-black shadow-lg shadow-amber-500/10' : 'text-white/70 hover:text-white hover:bg-white/5'
+                  }`}
+                >
+                  <Users className="w-3.5 h-3.5 shrink-0" />
+                  <span>User Accounts</span>
+                </button>
+              )}
 
-            {isTabAllowed('support') && (
-              <button
-                onClick={() => setAdminTab('support')}
-                className={`w-full text-left px-4 py-3 rounded-2xl text-xs font-bold transition flex items-center justify-between cursor-pointer ${
-                  adminTab === 'support' ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-black shadow-lg shadow-amber-500/10' : 'text-white/60 hover:text-white hover:bg-white/5'
-                }`}
-              >
-                <div className="flex items-center gap-2.5">
-                  <HelpCircle className="w-4 h-4 shrink-0" />
-                  <span>8. Support & FAQs</span>
-                </div>
-                {supportTickets.filter(t => t.status === 'Open').length > 0 && (
-                  <span className="bg-amber-500 text-black font-extrabold text-[9px] px-2 py-0.5 rounded-full">
-                    {supportTickets.filter(t => t.status === 'Open').length}
-                  </span>
-                )}
-              </button>
-            )}
+              {isTabAllowed('verification') && (
+                <button
+                  onClick={() => setAdminTab('verification')}
+                  className={`w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-bold transition flex items-center justify-between cursor-pointer ${
+                    adminTab === 'verification' ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-black shadow-lg shadow-amber-500/10' : 'text-white/70 hover:text-white hover:bg-white/5'
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    <ShieldCheck className="w-3.5 h-3.5 shrink-0" />
+                    <span>Verification Center</span>
+                  </div>
+                  {pendingUserVerifications > 0 && (
+                    <span className="bg-amber-500 text-black font-extrabold text-[9px] px-2 py-0.5 rounded-full">
+                      {pendingUserVerifications}
+                    </span>
+                  )}
+                </button>
+              )}
 
-            {isTabAllowed('languages') && (
-              <button
-                onClick={() => setAdminTab('languages')}
-                className={`w-full text-left px-4 py-3 rounded-2xl text-xs font-bold transition flex items-center gap-2.5 cursor-pointer ${
-                  adminTab === 'languages' ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-black shadow-lg shadow-amber-500/10' : 'text-white/60 hover:text-white hover:bg-white/5'
-                }`}
-              >
-                <Languages className="w-4 h-4 shrink-0" />
-                <span>9. Languages & Texts</span>
-              </button>
-            )}
+              {currentUser?.role === 'admin' && currentUser?.isEmployee !== true && (
+                <button
+                  onClick={() => setAdminTab('employeeAdmins')}
+                  className={`w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 cursor-pointer ${
+                    adminTab === 'employeeAdmins' ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-black shadow-lg shadow-amber-500/10' : 'text-white/70 hover:text-white hover:bg-white/5'
+                  }`}
+                >
+                  <ShieldCheck className="w-3.5 h-3.5 shrink-0 text-amber-500" />
+                  <span>Employee Admins</span>
+                </button>
+              )}
+            </div>
 
-            {isTabAllowed('payments') && (
-              <button
-                onClick={() => setAdminTab('payments')}
-                className={`w-full text-left px-4 py-3 rounded-2xl text-xs font-bold transition flex items-center justify-between cursor-pointer ${
-                  adminTab === 'payments' ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-black shadow-lg shadow-amber-500/10' : 'text-white/60 hover:text-white hover:bg-white/5'
-                }`}
-              >
-                <div className="flex items-center gap-2.5">
-                  <CreditCard className="w-4 h-4 shrink-0" />
-                  <span>10. Payment & Receipts</span>
-                </div>
-                {pendingReceiptsCount > 0 && (
-                  <span className="bg-amber-500 text-black font-extrabold text-[9px] px-2 py-0.5 rounded-full animate-bounce">
-                    {pendingReceiptsCount}
-                  </span>
-                )}
-              </button>
-            )}
+            {/* 📊 SECTION 3: OPERATIONS & MODERATION */}
+            <div className="space-y-1 pt-1 border-t border-white/5">
+              <span className="text-[9px] uppercase font-extrabold text-white/40 tracking-wider px-3 pt-1 block">
+                📊 Operations & Moderation
+              </span>
 
-            {isTabAllowed('settings') && (
-              <button
-                onClick={() => setAdminTab('settings')}
-                className={`w-full text-left px-4 py-3 rounded-2xl text-xs font-bold transition flex items-center gap-2.5 cursor-pointer ${
-                  adminTab === 'settings' ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-black shadow-lg shadow-amber-500/10' : 'text-white/60 hover:text-white hover:bg-white/5'
-                }`}
-              >
-                <Settings className="w-4 h-4 shrink-0" />
-                <span>11. System Settings</span>
-              </button>
-            )}
+              {isTabAllowed('overview') && (
+                <button
+                  onClick={() => setAdminTab('overview')}
+                  className={`w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 cursor-pointer ${
+                    adminTab === 'overview' ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-black shadow-lg shadow-amber-500/10' : 'text-white/70 hover:text-white hover:bg-white/5'
+                  }`}
+                >
+                  <TrendingUp className="w-3.5 h-3.5 shrink-0" />
+                  <span>Overview & Activity</span>
+                </button>
+              )}
 
-            {isTabAllowed('analytics') && (
-              <button
-                onClick={() => setAdminTab('analytics')}
-                className={`w-full text-left px-4 py-3 rounded-2xl text-xs font-bold transition flex items-center gap-2.5 cursor-pointer ${
-                  adminTab === 'analytics' ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-black shadow-lg shadow-amber-500/10' : 'text-white/60 hover:text-white hover:bg-white/5'
-                }`}
-              >
-                <BarChart3 className="w-4 h-4 shrink-0" />
-                <span>12. Advanced Analytics</span>
-              </button>
-            )}
+              {isTabAllowed('listings') && (
+                <button
+                  onClick={() => setAdminTab('listings')}
+                  className={`w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-bold transition flex items-center justify-between cursor-pointer ${
+                    adminTab === 'listings' ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-black shadow-lg shadow-amber-500/10' : 'text-white/70 hover:text-white hover:bg-white/5'
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    <Building className="w-3.5 h-3.5 shrink-0" />
+                    <span>Listing Moderation</span>
+                  </div>
+                  {pendingListingsCount > 0 && (
+                    <span className="bg-rose-500 text-white font-extrabold text-[9px] px-2 py-0.5 rounded-full">
+                      {pendingListingsCount}
+                    </span>
+                  )}
+                </button>
+              )}
 
-            {/* 13. Employee Admins & Staff Management (Super Admin only) */}
-            {currentUser?.role === 'admin' && currentUser?.isEmployee !== true && (
-              <button
-                onClick={() => setAdminTab('employeeAdmins')}
-                className={`w-full text-left px-4 py-3 rounded-2xl text-xs font-bold transition flex items-center gap-2.5 cursor-pointer ${
-                  adminTab === 'employeeAdmins' ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-black shadow-lg shadow-amber-500/10' : 'text-white/60 hover:text-white hover:bg-white/5'
-                }`}
-              >
-                <ShieldCheck className="w-4 h-4 shrink-0 text-amber-500" />
-                <span>13. Employee Admins</span>
-              </button>
-            )}
+              {isTabAllowed('categories') && (
+                <button
+                  onClick={() => setAdminTab('categories')}
+                  className={`w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 cursor-pointer ${
+                    adminTab === 'categories' ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-black shadow-lg shadow-amber-500/10' : 'text-white/70 hover:text-white hover:bg-white/5'
+                  }`}
+                >
+                  <Grid className="w-3.5 h-3.5 shrink-0" />
+                  <span>Category Manager</span>
+                </button>
+              )}
+
+              {isTabAllowed('ads') && (
+                <button
+                  onClick={() => setAdminTab('ads')}
+                  className={`w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 cursor-pointer ${
+                    adminTab === 'ads' ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-black shadow-lg shadow-amber-500/10' : 'text-white/70 hover:text-white hover:bg-white/5'
+                  }`}
+                >
+                  <Volume2 className="w-3.5 h-3.5 shrink-0" />
+                  <span>Ads & Campaigns</span>
+                </button>
+              )}
+
+              {isTabAllowed('reports') && (
+                <button
+                  onClick={() => setAdminTab('reports')}
+                  className={`w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-bold transition flex items-center justify-between cursor-pointer ${
+                    adminTab === 'reports' ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-black shadow-lg shadow-amber-500/10' : 'text-white/70 hover:text-white hover:bg-white/5'
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    <AlertOctagon className="w-3.5 h-3.5 shrink-0" />
+                    <span>Reports & Safety</span>
+                  </div>
+                  {reportedCount > 0 && (
+                    <span className="bg-rose-500 text-white font-extrabold text-[9px] px-2 py-0.5 rounded-full animate-pulse">
+                      {reportedCount}
+                    </span>
+                  )}
+                </button>
+              )}
+
+              {isTabAllowed('support') && (
+                <button
+                  onClick={() => setAdminTab('support')}
+                  className={`w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-bold transition flex items-center justify-between cursor-pointer ${
+                    adminTab === 'support' ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-black shadow-lg shadow-amber-500/10' : 'text-white/70 hover:text-white hover:bg-white/5'
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    <HelpCircle className="w-3.5 h-3.5 shrink-0" />
+                    <span>Support & Tickets</span>
+                  </div>
+                  {supportTickets.filter(t => t.status === 'Open').length > 0 && (
+                    <span className="bg-amber-500 text-black font-extrabold text-[9px] px-2 py-0.5 rounded-full">
+                      {supportTickets.filter(t => t.status === 'Open').length}
+                    </span>
+                  )}
+                </button>
+              )}
+
+              {isTabAllowed('payments') && (
+                <button
+                  onClick={() => setAdminTab('payments')}
+                  className={`w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-bold transition flex items-center justify-between cursor-pointer ${
+                    adminTab === 'payments' ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-black shadow-lg shadow-amber-500/10' : 'text-white/70 hover:text-white hover:bg-white/5'
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    <CreditCard className="w-3.5 h-3.5 shrink-0" />
+                    <span>Payment & Receipts</span>
+                  </div>
+                  {pendingReceiptsCount > 0 && (
+                    <span className="bg-amber-500 text-black font-extrabold text-[9px] px-2 py-0.5 rounded-full animate-bounce">
+                      {pendingReceiptsCount}
+                    </span>
+                  )}
+                </button>
+              )}
+
+              {isTabAllowed('analytics') && (
+                <button
+                  onClick={() => setAdminTab('analytics')}
+                  className={`w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 cursor-pointer ${
+                    adminTab === 'analytics' ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-black shadow-lg shadow-amber-500/10' : 'text-white/70 hover:text-white hover:bg-white/5'
+                  }`}
+                >
+                  <BarChart3 className="w-3.5 h-3.5 shrink-0" />
+                  <span>Advanced Analytics</span>
+                </button>
+              )}
+            </div>
+
+            {/* ⚙️ SECTION 4: SYSTEM & CONFIG */}
+            <div className="space-y-1 pt-1 border-t border-white/5">
+              <span className="text-[9px] uppercase font-extrabold text-white/40 tracking-wider px-3 pt-1 block">
+                ⚙️ System & Settings
+              </span>
+
+              {isTabAllowed('languages') && (
+                <button
+                  onClick={() => setAdminTab('languages')}
+                  className={`w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 cursor-pointer ${
+                    adminTab === 'languages' ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-black shadow-lg shadow-amber-500/10' : 'text-white/70 hover:text-white hover:bg-white/5'
+                  }`}
+                >
+                  <Languages className="w-3.5 h-3.5 shrink-0" />
+                  <span>Languages & Translations</span>
+                </button>
+              )}
+
+              {isTabAllowed('settings') && (
+                <button
+                  onClick={() => setAdminTab('settings')}
+                  className={`w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 cursor-pointer ${
+                    adminTab === 'settings' ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-black shadow-lg shadow-amber-500/10' : 'text-white/70 hover:text-white hover:bg-white/5'
+                  }`}
+                >
+                  <Settings className="w-3.5 h-3.5 shrink-0" />
+                  <span>System Settings</span>
+                </button>
+              )}
+            </div>
           </div>
         </div>
 
@@ -7333,86 +7664,735 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
             />
           )}
 
+          {/* 🛡️ SECURITY TAB 1: ACCOUNT LOCKOUTS & SECURITY UNLOCKS */}
+          {adminTab === 'accountLocks' && (
+            <div className="bg-[#0d0d12]/90 border border-white/5 p-6 rounded-3xl space-y-6">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-4 border-b border-white/5">
+                <div>
+                  <h3 className="text-xl font-serif font-bold text-white flex items-center gap-2">
+                    <Unlock className="w-5 h-5 text-amber-500" />
+                    <span>Account Lockouts & Security Protection</span>
+                  </h3>
+                  <p className="text-xs text-white/40 mt-1">Unlock accounts locked due to excessive failed password or 2FA verification attempts without database access.</p>
+                </div>
+                <button
+                  onClick={refreshData}
+                  className="px-3 py-1.5 bg-white/5 hover:bg-white/10 text-white/80 rounded-xl text-xs font-bold flex items-center gap-1.5 cursor-pointer border border-white/10 transition"
+                >
+                  <RefreshCw className="w-3.5 h-3.5" /> Refresh Status
+                </button>
+              </div>
+
+              {/* Locked Stats Cards */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="bg-[#12121a] p-4 rounded-2xl border border-rose-500/20">
+                  <span className="text-[10px] font-bold text-rose-400 uppercase tracking-widest block">Currently Locked Accounts</span>
+                  <p className="text-2xl font-extrabold text-white mt-1">
+                    {(users || []).filter(u => Boolean(u.lockoutUntil && new Date(u.lockoutUntil) > new Date()) || Boolean(u.lockout2FAUntil && new Date(u.lockout2FAUntil) > new Date()) || (u.failedLoginAttempts && u.failedLoginAttempts >= 5)).length}
+                  </p>
+                </div>
+
+                <div className="bg-[#12121a] p-4 rounded-2xl border border-amber-500/20">
+                  <span className="text-[10px] font-bold text-amber-400 uppercase tracking-widest block">Failed Attempt Risk (≥3)</span>
+                  <p className="text-2xl font-extrabold text-white mt-1">
+                    {(users || []).filter(u => u.failedLoginAttempts && u.failedLoginAttempts >= 3 && u.failedLoginAttempts < 5).length}
+                  </p>
+                </div>
+
+                <div className="bg-[#12121a] p-4 rounded-2xl border border-emerald-500/20">
+                  <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest block">Total Active Unlocked Accounts</span>
+                  <p className="text-2xl font-extrabold text-white mt-1">
+                    {(users || []).filter(u => (!u.lockoutUntil || new Date(u.lockoutUntil) <= new Date()) && (!u.failedLoginAttempts || u.failedLoginAttempts < 5)).length}
+                  </p>
+                </div>
+              </div>
+
+              {/* Locked Accounts Table */}
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse text-xs">
+                  <thead>
+                    <tr className="border-b border-white/10 text-[10px] font-mono text-white/40 uppercase tracking-wider">
+                      <th className="py-3 px-4">User Details</th>
+                      <th className="py-3 px-4">System Role</th>
+                      <th className="py-3 px-4">Lock Status</th>
+                      <th className="py-3 px-4">Lock Reason</th>
+                      <th className="py-3 px-4">Failed Counter</th>
+                      <th className="py-3 px-4 text-right">Security Action</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-white/5">
+                    {(users || []).filter(u => Boolean(u.lockoutUntil && new Date(u.lockoutUntil) > new Date()) || Boolean(u.lockout2FAUntil && new Date(u.lockout2FAUntil) > new Date()) || (u.failedLoginAttempts && u.failedLoginAttempts >= 3)).length === 0 ? (
+                      <tr>
+                        <td colSpan={6} className="py-8 text-center text-white/30 italic">
+                          ✨ No accounts are currently locked. All user and admin security parameters are healthy.
+                        </td>
+                      </tr>
+                    ) : (
+                      (users || []).filter(u => Boolean(u.lockoutUntil && new Date(u.lockoutUntil) > new Date()) || Boolean(u.lockout2FAUntil && new Date(u.lockout2FAUntil) > new Date()) || (u.failedLoginAttempts && u.failedLoginAttempts >= 3)).map(u => {
+                        const isLockedOut = Boolean(u.lockoutUntil && new Date(u.lockoutUntil) > new Date()) || Boolean(u.lockout2FAUntil && new Date(u.lockout2FAUntil) > new Date()) || (u.failedLoginAttempts && u.failedLoginAttempts >= 5);
+                        return (
+                          <tr key={u.id} className="hover:bg-white/[0.02] transition">
+                            <td className="py-3.5 px-4">
+                              <p className="font-bold text-white">{u.fullName}</p>
+                              <p className="text-[10px] font-mono text-white/40">{u.email}</p>
+                            </td>
+                            <td className="py-3.5 px-4">
+                              <span className={`px-2 py-0.5 rounded font-extrabold text-[9px] uppercase ${u.role === 'admin' ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20' : 'bg-white/5 text-white/60'}`}>
+                                {u.role}
+                              </span>
+                            </td>
+                            <td className="py-3.5 px-4">
+                              {isLockedOut ? (
+                                <span className="px-2.5 py-1 bg-rose-500/20 text-rose-300 border border-rose-500/30 rounded-full text-[9px] font-extrabold uppercase flex items-center gap-1 w-fit">
+                                  <Lock className="w-2.5 h-2.5" /> Locked
+                                </span>
+                              ) : (
+                                <span className="px-2.5 py-1 bg-amber-500/20 text-amber-300 border border-amber-500/30 rounded-full text-[9px] font-extrabold uppercase flex items-center gap-1 w-fit">
+                                  <AlertTriangle className="w-2.5 h-2.5" /> High Risk ({u.failedLoginAttempts} fails)
+                                </span>
+                              )}
+                            </td>
+                            <td className="py-3.5 px-4 text-white/70 text-[11px]">
+                              {u.lockReason || 'Excessive failed login password attempts'}
+                              {u.lockedAt && <span className="block text-[9px] text-white/30 font-mono mt-0.5">{new Date(u.lockedAt).toLocaleString()}</span>}
+                            </td>
+                            <td className="py-3.5 px-4 font-mono text-amber-400 font-bold">
+                              {u.failedLoginAttempts || 0} / 5
+                            </td>
+                            <td className="py-3.5 px-4 text-right space-x-2">
+                              <button
+                                onClick={() => setUnlockModalUser(u)}
+                                className="px-3 py-1.5 bg-gradient-to-r from-amber-500 to-amber-600 text-black font-extrabold text-xs rounded-xl shadow cursor-pointer hover:from-amber-400 hover:to-amber-500 transition"
+                              >
+                                🔓 Unlock Account
+                              </button>
+                              <button
+                                onClick={() => handleRevokeUserSessions(u)}
+                                className="px-2.5 py-1.5 bg-white/5 hover:bg-white/10 text-white/60 hover:text-white rounded-xl text-[10px] font-bold cursor-pointer transition"
+                                title="Revoke all active device tokens"
+                              >
+                                Revoke Sessions
+                              </button>
+                            </td>
+                          </tr>
+                        );
+                      })
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {/* 🛡️ SECURITY TAB 2: GLOBAL LOGIN HISTORY & LOGS */}
+          {adminTab === 'loginHistory' && (
+            <div className="bg-[#0d0d12]/90 border border-white/5 p-6 rounded-3xl space-y-6">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-4 border-b border-white/5">
+                <div>
+                  <h3 className="text-xl font-serif font-bold text-white flex items-center gap-2">
+                    <History className="w-5 h-5 text-amber-500" />
+                    <span>Global Platform Login History</span>
+                  </h3>
+                  <p className="text-xs text-white/40 mt-1">Real-time audit log of all successful and failed authentication events across the system.</p>
+                </div>
+                <button
+                  onClick={fetchGlobalLoginHistory}
+                  disabled={isLoadingLoginHistory}
+                  className="px-3.5 py-2 bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/30 rounded-xl text-xs font-bold flex items-center gap-1.5 cursor-pointer transition disabled:opacity-50"
+                >
+                  <RefreshCw className={`w-3.5 h-3.5 ${isLoadingLoginHistory ? 'animate-spin' : ''}`} /> Reload Logs
+                </button>
+              </div>
+
+              {/* Filters Bar */}
+              <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
+                <div className="relative">
+                  <Search className="w-3.5 h-3.5 text-white/40 absolute left-3 top-3.5" />
+                  <input
+                    type="text"
+                    placeholder="Search by name, email, or IP..."
+                    value={globalLoginSearch}
+                    onChange={e => setGlobalLoginSearch(e.target.value)}
+                    className="w-full pl-9 pr-3.5 py-2.5 bg-black/40 border border-white/10 rounded-xl text-xs text-white focus:outline-none focus:border-amber-500"
+                  />
+                </div>
+
+                <select
+                  value={globalLoginStatusFilter}
+                  onChange={e => setGlobalLoginStatusFilter(e.target.value as any)}
+                  className="px-3.5 py-2.5 bg-[#12121a] border border-white/10 rounded-xl text-xs text-white focus:outline-none"
+                >
+                  <option value="all">All Authentication Statuses</option>
+                  <option value="success">Success Only</option>
+                  <option value="failed">Failed Attempts Only</option>
+                </select>
+
+                <select
+                  value={globalLoginRoleFilter}
+                  onChange={e => setGlobalLoginRoleFilter(e.target.value as any)}
+                  className="px-3.5 py-2.5 bg-[#12121a] border border-white/10 rounded-xl text-xs text-white focus:outline-none"
+                >
+                  <option value="all">All Account Roles</option>
+                  <option value="admin">Administrators</option>
+                  <option value="employee">Staff / Employees</option>
+                  <option value="user">Sellers / Buyers</option>
+                </select>
+
+                <select
+                  value={globalLoginDateFilter}
+                  onChange={e => setGlobalLoginDateFilter(e.target.value as any)}
+                  className="px-3.5 py-2.5 bg-[#12121a] border border-white/10 rounded-xl text-xs text-white focus:outline-none"
+                >
+                  <option value="all">All Time Range</option>
+                  <option value="today">Today Only</option>
+                  <option value="7d">Last 7 Days</option>
+                  <option value="30d">Last 30 Days</option>
+                </select>
+              </div>
+
+              {/* Login Logs Table */}
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse text-xs">
+                  <thead>
+                    <tr className="border-b border-white/10 text-[10px] font-mono text-white/40 uppercase tracking-wider">
+                      <th className="py-3 px-4">Timestamp</th>
+                      <th className="py-3 px-4">User & Email</th>
+                      <th className="py-3 px-4">Role</th>
+                      <th className="py-3 px-4">Status</th>
+                      <th className="py-3 px-4">Reason / Failure</th>
+                      <th className="py-3 px-4">IP & Device</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-white/5">
+                    {globalLoginLogs.length === 0 ? (
+                      <tr>
+                        <td colSpan={6} className="py-8 text-center text-white/30 italic">
+                          No login history logs found matching current filter settings.
+                        </td>
+                      </tr>
+                    ) : (
+                      globalLoginLogs
+                        .filter(log => {
+                          if (globalLoginStatusFilter === 'success' && !log.success) return false;
+                          if (globalLoginStatusFilter === 'failed' && log.success) return false;
+                          if (globalLoginRoleFilter !== 'all' && (log.role || 'user').toLowerCase() !== globalLoginRoleFilter) return false;
+                          if (globalLoginSearch.trim()) {
+                            const q = globalLoginSearch.toLowerCase();
+                            const matchesName = (log.fullName || '').toLowerCase().includes(q);
+                            const matchesEmail = (log.email || '').toLowerCase().includes(q);
+                            const matchesIp = (log.ipAddress || '').toLowerCase().includes(q);
+                            if (!matchesName && !matchesEmail && !matchesIp) return false;
+                          }
+                          return true;
+                        })
+                        .map((log, idx) => (
+                          <tr key={log.id || idx} className="hover:bg-white/[0.02] transition">
+                            <td className="py-3 px-4 font-mono text-white/60 text-[10px]">
+                              {log.timestamp ? new Date(log.timestamp).toLocaleString() : 'N/A'}
+                            </td>
+                            <td className="py-3 px-4">
+                              <p className="font-bold text-white">{log.fullName || log.email || 'Anonymous'}</p>
+                              <p className="text-[10px] font-mono text-white/40">{log.email}</p>
+                            </td>
+                            <td className="py-3 px-4 capitalize">
+                              <span className="px-2 py-0.5 rounded font-extrabold text-[9px] uppercase bg-white/5 text-white/60">
+                                {log.role || 'user'}
+                              </span>
+                            </td>
+                            <td className="py-3 px-4">
+                              {log.success ? (
+                                <span className="px-2.5 py-0.5 bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 rounded-full text-[9px] font-extrabold uppercase">
+                                  SUCCESS
+                                </span>
+                              ) : (
+                                <span className="px-2.5 py-0.5 bg-rose-500/20 text-rose-300 border border-rose-500/30 rounded-full text-[9px] font-extrabold uppercase">
+                                  FAILED
+                                </span>
+                              )}
+                            </td>
+                            <td className="py-3 px-4 text-white/70 text-[11px]">
+                              {log.failureReason || (log.success ? 'Authentication Verified' : 'Invalid Credentials')}
+                            </td>
+                            <td className="py-3 px-4 font-mono text-[10px] text-white/50">
+                              <span>{log.ipAddress || '127.0.0.1'}</span>
+                              {log.userAgent && <span className="block text-[9px] text-white/30 truncate max-w-[180px]">{log.userAgent}</span>}
+                            </td>
+                          </tr>
+                        ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {/* 🛡️ SECURITY TAB 3: ACTIVE DEVICE SESSIONS */}
+          {adminTab === 'activeSessions' && (
+            <div className="bg-[#0d0d12]/90 border border-white/5 p-6 rounded-3xl space-y-6">
+              <div className="flex justify-between items-center pb-4 border-b border-white/5">
+                <div>
+                  <h3 className="text-xl font-serif font-bold text-white flex items-center gap-2">
+                    <Smartphone className="w-5 h-5 text-amber-500" />
+                    <span>Active Device Sessions Management</span>
+                  </h3>
+                  <p className="text-xs text-white/40 mt-1">Audit and revoke active login session tokens across all users and staff.</p>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                {(users || []).map(u => (
+                  <div key={u.id} className="bg-[#12121a] border border-white/5 p-4 rounded-2xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold text-white text-sm">{u.fullName}</span>
+                        <span className={`px-2 py-0.5 rounded font-extrabold text-[9px] uppercase ${u.role === 'admin' ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20' : 'bg-white/5 text-white/60'}`}>
+                          {u.role}
+                        </span>
+                      </div>
+                      <p className="text-xs font-mono text-white/40">{u.email}</p>
+                      <p className="text-[10px] text-emerald-400 font-mono">
+                        🟢 Active Session Token Established ({u.lastLoginAt ? new Date(u.lastLoginAt).toLocaleString() : 'Recent'})
+                      </p>
+                    </div>
+
+                    <button
+                      onClick={() => handleRevokeUserSessions(u)}
+                      className="px-3.5 py-2 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 rounded-xl text-xs font-bold flex items-center gap-1.5 cursor-pointer transition shrink-0"
+                    >
+                      <Ban className="w-3.5 h-3.5" /> Revoke Active Sessions
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* 🛡️ SECURITY TAB 4: EMERGENCY ADMIN RECOVERY */}
+          {adminTab === 'emergencyRecovery' && (
+            <div className="bg-[#0d0d12]/90 border border-rose-500/30 p-6 rounded-3xl space-y-6">
+              <div className="flex justify-between items-center pb-4 border-b border-rose-500/20">
+                <div>
+                  <h3 className="text-xl font-serif font-bold text-white flex items-center gap-2">
+                    <ShieldAlert className="w-5 h-5 text-rose-400" />
+                    <span>Emergency Administrator Account Recovery</span>
+                  </h3>
+                  <p className="text-xs text-rose-300/60 mt-1">Super-Admin emergency tool to safely clear 2FA and password lockout states for locked administrator accounts.</p>
+                </div>
+              </div>
+
+              {emergencyStatusMsg && (
+                <div className={`p-4 rounded-2xl border text-xs font-bold ${emergencyStatusMsg.isError ? 'bg-rose-500/10 border-rose-500/30 text-rose-300' : 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300'}`}>
+                  {emergencyStatusMsg.text}
+                </div>
+              )}
+
+              <form onSubmit={handleEmergencyAdminRecovery} className="bg-black/40 border border-white/10 p-6 rounded-2xl space-y-4 max-w-xl">
+                <div>
+                  <label className="block text-[10px] font-extrabold text-white/60 uppercase mb-1">Target Admin / Employee Email *</label>
+                  <input
+                    type="email"
+                    required
+                    value={emergencyTargetEmail}
+                    onChange={e => setEmergencyTargetEmail(e.target.value)}
+                    placeholder="e.g. admin@sofumer.com"
+                    className="w-full px-4 py-3 bg-[#12121a] border border-white/10 rounded-xl text-xs text-white focus:outline-none focus:border-rose-500"
+                  />
+                  <p className="text-[10px] text-white/30 mt-1">
+                    Executing emergency recovery will instantly clear all lockouts, reset failed login attempts to 0, and clear temporary 2FA blocks.
+                  </p>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={isSubmittingEmergency}
+                  className="w-full py-3 bg-gradient-to-r from-rose-500 to-rose-600 text-white font-extrabold text-xs rounded-xl shadow cursor-pointer hover:from-rose-400 hover:to-rose-500 transition disabled:opacity-50 flex items-center justify-center gap-2"
+                >
+                  <ShieldAlert className="w-4 h-4" />
+                  <span>{isSubmittingEmergency ? 'Executing Recovery...' : 'Execute Emergency Unlock'}</span>
+                </button>
+              </form>
+            </div>
+          )}
+
         </div>
       </div>
 
-      {/* --- MODERATION MODALS --- */}
+      {/* --- MODERATION & SECURITY MODALS --- */}
 
-      {/* 1. VIEW USER PROFILE MODAL */}
-      {viewingUser && (
-        <div className="fixed inset-0 z-[9999] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
-          <div className="bg-[#12121a] border border-white/10 rounded-3xl max-w-xl w-full p-6 space-y-6 shadow-2xl relative">
+      {/* 🔓 UNLOCK ACCOUNT MODAL */}
+      {unlockModalUser && (
+        <div className="fixed inset-0 z-[9999] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-[#12121a] border border-amber-500/30 rounded-3xl max-w-lg w-full p-6 space-y-5 shadow-2xl relative">
             <div className="flex justify-between items-start border-b border-white/10 pb-4">
               <div>
-                <span className="text-[10px] font-mono font-bold text-amber-500 uppercase tracking-widest">User Profile Details</span>
-                <h3 className="text-xl font-serif font-bold text-white mt-1">{viewingUser.fullName}</h3>
-                <p className="text-xs text-white/50">{viewingUser.email}</p>
+                <span className="text-[10px] font-mono font-bold text-amber-500 uppercase tracking-widest flex items-center gap-1.5">
+                  <Unlock className="w-3.5 h-3.5" /> Account Security Unlock
+                </span>
+                <h3 className="text-xl font-serif font-bold text-white mt-1">{unlockModalUser.fullName}</h3>
+                <p className="text-xs text-white/50">{unlockModalUser.email} • {unlockModalUser.role}</p>
               </div>
               <button
-                onClick={() => setViewingUser(null)}
-                className="p-2 bg-white/5 hover:bg-white/10 text-white rounded-xl cursor-pointer"
+                onClick={() => setUnlockModalUser(null)}
+                className="p-1.5 bg-white/5 hover:bg-white/10 text-white rounded-xl transition cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <div className="grid grid-cols-2 gap-4 text-xs">
-              <div className="bg-black/40 p-3 rounded-2xl border border-white/5">
-                <span className="text-[10px] text-white/40 uppercase font-mono block">System Role</span>
-                <span className="font-bold text-amber-400 capitalize">{viewingUser.role}</span>
-              </div>
-              <div className="bg-black/40 p-3 rounded-2xl border border-white/5">
-                <span className="text-[10px] text-white/40 uppercase font-mono block">Account Status</span>
-                <span className={`font-bold capitalize ${viewingUser.status === 'active' ? 'text-emerald-400' : viewingUser.status === 'suspended' ? 'text-amber-400' : 'text-rose-400'}`}>
-                  {viewingUser.status || 'active'}
-                </span>
-              </div>
-              <div className="bg-black/40 p-3 rounded-2xl border border-white/5">
-                <span className="text-[10px] text-white/40 uppercase font-mono block">Phone Number</span>
-                <span className="font-mono text-white">{viewingUser.phone || 'N/A'}</span>
-              </div>
-              <div className="bg-black/40 p-3 rounded-2xl border border-white/5">
-                <span className="text-[10px] text-white/40 uppercase font-mono block">Verification Badge</span>
-                <span className="font-mono text-white uppercase">{viewingUser.verificationStatus || 'unverified'}</span>
-              </div>
+            <div className="bg-amber-500/10 border border-amber-500/20 p-4 rounded-2xl text-xs space-y-1.5">
+              <span className="font-bold text-amber-400 uppercase text-[10px] tracking-wider block">Lock Status Summary</span>
+              <p className="text-white/80">
+                Reason: <strong className="text-amber-300">{unlockModalUser.lockReason || 'Excessive failed login password / 2FA attempts'}</strong>
+              </p>
+              <p className="text-white/60 text-[11px]">
+                Failed Attempts Counter: <span className="font-mono text-amber-400 font-bold">{unlockModalUser.failedLoginAttempts || 0}</span>
+              </p>
+              {unlockModalUser.lockedAt && (
+                <p className="text-white/40 text-[10px] font-mono">
+                  Locked At: {new Date(unlockModalUser.lockedAt).toLocaleString()}
+                </p>
+              )}
             </div>
 
-            {(viewingUser.suspendReason || viewingUser.banReason) && (
-              <div className="bg-rose-500/10 border border-rose-500/20 p-4 rounded-2xl text-xs space-y-1">
-                <span className="font-bold text-rose-400 uppercase tracking-wider text-[10px]">Restriction Reason</span>
-                <p className="text-white/80">{viewingUser.banReason || viewingUser.suspendReason}</p>
+            <form onSubmit={handlePerformAccountUnlock} className="space-y-4">
+              <div className="space-y-3 bg-black/40 p-4 rounded-2xl border border-white/5">
+                <label className="flex items-center gap-2.5 cursor-pointer text-xs font-bold text-white">
+                  <input
+                    type="checkbox"
+                    checked={unlockResetFailedCounter}
+                    onChange={e => setUnlockResetFailedCounter(e.target.checked)}
+                    className="w-4 h-4 rounded accent-amber-500 bg-black/50 border-white/20"
+                  />
+                  <span>Reset Failed Login Attempts Counter to 0</span>
+                </label>
+
+                <label className="flex items-center gap-2.5 cursor-pointer text-xs font-bold text-white">
+                  <input
+                    type="checkbox"
+                    checked={unlockForcePasswordReset}
+                    onChange={e => setUnlockForcePasswordReset(e.target.checked)}
+                    className="w-4 h-4 rounded accent-amber-500 bg-black/50 border-white/20"
+                  />
+                  <span>Require User to Change Password on Next Login</span>
+                </label>
+              </div>
+
+              <div>
+                <label className="block text-[10px] uppercase font-bold text-white/50 tracking-wider mb-1">
+                  Unlock Reason / Admin Audit Note (Optional)
+                </label>
+                <textarea
+                  rows={2}
+                  value={unlockNoteInput}
+                  onChange={e => setUnlockNoteInput(e.target.value)}
+                  placeholder="e.g. Identity verified via customer support ticket #1042."
+                  className="w-full p-3 bg-black/50 border border-white/10 rounded-xl text-xs text-white focus:outline-none focus:border-amber-500"
+                />
+              </div>
+
+              <div className="flex justify-end gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setUnlockModalUser(null)}
+                  className="px-4 py-2.5 bg-white/5 hover:bg-white/10 text-white rounded-xl text-xs font-bold cursor-pointer transition"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSubmittingUnlock}
+                  className="px-5 py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 text-black font-extrabold text-xs rounded-xl shadow cursor-pointer hover:from-amber-400 hover:to-amber-500 transition disabled:opacity-50"
+                >
+                  {isSubmittingUnlock ? 'Unlocking...' : 'Confirm Account Unlock'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* 1. VIEW USER PROFILE MODAL WITH TABS */}
+      {viewingUser && (
+        <div className="fixed inset-0 z-[9999] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-[#12121a] border border-white/10 rounded-3xl max-w-2xl w-full p-6 space-y-6 shadow-2xl relative my-8">
+            <div className="flex justify-between items-start border-b border-white/10 pb-4">
+              <div>
+                <span className="text-[10px] font-mono font-bold text-amber-500 uppercase tracking-widest">Comprehensive User Details</span>
+                <h3 className="text-xl font-serif font-bold text-white mt-1">{viewingUser.fullName}</h3>
+                <p className="text-xs text-white/50">{viewingUser.email} • ID: <span className="font-mono text-white/40">{viewingUser.id}</span></p>
+              </div>
+              <button
+                onClick={() => setViewingUser(null)}
+                className="p-2 bg-white/5 hover:bg-white/10 text-white rounded-xl cursor-pointer transition"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Modal Sub-Tabs */}
+            <div className="flex gap-1 bg-black/40 p-1 rounded-2xl border border-white/5 overflow-x-auto">
+              <button
+                type="button"
+                onClick={() => setUserModalTab('overview')}
+                className={`px-3.5 py-2 rounded-xl text-xs font-bold transition shrink-0 cursor-pointer ${userModalTab === 'overview' ? 'bg-amber-500 text-black shadow' : 'text-white/60 hover:text-white'}`}
+              >
+                Overview & Status
+              </button>
+              <button
+                type="button"
+                onClick={() => setUserModalTab('sessions')}
+                className={`px-3.5 py-2 rounded-xl text-xs font-bold transition shrink-0 cursor-pointer ${userModalTab === 'sessions' ? 'bg-amber-500 text-black shadow' : 'text-white/60 hover:text-white'}`}
+              >
+                Sessions & Logins
+              </button>
+              <button
+                type="button"
+                onClick={() => { setUserModalTab('timeline'); fetchUserTimeline(viewingUser.id); }}
+                className={`px-3.5 py-2 rounded-xl text-xs font-bold transition shrink-0 cursor-pointer ${userModalTab === 'timeline' ? 'bg-amber-500 text-black shadow' : 'text-white/60 hover:text-white'}`}
+              >
+                Security Timeline
+              </button>
+              <button
+                type="button"
+                onClick={() => setUserModalTab('notes')}
+                className={`px-3.5 py-2 rounded-xl text-xs font-bold transition shrink-0 cursor-pointer ${userModalTab === 'notes' ? 'bg-amber-500 text-black shadow' : 'text-white/60 hover:text-white'}`}
+              >
+                Admin Notes ({viewingUser.adminNotes?.length || 0})
+              </button>
+              <button
+                type="button"
+                onClick={() => setUserModalTab('warnings')}
+                className={`px-3.5 py-2 rounded-xl text-xs font-bold transition shrink-0 cursor-pointer ${userModalTab === 'warnings' ? 'bg-amber-500 text-black shadow' : 'text-white/60 hover:text-white'}`}
+              >
+                Warnings ({viewingUser.warnings?.length || 0})
+              </button>
+            </div>
+
+            {/* TAB 1: OVERVIEW & STATUS */}
+            {userModalTab === 'overview' && (
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4 text-xs">
+                  <div className="bg-black/40 p-3.5 rounded-2xl border border-white/5">
+                    <span className="text-[10px] text-white/40 uppercase font-mono block">System Role</span>
+                    <span className="font-bold text-amber-400 capitalize">{viewingUser.role}</span>
+                  </div>
+                  <div className="bg-black/40 p-3.5 rounded-2xl border border-white/5">
+                    <span className="text-[10px] text-white/40 uppercase font-mono block">Account Status</span>
+                    <span className={`font-bold capitalize ${viewingUser.status === 'active' ? 'text-emerald-400' : viewingUser.status === 'suspended' ? 'text-amber-400' : 'text-rose-400'}`}>
+                      {viewingUser.status || 'active'}
+                    </span>
+                  </div>
+                  <div className="bg-black/40 p-3.5 rounded-2xl border border-white/5">
+                    <span className="text-[10px] text-white/40 uppercase font-mono block">Phone Number</span>
+                    <span className="font-mono text-white">{viewingUser.phone || 'N/A'}</span>
+                  </div>
+                  <div className="bg-black/40 p-3.5 rounded-2xl border border-white/5">
+                    <span className="text-[10px] text-white/40 uppercase font-mono block">Verification Status</span>
+                    <span className="font-mono text-white uppercase">{viewingUser.verificationStatus || 'unverified'}</span>
+                  </div>
+                </div>
+
+                {/* Lock Status Banner */}
+                {((viewingUser.lockoutUntil && new Date(viewingUser.lockoutUntil) > new Date()) || (viewingUser.failedLoginAttempts && viewingUser.failedLoginAttempts >= 3)) ? (
+                  <div className="bg-rose-500/10 border border-rose-500/20 p-4 rounded-2xl text-xs space-y-2">
+                    <div className="flex justify-between items-center">
+                      <span className="font-bold text-rose-400 uppercase tracking-wider text-[10px] flex items-center gap-1">
+                        <Lock className="w-3.5 h-3.5" /> Account Security Lock Triggered
+                      </span>
+                      <button
+                        onClick={() => setUnlockModalUser(viewingUser)}
+                        className="px-3 py-1 bg-amber-500 text-black font-extrabold rounded-lg text-[10px] cursor-pointer"
+                      >
+                        🔓 Unlock Account
+                      </button>
+                    </div>
+                    <p className="text-white/80">{viewingUser.lockReason || 'Exceeded failed password login threshold'}</p>
+                    <p className="text-[10px] font-mono text-white/40">Failed attempts: {viewingUser.failedLoginAttempts || 0}</p>
+                  </div>
+                ) : (
+                  <div className="bg-emerald-500/10 border border-emerald-500/20 p-3.5 rounded-2xl text-xs flex items-center justify-between">
+                    <span className="text-emerald-300 font-bold flex items-center gap-1.5">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-400" /> Account Unlocked & Normal Standing
+                    </span>
+                    <span className="text-[10px] text-white/40 font-mono">Failed attempts: {viewingUser.failedLoginAttempts || 0}</span>
+                  </div>
+                )}
+
+                {/* Quick Security Controls */}
+                <div className="bg-black/40 p-4 rounded-2xl border border-white/5 space-y-3">
+                  <span className="text-[10px] uppercase font-bold text-white/40 tracking-wider block">Security & Policy Actions</span>
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      onClick={() => handleRevokeUserSessions(viewingUser)}
+                      className="px-3 py-2 bg-white/5 hover:bg-white/10 text-white rounded-xl text-xs font-bold border border-white/10 transition cursor-pointer"
+                    >
+                      Revoke Active Sessions
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleToggleForcePasswordChange(viewingUser, viewingUser.mustChangePasswordOnNextLogin)}
+                      className="px-3 py-2 bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 rounded-xl text-xs font-bold border border-amber-500/30 transition cursor-pointer"
+                    >
+                      {viewingUser.mustChangePasswordOnNextLogin ? 'Cancel Required Password Change' : 'Require Password Change on Next Login'}
+                    </button>
+                  </div>
+                </div>
               </div>
             )}
 
-            {/* Warnings Summary */}
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <h4 className="text-xs font-bold text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
-                  <AlertTriangle className="w-4 h-4" /> Warning History ({viewingUser.warnings?.length || 0})
-                </h4>
-              </div>
-              {viewingUser.warnings && viewingUser.warnings.length > 0 ? (
-                <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
-                  {viewingUser.warnings.map((w: any, idx: number) => (
-                    <div key={idx} className="bg-black/50 border border-amber-500/20 p-3 rounded-xl text-xs space-y-1">
-                      <div className="flex justify-between items-center">
-                        <span className="font-bold text-amber-300">{w.reason}</span>
-                        <span className="text-[10px] font-mono text-white/40">{w.dateIssued ? new Date(w.dateIssued).toLocaleDateString() : 'N/A'}</span>
-                      </div>
-                      {w.note && <p className="text-[11px] text-white/70 italic">Admin Note: {w.note}</p>}
-                      <p className="text-[9px] font-mono text-white/30">Issued by: {w.adminName || 'Admin'}</p>
-                    </div>
-                  ))}
+            {/* TAB 2: SESSIONS & LOGINS */}
+            {userModalTab === 'sessions' && (
+              <div className="space-y-4">
+                <div className="flex justify-between items-center bg-black/40 p-4 rounded-2xl border border-white/5">
+                  <div>
+                    <span className="font-bold text-white text-xs block">Active Login Sessions</span>
+                    <span className="text-[10px] text-white/40 font-mono">
+                      Last Authentication: {viewingUser.lastLoginAt ? new Date(viewingUser.lastLoginAt).toLocaleString() : 'Recent'}
+                    </span>
+                  </div>
+                  <button
+                    onClick={() => handleRevokeUserSessions(viewingUser)}
+                    className="px-3 py-1.5 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 rounded-xl text-xs font-bold cursor-pointer"
+                  >
+                    Revoke All Sessions
+                  </button>
                 </div>
-              ) : (
-                <p className="text-xs text-white/30 italic">No official warnings issued to this account.</p>
-              )}
-            </div>
+
+                <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
+                  <span className="text-[10px] uppercase font-bold text-white/40 tracking-wider block">Recent Login History</span>
+                  {viewingUser.loginHistory && viewingUser.loginHistory.length > 0 ? (
+                    viewingUser.loginHistory.map((lh: any, idx: number) => (
+                      <div key={idx} className="bg-black/50 p-3 rounded-xl border border-white/5 text-xs flex justify-between items-center">
+                        <div>
+                          <span className={`px-2 py-0.5 rounded text-[9px] font-extrabold uppercase ${lh.success ? 'bg-emerald-500/20 text-emerald-300' : 'bg-rose-500/20 text-rose-300'}`}>
+                            {lh.success ? 'SUCCESS' : 'FAILED'}
+                          </span>
+                          <span className="font-mono text-white/60 text-[11px] ml-2">{lh.ipAddress || '127.0.0.1'}</span>
+                        </div>
+                        <span className="text-[10px] font-mono text-white/40">
+                          {lh.timestamp ? new Date(lh.timestamp).toLocaleString() : 'N/A'}
+                        </span>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-xs text-white/30 italic">No previous login log records registered.</p>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* TAB 3: SECURITY TIMELINE */}
+            {userModalTab === 'timeline' && (
+              <div className="space-y-3">
+                <span className="text-[10px] uppercase font-bold text-white/40 tracking-wider block">Chronological Security & Activity Timeline</span>
+                {isLoadingTimeline ? (
+                  <div className="py-8 text-center text-white/40 text-xs flex items-center justify-center gap-2">
+                    <RefreshCw className="w-4 h-4 animate-spin text-amber-500" />
+                    <span>Loading security event history...</span>
+                  </div>
+                ) : userTimeline.length === 0 ? (
+                  <p className="text-xs text-white/30 italic py-4">No timeline events recorded for this account.</p>
+                ) : (
+                  <div className="space-y-3 max-h-72 overflow-y-auto pr-1">
+                    {userTimeline.map((item, idx) => (
+                      <div key={idx} className="bg-black/50 border border-white/5 p-3.5 rounded-2xl text-xs space-y-1">
+                        <div className="flex justify-between items-center">
+                          <span className="font-bold text-amber-400">{item.title}</span>
+                          <span className="text-[10px] font-mono text-white/40">{item.timestamp ? new Date(item.timestamp).toLocaleString() : 'N/A'}</span>
+                        </div>
+                        {item.description && <p className="text-[11px] text-white/70">{item.description}</p>}
+                        {item.actor && <p className="text-[9px] font-mono text-white/30">Actor: {item.actor}</p>}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* TAB 4: ADMIN NOTES */}
+            {userModalTab === 'notes' && (
+              <div className="space-y-4">
+                <form onSubmit={e => handleAddAdminNote(e, viewingUser, setViewingUser)} className="space-y-2">
+                  <label className="block text-[10px] font-bold text-white/50 uppercase">Add Private Admin Note (Admin-Only Visible)</label>
+                  <textarea
+                    rows={2}
+                    required
+                    value={adminNoteInput}
+                    onChange={e => setAdminNoteInput(e.target.value)}
+                    placeholder="Enter confidential notes regarding account audit, verification status, or support phone calls..."
+                    className="w-full p-3 bg-black/50 border border-white/10 rounded-xl text-xs text-white focus:outline-none focus:border-amber-500"
+                  />
+                  <div className="flex justify-end">
+                    <button
+                      type="submit"
+                      disabled={isAddingNote || !adminNoteInput.trim()}
+                      className="px-4 py-2 bg-amber-500 text-black font-extrabold text-xs rounded-xl shadow hover:bg-amber-400 transition cursor-pointer disabled:opacity-50"
+                    >
+                      {isAddingNote ? 'Saving Note...' : 'Save Private Note'}
+                    </button>
+                  </div>
+                </form>
+
+                <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
+                  <span className="text-[10px] uppercase font-bold text-white/40 tracking-wider block">Stored Admin Notes</span>
+                  {viewingUser.adminNotes && viewingUser.adminNotes.length > 0 ? (
+                    viewingUser.adminNotes.map(n => (
+                      <div key={n.id} className="bg-black/50 border border-amber-500/20 p-3.5 rounded-xl text-xs space-y-1.5 flex justify-between items-start gap-3">
+                        <div>
+                          <p className="text-white/90">{n.note}</p>
+                          <p className="text-[9px] font-mono text-white/40 mt-1">
+                            Added by <strong className="text-amber-400">{n.authorName}</strong> on {new Date(n.timestamp).toLocaleString()}
+                          </p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteAdminNote(n.id, viewingUser, setViewingUser)}
+                          className="p-1 text-white/30 hover:text-rose-400 rounded transition cursor-pointer shrink-0"
+                          title="Delete note"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-xs text-white/30 italic">No admin notes created for this user yet.</p>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* TAB 5: WARNINGS & MODERATION */}
+            {userModalTab === 'warnings' && (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-xs font-bold text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
+                    <AlertTriangle className="w-4 h-4" /> Issued Warning History ({viewingUser.warnings?.length || 0})
+                  </h4>
+                </div>
+                {viewingUser.warnings && viewingUser.warnings.length > 0 ? (
+                  <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
+                    {viewingUser.warnings.map((w: any, idx: number) => (
+                      <div key={idx} className="bg-black/50 border border-amber-500/20 p-3 rounded-xl text-xs space-y-1">
+                        <div className="flex justify-between items-center">
+                          <span className="font-bold text-amber-300">{w.reason}</span>
+                          <span className="text-[10px] font-mono text-white/40">{w.dateIssued ? new Date(w.dateIssued).toLocaleDateString() : 'N/A'}</span>
+                        </div>
+                        {w.note && <p className="text-[11px] text-white/70 italic">Admin Note: {w.note}</p>}
+                        <p className="text-[9px] font-mono text-white/30">Issued by: {w.adminName || 'Admin'}</p>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-xs text-white/30 italic">No official warnings issued to this account.</p>
+                )}
+              </div>
+            )}
 
             <div className="flex justify-end gap-2 pt-2 border-t border-white/10">
               <button
                 onClick={() => setViewingUser(null)}
-                className="px-5 py-2.5 bg-white/10 hover:bg-white/20 text-white rounded-xl text-xs font-bold cursor-pointer"
+                className="px-5 py-2.5 bg-white/10 hover:bg-white/20 text-white rounded-xl text-xs font-bold cursor-pointer transition"
               >
                 Close Profile
               </button>

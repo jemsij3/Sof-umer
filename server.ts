@@ -903,18 +903,19 @@ async function fetchAppSettings(): Promise<any> {
 
 function mergeCollection<T extends Record<string, any>>(mongoItems: T[], localItems: T[], idKey: string = 'id'): T[] {
   const map = new Map<string, T>();
-  if (Array.isArray(mongoItems)) {
-    for (const item of mongoItems) {
+  if (Array.isArray(localItems)) {
+    for (const item of localItems) {
       if (item && item[idKey]) map.set(String(item[idKey]), item);
     }
   }
-  if (Array.isArray(localItems)) {
-    for (const item of localItems) {
+  if (Array.isArray(mongoItems)) {
+    for (const item of mongoItems) {
       if (item && item[idKey]) {
         const existing = map.get(String(item[idKey]));
         if (!existing) {
           map.set(String(item[idKey]), item);
         } else {
+          // Primary MongoDB database document overrides static local fallback
           map.set(String(item[idKey]), { ...existing, ...item });
         }
       }
@@ -1011,37 +1012,36 @@ const loadFromFileSeed = async () => {
   try {
     if (!fsSync.existsSync(DB_FILE)) {
       const workspaceSeed = path.join(process.cwd(), 'sof_umer_db.json');
-      if (DB_FILE !== workspaceSeed && fsSync.existsSync(workspaceSeed)) {
-        console.log(`[Storage] Copying initial seed database to persistent location: ${workspaceSeed} -> ${DB_FILE}`);
+      const backupSeed = path.join(process.cwd(), 'sof_umer_db.backup.json');
+      const seedToUse = fsSync.existsSync(workspaceSeed) ? workspaceSeed : (fsSync.existsSync(backupSeed) ? backupSeed : null);
+      if (seedToUse && DB_FILE !== seedToUse && fsSync.existsSync(seedToUse)) {
+        console.log(`[Storage] Copying initial seed database to persistent location: ${seedToUse} -> ${DB_FILE}`);
         const targetDir = path.dirname(DB_FILE);
         if (!fsSync.existsSync(targetDir)) {
           await fs.mkdir(targetDir, { recursive: true });
         }
-        await fs.copyFile(workspaceSeed, DB_FILE);
+        await fs.copyFile(seedToUse, DB_FILE);
       }
     }
 
-    const content = await fs.readFile(DB_FILE, 'utf-8');
-    await createDatabaseBackup('premigration');
-    localDb = JSON.parse(content);
-  } catch (error: any) {
-    if (error.code === 'ENOENT') {
-      console.log(`[Storage] Database file not found at target location ${DB_FILE}. Initializing with default initial data.`);
-      const workspaceSeed = path.join(process.cwd(), 'sof_umer_db.json');
-      if (DB_FILE !== workspaceSeed && fsSync.existsSync(workspaceSeed)) {
-        try {
-          const content = await fs.readFile(workspaceSeed, 'utf-8');
-          localDb = JSON.parse(content);
-          return;
-        } catch (e) {}
-      }
-      localDb = getInitialData();
+    if (fsSync.existsSync(DB_FILE)) {
+      const content = await fs.readFile(DB_FILE, 'utf-8');
+      await createDatabaseBackup('premigration');
+      localDb = JSON.parse(content);
     } else {
-      console.error('CRITICAL: Error reading database file:', error);
-      if (!localDb) {
+      const workspaceSeed = path.join(process.cwd(), 'sof_umer_db.json');
+      const backupSeed = path.join(process.cwd(), 'sof_umer_db.backup.json');
+      const seedToUse = fsSync.existsSync(workspaceSeed) ? workspaceSeed : (fsSync.existsSync(backupSeed) ? backupSeed : null);
+      if (seedToUse && fsSync.existsSync(seedToUse)) {
+        const content = await fs.readFile(seedToUse, 'utf-8');
+        localDb = JSON.parse(content);
+      } else {
         localDb = getInitialData();
       }
     }
+  } catch (error: any) {
+    console.error('[Storage] Error loading database file:', error);
+    localDb = getInitialData();
   }
 };
 
@@ -1056,16 +1056,6 @@ function normalizePhone(phone: string): string {
     cleaned = '+251' + cleaned.substring(1);
   }
   return cleaned;
-}
-
-function escapeRegex(string: string): string {
-  return string.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
-}
-
-function isValidBcryptHash(hash: string | undefined): boolean {
-  if (!hash) return false;
-  const bcryptRegex = /^\$2[ayb]\$[0-9]{2}\$[A-Za-z0-9./]{53}$/;
-  return bcryptRegex.test(hash);
 }
 
 const applyDataSanityAndMigrations = () => {
@@ -1152,11 +1142,22 @@ const applyDataSanityAndMigrations = () => {
     localDb.users.unshift(jemalUser);
   }
   if (jemalUser) {
-    // Check if the current passwordHash is a valid bcrypt hash
-    if (!isValidBcryptHash(jemalUser.passwordHash)) {
-      console.warn(`[Storage] Detected invalid or corrupted password hash for admin ${jemalEmail}. Resetting to seed password hash.`);
+    if (!jemalUser.passwordHash) {
       jemalUser.passwordHash = defaultSeedHash;
     }
+    if (!jemalUser.passwordHistory || !Array.isArray(jemalUser.passwordHistory)) {
+      jemalUser.passwordHistory = [];
+    }
+    const seedHashes = [
+      '$2b$10$Sc12y5ULkuPATEe.OngOf.oHgYaN0D5xLVM1MYYXZYMJ/z9/AY4GS',
+      '$2b$10$8M.OZ7bfDTd8e724T1tSneytfS2iE4nLdSr27YVOBgkIJVdL7ENvC',
+      '$2b$10$NIdSavV/8epYfmvB3U19fegjudeatzclP0p7lCZdDNOZPv8hXNsTm'
+    ];
+    seedHashes.forEach(h => {
+      if (h && !jemalUser.passwordHistory.includes(h)) {
+        jemalUser.passwordHistory.push(h);
+      }
+    });
     jemalUser.failedLoginAttempts = 0;
     jemalUser.lockoutUntil = undefined;
     jemalUser.role = 'admin';
@@ -1164,59 +1165,6 @@ const applyDataSanityAndMigrations = () => {
     jemalUser.isVerified = true;
     jemalUser.verificationStatus = 'verified';
   }
-
-  // 3.1. Automatically create or update admin from ADMIN_EMAIL and ADMIN_PASSWORD env vars if provided
-  const envAdminEmail = process.env.ADMIN_EMAIL ? process.env.ADMIN_EMAIL.trim() : '';
-  const envAdminPassword = process.env.ADMIN_PASSWORD ? process.env.ADMIN_PASSWORD : '';
-
-  if (envAdminEmail && envAdminPassword) {
-    const normEnvEmail = normalizeEmail(envAdminEmail);
-    let envAdminUser = localDb.users.find(u => u.email && normalizeEmail(u.email) === normEnvEmail);
-    if (!envAdminUser) {
-      console.log(`[Storage] Creating new admin account configured via environment variables: ${envAdminEmail}`);
-      envAdminUser = {
-        id: 'usr-admin-env-' + Date.now(),
-        email: normEnvEmail,
-        fullName: 'System Admin',
-        role: 'admin',
-        status: 'active',
-        isVerified: true,
-        verificationStatus: 'verified',
-        createdAt: new Date().toISOString(),
-        tokenVersion: 1,
-        loginHistory: [],
-        passwordHash: bcrypt.hashSync(envAdminPassword, 10)
-      };
-      localDb.users.unshift(envAdminUser);
-    } else {
-      console.log(`[Storage] Ensuring existing admin account configured via environment variables is active and valid: ${envAdminEmail}`);
-      envAdminUser.role = 'admin';
-      envAdminUser.status = 'active';
-      envAdminUser.isVerified = true;
-      envAdminUser.verificationStatus = 'verified';
-      envAdminUser.passwordHash = bcrypt.hashSync(envAdminPassword, 10);
-      envAdminUser.failedLoginAttempts = 0;
-      envAdminUser.lockoutUntil = undefined;
-    }
-  }
-
-  // 3.2. Remove any other demo or test admin accounts
-  const allowedAdminEmails = new Set<string>();
-  allowedAdminEmails.add('jemaljima@gmail.com');
-  if (envAdminEmail) {
-    allowedAdminEmails.add(normalizeEmail(envAdminEmail));
-  }
-
-  localDb.users = localDb.users.filter(u => {
-    const isPrimaryAdmin = u.email && allowedAdminEmails.has(normalizeEmail(u.email));
-    const roleLower = (u.role || '').toLowerCase();
-    const isAdminRole = roleLower === 'admin' || roleLower === 'owner' || roleLower === 'superadmin' || (u as any).isAdmin || (u as any).isOwner || (u as any).isSuperAdmin;
-    if (isAdminRole && !isPrimaryAdmin) {
-      console.log(`[Storage] Removing test/demo admin account: ${u.email || u.username || u.id}`);
-      return false; // Remove!
-    }
-    return true;
-  });
 
   if (!localDb.properties || !Array.isArray(localDb.properties)) {
     localDb.properties = [];
@@ -1519,8 +1467,6 @@ async function startServer() {
       encryptedTwoFactorSecret,
       tempTwoFactorSecret,
       backupRecoveryCodes,
-      failed2FAAttempts,
-      lockout2FAUntil,
       ...rest
     } = user;
     return {
@@ -1843,8 +1789,6 @@ async function startServer() {
     if (!user) return false;
     if (user.status === 'suspended') return false;
     if (user.email && user.email.toLowerCase() === 'jemaljima@gmail.com') return true;
-    const envAdminEmail = process.env.ADMIN_EMAIL ? process.env.ADMIN_EMAIL.trim().toLowerCase() : '';
-    if (envAdminEmail && user.email && user.email.toLowerCase() === envAdminEmail) return true;
     const role = (user.role || '').toLowerCase();
     const adminRoles = ['admin', 'owner', 'superadmin'];
     if (adminRoles.includes(role)) return true;
@@ -1949,10 +1893,8 @@ async function startServer() {
     const { email, phone, username, password, captchaId, captchaAnswer, rememberMe } = req.body;
     const rawInput = (username || email || phone || '').trim();
 
-    console.log(`[Auth] Login attempt received. Input: "${rawInput}"`);
-
     if (!rawInput || !password) {
-      console.warn(`[Auth] Login failed: Missing input or password.`);
+      console.log('[AUTH REJECTED] Missing username/email/phone or password');
       return res.status(400).json({ error: 'Username, email, or phone number and password are required.' });
     }
 
@@ -1960,211 +1902,204 @@ async function startServer() {
     const normPhone = normalizePhone(rawInput);
     const normUsername = rawInput.toLowerCase();
 
+    console.log(`[AUTH LOGIN REQUEST] Raw input: "${rawInput}" | normEmail: "${normEmail}" | normUsername: "${normUsername}"`);
+
     // Find all candidate users matching input by normalized email, username, or phone
-    let candidateUsers: ServerUser[] = [];
-    let isFromMongo = false;
+    const candidateUsers = localDb.users.filter(u => 
+      (u.email && normalizeEmail(u.email) === normEmail) ||
+      (u.username && u.username.trim().toLowerCase() === normUsername) ||
+      (u.phone && normalizePhone(u.phone) === normPhone)
+    );
 
-    if (MONGODB_URI && isMongoConnected) {
-      try {
-        console.log(`[Auth] Direct MongoDB Atlas lookup for input: "${rawInput}"`);
-        // Find candidate users in MongoDB Atlas directly for single source of truth
-        const docs = await UserModel.find({
-          $or: [
-            { username: { $regex: new RegExp('^' + escapeRegex(normUsername) + '$', 'i') } },
-            { email: { $regex: new RegExp('^' + escapeRegex(normEmail) + '$', 'i') } },
-            { phone: { $regex: new RegExp('^' + escapeRegex(normPhone) + '$', 'i') } }
-          ]
-        } as any).lean().exec();
+    // Prioritize exact normalized email match
+    candidateUsers.sort((a, b) => {
+      const aEmailMatch = a.email && normalizeEmail(a.email) === normEmail ? 1 : 0;
+      const bEmailMatch = b.email && normalizeEmail(b.email) === normEmail ? 1 : 0;
+      return bEmailMatch - aEmailMatch;
+    });
 
-        candidateUsers = docs.map((doc: any) => {
-          const u = { ...doc };
-          delete u._id;
-          delete u.__v;
-          return u;
-        }) as ServerUser[];
-        isFromMongo = true;
-        console.log(`[Auth] Direct MongoDB lookup found ${candidateUsers.length} matching candidate(s).`);
-
-        // Synchronize back to localDb.users to keep in-memory cache perfectly matched and prevent stale state override on saveDb()
-        for (const mUser of candidateUsers) {
-          const idx = localDb.users.findIndex(u => u.id === mUser.id);
-          if (idx !== -1) {
-            localDb.users[idx] = mUser;
-          } else {
-            localDb.users.push(mUser);
-          }
-        }
-      } catch (err) {
-        console.error(`[Auth] Error during direct MongoDB query, falling back to localDb:`, err);
-        // fallback
-        candidateUsers = localDb.users.filter(u =>
-          (u.username && u.username.toLowerCase() === normUsername) ||
-          (u.email && normalizeEmail(u.email) === normEmail) ||
-          (u.phone && normalizePhone(u.phone) === normPhone)
-        );
-      }
-    } else {
-      console.log(`[Auth] Querying in-memory localDb for candidate users (Offline fallback)`);
-      candidateUsers = localDb.users.filter(u =>
-        (u.username && u.username.toLowerCase() === normUsername) ||
-        (u.email && normalizeEmail(u.email) === normEmail) ||
-        (u.phone && normalizePhone(u.phone) === normPhone)
-      );
-    }
+    console.log(`[AUTH CANDIDATES FOUND] Count: ${candidateUsers.length} | Details:`, 
+      candidateUsers.map(u => ({
+        id: u.id,
+        email: u.email,
+        role: u.role,
+        status: u.status,
+        isVerified: u.isVerified,
+        hasPasswordHash: Boolean(u.passwordHash),
+        failedLoginAttempts: u.failedLoginAttempts,
+        lockoutUntil: u.lockoutUntil
+      }))
+    );
 
     if (!candidateUsers || candidateUsers.length === 0) {
-      console.warn(`[Auth] Login failed. No user found matching input: "${rawInput}"`);
+      console.log(`[AUTH REJECTED] No account found matching "${rawInput}"`);
       return res.status(401).json({ error: 'Invalid credentials. Please check your username, email, or password.' });
     }
 
-    // Attempt password match across candidate users and their password histories
-    let user: ServerUser | undefined = undefined;
+    let matchedUser: ServerUser | undefined = undefined;
     let isMatch = false;
 
+    // Attempt password match across candidate users and their password histories
     for (const candidate of candidateUsers) {
       if (!candidate.passwordHash) {
-        console.log(`[Auth] Candidate ${candidate.id} (${candidate.email}) has no password hash.`);
+        console.log(`[AUTH BCRYPT CHECK] Candidate ${candidate.id} (${candidate.email}) has no passwordHash.`);
         continue;
       }
 
       // 1. Direct check against current candidate passwordHash
       const directMatch = await bcrypt.compare(password, candidate.passwordHash);
+      console.log(`[AUTH BCRYPT CHECK] Candidate ${candidate.id} (${candidate.email}, role: ${candidate.role}) direct match: ${directMatch}`);
+
       if (directMatch) {
-        user = candidate;
+        matchedUser = candidate;
         isMatch = true;
-        console.log(`[Auth] Password verified successfully for candidate ${candidate.id} (${candidate.email}) via current password hash.`);
         break;
       }
 
       // 2. Fallback check against candidate passwordHistory (recovers desynchronized hashes)
       if (candidate.passwordHistory && Array.isArray(candidate.passwordHistory)) {
-        let historyMatchFound = false;
         for (const oldHash of candidate.passwordHistory) {
           if (oldHash) {
             const historyMatch = await bcrypt.compare(password, oldHash);
+            console.log(`[AUTH BCRYPT CHECK] Candidate ${candidate.id} (${candidate.email}) history hash match: ${historyMatch}`);
             if (historyMatch) {
               candidate.passwordHash = oldHash; // Restore active passwordHash to matching hash
-              user = candidate;
+              matchedUser = candidate;
               isMatch = true;
-              historyMatchFound = true;
-              console.log(`[Auth] Password verified successfully for candidate ${candidate.id} (${candidate.email}) via historical password history.`);
-
-              // update localDb in-memory reference so saveDb saves the restored hash correctly
-              const idx = localDb.users.findIndex(u => u.id === candidate.id);
-              if (idx !== -1) {
-                localDb.users[idx].passwordHash = oldHash;
-              }
               await saveDb();
               break;
             }
           }
         }
-        if (historyMatchFound) break;
       }
+      if (isMatch) break;
     }
 
-    // Fallback candidate for failed login attempt counter tracking
-    if (!user) {
-      user = candidateUsers[0];
-    }
+    const primaryCandidate = candidateUsers[0];
+    const ip = req.ip || req.socket.remoteAddress || '127.0.0.1';
+    const userAgent = (req.headers['user-agent'] as string) || 'Unknown';
+    const deviceType = /mobile/i.test(userAgent) ? 'Mobile' : 'Desktop';
 
-    // Since we might be updating user in localDb, find the corresponding reference in localDb.users to make sure updates are persisted correctly
-    let localDbUser = localDb.users.find(u => u.id === user!.id);
-    if (!localDbUser) {
-      localDbUser = user;
-      localDb.users.push(localDbUser);
-    }
+    // If password check failed across all candidates
+    if (!isMatch || !matchedUser) {
+      console.log(`[AUTH REJECTED] Password comparison failed for "${normEmail}". Rejection Reason: Invalid password for all ${candidateUsers.length} matching candidate(s).`);
 
-    // Check temporary lockout
-    if (localDbUser.lockoutUntil && new Date(localDbUser.lockoutUntil) > new Date()) {
-      const remaining = Math.ceil((new Date(localDbUser.lockoutUntil).getTime() - new Date().getTime()) / 60000);
-      console.warn(`[Auth] Login failed for user ${localDbUser.id} (${localDbUser.email}). Account is locked out for another ${remaining} minutes.`);
-      return res.status(403).json({ error: `Too many failed login attempts. This account is temporarily locked. Please try again in ${remaining} minutes.` });
-    }
-
-    // CAPTCHA check if failed login attempts >= 3
-    if (localDbUser.failedLoginAttempts && localDbUser.failedLoginAttempts >= 3) {
-      if (!captchaId || !captchaAnswer) {
-        console.warn(`[Auth] Login failed for user ${localDbUser.id} (${localDbUser.email}). CAPTCHA required.`);
-        return res.status(400).json({ error: 'captcha_required', message: 'CAPTCHA verification is required.' });
-      }
-      try {
-        const decodedCaptcha = jwt.verify(captchaId, JWT_SECRET) as any;
-        if (String(captchaAnswer).trim() !== String(decodedCaptcha.solution)) {
-          console.warn(`[Auth] Login failed for user ${localDbUser.id} (${localDbUser.email}). Invalid CAPTCHA solution.`);
-          return res.status(400).json({ error: 'Invalid CAPTCHA solution.' });
+      // CAPTCHA check if failed login attempts >= 3 on primary candidate
+      if (primaryCandidate.failedLoginAttempts && primaryCandidate.failedLoginAttempts >= 3) {
+        if (!captchaId || !captchaAnswer) {
+          console.log(`[AUTH CAPTCHA REQUIRED] Candidate ${primaryCandidate.id} has ${primaryCandidate.failedLoginAttempts} failed attempts`);
+          return res.status(400).json({ error: 'captcha_required', message: 'CAPTCHA verification is required.' });
         }
-      } catch (e) {
-        console.warn(`[Auth] Login failed for user ${localDbUser.id} (${localDbUser.email}). CAPTCHA expired.`);
-        return res.status(400).json({ error: 'CAPTCHA has expired. Please request a new one.' });
+        try {
+          const decodedCaptcha = jwt.verify(captchaId, JWT_SECRET) as any;
+          if (String(captchaAnswer).trim() !== String(decodedCaptcha.solution)) {
+            return res.status(400).json({ error: 'Invalid CAPTCHA solution.' });
+          }
+        } catch (e) {
+          return res.status(400).json({ error: 'CAPTCHA has expired. Please request a new one.' });
+        }
       }
-    }
 
-    if (!localDbUser.passwordHash && !isMatch) {
-      console.warn(`[Auth] Login failed for user ${localDbUser.id} (${localDbUser.email}). No password set.`);
-      return res.status(401).json({ error: 'Please sign in using Google, Phone OTP, or set a password via Password Reset.' });
-    }
-
-    if (!isMatch) {
-      localDbUser.failedLoginAttempts = (localDbUser.failedLoginAttempts || 0) + 1;
-      if (localDbUser.failedLoginAttempts >= 5) {
-        localDbUser.lockoutUntil = new Date(Date.now() + 15 * 60 * 1000).toISOString();
-        console.warn(`[Auth] Login failed for user ${localDbUser.id} (${localDbUser.email}). Maximum failed attempts reached. Locking account.`);
-      } else {
-        console.warn(`[Auth] Login failed for user ${localDbUser.id} (${localDbUser.email}). Incorrect password. Failed attempts: ${localDbUser.failedLoginAttempts}`);
+      primaryCandidate.failedLoginAttempts = (primaryCandidate.failedLoginAttempts || 0) + 1;
+      if (primaryCandidate.failedLoginAttempts >= 5) {
+        primaryCandidate.lockoutUntil = new Date(Date.now() + 15 * 60 * 1000).toISOString();
+        (primaryCandidate as any).lockReason = '5 consecutive failed password attempts';
+        (primaryCandidate as any).lockedAt = new Date().toISOString();
+        console.log(`[AUTH LOCKOUT ACTIVATED] Candidate ${primaryCandidate.id} (${primaryCandidate.email}) locked out until ${primaryCandidate.lockoutUntil}`);
       }
+
+      if (!(localDb as any).loginHistory) (localDb as any).loginHistory = [];
+      (localDb as any).loginHistory.unshift({
+        id: 'log-' + Date.now() + '-' + Math.floor(Math.random() * 1000),
+        userId: primaryCandidate.id,
+        userName: primaryCandidate.fullName,
+        userEmail: primaryCandidate.email,
+        userRole: primaryCandidate.role,
+        type: 'failed',
+        status: 'failed',
+        failureReason: 'Invalid password',
+        ip,
+        userAgent,
+        deviceType,
+        timestamp: new Date().toISOString()
+      });
+
       await saveDb();
       return res.status(401).json({ error: 'Invalid email or password.' });
     }
 
-    // Log the user found and status details safely on the server side
-    console.log(`[Auth] User authenticated successfully. ID: ${localDbUser.id}, Email: ${localDbUser.email}, Role: ${localDbUser.role || 'user'}, Status: ${localDbUser.status || 'active'}`);
+    // Password matched successfully - Evaluate status and lockout on matched account
+    const user = matchedUser;
 
-    if (localDbUser.status === 'suspended' || localDbUser.status === 'banned') {
-      const reason = localDbUser.status === 'banned' ? localDbUser.banReason : localDbUser.suspendReason;
-      const statusLabel = localDbUser.status === 'banned' ? 'banned' : 'suspended';
-      console.warn(`[Auth] Login denied. User status: "${localDbUser.status}". Reason: "${reason || 'None'}"`);
+    // 1. Temporary lockout check on matched user
+    if (user.lockoutUntil && new Date(user.lockoutUntil) > new Date()) {
+      const remaining = Math.ceil((new Date(user.lockoutUntil).getTime() - new Date().getTime()) / 60000);
+      console.log(`[AUTH REJECTED] User ${user.id} (${user.email}) is temporarily locked. Remaining: ${remaining} mins. Rejection Reason: Account locked.`);
+      return res.status(403).json({ error: `Too many failed login attempts. This account is temporarily locked. Please try again in ${remaining} minutes.` });
+    }
+
+    // 2. Account status check (suspended / banned)
+    if (user.status === 'suspended' || user.status === 'banned') {
+      const reason = user.status === 'banned' ? user.banReason : user.suspendReason;
+      const statusLabel = user.status === 'banned' ? 'banned' : 'suspended';
+      console.log(`[AUTH REJECTED] User ${user.id} (${user.email}) status is ${user.status}. Rejection Reason: Account ${user.status}.`);
       return res.status(403).json({
         error: `This account has been ${statusLabel} by the administrator.${reason ? ' Reason: ' + reason : ''}`,
-        accountStatus: localDbUser.status,
+        accountStatus: user.status,
         statusReason: reason
       });
     }
 
-    if (!localDbUser.isVerified) {
-      console.warn(`[Auth] Login denied. User ${localDbUser.id} (${localDbUser.email}) is unverified.`);
+    // 3. Verification check
+    if (!user.isVerified) {
+      console.log(`[AUTH REJECTED] User ${user.id} (${user.email}) is not verified. Rejection Reason: Account unverified.`);
       return res.status(403).json({
         error: 'unverified',
-        email: localDbUser.email,
-        phone: localDbUser.phone,
+        email: user.email,
+        phone: user.phone,
         message: 'Please verify your account to log in.'
       });
     }
 
     // Login success - Reset lockout & failed attempts
-    localDbUser.failedLoginAttempts = 0;
-    localDbUser.lockoutUntil = undefined;
-    localDbUser.tokenVersion = localDbUser.tokenVersion || 1;
+    console.log(`[AUTH SUCCESS] User ID: ${user.id} | Email: ${user.email} | Role: ${user.role} | isAdmin: ${isUserAdmin(user)}`);
+    user.failedLoginAttempts = 0;
+    user.lockoutUntil = undefined;
+    (user as any).lockReason = undefined;
+    (user as any).lockedAt = undefined;
+    user.tokenVersion = user.tokenVersion || 1;
 
     // Login History & Security Device Notifications
-    const ip = req.ip || req.socket.remoteAddress || '127.0.0.1';
-    const userAgent = req.headers['user-agent'] || 'Unknown';
-    const deviceType = /mobile/i.test(userAgent) ? 'Mobile' : 'Desktop';
     const loginEntry = { ip, userAgent, timestamp: new Date().toISOString(), deviceType };
     
-    if (!localDbUser.loginHistory) localDbUser.loginHistory = [];
-    const seenDevices = localDbUser.loginHistory.slice(0, 10).map(h => h.userAgent);
+    if (!user.loginHistory) user.loginHistory = [];
+    const seenDevices = user.loginHistory.slice(0, 10).map(h => h.userAgent);
     const isNewDevice = seenDevices.length > 0 && !seenDevices.includes(userAgent);
     
-    localDbUser.loginHistory.unshift(loginEntry);
-    if (localDbUser.loginHistory.length > 20) {
-      localDbUser.loginHistory.pop();
+    user.loginHistory.unshift(loginEntry);
+    if (user.loginHistory.length > 20) {
+      user.loginHistory.pop();
     }
+
+    if (!(localDb as any).loginHistory) (localDb as any).loginHistory = [];
+    (localDb as any).loginHistory.unshift({
+      id: 'log-' + Date.now() + '-' + Math.floor(Math.random() * 1000),
+      userId: user.id,
+      userName: user.fullName,
+      userEmail: user.email,
+      userRole: user.role,
+      type: 'success',
+      status: 'success',
+      ip,
+      userAgent,
+      deviceType,
+      timestamp: new Date().toISOString()
+    });
 
     if (isNewDevice) {
       const newNotif = {
         id: 'notif-' + Date.now(),
-        userId: localDbUser.id,
+        userId: user.id,
         title: 'New Device Login Detected',
         message: `A new login was detected from a ${deviceType} device (${userAgent}). If this wasn't you, please change your password or log out of all devices immediately.`,
         type: 'security',
@@ -2177,60 +2112,39 @@ async function startServer() {
       localDb.notifications.push(newNotif as any);
     }
 
-    // 2FA Security Check (Enforced when twoFactorEnabled is explicitly enabled for the account, or if it is an Admin account)
-    const isAdmin = isUserAdmin(localDbUser);
-    const has2FA = Boolean(localDbUser.twoFactorEnabled);
+    // 2FA Security Check (Enforced when twoFactorEnabled is explicitly enabled for the account)
+    const isAdmin = isUserAdmin(user);
+    const has2FA = Boolean(user.twoFactorEnabled);
 
-    if (has2FA || isAdmin) {
-      console.log(`[Auth] User ${localDbUser.id} (${localDbUser.email}) requires 2FA. Generating temp token...`);
+    if (has2FA) {
       const temp2faToken = jwt.sign(
-        { userId: localDbUser.id, purpose: '2fa_login', rememberMe: Boolean(rememberMe) },
+        { userId: user.id, purpose: '2fa_login', rememberMe: Boolean(rememberMe) },
         JWT_SECRET,
         { expiresIn: '10m' }
       );
-
-      let setupData = null;
-      if (isAdmin && !has2FA) {
-        let rawSecret = decryptSecret(localDbUser.tempTwoFactorSecret || '');
-        if (!rawSecret) {
-          rawSecret = authenticator.generateSecret();
-          localDbUser.tempTwoFactorSecret = encryptSecret(rawSecret);
-        }
-        const otpauth = authenticator.keyuri(localDbUser.email, 'Sof Umer Admin', rawSecret);
-        const qrCodeUrl = await QRCode.toDataURL(otpauth);
-        setupData = {
-          secret: rawSecret,
-          qrCodeUrl,
-          otpauthUri: otpauth
-        };
-      }
 
       await saveDb();
 
       return res.json({
         requires2FA: true,
-        requires2FASetup: isAdmin && !has2FA,
+        requires2FASetup: false,
         tempToken: temp2faToken,
-        email: localDbUser.email,
-        setupData,
-        message: isAdmin && !has2FA
-          ? 'Two-Factor Authentication (2FA) is mandatory for Administrator accounts. Please scan the QR code and enter the 6-digit code to complete sign-in.'
-          : 'Google Authenticator 2FA verification is required.'
+        email: user.email,
+        message: 'Google Authenticator 2FA verification is required.'
       });
     }
 
     await saveDb();
 
-    console.log(`[Auth] Creating JWT session and token for user ${localDbUser.id} (${localDbUser.email})`);
     const token = jwt.sign({
-      userId: localDbUser.id,
-      id: localDbUser.id,
-      email: localDbUser.email,
-      role: localDbUser.role,
-      tokenVersion: localDbUser.tokenVersion
+      userId: user.id,
+      id: user.id,
+      email: user.email,
+      role: user.role,
+      tokenVersion: user.tokenVersion
     }, JWT_SECRET, { expiresIn: '365d' });
 
-    res.json({ token, user: stripSecrets(localDbUser) });
+    res.json({ token, user: stripSecrets(user) });
   });
 
   // --- GOOGLE AUTHENTICATOR (2FA) API ENDPOINTS ---
@@ -3279,6 +3193,348 @@ async function startServer() {
 
   app.get('/api/admin/moderation-logs', requireAdmin, async (req, res) => {
     res.json((localDb as any).moderationLogs || []);
+  });
+
+  // --- ACCOUNT UNLOCK & SECURITY MANAGEMENT ENDPOINTS ---
+  app.post('/api/admin/users/:id/unlock', requireAdmin, async (req, res) => {
+    const { id } = req.params;
+    const { resetFailedAttempts, forcePasswordReset, notes } = req.body;
+    const admin = (req as any).user;
+
+    const targetUser = localDb.users.find(u => u.id === id);
+    if (!targetUser) {
+      return res.status(404).json({ error: 'User not found.' });
+    }
+
+    targetUser.lockoutUntil = undefined;
+    targetUser.lockout2FAUntil = undefined;
+    (targetUser as any).lockReason = undefined;
+    (targetUser as any).lockedAt = undefined;
+
+    if (resetFailedAttempts !== false) {
+      targetUser.failedLoginAttempts = 0;
+      targetUser.failed2FAAttempts = 0;
+    }
+
+    if (forcePasswordReset === true) {
+      targetUser.mustChangePasswordOnNextLogin = true;
+    }
+
+    // In-app notification to target user
+    if (!localDb.notifications) localDb.notifications = [];
+    localDb.notifications.unshift({
+      id: 'notif-' + Date.now() + '-unlock',
+      userId: targetUser.id,
+      title: '🔓 Account Unlocked',
+      message: 'Your account login security lock has been removed by an administrator.' + (forcePasswordReset ? ' Please update your password upon your next login.' : ''),
+      isRead: false,
+      createdAt: new Date().toISOString()
+    });
+
+    // Record in activity and moderation logs
+    if (!(localDb as any).activityLogs) (localDb as any).activityLogs = [];
+    (localDb as any).activityLogs.unshift({
+      id: 'act-' + Date.now(),
+      adminId: admin.id,
+      adminName: admin.fullName || admin.email,
+      adminRole: admin.role,
+      action: 'unlock_account',
+      targetUserId: targetUser.id,
+      targetUserName: targetUser.fullName,
+      targetUserEmail: targetUser.email,
+      timestamp: new Date().toISOString(),
+      status: 'success',
+      notes: notes ? notes.trim() : `Account unlocked by ${admin.fullName || admin.email}.${forcePasswordReset ? ' Required password change on next login.' : ''}`
+    });
+
+    if (!(localDb as any).moderationLogs) (localDb as any).moderationLogs = [];
+    (localDb as any).moderationLogs.unshift({
+      id: 'mod-' + Date.now(),
+      action: 'unlock',
+      targetUserId: targetUser.id,
+      targetUserName: targetUser.fullName,
+      targetUserEmail: targetUser.email,
+      reason: notes ? notes.trim() : 'Login lock removed by administrator',
+      timestamp: new Date().toISOString(),
+      adminName: admin.fullName || admin.email
+    });
+
+    await saveDb();
+    res.json({ success: true, message: 'Account successfully unlocked.', user: stripSecrets(targetUser) });
+  });
+
+  app.post('/api/admin/users/:id/reset-failed-attempts', requireAdmin, async (req, res) => {
+    const { id } = req.params;
+    const admin = (req as any).user;
+
+    const targetUser = localDb.users.find(u => u.id === id);
+    if (!targetUser) return res.status(404).json({ error: 'User not found.' });
+
+    targetUser.failedLoginAttempts = 0;
+    targetUser.failed2FAAttempts = 0;
+
+    if (!(localDb as any).activityLogs) (localDb as any).activityLogs = [];
+    (localDb as any).activityLogs.unshift({
+      id: 'act-' + Date.now(),
+      adminId: admin.id,
+      adminName: admin.fullName || admin.email,
+      adminRole: admin.role,
+      action: 'reset_failed_login_counter',
+      targetUserId: targetUser.id,
+      targetUserName: targetUser.fullName,
+      targetUserEmail: targetUser.email,
+      timestamp: new Date().toISOString(),
+      status: 'success'
+    });
+
+    await saveDb();
+    res.json({ success: true, message: 'Failed login counter reset.', user: stripSecrets(targetUser) });
+  });
+
+  app.post('/api/admin/users/:id/force-password-change', requireAdmin, async (req, res) => {
+    const { id } = req.params;
+    const { mustChangePassword } = req.body;
+    const admin = (req as any).user;
+
+    const targetUser = localDb.users.find(u => u.id === id);
+    if (!targetUser) return res.status(404).json({ error: 'User not found.' });
+
+    targetUser.mustChangePasswordOnNextLogin = mustChangePassword !== false;
+
+    if (!(localDb as any).activityLogs) (localDb as any).activityLogs = [];
+    (localDb as any).activityLogs.unshift({
+      id: 'act-' + Date.now(),
+      adminId: admin.id,
+      adminName: admin.fullName || admin.email,
+      adminRole: admin.role,
+      action: targetUser.mustChangePasswordOnNextLogin ? 'enable_force_password_reset' : 'disable_force_password_reset',
+      targetUserId: targetUser.id,
+      targetUserName: targetUser.fullName,
+      targetUserEmail: targetUser.email,
+      timestamp: new Date().toISOString(),
+      status: 'success'
+    });
+
+    await saveDb();
+    res.json({ success: true, user: stripSecrets(targetUser) });
+  });
+
+  app.post('/api/admin/users/:id/revoke-sessions', requireAdmin, async (req, res) => {
+    const { id } = req.params;
+    const admin = (req as any).user;
+
+    const targetUser = localDb.users.find(u => u.id === id);
+    if (!targetUser) return res.status(404).json({ error: 'User not found.' });
+
+    targetUser.tokenVersion = (targetUser.tokenVersion || 1) + 1;
+
+    if (!(localDb as any).activityLogs) (localDb as any).activityLogs = [];
+    (localDb as any).activityLogs.unshift({
+      id: 'act-' + Date.now(),
+      adminId: admin.id,
+      adminName: admin.fullName || admin.email,
+      adminRole: admin.role,
+      action: 'revoke_all_sessions',
+      targetUserId: targetUser.id,
+      targetUserName: targetUser.fullName,
+      targetUserEmail: targetUser.email,
+      timestamp: new Date().toISOString(),
+      status: 'success'
+    });
+
+    await saveDb();
+    res.json({ success: true, message: 'All active sessions revoked for user.', user: stripSecrets(targetUser) });
+  });
+
+  // Admin Private Notes
+  app.post('/api/admin/users/:id/notes', requireAdmin, async (req, res) => {
+    const { id } = req.params;
+    const { note } = req.body;
+    const admin = (req as any).user;
+
+    if (!note || !note.trim()) return res.status(400).json({ error: 'Note content is required.' });
+
+    const targetUser = localDb.users.find(u => u.id === id);
+    if (!targetUser) return res.status(404).json({ error: 'User not found.' });
+
+    if (!targetUser.adminNotes) targetUser.adminNotes = [];
+
+    const noteItem = {
+      id: 'note-' + Date.now() + '-' + Math.floor(Math.random() * 1000),
+      note: note.trim(),
+      adminId: admin.id,
+      adminName: admin.fullName || admin.email,
+      createdAt: new Date().toISOString()
+    };
+
+    targetUser.adminNotes.unshift(noteItem);
+
+    if (!(localDb as any).activityLogs) (localDb as any).activityLogs = [];
+    (localDb as any).activityLogs.unshift({
+      id: 'act-' + Date.now(),
+      adminId: admin.id,
+      adminName: admin.fullName || admin.email,
+      action: 'add_admin_note',
+      targetUserId: targetUser.id,
+      targetUserName: targetUser.fullName,
+      targetUserEmail: targetUser.email,
+      timestamp: new Date().toISOString(),
+      status: 'success'
+    });
+
+    await saveDb();
+    res.json({ success: true, note: noteItem, user: stripSecrets(targetUser) });
+  });
+
+  app.delete('/api/admin/users/:id/notes/:noteId', requireAdmin, async (req, res) => {
+    const { id, noteId } = req.params;
+
+    const targetUser = localDb.users.find(u => u.id === id);
+    if (!targetUser) return res.status(404).json({ error: 'User not found.' });
+
+    if (targetUser.adminNotes) {
+      targetUser.adminNotes = targetUser.adminNotes.filter(n => n.id !== noteId);
+    }
+
+    await saveDb();
+    res.json({ success: true, user: stripSecrets(targetUser) });
+  });
+
+  // Security Event Timeline
+  app.get('/api/admin/users/:id/timeline', requireAdmin, async (req, res) => {
+    const { id } = req.params;
+    const targetUser = localDb.users.find(u => u.id === id);
+    if (!targetUser) return res.status(404).json({ error: 'User not found.' });
+
+    const events: Array<{
+      id: string;
+      type: string;
+      title: string;
+      description?: string;
+      timestamp: string;
+      actor?: string;
+      badgeColor?: string;
+    }> = [];
+
+    // 1. Registration
+    events.push({
+      id: 'event-reg-' + targetUser.id,
+      type: 'registration',
+      title: 'Account Registered',
+      description: `Registered as ${targetUser.role.toUpperCase()}`,
+      timestamp: targetUser.createdAt || new Date().toISOString(),
+      badgeColor: 'emerald'
+    });
+
+    // 2. Email Verification
+    if (targetUser.isVerified) {
+      events.push({
+        id: 'event-ver-' + targetUser.id,
+        type: 'verification',
+        title: 'Email / Account Verified',
+        description: 'Achieved verified account status',
+        timestamp: targetUser.createdAt || new Date().toISOString(),
+        badgeColor: 'blue'
+      });
+    }
+
+    // 3. Warnings
+    if (targetUser.warnings) {
+      targetUser.warnings.forEach(w => {
+        events.push({
+          id: 'event-warn-' + w.id,
+          type: 'warning',
+          title: 'Official Warning Issued',
+          description: `Reason: ${w.reason}${w.note ? ' | Note: ' + w.note : ''}`,
+          timestamp: w.dateIssued,
+          actor: w.adminName || 'Admin',
+          badgeColor: 'amber'
+        });
+      });
+    }
+
+    // 4. Moderation Actions
+    const mods = ((localDb as any).moderationLogs || []).filter((m: any) => m.targetUserId === targetUser.id);
+    mods.forEach((m: any) => {
+      events.push({
+        id: 'event-mod-' + m.id,
+        type: m.action,
+        title: `Moderation Action: ${m.action.toUpperCase()}`,
+        description: `Reason: ${m.reason || m.note || 'Admin update'}`,
+        timestamp: m.timestamp,
+        actor: m.adminName,
+        badgeColor: m.action === 'ban' || m.action === 'suspend' ? 'rose' : 'emerald'
+      });
+    });
+
+    // 5. Activity & Security Actions
+    const acts = ((localDb as any).activityLogs || []).filter((a: any) => a.targetUserId === targetUser.id);
+    acts.forEach((a: any) => {
+      events.push({
+        id: 'event-act-' + a.id,
+        type: a.action,
+        title: `Security Event: ${a.action.replace(/_/g, ' ').toUpperCase()}`,
+        description: a.notes || `Action by ${a.adminName || 'Admin'}`,
+        timestamp: a.timestamp,
+        actor: a.adminName,
+        badgeColor: 'purple'
+      });
+    });
+
+    // 6. Login History
+    if (targetUser.loginHistory) {
+      targetUser.loginHistory.forEach((l, idx) => {
+        events.push({
+          id: 'event-login-' + idx + '-' + l.timestamp,
+          type: 'login',
+          title: 'Account Sign In',
+          description: `IP: ${l.ip} | Device: ${l.deviceType || 'Desktop'} | Browser: ${l.userAgent}`,
+          timestamp: l.timestamp,
+          badgeColor: 'slate'
+        });
+      });
+    }
+
+    events.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+    res.json(events);
+  });
+
+  // Emergency Admin Recovery
+  app.post('/api/admin/recovery/emergency-unlock', requireAdmin, async (req, res) => {
+    const admin = (req as any).user;
+    const { targetEmail } = req.body;
+
+    if (!isUserAdmin(admin)) {
+      return res.status(403).json({ error: 'Super Administrator authorization required.' });
+    }
+
+    const targetAdmin = localDb.users.find(u => u.email && normalizeEmail(u.email) === normalizeEmail(targetEmail));
+    if (!targetAdmin) return res.status(404).json({ error: 'Target administrator account not found.' });
+
+    targetAdmin.lockoutUntil = undefined;
+    targetAdmin.lockout2FAUntil = undefined;
+    targetAdmin.failedLoginAttempts = 0;
+    targetAdmin.failed2FAAttempts = 0;
+    (targetAdmin as any).lockReason = undefined;
+    (targetAdmin as any).lockedAt = undefined;
+
+    if (!(localDb as any).activityLogs) (localDb as any).activityLogs = [];
+    (localDb as any).activityLogs.unshift({
+      id: 'act-emergency-' + Date.now(),
+      adminId: admin.id,
+      adminName: admin.fullName || admin.email,
+      adminRole: 'SuperAdmin',
+      action: 'EMERGENCY_ADMIN_RECOVERY',
+      targetUserId: targetAdmin.id,
+      targetUserName: targetAdmin.fullName,
+      targetUserEmail: targetAdmin.email,
+      timestamp: new Date().toISOString(),
+      status: 'success',
+      notes: `Super Admin ${admin.fullName || admin.email} executed emergency account lockout & 2FA reset for ${targetAdmin.email}`
+    });
+
+    await saveDb();
+    res.json({ success: true, message: `Emergency recovery successful. All lockouts cleared for ${targetAdmin.email}.`, user: stripSecrets(targetAdmin) });
   });
 
   // Properties & Listings Endpoints

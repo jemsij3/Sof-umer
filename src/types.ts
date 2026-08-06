@@ -38,6 +38,29 @@ export interface ModerationLogItem {
   adminName: string;
 }
 
+export interface AdminNote {
+  id: string;
+  note: string;
+  adminId: string;
+  adminName: string;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export interface AuditLogItem {
+  id: string;
+  adminId: string;
+  adminName: string;
+  adminRole?: string;
+  action: string;
+  targetUserId?: string;
+  targetUserName?: string;
+  targetUserEmail?: string;
+  timestamp: string;
+  status: 'success' | 'failure';
+  notes?: string;
+}
+
 export interface User {
   id: string;
   email: string;
@@ -56,6 +79,15 @@ export interface User {
   // Wallet
   walletBalance?: number; // In ETB / Credits
   walletTransactions?: WalletTransaction[];
+
+  // Account Lock & Security Status
+  failedLoginAttempts?: number;
+  lockoutUntil?: string;
+  lockout2FAUntil?: string;
+  lockReason?: string;
+  lockedAt?: string;
+  mustChangePasswordOnNextLogin?: boolean;
+  adminNotes?: AdminNote[];
 
   // Optional Employee Admins fields
   isEmployee?: boolean;
