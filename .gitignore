@@ -9,6 +9,9 @@ coverage/
 sof_umer_db.json
 sof_umer_db.json.tmp
 sof_umer_db.json.bak
+sof_umer_db.backup.json
 sof_umer_db_*.json
+*.backup.json
+*.bak.json
 /data/
 backups/

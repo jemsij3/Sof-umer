@@ -1012,15 +1012,13 @@ const loadFromFileSeed = async () => {
   try {
     if (!fsSync.existsSync(DB_FILE)) {
       const workspaceSeed = path.join(process.cwd(), 'sof_umer_db.json');
-      const backupSeed = path.join(process.cwd(), 'sof_umer_db.backup.json');
-      const seedToUse = fsSync.existsSync(workspaceSeed) ? workspaceSeed : (fsSync.existsSync(backupSeed) ? backupSeed : null);
-      if (seedToUse && DB_FILE !== seedToUse && fsSync.existsSync(seedToUse)) {
-        console.log(`[Storage] Copying initial seed database to persistent location: ${seedToUse} -> ${DB_FILE}`);
+      if (fsSync.existsSync(workspaceSeed) && DB_FILE !== workspaceSeed) {
+        console.log(`[Storage] Copying initial seed database to persistent location: ${workspaceSeed} -> ${DB_FILE}`);
         const targetDir = path.dirname(DB_FILE);
         if (!fsSync.existsSync(targetDir)) {
           await fs.mkdir(targetDir, { recursive: true });
         }
-        await fs.copyFile(seedToUse, DB_FILE);
+        await fs.copyFile(workspaceSeed, DB_FILE);
       }
     }
 
@@ -1030,10 +1028,8 @@ const loadFromFileSeed = async () => {
       localDb = JSON.parse(content);
     } else {
       const workspaceSeed = path.join(process.cwd(), 'sof_umer_db.json');
-      const backupSeed = path.join(process.cwd(), 'sof_umer_db.backup.json');
-      const seedToUse = fsSync.existsSync(workspaceSeed) ? workspaceSeed : (fsSync.existsSync(backupSeed) ? backupSeed : null);
-      if (seedToUse && fsSync.existsSync(seedToUse)) {
-        const content = await fs.readFile(seedToUse, 'utf-8');
+      if (fsSync.existsSync(workspaceSeed)) {
+        const content = await fs.readFile(workspaceSeed, 'utf-8');
         localDb = JSON.parse(content);
       } else {
         localDb = getInitialData();
