@@ -7,8 +7,7 @@
 [![MongoDB](https://img.shields.io/badge/MongoDB-Atlas_&_Mongoose-47A248.svg?logo=mongodb)](https://www.mongodb.com/)
 [![Capacitor](https://img.shields.io/badge/Capacitor-Android_8.5-119EFF.svg?logo=capacitor)](https://capacitorjs.com/)
 [![Cloudinary](https://img.shields.io/badge/Cloudinary-Media_CDN-3448C5.svg?logo=cloudinary)](https://cloudinary.com/)
-[![Google Gemini](https://img.shields.io/badge/AI-Google_Gemini-8E75B2.svg?logo=google)](https://ai.google.dev/)
-[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![License: Proprietary](https://img.shields.io/badge/License-Proprietary-blue.svg)](#-license)
 
 > **SOF-UMER** is a production-grade, full-stack multi-category marketplace and property listing platform engineered with modern web technologies and cross-platform native mobile support. Tailored for Ethiopian and international commercial markets, the application features complete tri-lingual localization (English, Afaan Oromoo, Amharic), high-security authentication (JWT, TOTP 2FA, brute-force mitigation), dual retail & wholesale trading mechanics, wallet & receipt verification engines, and an extensive enterprise administrative control suite.
 
@@ -28,7 +27,7 @@
                                   +---------------------------------------+
                                   |         CLIENT INTERFACES             |
                                   |  - Responsive Web (React 19 + Vite)   |
-                                  |  - Progressive Web App (PWA)          |
+                                  |  - Mobile Web Experience              |
                                   |  - Android App (Capacitor 8.5 / TWA)  |
                                   +-------------------+-------------------+
                                                       |
@@ -46,10 +45,10 @@
                   |                                   |                                   |
                   v                                   v                                   v
 +-----------------+-----------------+ +---------------+---------------+ +-----------------+-----------------+
-|        PERSISTENCE LAYER          | |      EXTERNAL INTEGRATIONS    | |       AI & EMAIL SERVICES       |
-| - MongoDB Atlas (Primary DB)      | | - Cloudinary (Media Assets)   | | - Google Gemini AI SDK          |
-| - Mongoose Schemas & Bulk Sync    | | - Local FS / Persistent Disk  | | - Resend API / Nodemailer SMTP  |
-| - Fail-Safe Seed & Backup Engine  | | - QR Code Generator           | | - Automated Verification OTPs   |
+|        PERSISTENCE LAYER          | |      EXTERNAL INTEGRATIONS    | |       EMAIL & NOTIFICATIONS     |
+| - MongoDB Atlas (Primary DB)      | | - Cloudinary (Media Assets)   | | - Resend API / Nodemailer SMTP  |
+| - Mongoose Schemas & Bulk Sync    | | - Local FS / Persistent Disk  | | - Automated Verification OTPs   |
+| - Fail-Safe Seed & Storage Engine | | - QR Code Generator           | | - Password Recovery Engine      |
 +-----------------------------------+ +-------------------------------+ +-----------------------------------+
 ```
 
@@ -95,8 +94,7 @@
   3. **Amharic (`am` / አማርኛ)**
 - Dynamic in-app language switcher, localized UI strings, RTL/LTR layout stability, and a database-backed Translation Key Manager for live hot-reloading of translations without code rebuilds.
 
-### 7. 📱 Cross-Platform Mobile Delivery
-- **Progressive Web App (PWA)**: Offline asset caching, service workers, standalone display mode, and installable web manifests.
+### 7. 📱 Mobile Application Delivery
 - **Native Android App (Capacitor 8.5)**: Native Android bridge supporting SDK 21 through SDK 34, native hardware acceleration, and cleartext secure API communication.
 - **Trusted Web Activity (TWA)**: Google Play Store ready configuration via `twa-manifest.json` and Bubblewrap tooling.
 
@@ -114,12 +112,11 @@
 | **Backend Runtime** | **Node.js + Express 4.21** | High-performance RESTful API endpoints and static SPA serving |
 | **TypeScript** | **TypeScript 5.8** | Full-stack end-to-end type safety and strict schema validation |
 | **Database & ODM** | **MongoDB Atlas + Mongoose 9.8** | Distributed cloud NoSQL database with auto-reconnecting bulk sync |
-| **Storage Fallback** | **Atomic JSON File Store** | Multi-tiered persistence engine with automatic migration & backup snapshots |
+| **Storage Fallback** | **Atomic JSON File Store** | Multi-tiered persistence engine with automatic migration & snapshots |
 | **Media & CDN** | **Cloudinary v2.10** | High-resolution image/video upload, transformation, and HTTPS CDN delivery |
 | **Authentication** | **JWT (`jsonwebtoken`) + `bcryptjs`** | Signed token session management and cryptographic password hashing |
 | **Two-Factor Auth** | **`otplib` + `qrcode`** | TOTP authentication algorithm and QR code generator for 2FA onboarding |
 | **Email Delivery** | **Resend API + Nodemailer 9.0** | Transactional verification codes, password resets, and admin notifications |
-| **AI Integration** | **`@google/genai` (Gemini 2.0/2.5)** | Server-side AI intelligence for listing optimization and smart assistance |
 | **Mobile Platform** | **Capacitor 8.5 + Android Studio** | Cross-platform native mobile container and APK generation |
 
 ---
@@ -134,7 +131,7 @@ sof-umer/
 │   ├── am.json                # Amharic translation catalog
 │   ├── en.json                # English translation catalog
 │   └── om.json                # Afaan Oromoo translation catalog
-├── public/                    # Static public assets (Favicons, PWA icons, manifest)
+├── public/                    # Static public assets (Favicon, icons)
 ├── src/                       # React frontend source code
 │   ├── components/            # Modular feature components
 │   │   ├── AdminDashboard.tsx         # Enterprise admin management panel
@@ -195,7 +192,6 @@ Create a `.env` file in the root directory (or configure via your cloud provider
 | `SMTP_PORT` | Optional | SMTP connection port | `587` |
 | `SMTP_USER` | Optional | SMTP authentication username | `your-email@gmail.com` |
 | `SMTP_PASS` | Optional | SMTP app-specific password | `your-app-password` |
-| `GEMINI_API_KEY` | Optional | Google Gemini AI API key for AI features | `AIzaSy...` |
 
 ---
 
@@ -321,4 +317,4 @@ npm run cap:open
 
 ## 📄 License
 
-This project is licensed under the [MIT License](LICENSE). All rights reserved.
+This repository and its codebase are private and proprietary. All rights reserved.
