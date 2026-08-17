@@ -17,7 +17,7 @@
 ## 🌐 Live Platform & Links
 
 - **Production Domain**: [https://sofumerapp.com](https://sofumerapp.com)
-- **GitHub Repository**: [https://github.com/jemaljima/sof-umer](https://github.com/jemaljima/sof-umer)
+- **GitHub Repository**: [https://github.com/jemsij3/sof-umer](https://github.com/jemsij3/sof-umer)
 - **Developer Contact**: Jemal Jima ([jemaljima@gmail.com](mailto:jemaljima@gmail.com))
 
 ---
@@ -209,7 +209,7 @@ Create a `.env` file in the root directory (or configure via your cloud provider
 ### 2. Clone & Install Dependencies
 ```bash
 # Clone the repository
-git clone https://github.com/jemaljima/sof-umer.git
+git clone https://github.com/jemsij3/sof-umer.git
 
 # Navigate to project folder
 cd sof-umer
@@ -313,8 +313,8 @@ npm run cap:open
 **Jemal Jima**  
 *Full-Stack Software Engineer*  
 - **Email**: [jemaljima@gmail.com](mailto:jemaljima@gmail.com)  
-- **GitHub**: [@jemaljima](https://github.com/jemaljima)  
-- **Project Repository**: [https://github.com/jemaljima/sof-umer](https://github.com/jemaljima/sof-umer)  
+- **GitHub**: [@jemsij3](https://github.com/jemsij3)  
+- **Project Repository**: [https://github.com/jemsij3/sof-umer](https://github.com/jemsij3/sof-umer)  
 - **Platform Web**: [https://sofumerapp.com](https://sofumerapp.com)
 
 ---
