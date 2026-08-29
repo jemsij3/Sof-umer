@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { Property, PropertyOffer } from '../types';
 import { useApp } from '../lib/AppContext';
+import { ListingCard } from './ListingCard';
 import { 
   getEffectiveMajorCategory,
   getTranslatedCategoryName,
@@ -1380,50 +1381,20 @@ export default function PropertyDetails({
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {similarProperties.map((simProp) => (
-              <div
+              <ListingCard
                 key={simProp.id}
-                onClick={() => {
-                  if (onSelectProperty) onSelectProperty(simProp);
+                property={simProp}
+                onSelect={(p) => {
+                  if (onSelectProperty) onSelectProperty(p);
                   window.scrollTo({ top: 0, behavior: 'smooth' });
                 }}
-                className="bg-[#0d0d12]/90 rounded-3xl border border-white/5 overflow-hidden hover:border-amber-500/30 transition duration-300 shadow-xl cursor-pointer group flex flex-col justify-between"
-              >
-                <div>
-                  <div className="h-44 overflow-hidden relative">
-                    <img
-                      src={simProp.images[0] || ''}
-                      alt={simProp.title}
-                      className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
-                      referrerPolicy="no-referrer"
-                    />
-                    <div className="absolute top-3 left-3 bg-black/70 backdrop-blur-md px-2.5 py-1 rounded-full text-[9px] font-bold text-amber-500 border border-amber-500/20 uppercase">
-                      {simProp.propertyType}
-                    </div>
-                  </div>
-
-                  <div className="p-4 space-y-2">
-                    <h4 className="font-bold text-white text-sm line-clamp-1 group-hover:text-amber-500 transition">
-                      {simProp.title}
-                    </h4>
-
-                    <p className="text-xs font-mono text-amber-500 font-extrabold">
-                      {simProp.price.toLocaleString()} {simProp.currency || 'ETB'}
-                    </p>
-
-                    <p className="text-[11px] text-white/50 flex items-center gap-1">
-                      <MapPin className="w-3 h-3 text-amber-500 shrink-0" />
-                      <span className="truncate">{simProp.location}</span>
-                    </p>
-                  </div>
-                </div>
-
-                <div className="p-4 pt-0">
-                  <span className="text-[10px] font-bold text-white/40 group-hover:text-amber-500 uppercase tracking-wider flex items-center justify-between">
-                    <span>View Listing</span>
-                    <ExternalLink className="w-3.5 h-3.5" />
-                  </span>
-                </div>
-              </div>
+                favorites={favorites}
+                onToggleFav={toggleFavorite}
+                onReport={() => onOpenReportModal('property', simProp.id, simProp.title)}
+                t={t}
+                currentLanguage={currentLanguage}
+                viewMode="grid"
+              />
             ))}
           </div>
         </div>
@@ -1449,52 +1420,20 @@ export default function PropertyDetails({
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {sellerListings.filter(p => p.id !== property.id).slice(0, 4).map((sellerProp) => (
-              <div
+              <ListingCard
                 key={sellerProp.id}
-                onClick={() => {
-                  if (onSelectProperty) onSelectProperty(sellerProp);
+                property={sellerProp}
+                onSelect={(p) => {
+                  if (onSelectProperty) onSelectProperty(p);
                   window.scrollTo({ top: 0, behavior: 'smooth' });
                 }}
-                className="bg-[#0d0d12]/90 rounded-3xl border border-white/5 overflow-hidden hover:border-amber-500/30 transition duration-300 shadow-xl cursor-pointer group flex flex-col justify-between"
-              >
-                <div>
-                  <div className="h-44 overflow-hidden relative">
-                    <img
-                      src={sellerProp.images[0] || ''}
-                      alt={sellerProp.title}
-                      className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
-                      referrerPolicy="no-referrer"
-                    />
-                    {((sellerProp as any).sellingType) && (
-                      <div className="absolute top-3 left-3 bg-black/80 backdrop-blur-md px-2.5 py-1 rounded-full text-[9px] font-bold text-amber-400 border border-amber-500/20 uppercase">
-                        {(sellerProp as any).sellingType}
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="p-4 space-y-2">
-                    <h4 className="font-bold text-white text-sm line-clamp-1 group-hover:text-amber-500 transition">
-                      {sellerProp.title}
-                    </h4>
-
-                    <p className="text-xs font-mono text-amber-500 font-extrabold">
-                      {sellerProp.price.toLocaleString()} {sellerProp.currency || 'ETB'}
-                    </p>
-
-                    <p className="text-[11px] text-white/50 flex items-center gap-1">
-                      <MapPin className="w-3 h-3 text-amber-500 shrink-0" />
-                      <span className="truncate">{sellerProp.location}</span>
-                    </p>
-                  </div>
-                </div>
-
-                <div className="p-4 pt-0">
-                  <span className="text-[10px] font-bold text-white/40 group-hover:text-amber-500 uppercase tracking-wider flex items-center justify-between">
-                    <span>View Item</span>
-                    <ExternalLink className="w-3.5 h-3.5" />
-                  </span>
-                </div>
-              </div>
+                favorites={favorites}
+                onToggleFav={toggleFavorite}
+                onReport={() => onOpenReportModal('property', sellerProp.id, sellerProp.title)}
+                t={t}
+                currentLanguage={currentLanguage}
+                viewMode="grid"
+              />
             ))}
           </div>
         </div>

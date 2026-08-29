@@ -29,6 +29,7 @@ import {
 import { AllCategoriesModal } from './AllCategoriesModal';
 import { LocationSelectorModal } from './LocationSelectorModal';
 import { matchesLocationFilter } from '../lib/locationData';
+import { ListingCard, PropertyCard } from './ListingCard';
 
 function SofUmerCaveLogo({ className = "w-16 h-16" }: { className?: string }) {
   return (
@@ -1452,76 +1453,20 @@ export default function Marketplace({
             </div>
           ) : (
             <div className="mb-12">
-              <div className={viewMode === 'grid' ? 'grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8' : 'grid grid-cols-1 gap-6'}>
-                {finalFilteredProperties.slice(0, visibleCount).map(prop => {
-                  const isPremium = prop.isFeatured || prop.isRecommended;
-                  if (viewMode === 'list') {
-                    return (
-                      <div key={prop.id} className="bg-[#0d0d12]/50 rounded-3xl border border-white/5 hover:border-white/10 transition-all duration-500 overflow-hidden shadow-xl flex flex-col md:flex-row text-left">
-                        <div className="md:w-1/3 relative h-56 md:h-auto overflow-hidden group shrink-0">
-                          <img
-                            src={prop.imageUrl}
-                            alt={extractString(prop.title, currentLanguage)}
-                            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                            referrerPolicy="no-referrer"
-                          />
-                          {isPremium && (
-                            <div className="absolute top-4 left-4 bg-gradient-to-r from-amber-400 to-amber-600 text-black font-black text-[9px] uppercase tracking-wider px-3 py-1.5 rounded-full shadow-lg">
-                              Premium
-                            </div>
-                          )}
-                        </div>
-                        <div className="flex-1 p-6 flex flex-col justify-between">
-                          <div>
-                            <div className="flex items-center gap-2 text-white/40 text-[10px] uppercase font-bold tracking-wider mb-2">
-                              <span className="bg-white/5 px-2 py-1 rounded">{prop.propertyType || 'Item'}</span>
-                              <span>•</span>
-                              <span className="flex items-center gap-1"><MapPin className="w-3 h-3 text-amber-500" /> {extractString(prop.location, currentLanguage)}</span>
-                            </div>
-                            <h4 className="text-lg font-bold font-serif text-white hover:text-amber-400 cursor-pointer transition line-clamp-1" onClick={() => onSelectProperty(prop)}>
-                              {extractString(prop.title, currentLanguage)}
-                            </h4>
-                            <p className="text-white/60 text-xs mt-2 line-clamp-2 leading-relaxed font-light">
-                              {extractString(prop.description, currentLanguage)}
-                            </p>
-                          </div>
-                          <div className="mt-6 pt-4 border-t border-white/5 flex items-center justify-between">
-                            <div className="text-amber-400 font-extrabold text-lg tracking-wide">
-                              {prop.currency} {prop.price.toLocaleString()}
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <button
-                                onClick={() => toggleFavorite(prop.id)}
-                                className="p-2.5 rounded-xl bg-white/5 border border-white/5 text-white/70 hover:bg-white/10 transition cursor-pointer"
-                              >
-                                <Heart className={`w-4 h-4 ${favorites.includes(prop.id) ? 'fill-rose-500 text-rose-500' : ''}`} />
-                              </button>
-                              <button
-                                onClick={() => onSelectProperty(prop)}
-                                className="px-4 py-2 bg-[#F5F5F4] hover:bg-zinc-200 text-[#050505] text-xs font-bold uppercase tracking-wider rounded-xl transition cursor-pointer flex items-center gap-1"
-                              >
-                                Details <ChevronRight className="w-3.5 h-3.5" />
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  }
-
-                  return (
-                    <PropertyCard
-                      key={prop.id}
-                      property={prop}
-                      onSelect={onSelectProperty}
-                      favorites={favorites}
-                      onToggleFav={toggleFavorite}
-                      onReport={() => onOpenReportModal('property', prop.id, prop.title)}
-                      t={t}
-                      currentLanguage={currentLanguage}
-                    />
-                  );
-                })}
+              <div className={viewMode === 'grid' ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8' : 'grid grid-cols-1 gap-6'}>
+                {finalFilteredProperties.slice(0, visibleCount).map(prop => (
+                  <ListingCard
+                    key={prop.id}
+                    property={prop}
+                    onSelect={onSelectProperty}
+                    favorites={favorites}
+                    onToggleFav={toggleFavorite}
+                    onReport={() => onOpenReportModal('property', prop.id, prop.title)}
+                    t={t}
+                    currentLanguage={currentLanguage}
+                    viewMode={viewMode}
+                  />
+                ))}
               </div>
 
               {/* Load More Button */}
@@ -1529,7 +1474,7 @@ export default function Marketplace({
                 <div className="mt-10 text-center">
                   <button
                     onClick={() => setVisibleCount(prev => prev + 6)}
-                    className="inline-flex items-center gap-2.5 bg-gradient-to-r from-amber-400 to-amber-600 text-black font-bold uppercase tracking-widest px-8 py-4 rounded-2xl text-xs transition duration-300 hover:opacity-95 cursor-pointer shadow-lg hover:scale-[1.01]"
+                    className="inline-flex items-center gap-2.5 bg-gradient-to-r from-amber-400 to-amber-600 hover:from-amber-300 hover:to-amber-500 text-black font-extrabold uppercase tracking-widest px-8 py-4 rounded-2xl text-xs transition duration-300 hover:opacity-95 cursor-pointer shadow-lg shadow-amber-500/10 hover:scale-[1.01]"
                   >
                     Load More Items <ArrowRight className="w-4 h-4 text-black animate-pulse" />
                   </button>
@@ -1820,9 +1765,9 @@ export default function Marketplace({
                     <span className="flex items-center gap-2"><Sparkles className="w-5 h-5 text-amber-500" /> {t('featured_properties')}</span>
                     <span className="text-[9px] uppercase font-bold tracking-[0.25em] text-white/30">{t('verified_select_picks')}</span>
                   </h3>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
                     {featuredProperties.map(prop => (
-                      <PropertyCard
+                      <ListingCard
                         key={prop.id}
                         property={prop}
                         onSelect={onSelectProperty}
@@ -1830,6 +1775,7 @@ export default function Marketplace({
                         onToggleFav={toggleFavorite}
                         onReport={() => onOpenReportModal('property', prop.id, prop.title)}
                         t={t} currentLanguage={currentLanguage}
+                        viewMode="grid"
                       />
                     ))}
                   </div>
@@ -1843,9 +1789,9 @@ export default function Marketplace({
                     <span className="flex items-center gap-2">{t('personalized_recommendation')}</span>
                     <span className="text-[9px] uppercase font-bold tracking-[0.25em] text-white/30">{t('curated_match')}</span>
                   </h3>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
                     {recommendedProperties.map(prop => (
-                      <PropertyCard
+                      <ListingCard
                         key={prop.id}
                         property={prop}
                         onSelect={onSelectProperty}
@@ -1853,6 +1799,7 @@ export default function Marketplace({
                         onToggleFav={toggleFavorite}
                         onReport={() => onOpenReportModal('property', prop.id, prop.title)}
                         t={t} currentLanguage={currentLanguage}
+                        viewMode="grid"
                       />
                     ))}
                   </div>
@@ -1866,9 +1813,9 @@ export default function Marketplace({
                     <span>{t('latest_properties') || 'All Listings'}</span>
                     <span className="text-[9px] uppercase font-bold tracking-[0.25em] text-white/30">{t('recent_offers')}</span>
                   </h3>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
                     {latestProperties.map(prop => (
-                      <PropertyCard
+                      <ListingCard
                         key={prop.id}
                         property={prop}
                         onSelect={onSelectProperty}
@@ -1876,6 +1823,7 @@ export default function Marketplace({
                         onToggleFav={toggleFavorite}
                         onReport={() => onOpenReportModal('property', prop.id, prop.title)}
                         t={t} currentLanguage={currentLanguage}
+                        viewMode="grid"
                       />
                     ))}
                   </div>
@@ -1945,161 +1893,6 @@ export default function Marketplace({
         }}
         t={t}
       />
-    </div>
-  );
-}
-
-// PropertyCard Subcomponent
-interface PropertyCardProps {
-  key?: React.Key;
-  property: Property;
-  onSelect: (prop: Property) => void;
-  favorites: string[];
-  onToggleFav: (id: string) => void;
-  onReport: () => void;
-  t: (key: string) => string;
-  currentLanguage: string;
-}
-
-function PropertyCard({ property, onSelect, favorites, onToggleFav, onReport, t, currentLanguage }: PropertyCardProps) {
-  const isFavorite = favorites.includes(property.id);
-  const isVerifiedSupplier = property.verificationStatus === 'verified' || property.isVerifiedListing === true || property.ownerId === 'usr-admin';
-  const sellingType = (property as any).sellingType || 'Retail';
-
-  return (
-    <div className="bg-[#0d0d12]/80 rounded-3xl overflow-hidden border border-white/5 hover:border-amber-500/30 transition-all duration-300 flex flex-col group relative shadow-lg hover:shadow-2xl">
-      {/* Category & Selling Type Badges */}
-      <div className="absolute top-4 left-4 z-10 flex flex-wrap gap-1.5 items-center max-w-[75%]">
-        <span className={`text-[9px] font-black uppercase tracking-wider px-2.5 py-1 rounded-xl shadow-md backdrop-blur-md ${
-          sellingType === 'Wholesale' ? 'bg-amber-500 text-black border border-amber-400' :
-          sellingType === 'Retail & Wholesale' ? 'bg-gradient-to-r from-amber-500 to-emerald-500 text-black border border-amber-300' :
-          'bg-blue-600/90 text-white border border-blue-400/30'
-        }`}>
-          {sellingType === 'Wholesale' ? '📦 Wholesale' :
-           sellingType === 'Retail & Wholesale' ? '🛒📦 Retail & Wholesale' :
-           '🛒 Retail'}
-        </span>
-
-        {isVerifiedSupplier && (
-          <span className="text-[9px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-xl shadow-md bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 backdrop-blur-md">
-            ✓ Verified
-          </span>
-        )}
-
-        {((property as any).isNegotiable === true || String((property as any).negotiable).toLowerCase() === 'yes') && (
-          <span className="text-[9px] font-bold uppercase tracking-wider px-2 py-1 rounded-xl shadow-md bg-amber-500/20 text-amber-300 border border-amber-500/30 backdrop-blur-md">
-            🤝 {getTranslatedOption('Negotiable', currentLanguage) || 'Negotiable'}
-          </span>
-        )}
-      </div>
-
-      {/* Save favorite toggle */}
-      <button
-        onClick={(e) => {
-          e.stopPropagation();
-          onToggleFav(property.id);
-        }}
-        className="absolute top-4 right-4 z-10 p-2.5 rounded-xl bg-black/60 hover:bg-black/85 backdrop-blur-md border border-white/5 transition duration-300 group cursor-pointer"
-        aria-label="Toggle Favorite"
-      >
-        <Heart className={`w-4 h-4 transition duration-300 ${isFavorite ? 'text-rose-500 fill-rose-500 scale-110' : 'text-white/60 group-hover:text-white'}`} />
-      </button>
-
-      {/* Listing Image */}
-      <div className="h-56 overflow-hidden relative bg-[#0c0c10] cursor-pointer" onClick={() => onSelect(property)}>
-        <img
-          src={property.images?.[0] || 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?auto=format&fit=crop&w=800&q=80'}
-          alt={extractString(property.title, currentLanguage) || 'Listing Image'}
-          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-          referrerPolicy="no-referrer"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent pointer-events-none" />
-      </div>
-
-      {/* Property Details Text */}
-      <div className="p-5 flex-1 flex flex-col justify-between">
-        <div>
-          {/* Price & Currency */}
-          <div className="mb-2">
-            <div className="flex justify-between items-baseline">
-              <p className="text-xl font-bold text-[#F5F5F4] tracking-tight font-mono">
-                {(property.price || 0).toLocaleString()} <span className="text-amber-500/80 text-xs font-bold uppercase tracking-wider ml-1">{property.currency || 'ETB'}</span>
-              </p>
-              <span className="text-[9px] font-black text-white/50 border border-white/5 bg-white/5 px-2.5 py-0.5 rounded-full uppercase tracking-wider">
-                {property.propertyType 
-                  ? getTranslatedPropertyType(extractString(property.propertyType, currentLanguage), currentLanguage) 
-                  : getTranslatedCategoryName(extractString(property.majorCategory, currentLanguage), currentLanguage)}
-              </span>
-            </div>
-
-            {/* Wholesale Price / MOQ sub-line */}
-            {(sellingType === 'Wholesale' || sellingType === 'Retail & Wholesale') && (property as any).wholesalePrice && (
-              <div className="flex items-center gap-2 mt-1 text-[11px] font-mono">
-                <span className="text-emerald-400 font-extrabold">
-                  Wholesale: {Number((property as any).wholesalePrice).toLocaleString()} {property.currency || 'ETB'} / {((property as any).wholesaleUnit || 'Piece').replace(/\s*\(.*\)/, '')}
-                </span>
-                {(property as any).minimumOrderQuantity && (
-                  <span className="text-white/40 text-[10px]">
-                    (MOQ: {(property as any).minimumOrderQuantity})
-                  </span>
-                )}
-              </div>
-            )}
-          </div>
-
-          {/* Title */}
-          <h4
-            onClick={() => onSelect(property)}
-            className="font-serif text-base text-[#F5F5F4] hover:text-amber-500 leading-snug mb-2 cursor-pointer line-clamp-1 transition duration-300 font-semibold"
-          >
-            {extractString(property.title, currentLanguage)}
-          </h4>
-
-          {/* Seller / Business Name & Location */}
-          <div className="space-y-1 mb-4">
-            <p className="text-[11px] text-amber-400/90 font-semibold flex items-center gap-1 font-mono">
-              <Building className="w-3 h-3 text-amber-500 shrink-0" />
-              <span className="truncate">{(property as any).ownerBusinessName || property.ownerName || 'Verified Seller'}</span>
-              {isVerifiedSupplier && <CheckCircle2 className="w-3 h-3 text-emerald-400 shrink-0" />}
-            </p>
-            <p className="text-xs text-[#F5F5F4]/50 flex items-center gap-1.5 font-light">
-              <MapPin className="w-3.5 h-3.5 text-amber-500 shrink-0" />
-              <span className="truncate">{extractString(property.location, currentLanguage)}</span>
-            </p>
-          </div>
-        </div>
-
-        {/* Action Row */}
-        <div className="border-t border-white/5 pt-3.5 mt-auto">
-          <div className="flex items-center justify-between gap-2">
-            <button
-              onClick={onReport}
-              className="p-2 text-white/40 hover:text-red-400 rounded-xl hover:bg-white/5 transition cursor-pointer shrink-0"
-              title="Report listing"
-            >
-              <ShieldAlert className="w-4 h-4" />
-            </button>
-
-            <div className="flex items-center gap-1.5 flex-1 justify-end min-w-0">
-              {(sellingType === 'Wholesale' || sellingType === 'Retail & Wholesale') && (
-                <button
-                  onClick={() => onSelect(property)}
-                  className="bg-amber-500/15 hover:bg-amber-500/25 text-amber-400 font-bold px-3 py-2 rounded-xl text-[10px] uppercase tracking-wider transition cursor-pointer border border-amber-500/30 truncate"
-                >
-                  Quote
-                </button>
-              )}
-
-              <button
-                onClick={() => onSelect(property)}
-                className="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black font-bold px-3.5 py-2 rounded-xl text-[10px] uppercase tracking-wider transition-all duration-300 hover:scale-[1.02] cursor-pointer shadow-md shadow-amber-500/5 truncate"
-              >
-                {sellingType === 'Wholesale' ? 'Contact Supplier' : 'Contact Seller'}
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
     </div>
   );
 }
