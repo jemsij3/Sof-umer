@@ -239,7 +239,8 @@ export function ListingCard({
   const formattedPrice = (property.price || 0).toLocaleString();
   const currencyCode = property.currency || 'ETB';
   const titleText = extractString(property.title, currentLanguage) || 'Untitled Listing';
-  const locationText = extractString(property.location, currentLanguage) || 'Ethiopia';
+  const rawLocation = (typeof property.location === 'string' ? property.location : extractString(property.location, currentLanguage))?.trim();
+  const locationText = rawLocation || 'Location not provided';
   const categoryLabel = property.propertyType 
     ? getTranslatedPropertyType(extractString(property.propertyType, currentLanguage), currentLanguage) 
     : getTranslatedCategoryName(extractString(property.majorCategory || 'Properties', currentLanguage), currentLanguage);

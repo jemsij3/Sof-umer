@@ -9,7 +9,6 @@ import {
   getTranslatedFieldLabel,
   getTranslatedOption,
   getTranslatedCondition,
-  getTranslatedLocation,
   getTranslatedPropertyType,
   extractString
 } from '../lib/categoriesData';
@@ -175,37 +174,24 @@ export default function PropertyDetails({
     }
   };
 
-  // Construct complete address combining all location parameters (e.g. City, Region, Building, Landmark)
-  const fullAddressText = useMemo(() => {
-    const parts: string[] = [];
-    const mainLoc = getTranslatedLocation(property.location, currentLanguage);
-    if (mainLoc && mainLoc.trim()) parts.push(mainLoc.trim());
-    if (property.address && property.address.trim() && !parts.some(p => p.toLowerCase().includes(property.address!.toLowerCase()))) {
-      parts.push(property.address.trim());
+  // User-provided location only (no guessing, combining, or auto-generating city/region/country)
+  const rawLocation = useMemo(() => {
+    if (typeof property.location === 'string') {
+      return property.location.trim();
     }
-    if (property.landmark && property.landmark.trim() && !parts.some(p => p.toLowerCase().includes(property.landmark!.toLowerCase()))) {
-      parts.push(property.landmark.trim());
-    }
-    if (property.city && property.city.trim() && !parts.some(p => p.toLowerCase().includes(property.city!.toLowerCase()))) {
-      parts.push(property.city.trim());
-    }
-    if (property.region && property.region.trim() && !parts.some(p => p.toLowerCase().includes(property.region!.toLowerCase()))) {
-      parts.push(property.region.trim());
-    }
-    return parts.join(', ');
-  }, [property.location, property.address, property.landmark, property.city, property.region, currentLanguage]);
+    return extractString(property.location, currentLanguage)?.trim() || '';
+  }, [property.location, currentLanguage]);
 
-  // Construct precise Google Maps query link
+  const displayLocation = rawLocation || 'Location not provided';
+
+  // Construct Google Maps query link directly from user-provided location
   const googleMapsUrl = useMemo(() => {
     if (property.latitude && property.longitude) {
       return `https://www.google.com/maps/search/?api=1&query=${property.latitude},${property.longitude}`;
     }
-    const queryBase = fullAddressText || getTranslatedLocation(property.location, currentLanguage);
-    const finalQuery = queryBase.toLowerCase().includes('ethiopia')
-      ? queryBase
-      : (queryBase ? `${queryBase}, Ethiopia` : 'Ethiopia');
-    return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(finalQuery)}`;
-  }, [property.latitude, property.longitude, fullAddressText, property.location, currentLanguage]);
+    if (!rawLocation) return '';
+    return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(rawLocation)}`;
+  }, [property.latitude, property.longitude, rawLocation]);
 
   const isFavorite = favorites.includes(property.id);
 
@@ -605,7 +591,7 @@ export default function PropertyDetails({
 
             <p className="text-sm text-[#F5F5F4]/60 flex items-center gap-1.5 pt-1">
               <MapPin className="w-4 h-4 text-amber-500 shrink-0" />
-              <span>{getTranslatedLocation(property.location, currentLanguage)}</span>
+              <span>{displayLocation}</span>
             </p>
           </div>
 
@@ -876,13 +862,8 @@ export default function PropertyDetails({
             <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
               <h3 className="text-lg font-serif font-bold text-white flex items-center gap-2">
                 <MapPin className="w-5 h-5 text-amber-500 shrink-0" />
-                <span>{t('location_on_map')}</span>
+                <span>{getTranslatedFieldLabel('Location', currentLanguage) || t('location')}</span>
               </h3>
-              {(property.region || property.city) && (
-                <span className="text-xs text-white/50 font-medium">
-                  {[property.city, property.region].filter(Boolean).join(', ')}
-                </span>
-              )}
             </div>
 
             {/* Map Canvas Container */}
@@ -894,32 +875,34 @@ export default function PropertyDetails({
               <div className="absolute top-2/3 left-0 w-full h-3 bg-white/5"></div>
               <div className="absolute left-2/3 top-0 w-3 h-full bg-white/5"></div>
 
-              {/* Centered Map Pin with Ping Animation (Clean - No overlapping text banner inside canvas) */}
+              {/* Centered Map Pin */}
               <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center pointer-events-none z-10">
                 <div className="relative flex items-center justify-center">
                   <div className="absolute w-12 h-12 rounded-full bg-amber-500/25 animate-ping"></div>
-                  <div className="relative bg-gradient-to-tr from-amber-500 to-amber-600 text-black p-3.5 rounded-full shadow-2xl border-2 border-[#0d0d12] animate-bounce">
+                  <div className="relative bg-gradient-to-tr from-amber-500 to-amber-600 text-black p-3.5 rounded-full shadow-2xl border-2 border-[#0d0d12]">
                     <MapPin className="w-6 h-6 text-black" />
                   </div>
                 </div>
-                <span className="mt-2 text-[10px] font-black uppercase tracking-widest text-amber-400 bg-black/90 backdrop-blur-md px-3 py-1 rounded-full border border-amber-500/30 shadow-lg">
-                  GPS Pin
+                <span className="mt-2 text-[10px] font-black uppercase tracking-widest text-amber-400 bg-black/90 backdrop-blur-md px-3 py-1 rounded-full border border-amber-500/30 shadow-lg max-w-[240px] truncate text-center">
+                  {displayLocation}
                 </span>
               </div>
 
-              {/* Floating Google Maps Button */}
-              <a
-                href={googleMapsUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="absolute top-3 right-3 bg-black/85 hover:bg-black text-amber-400 hover:text-amber-300 text-xs font-bold px-3 py-2 rounded-xl border border-amber-500/30 backdrop-blur-md shadow-lg flex items-center gap-1.5 transition z-20 cursor-pointer"
-              >
-                <Globe className="w-3.5 h-3.5 text-amber-400" />
-                <span>Open Google Maps</span>
-              </a>
+              {/* Floating Google Maps Button - only if a location was provided */}
+              {googleMapsUrl && (
+                <a
+                  href={googleMapsUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="absolute top-3 right-3 bg-black/85 hover:bg-black text-amber-400 hover:text-amber-300 text-xs font-bold px-3 py-2 rounded-xl border border-amber-500/30 backdrop-blur-md shadow-lg flex items-center gap-1.5 transition z-20 cursor-pointer"
+                >
+                  <Globe className="w-3.5 h-3.5 text-amber-400" />
+                  <span>Open Google Maps</span>
+                </a>
+              )}
             </div>
 
-            {/* Address Banner Container - Positioned Safely Outside / Below Map Container */}
+            {/* Location Banner Container */}
             <div className="mt-4 bg-[#12121a] border border-white/10 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-md">
               <div className="flex items-start gap-3 min-w-0">
                 <div className="p-2.5 bg-amber-500/10 text-amber-400 rounded-xl border border-amber-500/20 shrink-0 mt-0.5">
@@ -927,47 +910,30 @@ export default function PropertyDetails({
                 </div>
                 <div className="min-w-0 flex-1">
                   <span className="text-[10px] uppercase font-extrabold tracking-widest text-amber-500/80 block mb-0.5">
-                    Property Location Address
+                    {getTranslatedFieldLabel('Location', currentLanguage) || t('location')}
                   </span>
                   <p className="text-sm font-bold text-white leading-relaxed break-words">
-                    {fullAddressText || getTranslatedLocation(property.location, currentLanguage)}
+                    {displayLocation}
                   </p>
-                  {(property.region || property.city || property.landmark || property.address) && (
-                    <div className="flex flex-wrap gap-1.5 mt-2">
-                      {property.landmark && (
-                        <span className="px-2.5 py-0.5 bg-amber-500/10 border border-amber-500/20 text-amber-300 text-[10px] font-bold rounded-md">
-                          Landmark: {property.landmark}
-                        </span>
-                      )}
-                      {property.city && (
-                        <span className="px-2.5 py-0.5 bg-white/5 border border-white/10 text-white/70 text-[10px] font-bold rounded-md">
-                          City: {property.city}
-                        </span>
-                      )}
-                      {property.region && (
-                        <span className="px-2.5 py-0.5 bg-white/5 border border-white/10 text-white/70 text-[10px] font-bold rounded-md">
-                          Region: {property.region}
-                        </span>
-                      )}
-                    </div>
-                  )}
                 </div>
               </div>
 
-              <div className="flex items-center gap-2 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-white/5">
-                <button
-                  type="button"
-                  onClick={() => {
-                    navigator.clipboard.writeText(fullAddressText || getTranslatedLocation(property.location, currentLanguage));
-                    setAddressCopied(true);
-                    setTimeout(() => setAddressCopied(false), 2000);
-                  }}
-                  className="px-3.5 py-2 bg-white/5 hover:bg-white/10 text-white/90 hover:text-white border border-white/10 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer"
-                >
-                  <Copy className="w-3.5 h-3.5 text-amber-400" />
-                  <span>{addressCopied ? 'Copied!' : 'Copy Address'}</span>
-                </button>
-              </div>
+              {rawLocation && (
+                <div className="flex items-center gap-2 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-white/5">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      navigator.clipboard.writeText(rawLocation);
+                      setAddressCopied(true);
+                      setTimeout(() => setAddressCopied(false), 2000);
+                    }}
+                    className="px-3.5 py-2 bg-white/5 hover:bg-white/10 text-white/90 hover:text-white border border-white/10 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer"
+                  >
+                    <Copy className="w-3.5 h-3.5 text-amber-400" />
+                    <span>{addressCopied ? 'Copied!' : 'Copy Location'}</span>
+                  </button>
+                </div>
+              )}
             </div>
           </div>
 

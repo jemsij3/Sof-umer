@@ -3806,7 +3806,7 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
                                 )}
                               </div>
                               <p className="text-xs text-white/50 font-light mt-1 flex flex-wrap items-center gap-1.5">
-                                <span className="flex items-center gap-1"><MapPin className="w-3.5 h-3.5 text-amber-500" /> {extractString(p.location)}</span>
+                                <span className="flex items-center gap-1"><MapPin className="w-3.5 h-3.5 text-amber-500" /> {extractString(p.location) || 'Location not provided'}</span>
                                 <span>•</span>
                                 <span className="text-white/90 font-semibold">Owner: {extractString(p.ownerName) || 'Unknown Owner'}</span>
                                 <span className="text-white/40">({p.contactEmail || 'No Email'}, {p.contactPhone || 'No Phone'})</span>

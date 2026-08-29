@@ -1361,7 +1361,7 @@ export default function UserDashboard({
                                   {statusBadge}
                                 </div>
                                 <p className="text-[11px] text-amber-500 font-bold mt-1 font-mono">{Number(p.price).toLocaleString()} ETB</p>
-                                <p className="text-[10px] text-white/30 mt-0.5">{p.majorCategory} • {p.propertyType} • {p.location}</p>
+                                <p className="text-[10px] text-white/30 mt-0.5">{p.majorCategory} • {p.propertyType} • {p.location || 'Location not provided'}</p>
                               </div>
                             </div>
 
