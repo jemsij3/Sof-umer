@@ -828,9 +828,14 @@ async function syncCollectionToMongo<T extends Record<string, any>>(
   items: T[],
   idKey: string = 'id'
 ) {
-  if (!isMongoConnected || !items || items.length === 0) return;
+  if (!isMongoConnected) return;
   try {
-    const bulkOps = items.map(item => {
+    if (!items || !Array.isArray(items) || items.length === 0) {
+      await model.deleteMany({});
+      return;
+    }
+    const currentIds = items.map(item => item[idKey]).filter(id => id !== undefined && id !== null && id !== '');
+    const bulkOps: any[] = items.map(item => {
       const filter: Record<string, any> = {};
       filter[idKey] = item[idKey];
       return {
@@ -841,6 +846,13 @@ async function syncCollectionToMongo<T extends Record<string, any>>(
         }
       };
     });
+    if (currentIds.length > 0) {
+      bulkOps.push({
+        deleteMany: {
+          filter: { [idKey]: { $nin: currentIds } }
+        }
+      });
+    }
     await model.bulkWrite(bulkOps as any, { ordered: false });
   } catch (err) {
     console.error(`[Storage] Error syncing collection ${model.modelName} to MongoDB:`, err);
@@ -901,29 +913,6 @@ async function fetchAppSettings(): Promise<any> {
   return doc;
 }
 
-function mergeCollection<T extends Record<string, any>>(mongoItems: T[], localItems: T[], idKey: string = 'id'): T[] {
-  const map = new Map<string, T>();
-  if (Array.isArray(localItems)) {
-    for (const item of localItems) {
-      if (item && item[idKey]) map.set(String(item[idKey]), item);
-    }
-  }
-  if (Array.isArray(mongoItems)) {
-    for (const item of mongoItems) {
-      if (item && item[idKey]) {
-        const existing = map.get(String(item[idKey]));
-        if (!existing) {
-          map.set(String(item[idKey]), item);
-        } else {
-          // Primary MongoDB database document overrides static local fallback
-          map.set(String(item[idKey]), { ...existing, ...item });
-        }
-      }
-    }
-  }
-  return Array.from(map.values());
-}
-
 async function loadFromMongo(): Promise<boolean> {
   if (!isMongoConnected) return false;
   try {
@@ -978,29 +967,40 @@ async function loadFromMongo(): Promise<boolean> {
     ]);
 
     const prevLocal: any = localDb || {};
+    const defaultData = getInitialData();
 
     localDb = {
-      users: mergeCollection(users, prevLocal.users || [], 'id'),
-      properties: mergeCollection(properties, prevLocal.properties || [], 'id'),
-      paymentMethods: mergeCollection(paymentMethods, prevLocal.paymentMethods || [], 'id'),
-      receipts: mergeCollection(receipts, prevLocal.receipts || [], 'id'),
-      inquiries: mergeCollection(inquiries, prevLocal.inquiries || [], 'id'),
-      advertisements: mergeCollection(advertisements, prevLocal.advertisements || [], 'id'),
-      reports: mergeCollection(reports, prevLocal.reports || [], 'id'),
-      notifications: mergeCollection(notifications, prevLocal.notifications || [], 'id'),
-      categories: mergeCollection(categories, prevLocal.categories || [], 'id'),
-      appFeatures: mergeCollection(appFeatures, prevLocal.appFeatures || [], 'id'),
-      jobOpenings: mergeCollection(jobOpenings, prevLocal.jobOpenings || [], 'id'),
-      supportTickets: mergeCollection(supportTickets, prevLocal.supportTickets || [], 'id'),
-      offers: mergeCollection(offers, prevLocal.offers || [], 'id'),
-      languages: mergeCollection(languages, prevLocal.languages || [], 'code'),
-      translations: mergeCollection(translations, prevLocal.translations || [], 'key'),
-      faqs: mergeCollection(faqs, prevLocal.faqs || [], 'id'),
-      reviews: mergeCollection(reviews, prevLocal.reviews || [], 'id'),
-      appSettings: appSettingsDoc && appSettingsDoc.data ? appSettingsDoc.data : (prevLocal.appSettings || getInitialData().appSettings)
+      users: (Array.isArray(users) && users.length > 0) ? users : (prevLocal.users || defaultData.users),
+      properties: Array.isArray(properties) ? properties : [],
+      paymentMethods: (Array.isArray(paymentMethods) && paymentMethods.length > 0) ? paymentMethods : (prevLocal.paymentMethods || defaultData.paymentMethods),
+      receipts: Array.isArray(receipts) ? receipts : [],
+      inquiries: Array.isArray(inquiries) ? inquiries : [],
+      advertisements: Array.isArray(advertisements) ? advertisements : [],
+      reports: Array.isArray(reports) ? reports : [],
+      notifications: Array.isArray(notifications) ? notifications : [],
+      categories: (Array.isArray(categories) && categories.length > 0) ? categories : (prevLocal.categories || defaultData.categories),
+      appFeatures: (Array.isArray(appFeatures) && appFeatures.length > 0) ? appFeatures : (prevLocal.appFeatures || defaultData.appFeatures),
+      jobOpenings: Array.isArray(jobOpenings) ? jobOpenings : [],
+      supportTickets: Array.isArray(supportTickets) ? supportTickets : [],
+      offers: Array.isArray(offers) ? offers : [],
+      languages: (Array.isArray(languages) && languages.length > 0) ? languages : (prevLocal.languages || defaultData.languages),
+      translations: (Array.isArray(translations) && translations.length > 0) ? translations : (prevLocal.translations || defaultData.translations),
+      faqs: (Array.isArray(faqs) && faqs.length > 0) ? faqs : (prevLocal.faqs || defaultData.faqs),
+      reviews: Array.isArray(reviews) ? reviews : [],
+      appSettings: appSettingsDoc && appSettingsDoc.data ? appSettingsDoc.data : (prevLocal.appSettings || defaultData.appSettings)
     } as any;
 
-    console.log(`[Storage] Successfully loaded & merged from MongoDB: ${localDb.users.length} users, ${localDb.properties.length} properties.`);
+    // Immediately persist loaded MongoDB state to local disk fallback so they are in sync
+    try {
+      const jsonString = JSON.stringify(localDb, null, 2);
+      const tempFile = `${DB_FILE}.tmp`;
+      await fs.writeFile(tempFile, jsonString, 'utf-8');
+      await fs.rename(tempFile, DB_FILE);
+    } catch (diskErr) {
+      console.warn('[Storage] Could not write loaded Mongo state to disk:', diskErr);
+    }
+
+    console.log(`[Storage] Successfully loaded from MongoDB: ${localDb.users.length} users, ${localDb.properties.length} properties.`);
     return true;
   } catch (err) {
     console.error('[Storage] Error loading from MongoDB:', err);
@@ -3183,6 +3183,13 @@ async function startServer() {
     });
 
     localDb.users.splice(idx, 1);
+    if (isMongoConnected) {
+      try {
+        await UserModel.deleteOne({ id });
+      } catch (err) {
+        console.error('[Storage] Error deleting user in Mongo:', err);
+      }
+    }
     await saveDb();
     res.json({ success: true, message: 'User deleted successfully.' });
   });
@@ -4029,10 +4036,53 @@ async function startServer() {
         return res.status(403).json({ error: 'You are not authorized to delete this listing.' });
       }
 
+      // 1. Remove from local in-memory DB
       localDb.properties.splice(idx, 1);
+
+      // 2. Cascade delete dependent inquiries, reviews, offers
+      if (Array.isArray(localDb.inquiries)) {
+        localDb.inquiries = localDb.inquiries.filter(i => (i as any).propertyId !== id && (i as any).relatedPropertyId !== id);
+      }
+      if (Array.isArray((localDb as any).reviews)) {
+        (localDb as any).reviews = (localDb as any).reviews.filter((r: any) => r.propertyId !== id);
+      }
+      if (Array.isArray((localDb as any).offers)) {
+        (localDb as any).offers = (localDb as any).offers.filter((o: any) => o.propertyId !== id);
+      }
+
+      // 3. Directly delete from MongoDB Atlas immediately
+      if (isMongoConnected) {
+        try {
+          await PropertyModel.deleteOne({ id });
+          await InquiryModel.deleteMany({ $or: [{ propertyId: id }, { relatedPropertyId: id }] });
+          await ReviewModel.deleteMany({ propertyId: id });
+          await OfferModel.deleteMany({ propertyId: id });
+        } catch (mErr) {
+          console.error('[Storage] Error during direct MongoDB property deletion:', mErr);
+        }
+      }
+
+      // 4. Save to persistent storage and trigger background sync
       await saveDb();
-      return res.json({ success: true, message: 'Listing deleted successfully.' });
+      return res.json({ success: true, message: 'Listing deleted permanently.', id });
     }
+
+    // Fallback: If not found in local memory, still delete from MongoDB in case of desync
+    if (isMongoConnected) {
+      try {
+        const delRes = await PropertyModel.deleteOne({ id });
+        if (delRes.deletedCount > 0) {
+          await InquiryModel.deleteMany({ $or: [{ propertyId: id }, { relatedPropertyId: id }] });
+          await ReviewModel.deleteMany({ propertyId: id });
+          await OfferModel.deleteMany({ propertyId: id });
+          await saveDb();
+          return res.json({ success: true, message: 'Listing deleted from database.', id });
+        }
+      } catch (mErr) {
+        console.error('[Storage] Error during fallback MongoDB deletion:', mErr);
+      }
+    }
+
     res.status(404).json({ error: 'Listing not found' });
   });
 
@@ -4196,26 +4246,6 @@ async function startServer() {
     res.json({ success: foundUser });
   });
 
-  app.delete('/api/properties/:id', requireAuth, async (req, res) => {
-    const { id } = req.params;
-    const currentUser = (req as any).user;
-    const idx = localDb.properties.findIndex(p => p.id === id);
-    if (idx !== -1) {
-      const property = localDb.properties[idx];
-      const isOwner = property.ownerId === currentUser.id ||
-        (currentUser.email && (((property as any).ownerEmail && (property as any).ownerEmail.toLowerCase() === currentUser.email.toLowerCase()) || (property.contactEmail && property.contactEmail.toLowerCase() === currentUser.email.toLowerCase()))) ||
-        (currentUser.phone && (((property as any).ownerPhone && normalizePhone((property as any).ownerPhone) === normalizePhone(currentUser.phone)) || (property.contactPhone && normalizePhone(property.contactPhone) === normalizePhone(currentUser.phone))));
-
-      if (!isUserAdmin(currentUser) && !isOwner) {
-        return res.status(403).json({ error: 'You are not authorized to delete this listing.' });
-      }
-      localDb.properties = localDb.properties.filter(p => p.id !== id);
-      await saveDb();
-      return res.json({ success: true, id });
-    }
-    res.status(404).json({ error: 'Property not found' });
-  });
-
   // Categories Endpoints
   app.get('/api/categories', async (req, res) => {
     res.json(localDb.categories || []);
@@ -4258,6 +4288,13 @@ async function startServer() {
     const { id } = req.params;
     if (localDb.categories) {
       localDb.categories = localDb.categories.filter(c => c.id !== id);
+    }
+    if (isMongoConnected) {
+      try {
+        await CategoryModel.deleteOne({ id });
+      } catch (err) {
+        console.error('[Storage] Error deleting category in Mongo:', err);
+      }
     }
     await saveDb();
     res.json({ success: true });
@@ -4320,6 +4357,13 @@ async function startServer() {
       return res.status(404).json({ error: 'Feature not found.' });
     }
     localDb.appFeatures = localDb.appFeatures.filter(f => f.id !== id);
+    if (isMongoConnected) {
+      try {
+        await AppFeatureModel.deleteOne({ id });
+      } catch (err) {
+        console.error('[Storage] Error deleting app feature in Mongo:', err);
+      }
+    }
     await saveDb();
     res.json({ success: true });
   });
@@ -4371,6 +4415,13 @@ async function startServer() {
       return res.status(404).json({ error: 'Job opening not found.' });
     }
     localDb.jobOpenings = localDb.jobOpenings.filter(j => j.id !== id);
+    if (isMongoConnected) {
+      try {
+        await JobOpeningModel.deleteOne({ id });
+      } catch (err) {
+        console.error('[Storage] Error deleting job opening in Mongo:', err);
+      }
+    }
     await saveDb();
     res.json({ success: true });
   });
@@ -4407,6 +4458,13 @@ async function startServer() {
   app.delete('/api/payment-methods/:id', requireAdmin, async (req, res) => {
     const { id } = req.params;
     localDb.paymentMethods = localDb.paymentMethods.filter(m => m.id !== id);
+    if (isMongoConnected) {
+      try {
+        await PaymentMethodModel.deleteOne({ id });
+      } catch (err) {
+        console.error('[Storage] Error deleting payment method in Mongo:', err);
+      }
+    }
     await saveDb();
     res.json({ success: true });
   });
@@ -4554,6 +4612,13 @@ async function startServer() {
       }
 
       localDb.reviews = localDb.reviews.filter(r => r.id !== id);
+      if (isMongoConnected) {
+        try {
+          await ReviewModel.deleteOne({ id });
+        } catch (err) {
+          console.error('[Storage] Error deleting review in Mongo:', err);
+        }
+      }
       await saveDb();
 
       return res.json({ success: true });
@@ -4752,6 +4817,13 @@ async function startServer() {
       return res.status(403).json({ error: 'Unauthorized to delete this conversation.' });
     }
     localDb.inquiries.splice(index, 1);
+    if (isMongoConnected) {
+      try {
+        await InquiryModel.deleteOne({ id });
+      } catch (err) {
+        console.error('[Storage] Error deleting inquiry in Mongo:', err);
+      }
+    }
     await saveDb();
     res.json({ success: true, message: 'Inquiry conversation deleted successfully.' });
   });
@@ -4761,10 +4833,26 @@ async function startServer() {
     const user = (req as any).user;
     if (user.role === 'admin' && req.query.all === 'true') {
       localDb.inquiries = [];
+      if (isMongoConnected) {
+        try {
+          await InquiryModel.deleteMany({});
+        } catch (err) {
+          console.error('[Storage] Error deleting all inquiries in Mongo:', err);
+        }
+      }
     } else {
       localDb.inquiries = localDb.inquiries.filter(
         i => i.senderId !== user.id && i.receiverId !== user.id
       );
+      if (isMongoConnected) {
+        try {
+          await InquiryModel.deleteMany({
+            $or: [{ senderId: user.id }, { receiverId: user.id }]
+          });
+        } catch (err) {
+          console.error('[Storage] Error deleting user inquiries in Mongo:', err);
+        }
+      }
     }
     await saveDb();
     res.json({ success: true, message: 'All message threads deleted successfully.' });
@@ -4811,6 +4899,13 @@ async function startServer() {
   app.delete('/api/advertisements/:id', requireAdmin, async (req, res) => {
     const { id } = req.params;
     localDb.advertisements = localDb.advertisements.filter(a => a.id !== id);
+    if (isMongoConnected) {
+      try {
+        await AdvertisementModel.deleteOne({ id });
+      } catch (err) {
+        console.error('[Storage] Error deleting advertisement in Mongo:', err);
+      }
+    }
     await saveDb();
     res.json({ success: true });
   });
@@ -5120,6 +5215,13 @@ async function startServer() {
     const { id } = req.params;
     if (!localDb.supportTickets) localDb.supportTickets = [];
     localDb.supportTickets = localDb.supportTickets.filter(t => t.id !== id);
+    if (isMongoConnected) {
+      try {
+        await SupportTicketModel.deleteOne({ id });
+      } catch (err) {
+        console.error('[Storage] Error deleting support ticket in Mongo:', err);
+      }
+    }
     await saveDb();
     res.json({ success: true });
   });
@@ -5207,6 +5309,13 @@ async function startServer() {
       return res.status(403).json({ error: 'Unauthorized to delete this notification' });
     }
     localDb.notifications.splice(index, 1);
+    if (isMongoConnected) {
+      try {
+        await NotificationModel.deleteOne({ id });
+      } catch (err) {
+        console.error('[Storage] Error deleting notification in Mongo:', err);
+      }
+    }
     await saveDb();
     res.json({ success: true, message: 'Notification deleted successfully' });
   });
@@ -5215,8 +5324,22 @@ async function startServer() {
     const user = (req as any).user;
     if (user.role === 'admin' && req.query.all === 'true') {
       localDb.notifications = [];
+      if (isMongoConnected) {
+        try {
+          await NotificationModel.deleteMany({});
+        } catch (err) {
+          console.error('[Storage] Error deleting all notifications in Mongo:', err);
+        }
+      }
     } else {
       localDb.notifications = localDb.notifications.filter(n => n.userId !== user.id);
+      if (isMongoConnected) {
+        try {
+          await NotificationModel.deleteMany({ userId: user.id });
+        } catch (err) {
+          console.error('[Storage] Error deleting user notifications in Mongo:', err);
+        }
+      }
     }
     await saveDb();
     res.json({ success: true, message: 'All notifications deleted successfully' });
@@ -5530,8 +5653,15 @@ async function startServer() {
     const { id } = req.params;
     if ((localDb as any).faqs) {
       (localDb as any).faqs = (localDb as any).faqs.filter((f: any) => f.id !== id);
-      await saveDb();
     }
+    if (isMongoConnected) {
+      try {
+        await FaqModel.deleteOne({ id });
+      } catch (err) {
+        console.error('[Storage] Error deleting FAQ in Mongo:', err);
+      }
+    }
+    await saveDb();
     res.json({ success: true });
   });
 

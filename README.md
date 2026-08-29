@@ -7,7 +7,7 @@
 [![MongoDB](https://img.shields.io/badge/MongoDB-Atlas_&_Mongoose-47A248.svg?logo=mongodb)](https://www.mongodb.com/)
 [![Capacitor](https://img.shields.io/badge/Capacitor-Android_8.5-119EFF.svg?logo=capacitor)](https://capacitorjs.com/)
 [![Cloudinary](https://img.shields.io/badge/Cloudinary-Media_CDN-3448C5.svg?logo=cloudinary)](https://cloudinary.com/)
-[![License: Proprietary](https://img.shields.io/badge/License-Proprietary-blue.svg)](#-license)
+[![License: Proprietary](https://img.shields.io/badge/License-Proprietary-blue.svg)](LICENSE)
 
 > **SOF-UMER** is a production-grade, full-stack multi-category marketplace and property listing platform engineered with modern web technologies and cross-platform native mobile support. Tailored for Ethiopian and international commercial markets, the application features complete tri-lingual localization (English, Afaan Oromoo, Amharic), high-security authentication (JWT, TOTP 2FA, brute-force mitigation), dual retail & wholesale trading mechanics, wallet & receipt verification engines, and an extensive enterprise administrative control suite.
 
@@ -317,4 +317,4 @@ npm run cap:open
 
 ## 📄 License
 
-This repository and its codebase are private and proprietary. All rights reserved.
+This project is publicly viewable for portfolio and demonstration purposes. The source code is proprietary and may not be copied, modified, or redistributed without permission. All rights reserved.
