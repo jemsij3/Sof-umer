@@ -2854,8 +2854,17 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
                       <WholesalePricingTiersEditor
                         currency={currency}
                         unit={fieldsState.unit || fieldsState.wholesaleUnit || 'Piece'}
+                        moq={fieldsState.minimumOrderQuantity}
                         initialMoq={Number(fieldsState.minimumOrderQuantity || 10)}
                         tiers={wholesaleTiers}
+                        isRetailAndWholesale={sellingType === 'Retail + Wholesale' || (sellingType as any) === 'Retail & Wholesale'}
+                        onMoqChange={(newMoq) => handleFieldChange('minimumOrderQuantity', newMoq)}
+                        onTiersChange={(newTiers) => {
+                          setWholesaleTiers(newTiers);
+                          if (newTiers[0]?.pricePerUnit) {
+                            handleFieldChange('wholesalePrice', newTiers[0].pricePerUnit);
+                          }
+                        }}
                         onChange={(moq, newTiers) => {
                           setWholesaleTiers(newTiers);
                           handleFieldChange('minimumOrderQuantity', moq);

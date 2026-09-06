@@ -276,26 +276,42 @@ export interface ListingCustomerPricingDisplay {
   wholesaleTiers: CustomerTierDisplay[];
 }
 
+export function getPluralizedUnit(count: number, rawUnit?: string): string {
+  const clean = (rawUnit || 'piece').trim();
+  const lower = clean.toLowerCase();
+
+  // Metric or invariable abbreviations/units
+  if (['kg', 'kilogram', 'kilograms', 'g', 'gram', 'grams', 'liter', 'liters', 'meter', 'meters', 'ton', 'tons'].includes(lower)) {
+    if (['kg', 'kilogram', 'kilograms'].includes(lower)) return 'kg';
+    if (['liter', 'liters'].includes(lower)) return count === 1 ? 'liter' : 'liters';
+    if (['meter', 'meters'].includes(lower)) return count === 1 ? 'meter' : 'meters';
+    if (['ton', 'tons'].includes(lower)) return count === 1 ? 'ton' : 'tons';
+    return lower;
+  }
+
+  let singular = lower;
+  if (singular.endsWith('s') && singular.length > 3 && !singular.endsWith('ss')) {
+    singular = singular.slice(0, -1);
+  }
+
+  if (count === 1) {
+    return singular;
+  }
+
+  if (singular === 'box') return 'boxes';
+  if (singular === 'pair') return 'pairs';
+  if (singular === 'set') return 'sets';
+  if (singular === 'dozen') return 'dozens';
+  if (singular === 'carton') return 'cartons';
+  if (singular === 'bag') return 'bags';
+  if (singular === 'piece') return 'pieces';
+
+  return `${singular}s`;
+}
+
 export function formatQuantityWithUnit(quantity: number, rawUnit?: string): string {
-  const cleanUnit = (rawUnit || 'piece').trim();
-  const unitLower = cleanUnit.toLowerCase();
-
-  if (['kg', 'kilogram', 'kilograms', 'g', 'gram', 'grams', 'liter', 'liters', 'meter', 'meters', 'ton', 'tons'].includes(unitLower)) {
-    return `${quantity.toLocaleString()} ${cleanUnit}`;
-  }
-
-  if (quantity === 1) {
-    const sing = cleanUnit.endsWith('s') && cleanUnit.length > 3 ? cleanUnit.slice(0, -1) : cleanUnit;
-    return `1 ${sing}`;
-  }
-
-  if (unitLower.endsWith('s')) {
-    return `${quantity.toLocaleString()} ${cleanUnit}`;
-  }
-  if (unitLower === 'box') {
-    return `${quantity.toLocaleString()} boxes`;
-  }
-  return `${quantity.toLocaleString()} ${cleanUnit}s`;
+  const unit = getPluralizedUnit(quantity, rawUnit);
+  return `${quantity.toLocaleString()} ${unit}`;
 }
 
 /**
@@ -314,7 +330,7 @@ export function getListingCustomerPricingDisplay(property: Partial<Property>): L
   // Unit
   const rawUnit = property.unit || (property as any).wholesaleUnit || (isProductCategory ? 'piece' : '');
   const cleanUnit = rawUnit.trim();
-  const unitForPriceSlash = cleanUnit ? cleanUnit.toLowerCase() : '';
+  const unitForPriceSlash = cleanUnit ? getPluralizedUnit(1, cleanUnit) : '';
 
   // Selling Type (internal configuration only)
   const normalizedSt = normalizeSellingType(property.sellingType);

@@ -12,7 +12,7 @@ import {
   getTranslatedPropertyType,
   extractString
 } from '../lib/categoriesData';
-import { getListingCustomerPricingDisplay } from '../utils/wholesalePricing';
+import { getListingCustomerPricingDisplay, calculateDynamicPrice, getPluralizedUnit, normalizeSellingType } from '../utils/wholesalePricing';
 import { 
   ArrowLeft, 
   Heart, 
@@ -87,6 +87,16 @@ export default function PropertyDetails({
 
   const [activeImage, setActiveImage] = useState(property.images[0] || '');
   const pricingInfo = useMemo(() => getListingCustomerPricingDisplay(property), [property]);
+
+  // Buyer Quantity Calculator for Wholesale / Volume Pricing
+  const [calcQuantity, setCalcQuantity] = useState<number>(() => {
+    const defaultMoq = Number(property.minimumOrderQuantity) || 1;
+    return defaultMoq > 0 ? defaultMoq : 1;
+  });
+
+  const dynamicPricing = useMemo(() => {
+    return calculateDynamicPrice(property, calcQuantity);
+  }, [property, calcQuantity]);
   const [messageText, setMessageText] = useState('');
   const [inquirySuccess, setInquirySuccess] = useState(false);
   const [sendingInquiry, setSendingInquiry] = useState(false);
@@ -121,7 +131,10 @@ export default function PropertyDetails({
 
   // Quote Request Modal state
   const [quoteModalOpen, setQuoteModalOpen] = useState(false);
-  const [quoteQuantity, setQuoteQuantity] = useState<string | number>((property as any).minimumOrderQuantity || 1);
+  const [quoteQuantity, setQuoteQuantity] = useState<string | number>(() => {
+    const defaultMoq = Number(property.minimumOrderQuantity) || 1;
+    return defaultMoq > 0 ? defaultMoq : 1;
+  });
   const [quoteMessage, setQuoteMessage] = useState('');
   const [quotePhone, setQuotePhone] = useState(currentUser?.phone || '');
   const [quoteSubmitting, setQuoteSubmitting] = useState(false);
@@ -135,8 +148,17 @@ export default function PropertyDetails({
       else alert('Please log in to request a quote.');
       return;
     }
-    if (!quoteQuantity || (typeof quoteQuantity === 'number' && quoteQuantity <= 0)) {
+    const numQty = Number(quoteQuantity);
+    if (!quoteQuantity || isNaN(numQty) || numQty <= 0) {
       setQuoteError('Please enter a valid quantity.');
+      return;
+    }
+
+    const normSellingType = normalizeSellingType(property.sellingType);
+    const effectiveMoq = Number(property.minimumOrderQuantity) || 1;
+
+    if (normSellingType === 'Wholesale' && numQty < effectiveMoq) {
+      setQuoteError(`Minimum order quantity is ${effectiveMoq} ${getPluralizedUnit(effectiveMoq, pricingInfo.unit)}.`);
       return;
     }
 
@@ -145,7 +167,7 @@ export default function PropertyDetails({
     setQuoteSuccess('');
 
     try {
-      const formattedMsg = `[QUOTE REQUEST] Requested Quantity: ${quoteQuantity} ${((property as any).wholesaleUnit || 'Piece')}. Contact Phone: ${quotePhone || 'Not provided'}. Note: ${quoteMessage || 'No additional note'}`;
+      const formattedMsg = `[QUOTE REQUEST] Requested Quantity: ${numQty} ${getPluralizedUnit(numQty, pricingInfo.unit)}. Contact Phone: ${quotePhone || 'Not provided'}. Note: ${quoteMessage || 'No additional note'}`;
       
       const res = await fetch(`/api/properties/${property.id}/inquiry`, {
         method: 'POST',
@@ -563,13 +585,6 @@ export default function PropertyDetails({
                 </span>
               )}
 
-              {((property as any).availableQuantity && Number((property as any).availableQuantity) > 0) && (
-                <span className="inline-flex items-center gap-1.5 bg-blue-500/10 text-blue-400 border border-blue-500/20 px-3 py-1 rounded-xl text-xs font-bold uppercase tracking-wider">
-                  <Package className="w-3.5 h-3.5 text-blue-400" />
-                  Ready Stock ({(property as any).availableQuantity} Units)
-                </span>
-              )}
-
               {(Array.isArray((property as any).deliveryOptions) && (property as any).deliveryOptions.length > 0) && (
                 <span className="inline-flex items-center gap-1.5 bg-purple-500/10 text-purple-300 border border-purple-500/20 px-3 py-1 rounded-xl text-xs font-bold uppercase tracking-wider">
                   <Sparkles className="w-3.5 h-3.5 text-purple-300" />
@@ -633,20 +648,149 @@ export default function PropertyDetails({
 
             {/* Volume / Tier Pricing Grid if present */}
             {pricingInfo.hasWholesaleTiers && (
-              <div className="pt-4 border-t border-white/10 space-y-2">
-                <div className="flex items-center gap-2 text-xs font-bold text-white/70 uppercase tracking-wider">
-                  <Layers className="w-4 h-4 text-amber-400" />
-                  <span>Volume Pricing Tiers</span>
+              <div className="pt-5 border-t border-white/10 space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-xs font-bold text-white/80 uppercase tracking-wider">
+                    <Layers className="w-4 h-4 text-amber-400" />
+                    <span>Bulk Pricing</span>
+                  </div>
+                  {pricingInfo.hasMoq && (
+                    <span className="text-xs text-amber-400 font-mono font-bold">
+                      {pricingInfo.moqFormatted}
+                    </span>
+                  )}
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5 pt-1">
-                  {pricingInfo.wholesaleTiers.map((tier, idx) => (
-                    <div key={idx} className="bg-black/50 border border-white/10 rounded-xl px-4 py-2.5 font-mono flex items-center justify-between">
-                      <span className="text-white/70 text-xs font-bold">{tier.minQuantity}+ units</span>
-                      <span className="text-amber-400 text-sm font-extrabold">
-                        {tier.label.split('—')[1]?.trim() || `${pricingInfo.currency} ${tier.pricePerUnit.toLocaleString()}`}
-                      </span>
+
+                {/* Tiers List */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5">
+                  {pricingInfo.wholesaleTiers.map((tier, idx) => {
+                    const isCurrentTier = dynamicPricing.activeTier?.minimumQuantity === tier.minQuantity;
+                    return (
+                      <div
+                        key={idx}
+                        onClick={() => setCalcQuantity(tier.minQuantity)}
+                        className={`border rounded-2xl p-3.5 font-mono cursor-pointer transition-all duration-200 ${
+                          isCurrentTier
+                            ? 'bg-amber-500/15 border-amber-500/60 shadow-lg ring-1 ring-amber-500/40'
+                            : 'bg-black/40 border-white/10 hover:border-white/20'
+                        }`}
+                      >
+                        <div className="text-white/70 text-xs font-bold flex items-center justify-between">
+                          <span>{tier.minQuantity}+ {getPluralizedUnit(tier.minQuantity, pricingInfo.unit)}</span>
+                          {isCurrentTier && (
+                            <span className="text-[9px] bg-amber-500/20 text-amber-400 px-1.5 py-0.5 rounded font-bold uppercase">
+                              Applied
+                            </span>
+                          )}
+                        </div>
+                        <div className="text-amber-400 text-sm font-extrabold mt-1">
+                          {pricingInfo.currency} {tier.pricePerUnit.toLocaleString()} / {getPluralizedUnit(1, pricingInfo.unit)}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Interactive Quantity & Price Calculator */}
+                <div className="bg-[#141420] border border-white/10 rounded-2xl p-4 sm:p-5 space-y-3.5">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+                    <span className="text-xs font-bold text-white uppercase tracking-wider">
+                      Price Calculator
+                    </span>
+                    <span className="text-[11px] text-white/50">
+                      Adjust quantity to calculate your exact order price
+                    </span>
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-3">
+                    <div className="flex items-center border border-white/15 rounded-xl overflow-hidden bg-black/60">
+                      <button
+                        type="button"
+                        onClick={() => setCalcQuantity(prev => Math.max(1, prev - 1))}
+                        className="px-3.5 py-2 text-white/70 hover:text-white hover:bg-white/10 transition font-mono font-bold text-base cursor-pointer"
+                        title="Decrease"
+                      >
+                        -
+                      </button>
+                      <input
+                        type="number"
+                        min="1"
+                        value={calcQuantity}
+                        onChange={e => setCalcQuantity(Math.max(1, parseInt(e.target.value, 10) || 1))}
+                        className="w-20 text-center bg-transparent text-white font-mono font-bold text-sm focus:outline-none py-2"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setCalcQuantity(prev => prev + 1)}
+                        className="px-3.5 py-2 text-white/70 hover:text-white hover:bg-white/10 transition font-mono font-bold text-base cursor-pointer"
+                        title="Increase"
+                      >
+                        +
+                      </button>
                     </div>
-                  ))}
+
+                    <span className="text-xs font-mono font-medium text-white/70">
+                      {getPluralizedUnit(calcQuantity, pricingInfo.unit)}
+                    </span>
+
+                    {/* Quick quantity chips */}
+                    <div className="flex items-center gap-1.5 ml-auto flex-wrap">
+                      {pricingInfo.wholesaleTiers.map((tier, i) => (
+                        <button
+                          key={i}
+                          type="button"
+                          onClick={() => setCalcQuantity(tier.minQuantity)}
+                          className={`text-[11px] font-mono px-2.5 py-1 rounded-lg border transition cursor-pointer ${
+                            calcQuantity === tier.minQuantity
+                              ? 'bg-amber-500 text-black font-bold border-amber-500'
+                              : 'bg-white/5 text-white/70 border-white/10 hover:bg-white/10'
+                          }`}
+                        >
+                          {tier.minQuantity} {getPluralizedUnit(tier.minQuantity, pricingInfo.unit)}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Calculated Price & Status */}
+                  <div className="pt-3 border-t border-white/5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div>
+                      {!dynamicPricing.meetsMoq && dynamicPricing.sellingType === 'Wholesale' ? (
+                        <p className="text-xs font-bold text-rose-400">
+                          Minimum order quantity is {dynamicPricing.moq} {getPluralizedUnit(dynamicPricing.moq, pricingInfo.unit)}.
+                        </p>
+                      ) : (
+                        <div className="space-y-0.5">
+                          <div className="flex items-baseline gap-2">
+                            <span className="text-xs text-white/60">Calculated Total:</span>
+                            <span className="text-xl font-bold font-mono text-amber-400">
+                              {pricingInfo.currency} {dynamicPricing.totalPrice.toLocaleString()}
+                            </span>
+                          </div>
+                          <p className="text-[11px] text-white/50 font-mono">
+                            {pricingInfo.currency} {dynamicPricing.unitPrice.toLocaleString()} / {getPluralizedUnit(1, pricingInfo.unit)}
+                            {dynamicPricing.isWholesaleTier ? ' (Bulk tier applied)' : ' (Standard retail price)'}
+                          </p>
+                          {dynamicPricing.nextTier && dynamicPricing.unitsToNextTier && (
+                            <p className="text-[11px] text-emerald-400 font-mono">
+                              Add {dynamicPricing.unitsToNextTier} more to unlock {pricingInfo.currency} {dynamicPricing.nextTier.pricePerUnit.toLocaleString()} / {getPluralizedUnit(1, pricingInfo.unit)}!
+                            </p>
+                          )}
+                        </div>
+                      )}
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setQuoteQuantity(calcQuantity);
+                        setQuoteModalOpen(true);
+                      }}
+                      className="bg-amber-500 hover:bg-amber-400 text-black font-extrabold text-xs px-4 py-2.5 rounded-xl transition self-start sm:self-auto shadow-md cursor-pointer flex items-center gap-1.5"
+                    >
+                      <span>Request Quote for {calcQuantity} {getPluralizedUnit(calcQuantity, pricingInfo.unit)}</span>
+                    </button>
+                  </div>
                 </div>
               </div>
             )}
@@ -1424,20 +1568,27 @@ export default function PropertyDetails({
                 <form onSubmit={handleSendQuoteRequest} className="space-y-4">
                   <div>
                     <label className="block text-xs font-bold text-white/70 mb-1.5 uppercase tracking-wider">
-                      Required Quantity ({((property as any).wholesaleUnit || 'Piece')}s) *
+                      Required Quantity ({getPluralizedUnit(Number(quoteQuantity) || 1, pricingInfo.unit)}) *
                     </label>
                     <input
-                      type="text"
-                      inputMode="text"
+                      type="number"
+                      min="1"
                       required
                       value={quoteQuantity}
                       onChange={e => setQuoteQuantity(e.target.value)}
                       className="w-full p-3.5 bg-[#12121a] border border-white/10 rounded-2xl text-white font-mono text-base font-bold focus:outline-none focus:border-amber-500"
                       placeholder={`Min order: ${(property as any).minimumOrderQuantity || 1}`}
                     />
-                    <p className="text-[10px] text-amber-400/80 mt-1 font-mono">
-                      Supplier MOQ: {(property as any).minimumOrderQuantity || 1} {((property as any).wholesaleUnit || 'Piece')}s
-                    </p>
+                    {pricingInfo.hasMoq && (
+                      <p className="text-[11px] text-amber-400/90 mt-1 font-mono">
+                        {pricingInfo.moqFormatted}
+                      </p>
+                    )}
+                    {normalizeSellingType(property.sellingType) === 'Wholesale' && Number(quoteQuantity) < (Number(property.minimumOrderQuantity) || 1) && (
+                      <p className="text-xs font-bold text-rose-400 mt-1">
+                        Minimum order quantity is {property.minimumOrderQuantity || 1} {getPluralizedUnit(Number(property.minimumOrderQuantity) || 1, pricingInfo.unit)}.
+                      </p>
+                    )}
                   </div>
 
                   <div>

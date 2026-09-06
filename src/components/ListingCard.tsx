@@ -193,13 +193,6 @@ export function ListingCard({
           value: String(brand)
         });
       }
-      if (moq && (sellingType === 'Wholesale' || sellingType === 'Retail & Wholesale')) {
-        list.push({
-          icon: <Package className="w-3.5 h-3.5 text-amber-500" />,
-          label: 'MOQ',
-          value: `Min: ${moq} ${(property as any).wholesaleUnit || 'units'}`
-        });
-      }
     }
 
     return list.slice(0, 3); // Max 3 clean highlights
@@ -287,9 +280,11 @@ export function ListingCard({
           <h4 className="text-sm font-semibold text-white group-hover:text-amber-400 transition-colors truncate">
             {titleText}
           </h4>
-          <p className="text-sm font-bold text-amber-400 font-mono mt-0.5">
-            {formattedPrice} <span className="text-[10px] text-white/60 font-sans">{currencyCode}</span>
-          </p>
+          <div className="text-sm font-bold text-amber-400 font-mono mt-0.5 truncate">
+            {pricingInfo.hasRetailPrice
+              ? pricingInfo.retailPriceFormatted
+              : (pricingInfo.wholesaleTiers[0]?.label || (pricingInfo.hasMoq ? pricingInfo.moqFormatted : `${formattedPrice} ${currencyCode}`))}
+          </div>
           <p className="text-[11px] text-white/45 flex items-center gap-1 mt-1 truncate">
             <MapPin className="w-3 h-3 text-amber-500/80 shrink-0" />
             <span className="truncate">{locationText}</span>

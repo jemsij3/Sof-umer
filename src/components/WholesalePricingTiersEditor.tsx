@@ -1,13 +1,15 @@
 import React from 'react';
 import { WholesalePriceTier } from '../types';
 import { Plus, Trash2, AlertCircle, TrendingDown, Layers, HelpCircle } from 'lucide-react';
-import { validateWholesaleConfig } from '../utils/wholesalePricing';
+import { validateWholesaleConfig, getPluralizedUnit } from '../utils/wholesalePricing';
 
-interface WholesalePricingTiersEditorProps {
-  moq: number | '';
-  onMoqChange: (moq: number) => void;
+export interface WholesalePricingTiersEditorProps {
+  moq?: number | string;
+  initialMoq?: number | string;
+  onMoqChange?: (moq: number) => void;
   tiers: WholesalePriceTier[];
-  onTiersChange: (tiers: WholesalePriceTier[]) => void;
+  onTiersChange?: (tiers: WholesalePriceTier[]) => void;
+  onChange?: (moq: number, tiers: WholesalePriceTier[]) => void;
   currency: string;
   unit: string;
   isRetailAndWholesale?: boolean;
@@ -15,32 +17,44 @@ interface WholesalePricingTiersEditorProps {
 
 export const WholesalePricingTiersEditor: React.FC<WholesalePricingTiersEditorProps> = ({
   moq,
+  initialMoq,
   onMoqChange,
   tiers,
   onTiersChange,
+  onChange,
   currency,
   unit,
   isRetailAndWholesale = false
 }) => {
-  const effectiveMoq = typeof moq === 'number' && moq > 0 ? moq : 1;
+  // Determine effective MOQ from passed props or tiers
+  const derivedMoq = (moq !== undefined && moq !== '') 
+    ? Number(moq) 
+    : ((initialMoq !== undefined && initialMoq !== '') 
+      ? Number(initialMoq) 
+      : (tiers[0]?.minimumQuantity ? Number(tiers[0].minimumQuantity) : 10));
+
+  const effectiveMoq = Math.max(1, derivedMoq || 1);
 
   const handleMoqChange = (newMoqVal: number) => {
     const val = Math.max(1, newMoqVal || 1);
-    onMoqChange(val);
+    if (onMoqChange) onMoqChange(val);
 
     // If there are tiers, ensure the first tier's quantity starts at the new MOQ
-    if (tiers.length > 0) {
-      const updated = [...tiers];
+    const updated = [...tiers];
+    if (updated.length > 0) {
       updated[0] = { ...updated[0], minimumQuantity: val };
-      onTiersChange(updated);
     } else {
-      onTiersChange([{ minimumQuantity: val, pricePerUnit: 0 }]);
+      updated.push({ minimumQuantity: val, pricePerUnit: 0 });
     }
+    if (onTiersChange) onTiersChange(updated);
+    if (onChange) onChange(val, updated);
   };
 
   const handleAddTier = () => {
     if (tiers.length === 0) {
-      onTiersChange([{ minimumQuantity: effectiveMoq, pricePerUnit: 0 }]);
+      const newTiers = [{ minimumQuantity: effectiveMoq, pricePerUnit: 0 }];
+      if (onTiersChange) onTiersChange(newTiers);
+      if (onChange) onChange(effectiveMoq, newTiers);
       return;
     }
 
@@ -52,16 +66,19 @@ export const WholesalePricingTiersEditor: React.FC<WholesalePricingTiersEditorPr
     const prevPrice = Number(lastTier.pricePerUnit) || 0;
     const nextPrice = prevPrice > 0 ? Math.max(1, Math.round(prevPrice * 0.9)) : 0;
 
-    onTiersChange([
+    const newTiers = [
       ...tiers,
       { minimumQuantity: nextQty, pricePerUnit: nextPrice }
-    ]);
+    ];
+    if (onTiersChange) onTiersChange(newTiers);
+    if (onChange) onChange(effectiveMoq, newTiers);
   };
 
   const handleRemoveTier = (index: number) => {
     if (tiers.length <= 1) return; // Keep at least one tier
     const updated = tiers.filter((_, i) => i !== index);
-    onTiersChange(updated);
+    if (onTiersChange) onTiersChange(updated);
+    if (onChange) onChange(effectiveMoq, updated);
   };
 
   const handleTierQuantityChange = (index: number, newQty: number) => {
@@ -70,21 +87,29 @@ export const WholesalePricingTiersEditor: React.FC<WholesalePricingTiersEditorPr
     updated[index] = { ...updated[index], minimumQuantity: cleanQty };
 
     // If the first tier was changed, sync MOQ with it
+    let newMoq = effectiveMoq;
     if (index === 0) {
-      onMoqChange(cleanQty);
+      newMoq = cleanQty;
+      if (onMoqChange) onMoqChange(cleanQty);
     }
 
-    onTiersChange(updated);
+    if (onTiersChange) onTiersChange(updated);
+    if (onChange) onChange(newMoq, updated);
   };
 
   const handleTierPriceChange = (index: number, newPrice: number) => {
     const updated = [...tiers];
     updated[index] = { ...updated[index], pricePerUnit: Math.max(0, newPrice || 0) };
-    onTiersChange(updated);
+    if (onTiersChange) onTiersChange(updated);
+    if (onChange) onChange(effectiveMoq, updated);
   };
 
   // Run validation
   const validation = validateWholesaleConfig(effectiveMoq, tiers);
+
+  // Pluralized unit helpers
+  const unitSingular = getPluralizedUnit(1, unit);
+  const unitPlural = getPluralizedUnit(2, unit);
 
   return (
     <div className="bg-[#10101a] border border-amber-500/25 rounded-2xl p-4 sm:p-5 space-y-4 shadow-lg">
@@ -104,7 +129,7 @@ export const WholesalePricingTiersEditor: React.FC<WholesalePricingTiersEditorPr
         </div>
 
         <span className="text-[10px] font-mono font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20 px-2.5 py-1 rounded-lg self-start sm:self-auto">
-          Unit: {unit}
+          Unit: {unitSingular}
         </span>
       </div>
 
@@ -118,19 +143,19 @@ export const WholesalePricingTiersEditor: React.FC<WholesalePricingTiersEditorPr
             <input
               type="number"
               min="1"
-              value={moq}
+              value={effectiveMoq}
               onChange={e => handleMoqChange(parseInt(e.target.value, 10) || 1)}
               placeholder="e.g. 10"
               className="w-full bg-[#181826] border border-white/10 text-white font-mono text-sm rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-amber-500"
             />
             <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-medium text-white/40">
-              {unit}s
+              {getPluralizedUnit(effectiveMoq, unit)}
             </span>
           </div>
-          <p className="text-[10px] text-white/40 mt-1">
+          <p className="text-[11px] text-white/50 mt-1 font-medium">
             {isRetailAndWholesale
-              ? `Orders of ${effectiveMoq}+ ${unit}s qualify for wholesale pricing. Smaller orders use standard retail price.`
-              : `Buyers must purchase at least ${effectiveMoq} ${unit}s to place an order.`}
+              ? `Orders of ${effectiveMoq}+ ${getPluralizedUnit(effectiveMoq, unit)} qualify for wholesale pricing. Smaller orders use standard retail price.`
+              : `Buyers must purchase at least ${effectiveMoq} ${getPluralizedUnit(effectiveMoq, unit)}.`}
           </p>
         </div>
 
@@ -170,7 +195,8 @@ export const WholesalePricingTiersEditor: React.FC<WholesalePricingTiersEditorPr
             <thead className="bg-[#1a1a2c] text-white/60 text-[10px] font-mono uppercase tracking-wider border-b border-white/10">
               <tr>
                 <th className="py-2.5 px-3">Tier</th>
-                <th className="py-2.5 px-3">Min. Quantity ({unit}s)</th>
+                <th className="py-2.5 px-3">Min. Quantity ({unitPlural})</th>
+                <th className="py-2.5 px-3">Effective Range</th>
                 <th className="py-2.5 px-3">Price Per Unit ({currency})</th>
                 <th className="py-2.5 px-3 text-right">Actions</th>
               </tr>
@@ -179,7 +205,15 @@ export const WholesalePricingTiersEditor: React.FC<WholesalePricingTiersEditorPr
               {tiers.map((tier, idx) => {
                 const isFirst = idx === 0;
                 const prevTier = idx > 0 ? tiers[idx - 1] : null;
+                const nextTier = idx < tiers.length - 1 ? tiers[idx + 1] : null;
                 const hasOrderError = prevTier && Number(tier.minimumQuantity) <= Number(prevTier.minimumQuantity);
+
+                // Calculate display range
+                const minQ = Number(tier.minimumQuantity);
+                const maxQ = nextTier ? Number(nextTier.minimumQuantity) - 1 : null;
+                const rangeLabel = maxQ && maxQ >= minQ
+                  ? `${minQ} – ${maxQ} ${getPluralizedUnit(maxQ, unit)}`
+                  : `${minQ}+ ${getPluralizedUnit(minQ, unit)}`;
 
                 return (
                   <tr key={idx} className={hasOrderError ? 'bg-rose-500/10' : 'hover:bg-white/[0.02]'}>
@@ -200,8 +234,11 @@ export const WholesalePricingTiersEditor: React.FC<WholesalePricingTiersEditorPr
                           onChange={e => handleTierQuantityChange(idx, parseInt(e.target.value, 10) || 1)}
                           className={`w-24 bg-black/60 border ${hasOrderError ? 'border-rose-500 text-rose-300' : 'border-white/15 text-white'} rounded-lg px-2.5 py-1.5 text-xs font-mono focus:outline-none focus:border-amber-500`}
                         />
-                        <span className="text-[11px] text-white/40">+{unit}s</span>
+                        <span className="text-[11px] text-white/40">+{unitPlural}</span>
                       </div>
+                    </td>
+                    <td className="py-3 px-3 font-mono text-[11px] text-amber-400/90 font-medium">
+                      {rangeLabel}
                     </td>
                     <td className="py-3 px-3">
                       <div className="flex items-center gap-1.5">
