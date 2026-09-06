@@ -252,3 +252,156 @@ export function validateWholesaleConfig(
 
   return { isValid: true };
 }
+
+export interface CustomerTierDisplay {
+  minQuantity: number;
+  maxQuantity?: number;
+  pricePerUnit: number;
+  label: string; // e.g. "10+ — ETB 1,200 / piece"
+}
+
+export interface ListingCustomerPricingDisplay {
+  currency: string;
+  unit: string;
+  hasRetailPrice: boolean;
+  retailPrice: number | null;
+  retailPriceFormatted: string | null; // e.g. "ETB 1,500 / piece"
+  hasAvailableQuantity: boolean;
+  availableQuantity: number | null;
+  availableQuantityFormatted: string | null; // e.g. "Available: 25 pieces"
+  hasMoq: boolean;
+  moq: number | null;
+  moqFormatted: string | null; // e.g. "MOQ: 10 pieces"
+  hasWholesaleTiers: boolean;
+  wholesaleTiers: CustomerTierDisplay[];
+}
+
+export function formatQuantityWithUnit(quantity: number, rawUnit?: string): string {
+  const cleanUnit = (rawUnit || 'piece').trim();
+  const unitLower = cleanUnit.toLowerCase();
+
+  if (['kg', 'kilogram', 'kilograms', 'g', 'gram', 'grams', 'liter', 'liters', 'meter', 'meters', 'ton', 'tons'].includes(unitLower)) {
+    return `${quantity.toLocaleString()} ${cleanUnit}`;
+  }
+
+  if (quantity === 1) {
+    const sing = cleanUnit.endsWith('s') && cleanUnit.length > 3 ? cleanUnit.slice(0, -1) : cleanUnit;
+    return `1 ${sing}`;
+  }
+
+  if (unitLower.endsWith('s')) {
+    return `${quantity.toLocaleString()} ${cleanUnit}`;
+  }
+  if (unitLower === 'box') {
+    return `${quantity.toLocaleString()} boxes`;
+  }
+  return `${quantity.toLocaleString()} ${cleanUnit}s`;
+}
+
+/**
+ * Generates pure data-driven pricing & quantity display for customer-facing screens.
+ * Strictly adheres to:
+ * - NO selling-type labels (No "Retail", No "Wholesale", No "Retail + Wholesale")
+ * - NO word "Wholesale" in customer pricing display
+ * - Displays only what the seller actually entered
+ * - Hides all empty/null/zero fields completely (no "N/A" or placeholders)
+ */
+export function getListingCustomerPricingDisplay(property: Partial<Property>): ListingCustomerPricingDisplay {
+  const currency = property.currency || 'ETB';
+  const majorCategory = property.majorCategory;
+  const isProductCategory = !majorCategory || (majorCategory as string) === 'Products' || (majorCategory as string) === 'Electronics';
+
+  // Unit
+  const rawUnit = property.unit || (property as any).wholesaleUnit || (isProductCategory ? 'piece' : '');
+  const cleanUnit = rawUnit.trim();
+  const unitForPriceSlash = cleanUnit ? cleanUnit.toLowerCase() : '';
+
+  // Selling Type (internal configuration only)
+  const normalizedSt = normalizeSellingType(property.sellingType);
+
+  // 1. Retail Price
+  let retailPrice: number | null = null;
+  if ((property as any).retailPrice !== undefined && (property as any).retailPrice !== null && (property as any).retailPrice !== '') {
+    const p = Number((property as any).retailPrice);
+    if (!isNaN(p) && p > 0) {
+      retailPrice = p;
+    }
+  } else if (normalizedSt !== 'Wholesale' && property.price !== undefined && property.price !== null && (property.price as any) !== '') {
+    const p = Number(property.price);
+    if (!isNaN(p) && p > 0) {
+      retailPrice = p;
+    }
+  }
+
+  const hasRetailPrice = retailPrice !== null && retailPrice > 0;
+  const retailPriceFormatted = hasRetailPrice
+    ? (unitForPriceSlash
+        ? `${currency} ${retailPrice!.toLocaleString()} / ${unitForPriceSlash}`
+        : `${currency} ${retailPrice!.toLocaleString()}`)
+    : null;
+
+  // 2. Available Quantity
+  let availableQuantity: number | null = null;
+  const propQty = (property as any).quantity;
+  const rawAvail = (property as any).availableQuantity !== undefined && (property as any).availableQuantity !== null && (property as any).availableQuantity !== ''
+    ? (property as any).availableQuantity
+    : ((propQty !== undefined && propQty !== null && propQty !== '' && propQty !== '0' && propQty !== 0) ? propQty : null);
+
+  if (rawAvail !== null && rawAvail !== undefined && rawAvail !== '') {
+    const q = Number(rawAvail);
+    if (!isNaN(q) && q > 0) {
+      availableQuantity = q;
+    }
+  }
+
+  const hasAvailableQuantity = availableQuantity !== null && availableQuantity > 0;
+  const availableQuantityFormatted = hasAvailableQuantity
+    ? `Available: ${formatQuantityWithUnit(availableQuantity!, cleanUnit || 'piece')}`
+    : null;
+
+  // 3. Wholesale Tiers & MOQ
+  const tiers = getWholesaleTiers(property);
+  const hasWholesaleTiers = tiers.length > 0;
+
+  let moq: number | null = null;
+  if (property.minimumOrderQuantity !== undefined && property.minimumOrderQuantity !== null && (property.minimumOrderQuantity as any) !== '') {
+    const m = Number(property.minimumOrderQuantity);
+    if (!isNaN(m) && m > 0) {
+      moq = m;
+    }
+  } else if (hasWholesaleTiers && tiers[0].minimumQuantity > 0) {
+    moq = tiers[0].minimumQuantity;
+  }
+
+  const hasMoq = hasWholesaleTiers && moq !== null && moq > 0;
+  const moqFormatted = hasMoq
+    ? `MOQ: ${formatQuantityWithUnit(moq!, cleanUnit || 'piece')}`
+    : null;
+
+  const wholesaleTiersFormatted: CustomerTierDisplay[] = tiers.map(tier => {
+    const tierUnit = unitForPriceSlash || 'piece';
+    const label = `${tier.minimumQuantity}+ — ${currency} ${tier.pricePerUnit.toLocaleString()} / ${tierUnit}`;
+    return {
+      minQuantity: tier.minimumQuantity,
+      maxQuantity: (tier as any).maxQuantity,
+      pricePerUnit: tier.pricePerUnit,
+      label
+    };
+  });
+
+  return {
+    currency,
+    unit: cleanUnit,
+    hasRetailPrice,
+    retailPrice,
+    retailPriceFormatted,
+    hasAvailableQuantity,
+    availableQuantity,
+    availableQuantityFormatted,
+    hasMoq,
+    moq,
+    moqFormatted,
+    hasWholesaleTiers,
+    wholesaleTiers: wholesaleTiersFormatted
+  };
+}

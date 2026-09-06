@@ -12,6 +12,7 @@ import {
   getTranslatedPropertyType,
   extractString
 } from '../lib/categoriesData';
+import { getListingCustomerPricingDisplay } from '../utils/wholesalePricing';
 import { 
   ArrowLeft, 
   Heart, 
@@ -85,6 +86,7 @@ export default function PropertyDetails({
   } = useApp();
 
   const [activeImage, setActiveImage] = useState(property.images[0] || '');
+  const pricingInfo = useMemo(() => getListingCustomerPricingDisplay(property), [property]);
   const [messageText, setMessageText] = useState('');
   const [inquirySuccess, setInquirySuccess] = useState(false);
   const [sendingInquiry, setSendingInquiry] = useState(false);
@@ -538,19 +540,6 @@ export default function PropertyDetails({
                     getTranslatedCategoryName(property.majorCategory, currentLanguage) || t(`cat_${(property.majorCategory || '').toLowerCase().replace(/\s+/g, '')}`) || property.majorCategory || ''
                   )}
                 </span>
-
-                {/* Selling Type Badge */}
-                {((property as any).sellingType) && (
-                  <span className={`text-[10px] font-black uppercase px-3.5 py-1 rounded-full border shadow-sm ${
-                    (property as any).sellingType === 'Wholesale' ? 'bg-amber-500 text-black border-amber-400' :
-                    (property as any).sellingType === 'Retail & Wholesale' ? 'bg-gradient-to-r from-amber-500 to-emerald-500 text-black border-amber-300' :
-                    'bg-blue-500/20 text-blue-300 border-blue-500/30'
-                  }`}>
-                    {(property as any).sellingType === 'Wholesale' ? '📦 Wholesale' :
-                     (property as any).sellingType === 'Retail & Wholesale' ? '🛒📦 Retail & Wholesale' :
-                     '🛒 Retail'}
-                  </span>
-                )}
               </div>
             </div>
 
@@ -595,144 +584,129 @@ export default function PropertyDetails({
             </p>
           </div>
 
-          {/* ORDER 3: Price */}
-          <div className="bg-gradient-to-r from-[#0d0d12] via-[#12121a] to-[#0d0d12] rounded-3xl p-6 md:p-8 border border-amber-500/20 shadow-xl flex flex-wrap items-center justify-between gap-4">
-            <div>
-              <span className="text-xs font-bold text-amber-500 uppercase tracking-widest block font-mono">
-                {getTranslatedFieldLabel('Price', currentLanguage) || t('price')}
-              </span>
-              <p className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight mt-1 font-mono">
-                {property.price.toLocaleString()}{' '}
-                <span className="text-amber-500 text-lg font-bold uppercase ml-1">{property.currency || 'ETB'}</span>
-              </p>
+          {/* ORDER 3: Price & Volume Pricing */}
+          <div className="bg-gradient-to-r from-[#0d0d12] via-[#12121a] to-[#0d0d12] rounded-3xl p-6 md:p-8 border border-amber-500/20 shadow-xl space-y-4">
+            <div className="flex flex-wrap items-start justify-between gap-4">
+              <div className="space-y-1.5">
+                {/* Retail Price line if present */}
+                {pricingInfo.hasRetailPrice && (
+                  <div>
+                    <span className="text-xs font-bold text-amber-500 uppercase tracking-widest block font-mono">
+                      {getTranslatedFieldLabel('Price', currentLanguage) || t('price')}
+                    </span>
+                    <p className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight mt-1 font-mono">
+                      {pricingInfo.retailPriceFormatted}
+                    </p>
+                  </div>
+                )}
+
+                {/* Available stock line if present */}
+                {pricingInfo.hasAvailableQuantity && (
+                  <p className="text-sm font-semibold text-emerald-400 font-mono">
+                    {pricingInfo.availableQuantityFormatted}
+                  </p>
+                )}
+
+                {/* MOQ line if present */}
+                {pricingInfo.hasMoq && (
+                  <p className="text-sm font-bold text-amber-400 font-mono">
+                    {pricingInfo.moqFormatted}
+                  </p>
+                )}
+              </div>
+
+              {/* Negotiable Badge - Only show if seller selected Yes */}
+              {((property as any).isNegotiable === true || String((property as any).negotiable).toLowerCase() === 'yes' || property.amenities?.some(a => a.toLowerCase() === 'negotiable: yes' || a.toLowerCase() === 'negotiable: true')) && (
+                <div className="flex items-center gap-2">
+                  <span className="px-3.5 py-1.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-xs font-bold uppercase tracking-wider flex items-center gap-1.5">
+                    <Handshake className="w-4 h-4" />
+                    <span>{getTranslatedOption('Negotiable', currentLanguage) || t('negotiable')}</span>
+                  </span>
+                  {property.area > 0 && (
+                    <span className="px-3 py-1.5 rounded-full bg-white/5 text-white/60 border border-white/5 text-xs font-mono">
+                      ~{Math.round(property.price / property.area).toLocaleString()} {property.currency}/m²
+                    </span>
+                  )}
+                </div>
+              )}
             </div>
 
-            {/* Negotiable Badge - Only show if seller selected Yes */}
-            {((property as any).isNegotiable === true || String((property as any).negotiable).toLowerCase() === 'yes' || property.amenities?.some(a => a.toLowerCase() === 'negotiable: yes' || a.toLowerCase() === 'negotiable: true')) && (
-              <div className="flex items-center gap-2">
-                <span className="px-3.5 py-1.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-xs font-bold uppercase tracking-wider flex items-center gap-1.5">
-                  <Handshake className="w-4 h-4" />
-                  <span>{getTranslatedOption('Negotiable', currentLanguage) || t('negotiable')}</span>
-                </span>
-                {property.area > 0 && (
-                  <span className="px-3 py-1.5 rounded-full bg-white/5 text-white/60 border border-white/5 text-xs font-mono">
-                    ~{Math.round(property.price / property.area).toLocaleString()} {property.currency}/m²
-                  </span>
-                )}
+            {/* Volume / Tier Pricing Grid if present */}
+            {pricingInfo.hasWholesaleTiers && (
+              <div className="pt-4 border-t border-white/10 space-y-2">
+                <div className="flex items-center gap-2 text-xs font-bold text-white/70 uppercase tracking-wider">
+                  <Layers className="w-4 h-4 text-amber-400" />
+                  <span>Volume Pricing Tiers</span>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5 pt-1">
+                  {pricingInfo.wholesaleTiers.map((tier, idx) => (
+                    <div key={idx} className="bg-black/50 border border-white/10 rounded-xl px-4 py-2.5 font-mono flex items-center justify-between">
+                      <span className="text-white/70 text-xs font-bold">{tier.minQuantity}+ units</span>
+                      <span className="text-amber-400 text-sm font-extrabold">
+                        {tier.label.split('—')[1]?.trim() || `${pricingInfo.currency} ${tier.pricePerUnit.toLocaleString()}`}
+                      </span>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
           </div>
 
-          {/* Wholesale Details Block if available */}
-          {((property as any).sellingType === 'Wholesale' || (property as any).sellingType === 'Retail & Wholesale') && (
+          {/* Bulk Terms / Order Details if any entered */}
+          {(pricingInfo.hasWholesaleTiers || (property as any).businessType || (Array.isArray((property as any).deliveryOptions) && (property as any).deliveryOptions.length > 0) || (property as any).wholesaleNotes) && (
             <div className="bg-amber-500/10 border border-amber-500/30 rounded-3xl p-6 shadow-xl space-y-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2 text-amber-400 font-bold text-sm uppercase tracking-wider">
                   <Package className="w-5 h-5 text-amber-400" />
-                  <span>📦 {t('wholesale.wholesale_terms') || 'Wholesale & Bulk Selling Terms'}</span>
+                  <span>📦 {t('wholesale.wholesale_terms') || 'Volume Order Terms'}</span>
                 </div>
-                <span className="bg-amber-500 text-black text-[10px] font-black uppercase px-3 py-1 rounded-full shadow">
-                  {(property as any).sellingType === 'Wholesale' ? (t('wholesale.wholesale') || 'Wholesale') : (t('wholesale.retail_and_wholesale') || 'Retail & Wholesale')}
-                </span>
               </div>
 
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-2">
-                <div className="bg-black/40 p-3.5 rounded-2xl border border-white/5">
-                  <span className="text-[10px] text-white/50 uppercase font-bold block mb-1">{t('wholesale.business_type') || 'Business Type'}</span>
-                  <span className="text-xs font-bold text-white">
-                    {(() => {
-                      const bt = (property as any).businessType;
-                      if (bt === 'Manufacturer') return t('wholesale.manufacturer') || bt;
-                      if (bt === 'Importer') return t('wholesale.importer') || bt;
-                      if (bt === 'Exporter') return t('wholesale.exporter') || bt;
-                      if (bt === 'Wholesaler' || bt === 'Wholesaler / Supplier' || bt === 'Wholesaler / Distributor') return t('wholesale.wholesaler') || bt;
-                      if (bt === 'Distributor') return t('wholesale.distributor') || bt;
-                      if (bt === 'Authorized Dealer') return t('wholesale.authorized_dealer') || bt;
-                      if (bt === 'Local Supplier') return t('wholesale.local_supplier') || bt;
-                      if (bt === 'Farmer') return t('wholesale.farmer') || bt;
-                      if (bt === 'Cooperative') return t('wholesale.cooperative') || bt;
-                      if (bt === 'Other') return t('wholesale.other') || bt;
-                      return bt || t('wholesale.wholesaler') || 'Wholesaler';
-                    })()}
-                  </span>
-                </div>
+                {(property as any).businessType && (
+                  <div className="bg-black/40 p-3.5 rounded-2xl border border-white/5">
+                    <span className="text-[10px] text-white/50 uppercase font-bold block mb-1">{t('wholesale.business_type') || 'Business Type'}</span>
+                    <span className="text-xs font-bold text-white">
+                      {(property as any).businessType}
+                    </span>
+                  </div>
+                )}
 
-                <div className="bg-black/40 p-3.5 rounded-2xl border border-white/5">
-                  <span className="text-[10px] text-amber-400/80 uppercase font-bold block mb-1">{t('wholesale.wholesale_price') || 'Wholesale Price'}</span>
-                  <span className="text-sm font-black text-amber-400 font-mono">
-                    {(property as any).wholesalePrice ? `${Number((property as any).wholesalePrice).toLocaleString()} ${property.currency || 'ETB'}` : t('contact_seller') || 'Contact Seller'}
-                  </span>
-                </div>
+                {pricingInfo.hasMoq && (
+                  <div className="bg-black/40 p-3.5 rounded-2xl border border-white/5">
+                    <span className="text-[10px] text-white/50 uppercase font-bold block mb-1">{t('wholesale.moq') || 'Min. Order (MOQ)'}</span>
+                    <span className="text-xs font-bold text-white font-mono">
+                      {pricingInfo.moqFormatted}
+                    </span>
+                  </div>
+                )}
 
-                <div className="bg-black/40 p-3.5 rounded-2xl border border-white/5">
-                  <span className="text-[10px] text-white/50 uppercase font-bold block mb-1">{t('wholesale.moq') || 'Min. Order (MOQ)'}</span>
-                  <span className="text-xs font-bold text-white font-mono">
-                    {(property as any).minimumOrderQuantity || 1} {((property as any).wholesaleUnit || 'Piece').replace(/\s*\(.*\)/, '')}
-                  </span>
-                </div>
-
-                <div className="bg-black/40 p-3.5 rounded-2xl border border-white/5">
-                  <span className="text-[10px] text-white/50 uppercase font-bold block mb-1">{t('wholesale.unit_of_sale') || 'Unit of Sale'}</span>
-                  <span className="text-xs font-bold text-white">
-                    {(() => {
-                      const wu = (property as any).wholesaleUnit;
-                      if (wu === 'Piece') return t('wholesale.unit_piece') || wu;
-                      if (wu === 'Box') return t('wholesale.unit_box') || wu;
-                      if (wu === 'Carton') return t('wholesale.unit_carton') || wu;
-                      if (wu === 'Pack') return t('wholesale.unit_pack') || wu;
-                      if (wu === 'Dozen') return t('wholesale.unit_dozen') || wu;
-                      if (wu === 'Pair') return t('wholesale.unit_pair') || wu;
-                      if (wu === 'Bag') return t('wholesale.unit_bag') || wu;
-                      if (wu === 'Sack') return t('wholesale.unit_sack') || wu;
-                      if (wu === 'Bundle') return t('wholesale.unit_bundle') || wu;
-                      if (wu === 'Roll') return t('wholesale.unit_roll') || wu;
-                      if (wu === 'Bottle') return t('wholesale.unit_bottle') || wu;
-                      if (wu === 'Kilogram (Kg)') return t('wholesale.unit_kg') || wu;
-                      if (wu === 'Gram') return t('wholesale.unit_gram') || wu;
-                      if (wu === 'Liter') return t('wholesale.unit_liter') || wu;
-                      if (wu === 'Meter') return t('wholesale.unit_meter') || wu;
-                      if (wu === 'Ton') return t('wholesale.unit_ton') || wu;
-                      if (wu === 'Other') return t('wholesale.unit_other') || wu;
-                      if (wu === 'Pieces (Pcs)') return t('wholesale.unit_pieces') || wu;
-                      if (wu === 'Cartons / Boxes') return t('wholesale.unit_cartons') || wu;
-                      if (wu === 'Kilograms (Kg)') return t('wholesale.unit_kilograms') || wu;
-                      return wu || t('wholesale.unit_piece') || 'Piece';
-                    })()}
-                  </span>
-                </div>
+                {pricingInfo.unit && (
+                  <div className="bg-black/40 p-3.5 rounded-2xl border border-white/5">
+                    <span className="text-[10px] text-white/50 uppercase font-bold block mb-1">{t('wholesale.unit_of_sale') || 'Unit of Sale'}</span>
+                    <span className="text-xs font-bold text-white">
+                      {pricingInfo.unit}
+                    </span>
+                  </div>
+                )}
               </div>
-
-              {(property as any).availableQuantity !== undefined && (property as any).availableQuantity !== null && (property as any).availableQuantity !== '' && (
-                <div className="pt-2 border-t border-white/10 flex items-center gap-2">
-                  <span className="text-[11px] font-bold text-white/60 uppercase tracking-wider">📊 {t('wholesale.available_quantity') || 'Available Quantity'}:</span>
-                  <span className="text-xs font-mono font-bold text-amber-300">{(property as any).availableQuantity} {((property as any).wholesaleUnit || 'Piece').replace(/\s*\(.*\)/, '')}s</span>
-                </div>
-              )}
 
               {Array.isArray((property as any).deliveryOptions) && (property as any).deliveryOptions.length > 0 && (
                 <div className="pt-2 border-t border-white/10">
                   <span className="text-[11px] font-bold text-white/60 uppercase tracking-wider block mb-2">🚚 {t('wholesale.delivery_options') || 'Delivery Options'}</span>
                   <div className="flex flex-wrap gap-2">
-                    {((property as any).deliveryOptions as string[]).map((opt, i) => {
-                      let translatedOpt = opt;
-                      if (opt === 'Store Pickup') translatedOpt = t('wholesale.delivery_pickup') || opt;
-                      else if (opt === 'Local Delivery') translatedOpt = t('wholesale.delivery_local') || opt;
-                      else if (opt === 'Nationwide Shipping') translatedOpt = t('wholesale.delivery_nationwide') || opt;
-                      else if (opt === 'Buyer Pays Shipping') translatedOpt = t('wholesale.delivery_buyer_pays') || opt;
-                      else if (opt === 'Free Shipping for Bulk Orders') translatedOpt = t('wholesale.delivery_free_bulk') || opt;
-                      return (
-                        <span key={i} className="bg-white/5 border border-white/10 px-3 py-1 rounded-xl text-xs text-amber-300 font-medium">
-                          ✓ {translatedOpt}
-                        </span>
-                      );
-                    })}
+                    {((property as any).deliveryOptions as string[]).map((opt, i) => (
+                      <span key={i} className="bg-white/5 border border-white/10 px-3 py-1 rounded-xl text-xs text-amber-300 font-medium">
+                        ✓ {opt}
+                      </span>
+                    ))}
                   </div>
                 </div>
               )}
 
               {(property as any).wholesaleNotes && (
                 <div className="pt-2 border-t border-white/10">
-                  <span className="text-[11px] font-bold text-white/60 uppercase tracking-wider block mb-1">📝 {t('wholesale.wholesale_notes') || 'Additional Wholesale Terms / Notes'}</span>
+                  <span className="text-[11px] font-bold text-white/60 uppercase tracking-wider block mb-1">📝 Additional Terms / Notes</span>
                   <p className="text-xs text-white/80 font-light leading-relaxed italic">{(property as any).wholesaleNotes}</p>
                 </div>
               )}
@@ -1514,54 +1488,37 @@ export default function PropertyDetails({
           <div className="hidden sm:flex items-center gap-3 min-w-0">
             <span className="text-xs text-white/50 uppercase tracking-wider font-bold shrink-0">Price:</span>
             <span className="text-lg font-black text-amber-400 font-mono shrink-0">
-              {property.price.toLocaleString()} {property.currency || 'ETB'}
+              {pricingInfo.hasRetailPrice
+                ? pricingInfo.retailPriceFormatted
+                : (pricingInfo.hasMoq ? pricingInfo.moqFormatted : `${property.price.toLocaleString()} ${property.currency || 'ETB'}`)}
             </span>
-            {((property as any).sellingType === 'Wholesale' || (property as any).sellingType === 'Retail & Wholesale') && (property as any).wholesalePrice && (
+            {pricingInfo.hasWholesaleTiers && (
               <span className="text-xs font-mono text-emerald-400 font-bold bg-emerald-500/10 px-2.5 py-1 rounded-lg border border-emerald-500/20 truncate">
-                Wholesale: {(property as any).wholesalePrice.toLocaleString()} {property.currency || 'ETB'}
+                {pricingInfo.wholesaleTiers[0].label}
               </span>
             )}
           </div>
 
           <div className="flex items-center gap-2.5 w-full sm:w-auto justify-end">
-            {/* Retail or Retail & Wholesale: Contact Seller */}
-            {((property as any).sellingType !== 'Wholesale') && (
-              <button
-                onClick={() => {
-                  setShowContactDetails(true);
-                  const el = document.getElementById('inquiry-form-section');
-                  if (el) el.scrollIntoView({ behavior: 'smooth' });
-                }}
-                className="flex-1 sm:flex-initial bg-[#161622] hover:bg-white/10 text-white font-extrabold px-5 py-3 rounded-2xl border border-white/15 transition flex items-center justify-center gap-2 text-xs uppercase tracking-wider cursor-pointer shadow-lg"
-              >
-                <MessageSquare className="w-4 h-4 text-amber-400" />
-                <span>Contact Seller</span>
-              </button>
-            )}
+            <button
+              onClick={() => {
+                setShowContactDetails(true);
+                const el = document.getElementById('inquiry-form-section');
+                if (el) el.scrollIntoView({ behavior: 'smooth' });
+              }}
+              className="flex-1 sm:flex-initial bg-[#161622] hover:bg-white/10 text-white font-extrabold px-5 py-3 rounded-2xl border border-white/15 transition flex items-center justify-center gap-2 text-xs uppercase tracking-wider cursor-pointer shadow-lg"
+            >
+              <MessageSquare className="w-4 h-4 text-amber-400" />
+              <span>Contact Seller</span>
+            </button>
 
-            {/* Wholesale: Contact Supplier */}
-            {((property as any).sellingType === 'Wholesale') && (
-              <button
-                onClick={() => {
-                  setShowContactDetails(true);
-                  const el = document.getElementById('inquiry-form-section');
-                  if (el) el.scrollIntoView({ behavior: 'smooth' });
-                }}
-                className="flex-1 sm:flex-initial bg-[#161622] hover:bg-white/10 text-white font-extrabold px-5 py-3 rounded-2xl border border-white/15 transition flex items-center justify-center gap-2 text-xs uppercase tracking-wider cursor-pointer shadow-lg"
-              >
-                <Phone className="w-4 h-4 text-emerald-400" />
-                <span>Contact Supplier</span>
-              </button>
-            )}
-
-            {/* Wholesale or Retail & Wholesale: Request Quote */}
-            {((property as any).sellingType === 'Wholesale' || (property as any).sellingType === 'Retail & Wholesale') && (
+            {(pricingInfo.hasWholesaleTiers || pricingInfo.hasMoq) && (
               <button
                 onClick={() => setQuoteModalOpen(true)}
                 className="flex-1 sm:flex-initial bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black font-extrabold px-6 py-3 rounded-2xl shadow-xl transition flex items-center justify-center gap-2 text-xs uppercase tracking-wider cursor-pointer"
               >
                 <Handshake className="w-4.5 h-4.5" />
-                <span>Request Quote</span>
+                <span>Request Bulk Quote</span>
               </button>
             )}
           </div>

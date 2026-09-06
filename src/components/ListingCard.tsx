@@ -14,6 +14,7 @@ import {
   getTranslatedOption,
   getEffectiveMajorCategory
 } from '../lib/categoriesData';
+import { getListingCustomerPricingDisplay } from '../utils/wholesalePricing';
 
 export interface ListingCardProps {
   key?: React.Key;
@@ -43,6 +44,7 @@ export function ListingCard({
   const isVerifiedSupplier = property.verificationStatus === 'verified' || property.isVerifiedListing === true || property.ownerId === 'usr-admin';
   const isFeatured = property.isFeatured || property.isRecommended || property.isTopAd || property.boostPlan === 'vip' || property.boostPlan === 'premium';
   const sellingType = (property as any).sellingType || 'Retail';
+  const pricingInfo = useMemo(() => getListingCustomerPricingDisplay(property), [property]);
   const isNegotiable = (property as any).isNegotiable === true || 
                        String((property as any).negotiable).toLowerCase() === 'yes' ||
                        property.amenities?.some(a => a.toLowerCase() === 'negotiable: yes' || a.toLowerCase() === 'negotiable: true');
@@ -334,16 +336,6 @@ export function ListingCard({
 
           {/* Top badges */}
           <div className="absolute top-3.5 left-3.5 z-10 flex flex-wrap gap-1.5 items-center max-w-[80%]">
-            {sellingType === 'Wholesale' ? (
-              <span className="text-[9px] font-extrabold uppercase tracking-wider px-2.5 py-1 rounded-lg bg-amber-500 text-black shadow-md">
-                📦 Wholesale
-              </span>
-            ) : sellingType === 'Retail & Wholesale' ? (
-              <span className="text-[9px] font-extrabold uppercase tracking-wider px-2.5 py-1 rounded-lg bg-gradient-to-r from-amber-500 to-emerald-500 text-black shadow-md">
-                🛒📦 Retail & Wholesale
-              </span>
-            ) : null}
-
             {isFeatured && (
               <span className="text-[9px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-lg bg-gradient-to-r from-amber-400 to-amber-600 text-black shadow-md flex items-center gap-1">
                 <Sparkles className="w-2.5 h-2.5" /> Featured
@@ -433,20 +425,45 @@ export function ListingCard({
               {titleText}
             </h3>
 
-            {/* Price section */}
-            <div className="flex items-baseline gap-2 mb-3">
-              <span className="text-2xl font-extrabold text-white font-mono tracking-tight">
-                {formattedPrice}
-              </span>
-              <span className="text-xs font-bold text-amber-400/90 font-mono uppercase">
-                {currencyCode}
-              </span>
+            {/* Pure Data-Driven Pricing & Quantity Section */}
+            <div className="space-y-1 mb-3">
+              {/* Retail price line if present */}
+              {pricingInfo.hasRetailPrice && (
+                <div className="flex items-baseline gap-2">
+                  <span className="text-2xl font-extrabold text-white font-mono tracking-tight">
+                    {pricingInfo.retailPriceFormatted}
+                  </span>
+                </div>
+              )}
 
-              {(sellingType === 'Wholesale' || sellingType === 'Retail & Wholesale') && (property as any).wholesalePrice && (
-                <span className="text-xs text-emerald-400 font-mono font-bold bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-md ml-2">
-                  Wholesale: {Number((property as any).wholesalePrice).toLocaleString()} {currencyCode}
-                  {(property as any).wholesaleUnit ? ` / ${(property as any).wholesaleUnit}` : ''}
-                </span>
+              {/* Available quantity line if present */}
+              {pricingInfo.hasAvailableQuantity && (
+                <div className="text-xs font-medium text-emerald-400 font-mono">
+                  {pricingInfo.availableQuantityFormatted}
+                </div>
+              )}
+
+              {/* MOQ line if present */}
+              {pricingInfo.hasMoq && (
+                <div className="text-xs font-bold text-amber-400 font-mono pt-0.5">
+                  {pricingInfo.moqFormatted}
+                </div>
+              )}
+
+              {/* Tier lines if present */}
+              {pricingInfo.hasWholesaleTiers && (
+                <div className="space-y-0.5 pt-0.5 font-mono text-xs text-white/90">
+                  {pricingInfo.wholesaleTiers.slice(0, 3).map((tier, idx) => (
+                    <div key={idx} className="text-white/80">
+                      {tier.label}
+                    </div>
+                  ))}
+                  {pricingInfo.wholesaleTiers.length > 3 && (
+                    <span className="text-[10px] text-amber-400/80 font-sans block">
+                      +{pricingInfo.wholesaleTiers.length - 3} more tiers
+                    </span>
+                  )}
+                </div>
               )}
             </div>
 
@@ -501,7 +518,7 @@ export function ListingCard({
                 onClick={() => onSelect(property)}
                 className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black font-extrabold text-xs uppercase tracking-wider transition-all duration-300 hover:scale-[1.02] shadow-md shadow-amber-500/10 flex items-center gap-1.5"
               >
-                <span>{sellingType === 'Wholesale' ? 'Contact Supplier' : 'View Details'}</span>
+                <span>{t('view_details') || 'View Details'}</span>
                 <ChevronRight className="w-3.5 h-3.5" />
               </button>
             </div>
@@ -534,16 +551,6 @@ export function ListingCard({
 
         {/* Floating Badges (Top-Left) */}
         <div className="absolute top-3.5 left-3.5 z-10 flex flex-wrap gap-1.5 items-center max-w-[75%]">
-          {sellingType === 'Wholesale' ? (
-            <span className="text-[9px] font-extrabold uppercase tracking-wider px-2.5 py-1 rounded-xl bg-amber-500 text-black shadow-md">
-              📦 Wholesale
-            </span>
-          ) : sellingType === 'Retail & Wholesale' ? (
-            <span className="text-[9px] font-extrabold uppercase tracking-wider px-2.5 py-1 rounded-xl bg-gradient-to-r from-amber-500 to-emerald-500 text-black shadow-md">
-              🛒📦 Wholesale & Retail
-            </span>
-          ) : null}
-
           {isFeatured && (
             <span className="text-[9px] font-extrabold uppercase tracking-wider px-2.5 py-1 rounded-xl bg-gradient-to-r from-amber-400 to-amber-600 text-black shadow-md flex items-center gap-1">
               <Sparkles className="w-2.5 h-2.5" /> Featured
@@ -639,33 +646,50 @@ export function ListingCard({
       <div className="p-5 flex-1 flex flex-col justify-between">
         <div>
           {/* Price & Category Row */}
-          <div className="flex items-baseline justify-between gap-2 mb-2">
-            <div>
-              <div className="flex items-baseline gap-1.5">
-                <span className="text-2xl font-extrabold text-white font-mono tracking-tight">
-                  {formattedPrice}
-                </span>
-                <span className="text-xs font-bold text-amber-400/90 font-mono uppercase">
-                  {currencyCode}
-                </span>
-              </div>
-
-              {/* Wholesale sub-pricing if applicable */}
-              {(sellingType === 'Wholesale' || sellingType === 'Retail & Wholesale') && (property as any).wholesalePrice && (
-                <div className="text-[11px] font-mono text-emerald-400 font-bold mt-0.5 flex items-center gap-1">
-                  <span>Bulk: {Number((property as any).wholesalePrice).toLocaleString()} {currencyCode}</span>
-                  {(property as any).minimumOrderQuantity && (
-                    <span className="text-white/40 font-normal">
-                      (MOQ: {(property as any).minimumOrderQuantity})
-                    </span>
-                  )}
-                </div>
-              )}
-            </div>
-
-            <span className="text-[10px] font-extrabold text-amber-400/90 bg-amber-500/10 border border-amber-500/20 px-2.5 py-1 rounded-xl uppercase tracking-wider shrink-0">
+          <div className="flex items-center justify-between gap-2 mb-2">
+            <span className="text-[10px] font-extrabold text-amber-400/90 bg-amber-500/10 border border-amber-500/20 px-2.5 py-1 rounded-xl uppercase tracking-wider">
               {categoryLabel}
             </span>
+          </div>
+
+          {/* Pure Data-Driven Pricing & Quantity Block */}
+          <div className="space-y-1 mb-2.5 min-h-[50px]">
+            {/* Retail Price line if present */}
+            {pricingInfo.hasRetailPrice && (
+              <div className="text-xl font-extrabold text-white font-mono tracking-tight leading-tight">
+                {pricingInfo.retailPriceFormatted}
+              </div>
+            )}
+
+            {/* Available quantity line if present */}
+            {pricingInfo.hasAvailableQuantity && (
+              <div className="text-xs font-medium text-emerald-400 font-mono">
+                {pricingInfo.availableQuantityFormatted}
+              </div>
+            )}
+
+            {/* MOQ line if present */}
+            {pricingInfo.hasMoq && (
+              <div className="text-xs font-bold text-amber-400 font-mono">
+                {pricingInfo.moqFormatted}
+              </div>
+            )}
+
+            {/* Tier lines if present */}
+            {pricingInfo.hasWholesaleTiers && (
+              <div className="space-y-0.5 font-mono text-[11px] text-white/85">
+                {pricingInfo.wholesaleTiers.slice(0, 3).map((tier, idx) => (
+                  <div key={idx} className="truncate">
+                    {tier.label}
+                  </div>
+                ))}
+                {pricingInfo.wholesaleTiers.length > 3 && (
+                  <span className="text-[10px] text-amber-400/80 font-sans block">
+                    +{pricingInfo.wholesaleTiers.length - 3} more tiers
+                  </span>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Title */}
@@ -725,7 +749,7 @@ export function ListingCard({
                 onClick={() => onSelect(property)}
                 className="w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black font-extrabold py-2.5 px-4 rounded-xl text-xs uppercase tracking-wider transition-all duration-300 hover:scale-[1.02] shadow-md shadow-amber-500/10 flex items-center justify-center gap-1.5 cursor-pointer truncate"
               >
-                <span>{sellingType === 'Wholesale' ? 'Contact Supplier' : 'View Listing'}</span>
+                <span>{t('view_listing') || 'View Listing'}</span>
                 <ChevronRight className="w-3.5 h-3.5 shrink-0" />
               </button>
             </div>
