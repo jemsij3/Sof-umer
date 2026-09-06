@@ -175,14 +175,34 @@ export interface Property {
   promotionExpiresAt?: string; // ISO date string
   approvalStatus?: 'approved' | 'pending' | 'rejected';
 
-  // Wholesale Selling extensions
-  sellingType?: 'retail' | 'wholesale' | 'retail_wholesale';
+  // Retail & Wholesale Selling extensions
+  sellingType?: 'Retail' | 'Wholesale' | 'Retail + Wholesale' | 'Retail & Wholesale' | 'retail' | 'wholesale' | 'retail_wholesale' | string;
+  retailPrice?: number;
+  retailQuantity?: number;
+  unit?: 'Piece' | 'Pair' | 'Set' | 'Box' | 'Kg' | 'Liter' | 'Meter' | 'Other' | string;
   businessType?: 'Manufacturer' | 'Wholesaler' | 'Distributor' | 'Importer' | 'Exporter' | 'Retailer' | 'Farmer' | 'Cooperative' | 'Other' | string;
   wholesalePrice?: number;
   minimumOrderQuantity?: number;
+  wholesalePriceTiers?: WholesalePriceTier[];
   wholesaleUnit?: string;
+  availableQuantity?: number;
   deliveryOptions?: string[];
   wholesaleNotes?: string;
+  variations?: ProductVariation[];
+}
+
+export interface WholesalePriceTier {
+  minimumQuantity: number;
+  pricePerUnit: number;
+}
+
+export interface ProductVariation {
+  id: string;
+  name?: string;
+  attributes: Record<string, string>; // e.g. { Color: 'Black', Size: 'M' }
+  stock?: number;
+  price?: number;
+  sku?: string;
 }
 
 export interface Review {
