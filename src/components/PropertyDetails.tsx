@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Property, PropertyOffer } from '../types';
 import { useApp } from '../lib/AppContext';
 import { ListingCard } from './ListingCard';
@@ -13,7 +13,7 @@ import {
   getTranslatedPropertyType,
   extractString
 } from '../lib/categoriesData';
-import { getListingCustomerPricingDisplay, calculateDynamicPrice, getPluralizedUnit, normalizeSellingType } from '../utils/wholesalePricing';
+import { getListingCustomerPricingDisplay, calculateDynamicPrice, getPluralizedUnit, normalizeSellingType, getMoq } from '../utils/wholesalePricing';
 import { 
   ArrowLeft, 
   Heart, 
@@ -90,11 +90,24 @@ export default function PropertyDetails({
   const isProperty = useMemo(() => isPropertyListing(property), [property]);
   const pricingInfo = useMemo(() => getListingCustomerPricingDisplay(property), [property]);
 
+  const effectiveMoq = useMemo(() => getMoq(property), [property]);
+  const minAllowedQty = useMemo(() => {
+    return normalizeSellingType(property.sellingType) === 'Wholesale' ? Math.max(1, effectiveMoq) : 1;
+  }, [property.sellingType, effectiveMoq]);
+
   // Buyer Quantity Calculator for Wholesale / Volume Pricing
   const [calcQuantity, setCalcQuantity] = useState<number>(() => {
-    const defaultMoq = Number(property.minimumOrderQuantity) || 1;
-    return defaultMoq > 0 ? defaultMoq : 1;
+    const norm = normalizeSellingType(property.sellingType);
+    const moq = getMoq(property);
+    return norm === 'Wholesale' ? Math.max(1, moq) : 1;
   });
+
+  useEffect(() => {
+    const norm = normalizeSellingType(property.sellingType);
+    const moq = getMoq(property);
+    const minQ = norm === 'Wholesale' ? Math.max(1, moq) : 1;
+    setCalcQuantity(prev => (prev < minQ ? minQ : prev));
+  }, [property]);
 
   const dynamicPricing = useMemo(() => {
     return calculateDynamicPrice(property, calcQuantity);
@@ -134,8 +147,9 @@ export default function PropertyDetails({
   // Quote Request Modal state
   const [quoteModalOpen, setQuoteModalOpen] = useState(false);
   const [quoteQuantity, setQuoteQuantity] = useState<string | number>(() => {
-    const defaultMoq = Number(property.minimumOrderQuantity) || 1;
-    return defaultMoq > 0 ? defaultMoq : 1;
+    const norm = normalizeSellingType(property.sellingType);
+    const moq = getMoq(property);
+    return norm === 'Wholesale' ? Math.max(1, moq) : 1;
   });
   const [quoteMessage, setQuoteMessage] = useState('');
   const [quotePhone, setQuotePhone] = useState(currentUser?.phone || '');
@@ -157,10 +171,10 @@ export default function PropertyDetails({
     }
 
     const normSellingType = normalizeSellingType(property.sellingType);
-    const effectiveMoq = Number(property.minimumOrderQuantity) || 1;
+    const reqMoq = getMoq(property);
 
-    if (normSellingType === 'Wholesale' && numQty < effectiveMoq) {
-      setQuoteError(`Minimum order quantity is ${effectiveMoq} ${getPluralizedUnit(effectiveMoq, pricingInfo.unit)}.`);
+    if (normSellingType === 'Wholesale' && numQty < reqMoq) {
+      setQuoteError(`Minimum order quantity is ${reqMoq} ${getPluralizedUnit(reqMoq, pricingInfo.unit)}.`);
       return;
     }
 
@@ -283,8 +297,8 @@ export default function PropertyDetails({
   const addedKeys = new Set<string>();
 
   const categoryAllowedKeys: Record<string, string[]> = {
-    Products: ['subcategory', 'brand', 'model', 'size', 'dimensions', 'color', 'material', 'condition', 'quantity', 'negotiable', 'gender', 'clothing type', 'storage / spec'],
-    Properties: ['subcategory', 'property type', 'purpose', 'bedrooms', 'bathrooms', 'toilets', 'toilet', 'area', 'area (m²)', 'furnished', 'furnished status', 'parking', 'parking available', 'floor level', 'ownership', 'ownership / title deed', 'title deed', 'zoning'],
+    Products: ['subcategory', 'brand', 'model', 'size', 'dimensions', 'color', 'material', 'condition', 'gender', 'clothing type', 'storage / spec'],
+    Properties: ['subcategory', 'property type', 'purpose', 'toilets', 'toilet', 'furnished', 'furnished status', 'parking', 'parking available', 'floor level', 'ownership', 'ownership / title deed', 'title deed', 'zoning'],
     Vehicles: ['subcategory', 'vehicle type', 'make / brand', 'transmission', 'fuel type', 'engine capacity', 'year', 'mileage', 'mileage (km)', 'color', 'brand', 'condition', 'model'],
     Jobs: ['subcategory', 'job type', 'employment type', 'sector', 'sector / industry', 'industry', 'salary range', 'qualification', 'education required', 'experience', 'experience required', 'deadline', 'application deadline'],
     Services: ['subcategory', 'service type', 'service category', 'pricing unit', 'years of experience', 'coverage area', 'availability', 'opening hours'],
@@ -301,9 +315,37 @@ export default function PropertyDetails({
     if (!valStr || (valStr === '0' && ['Bedrooms', 'Bathrooms', 'Toilet'].includes(label))) return;
     const normKey = label.toLowerCase().trim();
 
-    if (normKey === 'negotiable') {
-      const lower = valStr.toLowerCase();
-      if (lower === 'no' || lower === 'false') return;
+    // Prevent duplicate displays of fields that already have dedicated display locations:
+    // - Negotiable: primary location is the Pricing section badge
+    // - Quantity/Stock: primary location is the Listing Summary / Price section
+    // - MOQ / Wholesale Pricing: primary location is the Bulk Pricing section
+    // - Business Type & Unit of Sale: primary location is the Wholesale Terms section
+    if (
+      normKey === 'negotiable' ||
+      normKey === 'isnegotiable' ||
+      normKey === 'quantity' ||
+      normKey === 'availablequantity' ||
+      normKey === 'available_quantity' ||
+      normKey === 'stock' ||
+      normKey === 'moq' ||
+      normKey === 'minimum order quantity' ||
+      normKey === 'minimumorderquantity' ||
+      normKey === 'unit' ||
+      normKey === 'unit of sale' ||
+      normKey === 'wholesaleunit' ||
+      normKey === 'business type' ||
+      normKey === 'businesstype'
+    ) {
+      return;
+    }
+
+    // Filter out meaningless values: null, undefined, empty, N/A, placeholders
+    const lowerVal = valStr.toLowerCase();
+    if (
+      !valStr ||
+      ['null', 'undefined', 'n/a', 'na', 'none', 'placeholder', '-', '--', 'not specified', 'not provided'].includes(lowerVal)
+    ) {
+      return;
     }
 
     if (allowedKeys && !allowedKeys.includes(normKey)) return;
@@ -314,16 +356,16 @@ export default function PropertyDetails({
     }
   };
 
-  if (currentCategory === 'Properties') {
-    if (property.bedrooms && property.bedrooms > 0) addSpec('Bedrooms', property.bedrooms);
-    if (property.bathrooms && property.bathrooms > 0) addSpec('Bathrooms', property.bathrooms);
-    if (property.area && property.area > 0) addSpec('Area (m²)', `${property.area} m²`);
-  }
+  // Structured fields for Products and general categories
+  const subcatVal = (property as any).subCategoryName || (property as any).subcategory || (property as any).subCategoryId;
+  if (subcatVal) addSpec('Subcategory', subcatVal);
   if (property.brand) addSpec('Brand', property.brand);
   if (property.condition) addSpec('Condition', property.condition);
   if ((property as any).size) addSpec('Size', (property as any).size);
   if ((property as any).color) addSpec('Color', (property as any).color);
   if ((property as any).material) addSpec('Material', (property as any).material);
+  if ((property as any).gender) addSpec('Gender', (property as any).gender);
+  if ((property as any).model) addSpec('Model', (property as any).model);
 
   for (const item of rawAmenities) {
     if (!item || typeof item !== 'string') continue;
@@ -338,7 +380,18 @@ export default function PropertyDetails({
         addSpec(label, value);
       }
     } else {
-      if (!generalFeatures.includes(trimmed) && !addedKeys.has(trimmed.toLowerCase())) {
+      const lowerTrimmed = trimmed.toLowerCase();
+      if (
+        lowerTrimmed === 'negotiable' ||
+        lowerTrimmed === 'isnegotiable' ||
+        lowerTrimmed === 'null' ||
+        lowerTrimmed === 'undefined' ||
+        lowerTrimmed === 'n/a' ||
+        lowerTrimmed === 'none'
+      ) {
+        continue;
+      }
+      if (!generalFeatures.includes(trimmed) && !addedKeys.has(lowerTrimmed)) {
         generalFeatures.push(trimmed);
       }
     }
@@ -580,13 +633,6 @@ export default function PropertyDetails({
                 </span>
               )}
 
-              {(property as any).businessType && (
-                <span className="inline-flex items-center gap-1.5 bg-amber-500/10 text-amber-400 border border-amber-500/20 px-3 py-1 rounded-xl text-xs font-bold uppercase tracking-wider">
-                  <Building className="w-3.5 h-3.5 text-amber-400" />
-                  {(property as any).businessType}
-                </span>
-              )}
-
               {(Array.isArray((property as any).deliveryOptions) && (property as any).deliveryOptions.length > 0) && (
                 <span className="inline-flex items-center gap-1.5 bg-purple-500/10 text-purple-300 border border-purple-500/20 px-3 py-1 rounded-xl text-xs font-bold uppercase tracking-wider">
                   <Sparkles className="w-3.5 h-3.5 text-purple-300" />
@@ -623,13 +669,6 @@ export default function PropertyDetails({
                     {pricingInfo.availableQuantityFormatted}
                   </p>
                 )}
-
-                {/* MOQ line if present */}
-                {pricingInfo.hasMoq && (
-                  <p className="text-sm font-bold text-amber-400 font-mono">
-                    {pricingInfo.moqFormatted}
-                  </p>
-                )}
               </div>
 
               {/* Negotiable Badge - Only show if seller selected Yes */}
@@ -658,7 +697,7 @@ export default function PropertyDetails({
                   </div>
                   {pricingInfo.hasMoq && (
                     <span className="text-xs text-amber-400 font-mono font-bold">
-                      {pricingInfo.moqFormatted}
+                      Minimum Order: {pricingInfo.moq} {getPluralizedUnit(pricingInfo.moq, pricingInfo.unit)}
                     </span>
                   )}
                 </div>
@@ -667,10 +706,16 @@ export default function PropertyDetails({
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5">
                   {pricingInfo.wholesaleTiers.map((tier, idx) => {
                     const isCurrentTier = dynamicPricing.activeTier?.minimumQuantity === tier.minQuantity;
+                    const nextTier = pricingInfo.wholesaleTiers[idx + 1];
+                    const maxQty = tier.maxQuantity || (nextTier ? nextTier.minQuantity - 1 : undefined);
+                    const rangeLabel = maxQty && maxQty >= tier.minQuantity
+                      ? `${tier.minQuantity}–${maxQty} ${getPluralizedUnit(maxQty, pricingInfo.unit)}`
+                      : `${tier.minQuantity}+ ${getPluralizedUnit(tier.minQuantity, pricingInfo.unit)}`;
+
                     return (
                       <div
                         key={idx}
-                        onClick={() => setCalcQuantity(tier.minQuantity)}
+                        onClick={() => setCalcQuantity(Math.max(minAllowedQty, tier.minQuantity))}
                         className={`border rounded-2xl p-3.5 font-mono cursor-pointer transition-all duration-200 ${
                           isCurrentTier
                             ? 'bg-amber-500/15 border-amber-500/60 shadow-lg ring-1 ring-amber-500/40'
@@ -678,7 +723,7 @@ export default function PropertyDetails({
                         }`}
                       >
                         <div className="text-white/70 text-xs font-bold flex items-center justify-between">
-                          <span>{tier.minQuantity}+ {getPluralizedUnit(tier.minQuantity, pricingInfo.unit)}</span>
+                          <span>{rangeLabel}</span>
                           {isCurrentTier && (
                             <span className="text-[9px] bg-amber-500/20 text-amber-400 px-1.5 py-0.5 rounded font-bold uppercase">
                               Applied
@@ -708,17 +753,29 @@ export default function PropertyDetails({
                     <div className="flex items-center border border-white/15 rounded-xl overflow-hidden bg-black/60">
                       <button
                         type="button"
-                        onClick={() => setCalcQuantity(prev => Math.max(1, prev - 1))}
-                        className="px-3.5 py-2 text-white/70 hover:text-white hover:bg-white/10 transition font-mono font-bold text-base cursor-pointer"
+                        onClick={() => setCalcQuantity(prev => Math.max(minAllowedQty, prev - 1))}
+                        disabled={calcQuantity <= minAllowedQty}
+                        className={`px-3.5 py-2 transition font-mono font-bold text-base ${
+                          calcQuantity <= minAllowedQty
+                            ? 'text-white/20 cursor-not-allowed'
+                            : 'text-white/70 hover:text-white hover:bg-white/10 cursor-pointer'
+                        }`}
                         title="Decrease"
                       >
                         -
                       </button>
                       <input
                         type="number"
-                        min="1"
+                        min={minAllowedQty}
                         value={calcQuantity}
-                        onChange={e => setCalcQuantity(Math.max(1, parseInt(e.target.value, 10) || 1))}
+                        onChange={e => {
+                          const val = parseInt(e.target.value, 10);
+                          if (isNaN(val)) {
+                            setCalcQuantity(minAllowedQty);
+                          } else {
+                            setCalcQuantity(Math.max(minAllowedQty, val));
+                          }
+                        }}
                         className="w-20 text-center bg-transparent text-white font-mono font-bold text-sm focus:outline-none py-2"
                       />
                       <button
@@ -741,7 +798,7 @@ export default function PropertyDetails({
                         <button
                           key={i}
                           type="button"
-                          onClick={() => setCalcQuantity(tier.minQuantity)}
+                          onClick={() => setCalcQuantity(Math.max(minAllowedQty, tier.minQuantity))}
                           className={`text-[11px] font-mono px-2.5 py-1 rounded-lg border transition cursor-pointer ${
                             calcQuantity === tier.minQuantity
                               ? 'bg-amber-500 text-black font-bold border-amber-500'
@@ -785,7 +842,8 @@ export default function PropertyDetails({
                     <button
                       type="button"
                       onClick={() => {
-                        setQuoteQuantity(calcQuantity);
+                        const targetQty = Math.max(minAllowedQty, calcQuantity);
+                        setQuoteQuantity(targetQty);
                         setQuoteModalOpen(true);
                       }}
                       className="bg-amber-500 hover:bg-amber-400 text-black font-extrabold text-xs px-4 py-2.5 rounded-xl transition self-start sm:self-auto shadow-md cursor-pointer flex items-center gap-1.5"
@@ -799,30 +857,21 @@ export default function PropertyDetails({
           </div>
 
           {/* Bulk Terms / Order Details if any entered (Only for Physical Products) */}
-          {!isProperty && (pricingInfo.hasWholesaleTiers || (property as any).businessType || (Array.isArray((property as any).deliveryOptions) && (property as any).deliveryOptions.length > 0) || (property as any).wholesaleNotes) && (
+          {!isProperty && ((property as any).businessType || pricingInfo.unit || (Array.isArray((property as any).deliveryOptions) && (property as any).deliveryOptions.length > 0) || (property as any).wholesaleNotes) && (
             <div className="bg-amber-500/10 border border-amber-500/30 rounded-3xl p-6 shadow-xl space-y-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2 text-amber-400 font-bold text-sm uppercase tracking-wider">
                   <Package className="w-5 h-5 text-amber-400" />
-                  <span>📦 {t('wholesale.wholesale_terms') || 'Volume Order Terms'}</span>
+                  <span>📦 {t('wholesale.wholesale_terms') || 'Wholesale Terms'}</span>
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-2">
+              <div className="grid grid-cols-2 sm:grid-cols-2 gap-4 pt-2">
                 {(property as any).businessType && (
                   <div className="bg-black/40 p-3.5 rounded-2xl border border-white/5">
                     <span className="text-[10px] text-white/50 uppercase font-bold block mb-1">{t('wholesale.business_type') || 'Business Type'}</span>
                     <span className="text-xs font-bold text-white">
                       {(property as any).businessType}
-                    </span>
-                  </div>
-                )}
-
-                {pricingInfo.hasMoq && (
-                  <div className="bg-black/40 p-3.5 rounded-2xl border border-white/5">
-                    <span className="text-[10px] text-white/50 uppercase font-bold block mb-1">{t('wholesale.moq') || 'Min. Order (MOQ)'}</span>
-                    <span className="text-xs font-bold text-white font-mono">
-                      {pricingInfo.moqFormatted}
                     </span>
                   </div>
                 )}
@@ -1574,21 +1623,30 @@ export default function PropertyDetails({
                     </label>
                     <input
                       type="number"
-                      min="1"
+                      min={minAllowedQty}
                       required
                       value={quoteQuantity}
-                      onChange={e => setQuoteQuantity(e.target.value)}
+                      onChange={e => {
+                        const val = parseInt(e.target.value, 10);
+                        setQuoteQuantity(isNaN(val) ? '' : val);
+                      }}
+                      onBlur={() => {
+                        const val = Number(quoteQuantity);
+                        if (!val || val < minAllowedQty) {
+                          setQuoteQuantity(minAllowedQty);
+                        }
+                      }}
                       className="w-full p-3.5 bg-[#12121a] border border-white/10 rounded-2xl text-white font-mono text-base font-bold focus:outline-none focus:border-amber-500"
-                      placeholder={`Min order: ${(property as any).minimumOrderQuantity || 1}`}
+                      placeholder={`Min order: ${minAllowedQty}`}
                     />
                     {pricingInfo.hasMoq && (
                       <p className="text-[11px] text-amber-400/90 mt-1 font-mono">
-                        {pricingInfo.moqFormatted}
+                        Minimum Order: {pricingInfo.moq} {getPluralizedUnit(pricingInfo.moq, pricingInfo.unit)}
                       </p>
                     )}
-                    {normalizeSellingType(property.sellingType) === 'Wholesale' && Number(quoteQuantity) < (Number(property.minimumOrderQuantity) || 1) && (
+                    {normalizeSellingType(property.sellingType) === 'Wholesale' && Number(quoteQuantity) < effectiveMoq && (
                       <p className="text-xs font-bold text-rose-400 mt-1">
-                        Minimum order quantity is {property.minimumOrderQuantity || 1} {getPluralizedUnit(Number(property.minimumOrderQuantity) || 1, pricingInfo.unit)}.
+                        Minimum order quantity is {effectiveMoq} {getPluralizedUnit(effectiveMoq, pricingInfo.unit)}.
                       </p>
                     )}
                   </div>
