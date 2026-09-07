@@ -4,6 +4,7 @@ import { useApp } from '../lib/AppContext';
 import { ListingCard } from './ListingCard';
 import { 
   getEffectiveMajorCategory,
+  isPropertyListing,
   getTranslatedCategoryName,
   getTranslatedSubcategoryName,
   getTranslatedFieldLabel,
@@ -86,6 +87,7 @@ export default function PropertyDetails({
   } = useApp();
 
   const [activeImage, setActiveImage] = useState(property.images[0] || '');
+  const isProperty = useMemo(() => isPropertyListing(property), [property]);
   const pricingInfo = useMemo(() => getListingCustomerPricingDisplay(property), [property]);
 
   // Buyer Quantity Calculator for Wholesale / Volume Pricing
@@ -290,7 +292,7 @@ export default function PropertyDetails({
     Community: ['subcategory', 'post type', 'organizer', 'organizer name / group', 'venue', 'venue / address', 'date', 'time', 'event date & time']
   };
 
-  const currentCategory = getEffectiveMajorCategory(property);
+  const currentCategory = isProperty ? 'Properties' : getEffectiveMajorCategory(property);
   const allowedKeys = categoryAllowedKeys[currentCategory];
 
   const addSpec = (label: string, value: string | number | undefined) => {
@@ -796,8 +798,8 @@ export default function PropertyDetails({
             )}
           </div>
 
-          {/* Bulk Terms / Order Details if any entered */}
-          {(pricingInfo.hasWholesaleTiers || (property as any).businessType || (Array.isArray((property as any).deliveryOptions) && (property as any).deliveryOptions.length > 0) || (property as any).wholesaleNotes) && (
+          {/* Bulk Terms / Order Details if any entered (Only for Physical Products) */}
+          {!isProperty && (pricingInfo.hasWholesaleTiers || (property as any).businessType || (Array.isArray((property as any).deliveryOptions) && (property as any).deliveryOptions.length > 0) || (property as any).wholesaleNotes) && (
             <div className="bg-amber-500/10 border border-amber-500/30 rounded-3xl p-6 shadow-xl space-y-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2 text-amber-400 font-bold text-sm uppercase tracking-wider">
@@ -1663,7 +1665,7 @@ export default function PropertyDetails({
               <span>Contact Seller</span>
             </button>
 
-            {(pricingInfo.hasWholesaleTiers || pricingInfo.hasMoq) && (
+            {!isProperty && (pricingInfo.hasWholesaleTiers || pricingInfo.hasMoq) && (
               <button
                 onClick={() => setQuoteModalOpen(true)}
                 className="flex-1 sm:flex-initial bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black font-extrabold px-6 py-3 rounded-2xl shadow-xl transition flex items-center justify-center gap-2 text-xs uppercase tracking-wider cursor-pointer"

@@ -12,7 +12,8 @@ import {
   getTranslatedCategoryName,
   getTranslatedPropertyType,
   getTranslatedOption,
-  getEffectiveMajorCategory
+  getEffectiveMajorCategory,
+  isPropertyListing
 } from '../lib/categoriesData';
 import { getListingCustomerPricingDisplay } from '../utils/wholesalePricing';
 
@@ -84,7 +85,9 @@ export function ListingCard({
       return null;
     };
 
-    if (majorCategory === 'Properties') {
+    const isProp = isPropertyListing(property);
+
+    if (isProp) {
       if (property.bedrooms && property.bedrooms > 0) {
         list.push({
           icon: <BedDouble className="w-3.5 h-3.5 text-amber-500" />,

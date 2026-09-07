@@ -1,4 +1,5 @@
 import { Property, WholesalePriceTier } from '../types';
+import { isPropertyListing, isPhysicalProductListing, getEffectiveMajorCategory } from '../lib/categoriesData';
 
 export type NormalizedSellingType = 'Retail' | 'Wholesale' | 'Retail + Wholesale';
 
@@ -315,8 +316,12 @@ export function formatQuantityWithUnit(quantity: number, rawUnit?: string): stri
 }
 
 /**
- * Generates pure data-driven pricing & quantity display for customer-facing screens.
+ * Generates category-aware data-driven pricing & quantity display for customer-facing screens.
  * Strictly adheres to:
+ * - Category type determines what kind of information is appropriate
+ * - Property listings NEVER display product inventory language (no "piece", no "Available: 1 piece", no MOQ, no wholesale tiers)
+ * - Property listings display clean price: e.g. "ETB 10,000,000" (NOT "ETB 10,000,000 / piece")
+ * - Physical product listings retain full Retail / Wholesale / Retail + Wholesale pricing and inventory
  * - NO selling-type labels (No "Retail", No "Wholesale", No "Retail + Wholesale")
  * - NO word "Wholesale" in customer pricing display
  * - Displays only what the seller actually entered
@@ -324,18 +329,30 @@ export function formatQuantityWithUnit(quantity: number, rawUnit?: string): stri
  */
 export function getListingCustomerPricingDisplay(property: Partial<Property>): ListingCustomerPricingDisplay {
   const currency = property.currency || 'ETB';
-  const majorCategory = property.majorCategory;
-  const isProductCategory = !majorCategory || (majorCategory as string) === 'Products' || (majorCategory as string) === 'Electronics';
+  const isProperty = isPropertyListing(property);
+  const isPhysicalProduct = isPhysicalProductListing(property);
 
-  // Unit
-  const rawUnit = property.unit || (property as any).wholesaleUnit || (isProductCategory ? 'piece' : '');
-  const cleanUnit = rawUnit.trim();
-  const unitForPriceSlash = cleanUnit ? getPluralizedUnit(1, cleanUnit) : '';
+  // Unit resolution based on category
+  let cleanUnit = '';
+  let unitForPriceSlash = '';
+
+  if (isPhysicalProduct) {
+    const rawUnit = property.unit || (property as any).wholesaleUnit || 'piece';
+    cleanUnit = rawUnit.trim() || 'piece';
+    unitForPriceSlash = getPluralizedUnit(1, cleanUnit);
+  } else if (!isProperty) {
+    // Other categories (Services might have a rate unit like 'hr')
+    const rawUnit = (property.unit || '').trim();
+    if (rawUnit && rawUnit.toLowerCase() !== 'piece') {
+      cleanUnit = rawUnit;
+      unitForPriceSlash = cleanUnit;
+    }
+  }
 
   // Selling Type (internal configuration only)
   const normalizedSt = normalizeSellingType(property.sellingType);
 
-  // 1. Retail Price
+  // 1. Retail / Standard Price
   let retailPrice: number | null = null;
   if ((property as any).retailPrice !== undefined && (property as any).retailPrice !== null && (property as any).retailPrice !== '') {
     const p = Number((property as any).retailPrice);
@@ -356,54 +373,65 @@ export function getListingCustomerPricingDisplay(property: Partial<Property>): L
         : `${currency} ${retailPrice!.toLocaleString()}`)
     : null;
 
-  // 2. Available Quantity
+  // 2. Available Quantity / Stock
+  // CRITICAL RULE: Properties, Vehicles, Jobs, Services, Community NEVER show product inventory language (no "Available: 1 piece")
   let availableQuantity: number | null = null;
-  const propQty = (property as any).quantity;
-  const rawAvail = (property as any).availableQuantity !== undefined && (property as any).availableQuantity !== null && (property as any).availableQuantity !== ''
-    ? (property as any).availableQuantity
-    : ((propQty !== undefined && propQty !== null && propQty !== '' && propQty !== '0' && propQty !== 0) ? propQty : null);
+  let hasAvailableQuantity = false;
+  let availableQuantityFormatted: string | null = null;
 
-  if (rawAvail !== null && rawAvail !== undefined && rawAvail !== '') {
-    const q = Number(rawAvail);
-    if (!isNaN(q) && q > 0) {
-      availableQuantity = q;
+  if (isPhysicalProduct) {
+    const propQty = (property as any).quantity;
+    const rawAvail = (property as any).availableQuantity !== undefined && (property as any).availableQuantity !== null && (property as any).availableQuantity !== ''
+      ? (property as any).availableQuantity
+      : ((propQty !== undefined && propQty !== null && propQty !== '' && propQty !== '0' && propQty !== 0) ? propQty : null);
+
+    if (rawAvail !== null && rawAvail !== undefined && rawAvail !== '') {
+      const q = Number(rawAvail);
+      if (!isNaN(q) && q > 0) {
+        availableQuantity = q;
+        hasAvailableQuantity = true;
+        availableQuantityFormatted = `Available: ${formatQuantityWithUnit(availableQuantity, cleanUnit || 'piece')}`;
+      }
     }
   }
-
-  const hasAvailableQuantity = availableQuantity !== null && availableQuantity > 0;
-  const availableQuantityFormatted = hasAvailableQuantity
-    ? `Available: ${formatQuantityWithUnit(availableQuantity!, cleanUnit || 'piece')}`
-    : null;
 
   // 3. Wholesale Tiers & MOQ
-  const tiers = getWholesaleTiers(property);
-  const hasWholesaleTiers = tiers.length > 0;
-
+  // CRITICAL RULE: Wholesale tiers and MOQ are ONLY appropriate for Physical Products
+  let hasMoq = false;
   let moq: number | null = null;
-  if (property.minimumOrderQuantity !== undefined && property.minimumOrderQuantity !== null && (property.minimumOrderQuantity as any) !== '') {
-    const m = Number(property.minimumOrderQuantity);
-    if (!isNaN(m) && m > 0) {
-      moq = m;
+  let moqFormatted: string | null = null;
+  let hasWholesaleTiers = false;
+  let wholesaleTiersFormatted: CustomerTierDisplay[] = [];
+
+  if (isPhysicalProduct) {
+    const tiers = getWholesaleTiers(property);
+    hasWholesaleTiers = tiers.length > 0;
+
+    if (property.minimumOrderQuantity !== undefined && property.minimumOrderQuantity !== null && (property.minimumOrderQuantity as any) !== '') {
+      const m = Number(property.minimumOrderQuantity);
+      if (!isNaN(m) && m > 0) {
+        moq = m;
+      }
+    } else if (hasWholesaleTiers && tiers[0].minimumQuantity > 0) {
+      moq = tiers[0].minimumQuantity;
     }
-  } else if (hasWholesaleTiers && tiers[0].minimumQuantity > 0) {
-    moq = tiers[0].minimumQuantity;
+
+    hasMoq = hasWholesaleTiers && moq !== null && moq > 0;
+    moqFormatted = hasMoq
+      ? `MOQ: ${formatQuantityWithUnit(moq!, cleanUnit || 'piece')}`
+      : null;
+
+    wholesaleTiersFormatted = tiers.map(tier => {
+      const tierUnit = unitForPriceSlash || 'piece';
+      const label = `${tier.minimumQuantity}+ — ${currency} ${tier.pricePerUnit.toLocaleString()} / ${tierUnit}`;
+      return {
+        minQuantity: tier.minimumQuantity,
+        maxQuantity: (tier as any).maxQuantity,
+        pricePerUnit: tier.pricePerUnit,
+        label
+      };
+    });
   }
-
-  const hasMoq = hasWholesaleTiers && moq !== null && moq > 0;
-  const moqFormatted = hasMoq
-    ? `MOQ: ${formatQuantityWithUnit(moq!, cleanUnit || 'piece')}`
-    : null;
-
-  const wholesaleTiersFormatted: CustomerTierDisplay[] = tiers.map(tier => {
-    const tierUnit = unitForPriceSlash || 'piece';
-    const label = `${tier.minimumQuantity}+ — ${currency} ${tier.pricePerUnit.toLocaleString()} / ${tierUnit}`;
-    return {
-      minQuantity: tier.minimumQuantity,
-      maxQuantity: (tier as any).maxQuantity,
-      pricePerUnit: tier.pricePerUnit,
-      label
-    };
-  });
 
   return {
     currency,

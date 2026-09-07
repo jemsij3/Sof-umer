@@ -534,11 +534,23 @@ export function getEffectiveMajorCategory(p: {
     }
   }
 
-  // 2. Check explicit majorCategory if valid
-  const major = (p.majorCategory || '').trim();
-  if (major === 'Properties' || major === 'Vehicles' || major === 'Jobs' || major === 'Services' || major === 'Products' || major === 'Local Businesses' || major === 'Community') {
-    return major as any;
-  }
+  // 2. Check explicit majorCategory or category if valid
+  const rawMajor = (p.majorCategory || '').trim().toLowerCase();
+  if (rawMajor === 'properties' || rawMajor === 'real estate') return 'Properties';
+  if (rawMajor === 'vehicles' || rawMajor === 'vehicle') return 'Vehicles';
+  if (rawMajor === 'jobs' || rawMajor === 'job') return 'Jobs';
+  if (rawMajor === 'services' || rawMajor === 'service') return 'Services';
+  if (rawMajor === 'products' || rawMajor === 'product') return 'Products';
+  if (rawMajor === 'local businesses' || rawMajor === 'local business') return 'Local Businesses';
+  if (rawMajor === 'community') return 'Community';
+
+  const rawCat = extractString(p.category).trim().toLowerCase();
+  if (rawCat === 'properties' || rawCat === 'real estate') return 'Properties';
+  if (rawCat === 'vehicles' || rawCat === 'vehicle') return 'Vehicles';
+  if (rawCat === 'jobs' || rawCat === 'job') return 'Jobs';
+  if (rawCat === 'services' || rawCat === 'service') return 'Services';
+  if (rawCat === 'products' || rawCat === 'product') return 'Products';
+  if (rawCat === 'community') return 'Community';
 
   // Lowercase text fields for inspection
   const type = extractString(p.propertyType).toLowerCase();
@@ -546,6 +558,19 @@ export function getEffectiveMajorCategory(p: {
   const title = extractString(p.title).toLowerCase();
   const desc = extractString(p.description).toLowerCase();
   const fullText = `${type} ${cat} ${title} ${desc}`;
+
+  // Check Property indicators first (Bedrooms, Bathrooms, or Property types like Villa, House, Apartment, Land, Office, Shop, Warehouse)
+  // This prevents properties mentioning "car parking" or "car garage" from mistakenly matching Vehicles
+  const propKeywords = ['villa', 'house', 'apartment', 'condo', 'land', 'plot', 'office', 'shop', 'warehouse', 'commercial', 'real estate', 'hotel', 'farm', 'building', 'penthouse', 'townhouse'];
+  const hasPropTypeOrKeyword = propKeywords.some(kw => type === kw || type.includes(kw) || title.includes(kw));
+  if (
+    hasPropTypeOrKeyword ||
+    (p.bedrooms !== undefined && Number(p.bedrooms) > 0) ||
+    (p.bathrooms !== undefined && Number(p.bathrooms) > 0) ||
+    (fullText.includes('villa') || fullText.includes('apartment') || fullText.includes('real estate'))
+  ) {
+    return 'Properties';
+  }
 
   // 3. Keyword matching
   // Vehicles
@@ -605,7 +630,7 @@ export function getEffectiveMajorCategory(p: {
     return 'Community';
   }
 
-  // Properties
+  // Properties general check
   if (
     fullText.includes('house') ||
     fullText.includes('apartment') ||
@@ -617,15 +642,77 @@ export function getEffectiveMajorCategory(p: {
     fullText.includes('shop') ||
     fullText.includes('warehouse') ||
     fullText.includes('real estate') ||
-    (p.bedrooms !== undefined && p.bedrooms > 0) ||
-    (p.bathrooms !== undefined && p.bathrooms > 0) ||
-    (p.area !== undefined && p.area > 0)
+    (p.area !== undefined && Number(p.area) > 0)
   ) {
     return 'Properties';
   }
 
   // Default to Products
   return 'Products';
+}
+
+/**
+ * Authoritative check if a listing belongs to the Properties category.
+ * Recognizes all property types (Villas, Houses, Apartments, Land, Offices, Shops, Warehouses, Commercial, etc.)
+ */
+export function isPropertyListing(p: any): boolean {
+  if (!p) return false;
+
+  if (p.subCategoryId && typeof p.subCategoryId === 'string' && p.subCategoryId.startsWith('prop-')) {
+    return true;
+  }
+
+  const major = (p.majorCategory || '').toString().trim().toLowerCase();
+  if (major === 'properties' || major === 'real estate') {
+    return true;
+  }
+
+  const cat = (typeof p.category === 'string' ? p.category : extractString(p.category)).trim().toLowerCase();
+  if (cat === 'properties' || cat === 'real estate') {
+    return true;
+  }
+
+  const type = (typeof p.propertyType === 'string' ? p.propertyType : extractString(p.propertyType)).trim().toLowerCase();
+  const propertyKeywords = [
+    'villa', 'villas', 'house', 'houses', 'apartment', 'apartments', 'condo', 'condominium',
+    'land', 'plot', 'plots', 'office', 'offices', 'shop', 'shops', 'warehouse', 'warehouses',
+    'commercial', 'building', 'buildings', 'real estate', 'hotel', 'hotels', 'farm', 'farms',
+    'penthouse', 'townhouse', 'studio', 'residential'
+  ];
+  if (propertyKeywords.some(kw => type === kw || (type.length > 2 && type.includes(kw)))) {
+    return true;
+  }
+
+  if ((p.bedrooms !== undefined && Number(p.bedrooms) > 0) || (p.bathrooms !== undefined && Number(p.bathrooms) > 0)) {
+    return true;
+  }
+
+  return getEffectiveMajorCategory(p) === 'Properties';
+}
+
+/**
+ * Checks if a listing is a physical product category (clothing, electronics, furniture, food, spare parts, etc.)
+ * Excludes properties, whole vehicles (cars/trucks/buses), jobs, services, and community posts.
+ */
+export function isPhysicalProductListing(p: any): boolean {
+  if (!p) return false;
+  if (isPropertyListing(p)) return false;
+
+  const eff = getEffectiveMajorCategory(p);
+  if (eff === 'Properties' || eff === 'Jobs' || eff === 'Services' || eff === 'Community') {
+    return false;
+  }
+
+  if (eff === 'Vehicles') {
+    const sub = (p.subCategoryId || '').toLowerCase();
+    const type = (typeof p.propertyType === 'string' ? p.propertyType : extractString(p.propertyType)).toLowerCase();
+    const cat = (typeof p.category === 'string' ? p.category : extractString(p.category)).toLowerCase();
+    const title = (typeof p.title === 'string' ? p.title : extractString(p.title)).toLowerCase();
+    const combined = `${sub} ${type} ${cat} ${title}`;
+    return combined.includes('part') || combined.includes('spare') || combined.includes('accessori') || combined.includes('tire') || combined.includes('rim') || combined.includes('engine');
+  }
+
+  return true;
 }
 
 export function getMatchingSubcategoryId(p: {

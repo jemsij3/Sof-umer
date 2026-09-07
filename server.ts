@@ -1177,6 +1177,16 @@ const applyDataSanityAndMigrations = () => {
         (p as any).isArchived = false;
       }
 
+      const isProp = p.majorCategory === 'Properties' || p.category === 'Properties' || (p.subCategoryId && String(p.subCategoryId).startsWith('prop-'));
+      if (isProp) {
+        if (p.unit && p.unit.toLowerCase() === 'piece') {
+          p.unit = undefined;
+        }
+        if ((p as any).wholesaleUnit && (p as any).wholesaleUnit.toLowerCase() === 'piece') {
+          (p as any).wholesaleUnit = undefined;
+        }
+      }
+
       if (!p.createdBy) {
         p.createdBy = (p as any).createdBy || (p.ownerId && p.ownerId.startsWith('usr-admin') ? p.ownerId : 'usr-jemal');
       }
@@ -3805,7 +3815,9 @@ async function startServer() {
         storageSpec: propertyData.storageSpec || propertyData.specifications || '',
         region: propertyData.region || '',
         city: propertyData.city || '',
-        quantity: propertyData.quantity || propertyData.availableQuantity || 1,
+        quantity: (propertyData.majorCategory === 'Properties' || propertyData.category === 'Properties')
+          ? (propertyData.quantity || propertyData.availableQuantity || undefined)
+          : (propertyData.quantity || propertyData.availableQuantity || 1),
         boostPlan: requestedPlan,
         isTopAd: propertyData.isTopAd === true || requestedPlan === 'starter' || requestedPlan === 'basic' || requestedPlan === 'vip',
         isFeatured: propertyData.isFeatured === true || requestedPlan === 'premium' || requestedPlan === 'vip',

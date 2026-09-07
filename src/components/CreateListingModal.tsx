@@ -1768,8 +1768,14 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
         return;
       }
 
-      // Retail & Wholesale conditional validations:
-      if (st === 'Retail') {
+      // Conditional validations based on category and selling type:
+      if (majorCategory === 'Properties') {
+        const propPrice = Number(fieldsState.price || fieldsState.retailPrice || 0);
+        if (!propPrice || propPrice <= 0) {
+          setError('Please enter a valid Property Price greater than 0.');
+          return;
+        }
+      } else if (st === 'Retail') {
         const retPrice = Number(fieldsState.retailPrice || fieldsState.price || 0);
         if (!retPrice || retPrice <= 0) {
           setError('Please enter a valid Retail Price greater than 0.');
@@ -1861,18 +1867,23 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
       const days = selectedPlan === 'basic' ? 3 : selectedPlan === 'premium' ? 7 : selectedPlan === 'vip' ? 30 : 0;
       const expiresAt = days > 0 ? new Date(Date.now() + days * 24 * 60 * 60 * 1000).toISOString() : undefined;
 
-      const finalUnit = fieldsState.unit || fieldsState.wholesaleUnit || 'Piece';
-      const isRetail = sellingType === 'Retail' || sellingType === 'Retail + Wholesale' || (sellingType as any) === 'Retail & Wholesale';
-      const isWholesale = sellingType === 'Wholesale' || sellingType === 'Retail + Wholesale' || (sellingType as any) === 'Retail & Wholesale';
+      const isPropertyCategory = dbMajorCategory === 'Properties' || majorCategory === 'Properties';
+      const finalUnit = isPropertyCategory ? '' : (fieldsState.unit || fieldsState.wholesaleUnit || 'Piece');
+      const isRetail = !isPropertyCategory && (sellingType === 'Retail' || sellingType === 'Retail + Wholesale' || (sellingType as any) === 'Retail & Wholesale');
+      const isWholesale = !isPropertyCategory && (sellingType === 'Wholesale' || sellingType === 'Retail + Wholesale' || (sellingType as any) === 'Retail & Wholesale');
 
-      const retailVal = isRetail ? Number(fieldsState.retailPrice || fieldsState.price || 0) : undefined;
+      const retailVal = isPropertyCategory
+        ? Number(fieldsState.price || fieldsState.retailPrice || 0)
+        : (isRetail ? Number(fieldsState.retailPrice || fieldsState.price || 0) : undefined);
       const wholesaleMoq = isWholesale ? Number(fieldsState.minimumOrderQuantity || wholesaleTiers[0]?.minimumQuantity || 1) : undefined;
       const primaryWholesalePrice = isWholesale ? Number(wholesaleTiers[0]?.pricePerUnit || fieldsState.wholesalePrice || 0) : undefined;
-      const availStock = fieldsState.availableQuantity ? Number(fieldsState.availableQuantity) : (fieldsState.quantity ? Number(fieldsState.quantity) : undefined);
+      const availStock = isPropertyCategory
+        ? undefined
+        : (fieldsState.availableQuantity ? Number(fieldsState.availableQuantity) : (fieldsState.quantity ? Number(fieldsState.quantity) : undefined));
 
-      const displayPrice = sellingType === 'Wholesale'
-        ? (primaryWholesalePrice || 0)
-        : (retailVal || 0);
+      const displayPrice = isPropertyCategory
+        ? Number(fieldsState.price || fieldsState.retailPrice || 0)
+        : (sellingType === 'Wholesale' ? (primaryWholesalePrice || 0) : (retailVal || 0));
 
       const propertyData = {
         title: fieldsState.title,
@@ -1882,12 +1893,12 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
         propertyType: finalPropertyType,
         category: finalCategory,
         price: displayPrice,
-        retailPrice: retailVal,
+        retailPrice: isPropertyCategory ? undefined : retailVal,
         currency,
         brand: fieldsState.brand || '',
         condition: (fieldsState.condition !== undefined && fieldsState.condition !== '') ? fieldsState.condition : 'New',
-        unit: finalUnit,
-        wholesaleUnit: finalUnit,
+        unit: isPropertyCategory ? '' : finalUnit,
+        wholesaleUnit: isPropertyCategory ? '' : finalUnit,
         negotiable: fieldsState.negotiable || 'No',
         isNegotiable: (fieldsState.negotiable || 'No') === 'Yes',
         model: fieldsState.model || '',
@@ -1895,8 +1906,8 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
         storageSpec: fieldsState.storageSpec || fieldsState.specifications || '',
         region: fieldsState.region || '',
         city: fieldsState.city || '',
-        quantity: availStock || 1,
-        availableQuantity: availStock,
+        quantity: isPropertyCategory ? undefined : (availStock || 1),
+        availableQuantity: isPropertyCategory ? undefined : availStock,
         bedrooms: majorCategory === 'Properties' ? Number(fieldsState.bedrooms || 0) : 0,
         bathrooms: majorCategory === 'Properties' ? Number(fieldsState.bathrooms || 0) : 0,
         area: majorCategory === 'Properties' ? Number(fieldsState.area || 0) : 0,
@@ -1920,7 +1931,7 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
         verificationStatus: currentUser?.role === 'admin' ? 'verified' : 'pending',
         isVerifiedListing: currentUser?.role === 'admin',
         subCategoryId: computedSubcatId || undefined,
-        sellingType,
+        sellingType: isPropertyCategory ? 'Retail' : sellingType,
         businessType: isWholesale ? (fieldsState.businessType || 'Wholesaler') : undefined,
         wholesalePrice: primaryWholesalePrice,
         minimumOrderQuantity: wholesaleMoq,
@@ -2076,14 +2087,16 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
             {/* STEP 1: CATEGORY SELECTION */}
             {currentStep === 1 && (
               <div className="space-y-6 animate-in fade-in duration-300">
-                {/* Selling Type Selection right at the beginning of the Create Listing form */}
-                <SellingTypeSelector
-                  value={sellingType}
-                  onChange={(type) => {
-                    setSellingType(type);
-                    handleFieldChange('sellingType', type);
-                  }}
-                />
+                {/* Selling Type Selection right at the beginning of the Create Listing form (for products) */}
+                {majorCategory !== 'Properties' && (
+                  <SellingTypeSelector
+                    value={sellingType}
+                    onChange={(type) => {
+                      setSellingType(type);
+                      handleFieldChange('sellingType', type);
+                    }}
+                  />
+                )}
 
                 <div className="space-y-1 pt-2 border-t border-white/5">
                   <label className="block text-xs font-bold text-amber-500 uppercase tracking-widest">
@@ -2199,14 +2212,16 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
                   <p className="text-[10px] text-white/40 font-light">{d.specSubtext}</p>
                 </div>
 
-                {/* Selling Type Selector - Prominently placed at top of Step 3 */}
-                <SellingTypeSelector
-                  value={sellingType}
-                  onChange={(type) => {
-                    setSellingType(type);
-                    handleFieldChange('sellingType', type);
-                  }}
-                />
+                {/* Selling Type Selector - Prominently placed at top of Step 3 (for physical goods) */}
+                {majorCategory !== 'Properties' && (
+                  <SellingTypeSelector
+                    value={sellingType}
+                    onChange={(type) => {
+                      setSellingType(type);
+                      handleFieldChange('sellingType', type);
+                    }}
+                  />
+                )}
 
                 {/* Admin-only Property Owner Contact Details (Hidden for Wholesale) */}
                 {currentUser?.role === 'admin' && (fieldsState.sellingType || 'Retail') !== 'Wholesale' && (
@@ -2676,7 +2691,73 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
                   })}
                 </div>
 
-                {/* Conditional Pricing & Inventory Engine based on Selling Type */}
+                {/* Conditional Pricing & Inventory Engine based on Category and Selling Type */}
+                {majorCategory === 'Properties' ? (
+                  <div className="bg-zinc-900/40 border border-white/10 p-5 rounded-2xl space-y-5">
+                    <div className="flex items-center justify-between border-b border-white/5 pb-3">
+                      <div className="flex items-center gap-2">
+                        <DollarSign className="w-4 h-4 text-amber-500" />
+                        <h4 className="text-xs font-bold text-white uppercase tracking-wider">
+                          Property Pricing
+                        </h4>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                      <div>
+                        <label className="block text-[11px] font-bold text-white/80 uppercase tracking-wider mb-1">
+                          Property Price *
+                        </label>
+                        <div className="relative">
+                          <span className="absolute left-3 top-3 text-xs text-amber-500 font-bold">{currency}</span>
+                          <input
+                            type="text"
+                            inputMode="numeric"
+                            required
+                            placeholder="e.g. 10000000"
+                            value={fieldsState.price !== undefined ? fieldsState.price : (fieldsState.retailPrice || '')}
+                            onChange={e => {
+                              handleFieldChange('price', e.target.value);
+                              handleFieldChange('retailPrice', e.target.value);
+                            }}
+                            className="w-full pl-14 pr-3 py-3 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white font-mono font-medium focus:outline-none transition"
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-[11px] font-bold text-white/80 uppercase tracking-wider mb-1">
+                          💱 Currency *
+                        </label>
+                        <select
+                          value={currency}
+                          onChange={e => setCurrency(e.target.value as any)}
+                          className="w-full p-3 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white focus:outline-none transition font-bold text-amber-400"
+                        >
+                          <option value="ETB">ETB (Ethiopian Birr)</option>
+                          <option value="USD">USD ($)</option>
+                          <option value="SAR">SAR (Saudi Riyal)</option>
+                          <option value="EUR">EUR (€)</option>
+                          <option value="AED">AED (UAE Dirham)</option>
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block text-[11px] font-bold text-white/80 uppercase tracking-wider mb-1">
+                          Price Negotiable?
+                        </label>
+                        <select
+                          value={fieldsState.negotiable || 'No'}
+                          onChange={e => handleFieldChange('negotiable', e.target.value)}
+                          className="w-full p-3 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white focus:outline-none transition"
+                        >
+                          <option value="No">No (Fixed Price)</option>
+                          <option value="Yes">Yes (Negotiable)</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
                 <div className="bg-zinc-900/40 border border-white/10 p-5 rounded-2xl space-y-5">
                   <div className="flex items-center justify-between border-b border-white/5 pb-3">
                     <div className="flex items-center gap-2">
@@ -2970,12 +3051,15 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
                     </div>
                   )}
                 </div>
+                )}
 
-                {/* 3. PRODUCT VARIATIONS / SKU MANAGEMENT (Optional attributes like Color, Size, etc.) */}
-                <ProductVariationsManager
-                  variations={variationsList}
-                  onChange={setVariationsList}
-                />
+                {/* 3. PRODUCT VARIATIONS / SKU MANAGEMENT (For physical products only) */}
+                {majorCategory !== 'Properties' && (
+                  <ProductVariationsManager
+                    variations={variationsList}
+                    onChange={setVariationsList}
+                  />
+                )}
               </form>
             )}
 
@@ -3023,7 +3107,11 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
                         </div>
                       </div>
                       <div className="text-right">
-                        {(fieldsState.sellingType || 'Retail') === 'Wholesale' ? (
+                        {majorCategory === 'Properties' ? (
+                          <span className="text-lg font-extrabold text-amber-400 font-mono block">
+                            {fieldsState.price ? `${Number(fieldsState.price).toLocaleString()} ${currency}` : d.contactPrice}
+                          </span>
+                        ) : (fieldsState.sellingType || 'Retail') === 'Wholesale' ? (
                           <>
                             <span className="text-lg font-extrabold text-amber-400 font-mono block">
                               {fieldsState.wholesalePrice ? `${Number(fieldsState.wholesalePrice).toLocaleString()} ${currency}` : d.contactPrice}
@@ -3048,7 +3136,7 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
                       </div>
                     </div>
 
-                    {((fieldsState.sellingType || 'Retail') === 'Wholesale' || (fieldsState.sellingType || 'Retail') === 'Retail & Wholesale') && (
+                    {majorCategory !== 'Properties' && ((fieldsState.sellingType || 'Retail') === 'Wholesale' || (fieldsState.sellingType || 'Retail') === 'Retail & Wholesale') && (
                       <div className="bg-amber-500/10 border border-amber-500/20 p-2.5 rounded-xl flex items-center justify-between text-[11px] text-amber-300">
                         <div className="flex items-center gap-1.5 font-bold">
                           <Package className="w-3.5 h-3.5 text-amber-400" />
@@ -3066,7 +3154,7 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
                     )}
 
                     {/* Wholesale Tiers Preview in Step 4 */}
-                    {((fieldsState.sellingType || 'Retail') === 'Wholesale' || (fieldsState.sellingType || 'Retail') === 'Retail & Wholesale' || (fieldsState.sellingType || 'Retail') === 'Retail + Wholesale') && wholesaleTiers.length > 0 && (
+                    {majorCategory !== 'Properties' && ((fieldsState.sellingType || 'Retail') === 'Wholesale' || (fieldsState.sellingType || 'Retail') === 'Retail & Wholesale' || (fieldsState.sellingType || 'Retail') === 'Retail + Wholesale') && wholesaleTiers.length > 0 && (
                       <div className="bg-amber-500/5 border border-amber-500/20 p-3 rounded-xl space-y-2">
                         <div className="flex items-center justify-between text-[11px] font-bold text-amber-400">
                           <span>📦 Tiered Bulk Pricing</span>
@@ -3088,7 +3176,7 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
                     )}
 
                     {/* Variations Preview in Step 4 */}
-                    {variationsList.length > 0 && (
+                    {majorCategory !== 'Properties' && variationsList.length > 0 && (
                       <div className="bg-white/5 border border-white/10 p-3 rounded-xl space-y-1.5">
                         <span className="text-[11px] font-bold text-white/80 block">
                           🎨 Available Options ({variationsList.length})
