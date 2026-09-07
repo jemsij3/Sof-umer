@@ -70,6 +70,22 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
 
   // Admin Privacy Control: Hide admin personal details by default
   const [showAdminDetails, setShowAdminDetails] = useState<boolean>(false);
+
+  // Collapsible Sidebar Groups State
+  const [collapsedGroups, setCollapsedGroups] = useState<Record<string, boolean>>({
+    security: false,
+    people: false,
+    marketplace: false,
+    finance: false,
+    system: false
+  });
+
+  const toggleSidebarGroup = (groupKey: string) => {
+    setCollapsedGroups(prev => ({ ...prev, [groupKey]: !prev[groupKey] }));
+  };
+
+  // Overview Activity Filter Tab State (Users | Listings | Payments)
+  const [activityTab, setActivityTab] = useState<'users' | 'listings' | 'payments'>('listings');
   const isAuthorizedAdmin = currentUser?.role === 'admin' && currentUser?.isEmployee !== true;
 
   // Account Unlock & Security Modal State
@@ -2193,367 +2209,470 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 text-left animate-fade-in text-white">
       
-      {/* Dynamic Header */}
-      <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 border-b border-white/5 pb-5 mb-8">
-        <div>
-          <span className="text-amber-500 font-extrabold uppercase text-[10px] tracking-widest block mb-1">Administrative Center</span>
-          <h2 className="text-2xl sm:text-3xl font-serif font-bold text-white tracking-tight flex items-center gap-2.5">
-            {systemSettings?.logoUrl ? (
-              <img
-                src={systemSettings.logoUrl}
-                alt="App Logo"
-                className="w-8 h-8 object-cover rounded-xl border border-amber-500/50 shadow-md shadow-amber-500/10"
-                referrerPolicy="no-referrer"
-              />
-            ) : (
-              <Shield className="w-7 h-7 text-amber-500" />
-            )}
-            <span>{systemSettings.appName} Control Console</span>
-          </h2>
-        </div>
-
-        <div className="flex flex-wrap gap-2 items-center">
-          {/* Admin Privacy Control Button */}
-          {isAuthorizedAdmin ? (
-            <button
-              onClick={() => setShowAdminDetails(!showAdminDetails)}
-              className={`px-3.5 py-2.5 rounded-xl text-xs font-bold border transition flex items-center gap-2 cursor-pointer ${
-                showAdminDetails 
-                  ? 'bg-amber-500/20 text-amber-400 border-amber-500/40 hover:bg-amber-500/30' 
-                  : 'bg-white/5 text-white/80 border-white/10 hover:bg-white/10'
-              }`}
-              title={showAdminDetails ? "Hide private admin personal details" : "Show private admin personal details"}
-            >
-              {showAdminDetails ? <EyeOff className="w-4 h-4 text-amber-400" /> : <Eye className="w-4 h-4 text-amber-400" />}
-              <span>{showAdminDetails ? 'Hide Admin Info' : 'Show Admin Info'}</span>
-            </button>
-          ) : (
-            <div className="px-3.5 py-2.5 bg-white/5 border border-white/10 rounded-xl text-xs text-white/40 flex items-center gap-2 font-mono" title="Only authorized Super Admin can reveal personal info">
-              <Lock className="w-4 h-4 text-amber-500/60" />
-              <span>Admin Info Masked</span>
+      {/* Dynamic Header: SOF-UMER CONTROL CONSOLE */}
+      <div className="bg-[#0d0d12]/90 border border-white/10 p-5 rounded-3xl shadow-2xl mb-8 backdrop-blur-md">
+        <div className="flex flex-col md:flex-row justify-between md:items-center gap-4">
+          <div className="flex items-center gap-3.5">
+            <div className="relative">
+              {systemSettings?.logoUrl ? (
+                <img
+                  src={systemSettings.logoUrl}
+                  alt="App Logo"
+                  className="w-10 h-10 object-cover rounded-2xl border border-amber-500/40 shadow-lg shadow-amber-500/10"
+                  referrerPolicy="no-referrer"
+                />
+              ) : (
+                <div className="w-10 h-10 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center">
+                  <Shield className="w-5 h-5 text-amber-500" />
+                </div>
+              )}
+              <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-500 rounded-full border-2 border-[#0d0d12]" title="System Online" />
             </div>
-          )}
 
-          <button
-            onClick={onBackToMarketplace}
-            className="px-4 py-2.5 bg-white/5 border border-white/10 hover:bg-white/10 text-white font-bold text-xs rounded-xl shadow transition duration-300 cursor-pointer"
-          >
-            Marketplace Home
-          </button>
-          <button
-            onClick={onOpenCreateModal}
-            className="px-4 py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 text-black font-bold text-xs rounded-xl shadow-lg hover:from-amber-400 hover:to-amber-500 transition duration-300 cursor-pointer"
-          >
-            Create New Listing
-          </button>
-          <button
-            onClick={refreshData}
-            className="p-2.5 bg-white/5 hover:bg-white/10 text-white/60 rounded-xl border border-white/10 transition duration-300 shrink-0 cursor-pointer"
-            title="Reload backend state"
-          >
-            <RefreshCw className="w-4 h-4" />
-          </button>
-          <button
-            onClick={() => {
-              logout();
-              onBackToMarketplace();
-            }}
-            className="px-4 py-2.5 bg-rose-500/10 border border-rose-500/25 hover:bg-rose-500/20 text-rose-400 hover:text-rose-300 font-bold text-xs rounded-xl shadow transition duration-300 cursor-pointer flex items-center gap-2"
-            title="Log out immediately in 1 click"
-          >
-            <LogOut className="w-4 h-4 text-rose-400" />
-            <span>Log Out</span>
-          </button>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] font-extrabold uppercase tracking-widest text-amber-500">
+                  SOF-UMER CONTROL CONSOLE
+                </span>
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" /> Online
+                </span>
+              </div>
+              <h2 className="text-xl sm:text-2xl font-serif font-bold text-white tracking-tight flex items-center gap-2 mt-0.5">
+                <span>{systemSettings.appName || 'SOF-UMER'} Marketplace Console</span>
+              </h2>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2.5">
+            {/* Admin Profile Summary Badge */}
+            <div className="flex items-center gap-2 px-3 py-1.5 bg-black/40 border border-white/10 rounded-xl text-xs">
+              <div className="w-6 h-6 rounded-lg bg-amber-500/20 border border-amber-500/30 text-amber-400 font-bold flex items-center justify-center text-[10px]">
+                {currentUser?.fullName?.[0] || 'A'}
+              </div>
+              <div className="text-left">
+                <span className="text-[10px] font-bold text-white block leading-tight">
+                  {isAuthorizedAdmin && !showAdminDetails ? maskName(currentUser?.fullName || 'Admin') : (currentUser?.fullName || 'Admin')}
+                </span>
+                <span className="text-[9px] text-white/40 font-mono block leading-tight capitalize">
+                  {currentUser?.employeeRole || currentUser?.role || 'Admin'}
+                </span>
+              </div>
+            </div>
+
+            {/* Notifications Indicator */}
+            <button
+              onClick={() => { setAdminTab('support'); }}
+              className="relative p-2.5 bg-white/5 hover:bg-white/10 text-white/80 hover:text-white rounded-xl border border-white/10 transition cursor-pointer"
+              title="Notifications & Tickets"
+            >
+              <BellRing className="w-4 h-4 text-amber-400" />
+              {(reports.filter(r => r.status === 'pending').length + receipts.filter(r => r.status === 'Pending').length) > 0 && (
+                <span className="absolute -top-1 -right-1 w-4 h-4 bg-rose-500 text-white font-extrabold text-[9px] rounded-full flex items-center justify-center animate-pulse">
+                  {reports.filter(r => r.status === 'pending').length + receipts.filter(r => r.status === 'Pending').length}
+                </span>
+              )}
+            </button>
+
+            {/* Admin Privacy Control */}
+            {isAuthorizedAdmin ? (
+              <button
+                onClick={() => setShowAdminDetails(!showAdminDetails)}
+                className={`px-3 py-2 rounded-xl text-xs font-bold border transition flex items-center gap-1.5 cursor-pointer ${
+                  showAdminDetails
+                    ? 'bg-amber-500/20 text-amber-400 border-amber-500/40 hover:bg-amber-500/30'
+                    : 'bg-white/5 text-white/80 border-white/10 hover:bg-white/10'
+                }`}
+                title={showAdminDetails ? "Hide private admin personal details" : "Show private admin personal details"}
+              >
+                {showAdminDetails ? <EyeOff className="w-3.5 h-3.5 text-amber-400" /> : <Eye className="w-3.5 h-3.5 text-amber-400" />}
+                <span className="hidden sm:inline">{showAdminDetails ? 'Hide Info' : 'Show Info'}</span>
+              </button>
+            ) : (
+              <div className="px-3 py-2 bg-white/5 border border-white/10 rounded-xl text-xs text-white/40 flex items-center gap-1.5 font-mono" title="Only authorized Super Admin can reveal personal info">
+                <Lock className="w-3.5 h-3.5 text-amber-500/60" />
+                <span className="hidden sm:inline">Masked</span>
+              </div>
+            )}
+
+            <button
+              onClick={onBackToMarketplace}
+              className="px-3.5 py-2 bg-white/5 hover:bg-white/10 border border-white/10 text-white font-bold text-xs rounded-xl shadow transition cursor-pointer"
+            >
+              Marketplace Home
+            </button>
+
+            <button
+              onClick={refreshData}
+              className="p-2.5 bg-white/5 hover:bg-white/10 text-white/70 hover:text-white rounded-xl border border-white/10 transition cursor-pointer"
+              title="Reload backend state"
+            >
+              <RefreshCw className="w-4 h-4" />
+            </button>
+
+            <button
+              onClick={() => {
+                logout();
+                onBackToMarketplace();
+              }}
+              className="px-3.5 py-2 bg-rose-500/10 border border-rose-500/25 hover:bg-rose-500/20 text-rose-400 font-bold text-xs rounded-xl shadow transition cursor-pointer flex items-center gap-1.5"
+            >
+              <LogOut className="w-3.5 h-3.5 text-rose-400" />
+              <span>Logout</span>
+            </button>
+          </div>
         </div>
       </div>
 
       {/* 12-Section Dashboard Grid Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         
-        {/* SIDEBAR NAVIGATION PANEL */}
+        {/* SIDEBAR NAVIGATION PANEL WITH COLLAPSIBLE GROUPS */}
         <div className="lg:col-span-3">
           <div className="bg-[#0d0d12]/90 border border-white/5 p-4 rounded-3xl shadow-2xl space-y-3 backdrop-blur-md sticky top-6 max-h-[calc(100vh-100px)] overflow-y-auto">
-            <div className="px-3.5 pb-2 border-b border-white/5 flex items-center justify-between">
+            <div className="px-3 pb-2 border-b border-white/5 flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <div className="w-2.5 h-2.5 bg-emerald-500 rounded-full animate-ping" />
-                <span className="text-[9px] uppercase font-bold text-white/40 tracking-wider">ADMIN CONTROL CENTER</span>
+                <div className="w-2 h-2 bg-amber-500 rounded-full animate-ping" />
+                <span className="text-[9px] uppercase font-extrabold text-white/50 tracking-wider">ADMIN NAVIGATION</span>
               </div>
-              <span className="text-[9px] font-extrabold px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-500 border border-amber-500/20">
-                {systemSettings.siteStatus}
+              <span className="text-[9px] font-extrabold px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                {systemSettings.siteStatus || 'Online'}
               </span>
             </div>
 
-            {/* 🛡️ SECTION 1: SECURITY & PROTECTION */}
+            {/* GROUP 1: SECURITY */}
             <div className="space-y-1">
-              <span className="text-[9px] uppercase font-extrabold text-amber-500/80 tracking-wider px-3 pt-1 block">
-                🛡️ Security & Access
-              </span>
+              <button
+                onClick={() => toggleSidebarGroup('security')}
+                className="w-full text-left px-3 py-1.5 rounded-lg flex items-center justify-between text-[10px] uppercase font-extrabold text-amber-500 tracking-wider hover:bg-white/5 cursor-pointer transition"
+              >
+                <div className="flex items-center gap-1.5">
+                  <Shield className="w-3.5 h-3.5 text-amber-500" />
+                  <span>SECURITY</span>
+                </div>
+                {collapsedGroups.security ? <ChevronRight className="w-3.5 h-3.5 text-white/40" /> : <ChevronDown className="w-3.5 h-3.5 text-white/40" />}
+              </button>
 
-              {isTabAllowed('accountLocks') && (
-                <button
-                  onClick={() => setAdminTab('accountLocks')}
-                  className={`w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-bold transition flex items-center justify-between cursor-pointer ${
-                    adminTab === 'accountLocks' ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-black shadow-lg shadow-amber-500/10' : 'text-white/70 hover:text-white hover:bg-white/5'
-                  }`}
-                >
-                  <div className="flex items-center gap-2">
-                    <Unlock className="w-3.5 h-3.5 shrink-0" />
-                    <span>Account Lockouts</span>
-                  </div>
-                  {((users || []).filter(u => Boolean(u.lockoutUntil && new Date(u.lockoutUntil) > new Date()) || Boolean(u.lockout2FAUntil && new Date(u.lockout2FAUntil) > new Date()) || (u.failedLoginAttempts && u.failedLoginAttempts >= 3)).length) > 0 && (
-                    <span className="bg-rose-500 text-white font-extrabold text-[9px] px-2 py-0.5 rounded-full animate-pulse">
-                      {(users || []).filter(u => Boolean(u.lockoutUntil && new Date(u.lockoutUntil) > new Date()) || Boolean(u.lockout2FAUntil && new Date(u.lockout2FAUntil) > new Date()) || (u.failedLoginAttempts && u.failedLoginAttempts >= 3)).length}
-                    </span>
+              {!collapsedGroups.security && (
+                <div className="space-y-0.5 pl-1 animate-fade-in">
+                  {isTabAllowed('accountLocks') && (
+                    <button
+                      onClick={() => setAdminTab('accountLocks')}
+                      className={`w-full text-left px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center justify-between cursor-pointer ${
+                        adminTab === 'accountLocks' ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-black shadow-lg shadow-amber-500/10' : 'text-white/70 hover:text-white hover:bg-white/5'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <Unlock className="w-3.5 h-3.5 shrink-0" />
+                        <span>Account Lockouts</span>
+                      </div>
+                      {((users || []).filter(u => Boolean(u.lockoutUntil && new Date(u.lockoutUntil) > new Date()) || Boolean(u.lockout2FAUntil && new Date(u.lockout2FAUntil) > new Date()) || (u.failedLoginAttempts && u.failedLoginAttempts >= 3)).length) > 0 && (
+                        <span className="bg-rose-500 text-white font-extrabold text-[9px] px-2 py-0.5 rounded-full">
+                          {(users || []).filter(u => Boolean(u.lockoutUntil && new Date(u.lockoutUntil) > new Date()) || Boolean(u.lockout2FAUntil && new Date(u.lockout2FAUntil) > new Date()) || (u.failedLoginAttempts && u.failedLoginAttempts >= 3)).length}
+                        </span>
+                      )}
+                    </button>
                   )}
-                </button>
-              )}
 
-              {isTabAllowed('loginHistory') && (
-                <button
-                  onClick={() => { setAdminTab('loginHistory'); fetchGlobalLoginHistory(); }}
-                  className={`w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 cursor-pointer ${
-                    adminTab === 'loginHistory' ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-black shadow-lg shadow-amber-500/10' : 'text-white/70 hover:text-white hover:bg-white/5'
-                  }`}
-                >
-                  <History className="w-3.5 h-3.5 shrink-0" />
-                  <span>Login History & Logs</span>
-                </button>
-              )}
+                  {isTabAllowed('loginHistory') && (
+                    <button
+                      onClick={() => { setAdminTab('loginHistory'); fetchGlobalLoginHistory(); }}
+                      className={`w-full text-left px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 cursor-pointer ${
+                        adminTab === 'loginHistory' ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-black shadow-lg shadow-amber-500/10' : 'text-white/70 hover:text-white hover:bg-white/5'
+                      }`}
+                    >
+                      <History className="w-3.5 h-3.5 shrink-0" />
+                      <span>Login History & Logs</span>
+                    </button>
+                  )}
 
-              {isTabAllowed('activeSessions') && (
-                <button
-                  onClick={() => setAdminTab('activeSessions')}
-                  className={`w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 cursor-pointer ${
-                    adminTab === 'activeSessions' ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-black shadow-lg shadow-amber-500/10' : 'text-white/70 hover:text-white hover:bg-white/5'
-                  }`}
-                >
-                  <Smartphone className="w-3.5 h-3.5 shrink-0" />
-                  <span>Active Device Sessions</span>
-                </button>
-              )}
+                  {isTabAllowed('activeSessions') && (
+                    <button
+                      onClick={() => setAdminTab('activeSessions')}
+                      className={`w-full text-left px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 cursor-pointer ${
+                        adminTab === 'activeSessions' ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-black shadow-lg shadow-amber-500/10' : 'text-white/70 hover:text-white hover:bg-white/5'
+                      }`}
+                    >
+                      <Smartphone className="w-3.5 h-3.5 shrink-0" />
+                      <span>Active Device Sessions</span>
+                    </button>
+                  )}
 
-              {currentUser?.role === 'admin' && currentUser?.isEmployee !== true && (
-                <button
-                  onClick={() => setAdminTab('emergencyRecovery')}
-                  className={`w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 cursor-pointer ${
-                    adminTab === 'emergencyRecovery' ? 'bg-gradient-to-r from-rose-500 to-rose-600 text-white shadow-lg shadow-rose-500/10' : 'text-rose-400/80 hover:text-rose-300 hover:bg-rose-500/10'
-                  }`}
-                >
-                  <ShieldAlert className="w-3.5 h-3.5 shrink-0" />
-                  <span>Emergency Recovery</span>
-                </button>
+                  {currentUser?.role === 'admin' && currentUser?.isEmployee !== true && (
+                    <button
+                      onClick={() => setAdminTab('emergencyRecovery')}
+                      className={`w-full text-left px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 cursor-pointer ${
+                        adminTab === 'emergencyRecovery' ? 'bg-gradient-to-r from-rose-500 to-rose-600 text-white shadow-lg shadow-rose-500/10' : 'text-rose-400/80 hover:text-rose-300 hover:bg-rose-500/10'
+                      }`}
+                    >
+                      <ShieldAlert className="w-3.5 h-3.5 shrink-0" />
+                      <span>Emergency Recovery</span>
+                    </button>
+                  )}
+                </div>
               )}
             </div>
 
-            {/* 👥 SECTION 2: USERS & STAFF */}
+            {/* GROUP 2: PEOPLE */}
             <div className="space-y-1 pt-1 border-t border-white/5">
-              <span className="text-[9px] uppercase font-extrabold text-white/40 tracking-wider px-3 pt-1 block">
-                👥 Users & Personnel
-              </span>
+              <button
+                onClick={() => toggleSidebarGroup('people')}
+                className="w-full text-left px-3 py-1.5 rounded-lg flex items-center justify-between text-[10px] uppercase font-extrabold text-white/50 tracking-wider hover:bg-white/5 cursor-pointer transition"
+              >
+                <div className="flex items-center gap-1.5">
+                  <Users className="w-3.5 h-3.5 text-amber-500" />
+                  <span>PEOPLE</span>
+                </div>
+                {collapsedGroups.people ? <ChevronRight className="w-3.5 h-3.5 text-white/40" /> : <ChevronDown className="w-3.5 h-3.5 text-white/40" />}
+              </button>
 
-              {isTabAllowed('users') && (
-                <button
-                  onClick={() => setAdminTab('users')}
-                  className={`w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 cursor-pointer ${
-                    adminTab === 'users' ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-black shadow-lg shadow-amber-500/10' : 'text-white/70 hover:text-white hover:bg-white/5'
-                  }`}
-                >
-                  <Users className="w-3.5 h-3.5 shrink-0" />
-                  <span>User Accounts</span>
-                </button>
-              )}
-
-              {isTabAllowed('verification') && (
-                <button
-                  onClick={() => setAdminTab('verification')}
-                  className={`w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-bold transition flex items-center justify-between cursor-pointer ${
-                    adminTab === 'verification' ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-black shadow-lg shadow-amber-500/10' : 'text-white/70 hover:text-white hover:bg-white/5'
-                  }`}
-                >
-                  <div className="flex items-center gap-2">
-                    <ShieldCheck className="w-3.5 h-3.5 shrink-0" />
-                    <span>Verification Center</span>
-                  </div>
-                  {pendingUserVerifications > 0 && (
-                    <span className="bg-amber-500 text-black font-extrabold text-[9px] px-2 py-0.5 rounded-full">
-                      {pendingUserVerifications}
-                    </span>
+              {!collapsedGroups.people && (
+                <div className="space-y-0.5 pl-1 animate-fade-in">
+                  {isTabAllowed('users') && (
+                    <button
+                      onClick={() => setAdminTab('users')}
+                      className={`w-full text-left px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 cursor-pointer ${
+                        adminTab === 'users' ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-black shadow-lg shadow-amber-500/10' : 'text-white/70 hover:text-white hover:bg-white/5'
+                      }`}
+                    >
+                      <Users className="w-3.5 h-3.5 shrink-0" />
+                      <span>User Accounts</span>
+                    </button>
                   )}
-                </button>
-              )}
 
-              {currentUser?.role === 'admin' && currentUser?.isEmployee !== true && (
-                <button
-                  onClick={() => setAdminTab('employeeAdmins')}
-                  className={`w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 cursor-pointer ${
-                    adminTab === 'employeeAdmins' ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-black shadow-lg shadow-amber-500/10' : 'text-white/70 hover:text-white hover:bg-white/5'
-                  }`}
-                >
-                  <ShieldCheck className="w-3.5 h-3.5 shrink-0 text-amber-500" />
-                  <span>Employee Admins</span>
-                </button>
+                  {isTabAllowed('verification') && (
+                    <button
+                      onClick={() => setAdminTab('verification')}
+                      className={`w-full text-left px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center justify-between cursor-pointer ${
+                        adminTab === 'verification' ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-black shadow-lg shadow-amber-500/10' : 'text-white/70 hover:text-white hover:bg-white/5'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <ShieldCheck className="w-3.5 h-3.5 shrink-0" />
+                        <span>Verification Center</span>
+                      </div>
+                      {pendingUserVerifications > 0 && (
+                        <span className="bg-amber-500 text-black font-extrabold text-[9px] px-2 py-0.5 rounded-full">
+                          {pendingUserVerifications}
+                        </span>
+                      )}
+                    </button>
+                  )}
+
+                  {currentUser?.role === 'admin' && currentUser?.isEmployee !== true && (
+                    <button
+                      onClick={() => setAdminTab('employeeAdmins')}
+                      className={`w-full text-left px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 cursor-pointer ${
+                        adminTab === 'employeeAdmins' ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-black shadow-lg shadow-amber-500/10' : 'text-white/70 hover:text-white hover:bg-white/5'
+                      }`}
+                    >
+                      <ShieldCheck className="w-3.5 h-3.5 shrink-0 text-amber-500" />
+                      <span>Employee Admins</span>
+                    </button>
+                  )}
+                </div>
               )}
             </div>
 
-            {/* 📊 SECTION 3: OPERATIONS & MODERATION */}
+            {/* GROUP 3: MARKETPLACE */}
             <div className="space-y-1 pt-1 border-t border-white/5">
-              <span className="text-[9px] uppercase font-extrabold text-white/40 tracking-wider px-3 pt-1 block">
-                📊 Operations & Moderation
-              </span>
+              <button
+                onClick={() => toggleSidebarGroup('marketplace')}
+                className="w-full text-left px-3 py-1.5 rounded-lg flex items-center justify-between text-[10px] uppercase font-extrabold text-white/50 tracking-wider hover:bg-white/5 cursor-pointer transition"
+              >
+                <div className="flex items-center gap-1.5">
+                  <Store className="w-3.5 h-3.5 text-amber-500" />
+                  <span>MARKETPLACE</span>
+                </div>
+                {collapsedGroups.marketplace ? <ChevronRight className="w-3.5 h-3.5 text-white/40" /> : <ChevronDown className="w-3.5 h-3.5 text-white/40" />}
+              </button>
 
-              {isTabAllowed('overview') && (
-                <button
-                  onClick={() => setAdminTab('overview')}
-                  className={`w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 cursor-pointer ${
-                    adminTab === 'overview' ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-black shadow-lg shadow-amber-500/10' : 'text-white/70 hover:text-white hover:bg-white/5'
-                  }`}
-                >
-                  <TrendingUp className="w-3.5 h-3.5 shrink-0" />
-                  <span>Overview & Activity</span>
-                </button>
-              )}
-
-              {isTabAllowed('listings') && (
-                <button
-                  onClick={() => setAdminTab('listings')}
-                  className={`w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-bold transition flex items-center justify-between cursor-pointer ${
-                    adminTab === 'listings' ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-black shadow-lg shadow-amber-500/10' : 'text-white/70 hover:text-white hover:bg-white/5'
-                  }`}
-                >
-                  <div className="flex items-center gap-2">
-                    <Building className="w-3.5 h-3.5 shrink-0" />
-                    <span>Listing Moderation</span>
-                  </div>
-                  {pendingListingsCount > 0 && (
-                    <span className="bg-rose-500 text-white font-extrabold text-[9px] px-2 py-0.5 rounded-full">
-                      {pendingListingsCount}
-                    </span>
+              {!collapsedGroups.marketplace && (
+                <div className="space-y-0.5 pl-1 animate-fade-in">
+                  {isTabAllowed('overview') && (
+                    <button
+                      onClick={() => setAdminTab('overview')}
+                      className={`w-full text-left px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 cursor-pointer ${
+                        adminTab === 'overview' ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-black shadow-lg shadow-amber-500/10' : 'text-white/70 hover:text-white hover:bg-white/5'
+                      }`}
+                    >
+                      <TrendingUp className="w-3.5 h-3.5 shrink-0" />
+                      <span>Overview & Activity</span>
+                    </button>
                   )}
-                </button>
-              )}
 
-              {isTabAllowed('categories') && (
-                <button
-                  onClick={() => setAdminTab('categories')}
-                  className={`w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 cursor-pointer ${
-                    adminTab === 'categories' ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-black shadow-lg shadow-amber-500/10' : 'text-white/70 hover:text-white hover:bg-white/5'
-                  }`}
-                >
-                  <Grid className="w-3.5 h-3.5 shrink-0" />
-                  <span>Category Manager</span>
-                </button>
-              )}
-
-              {isTabAllowed('ads') && (
-                <button
-                  onClick={() => setAdminTab('ads')}
-                  className={`w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 cursor-pointer ${
-                    adminTab === 'ads' ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-black shadow-lg shadow-amber-500/10' : 'text-white/70 hover:text-white hover:bg-white/5'
-                  }`}
-                >
-                  <Volume2 className="w-3.5 h-3.5 shrink-0" />
-                  <span>Ads & Campaigns</span>
-                </button>
-              )}
-
-              {isTabAllowed('reports') && (
-                <button
-                  onClick={() => setAdminTab('reports')}
-                  className={`w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-bold transition flex items-center justify-between cursor-pointer ${
-                    adminTab === 'reports' ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-black shadow-lg shadow-amber-500/10' : 'text-white/70 hover:text-white hover:bg-white/5'
-                  }`}
-                >
-                  <div className="flex items-center gap-2">
-                    <AlertOctagon className="w-3.5 h-3.5 shrink-0" />
-                    <span>Reports & Safety</span>
-                  </div>
-                  {reportedCount > 0 && (
-                    <span className="bg-rose-500 text-white font-extrabold text-[9px] px-2 py-0.5 rounded-full animate-pulse">
-                      {reportedCount}
-                    </span>
+                  {isTabAllowed('listings') && (
+                    <button
+                      onClick={() => setAdminTab('listings')}
+                      className={`w-full text-left px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center justify-between cursor-pointer ${
+                        adminTab === 'listings' ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-black shadow-lg shadow-amber-500/10' : 'text-white/70 hover:text-white hover:bg-white/5'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <Building className="w-3.5 h-3.5 shrink-0" />
+                        <span>Listing Moderation</span>
+                      </div>
+                      {pendingListingsCount > 0 && (
+                        <span className="bg-rose-500 text-white font-extrabold text-[9px] px-2 py-0.5 rounded-full">
+                          {pendingListingsCount}
+                        </span>
+                      )}
+                    </button>
                   )}
-                </button>
-              )}
 
-              {isTabAllowed('support') && (
-                <button
-                  onClick={() => setAdminTab('support')}
-                  className={`w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-bold transition flex items-center justify-between cursor-pointer ${
-                    adminTab === 'support' ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-black shadow-lg shadow-amber-500/10' : 'text-white/70 hover:text-white hover:bg-white/5'
-                  }`}
-                >
-                  <div className="flex items-center gap-2">
-                    <HelpCircle className="w-3.5 h-3.5 shrink-0" />
-                    <span>Support & Tickets</span>
-                  </div>
-                  {supportTickets.filter(t => t.status === 'Open').length > 0 && (
-                    <span className="bg-amber-500 text-black font-extrabold text-[9px] px-2 py-0.5 rounded-full">
-                      {supportTickets.filter(t => t.status === 'Open').length}
-                    </span>
+                  {isTabAllowed('categories') && (
+                    <button
+                      onClick={() => setAdminTab('categories')}
+                      className={`w-full text-left px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 cursor-pointer ${
+                        adminTab === 'categories' ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-black shadow-lg shadow-amber-500/10' : 'text-white/70 hover:text-white hover:bg-white/5'
+                      }`}
+                    >
+                      <Grid className="w-3.5 h-3.5 shrink-0" />
+                      <span>Category Manager</span>
+                    </button>
                   )}
-                </button>
-              )}
 
-              {isTabAllowed('payments') && (
-                <button
-                  onClick={() => setAdminTab('payments')}
-                  className={`w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-bold transition flex items-center justify-between cursor-pointer ${
-                    adminTab === 'payments' ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-black shadow-lg shadow-amber-500/10' : 'text-white/70 hover:text-white hover:bg-white/5'
-                  }`}
-                >
-                  <div className="flex items-center gap-2">
-                    <CreditCard className="w-3.5 h-3.5 shrink-0" />
-                    <span>Payment & Receipts</span>
-                  </div>
-                  {pendingReceiptsCount > 0 && (
-                    <span className="bg-amber-500 text-black font-extrabold text-[9px] px-2 py-0.5 rounded-full animate-bounce">
-                      {pendingReceiptsCount}
-                    </span>
+                  {isTabAllowed('reports') && (
+                    <button
+                      onClick={() => setAdminTab('reports')}
+                      className={`w-full text-left px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center justify-between cursor-pointer ${
+                        adminTab === 'reports' ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-black shadow-lg shadow-amber-500/10' : 'text-white/70 hover:text-white hover:bg-white/5'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <AlertOctagon className="w-3.5 h-3.5 shrink-0" />
+                        <span>Reports & Safety</span>
+                      </div>
+                      {reportedCount > 0 && (
+                        <span className="bg-rose-500 text-white font-extrabold text-[9px] px-2 py-0.5 rounded-full animate-pulse">
+                          {reportedCount}
+                        </span>
+                      )}
+                    </button>
                   )}
-                </button>
-              )}
 
-              {isTabAllowed('analytics') && (
-                <button
-                  onClick={() => setAdminTab('analytics')}
-                  className={`w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 cursor-pointer ${
-                    adminTab === 'analytics' ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-black shadow-lg shadow-amber-500/10' : 'text-white/70 hover:text-white hover:bg-white/5'
-                  }`}
-                >
-                  <BarChart3 className="w-3.5 h-3.5 shrink-0" />
-                  <span>Advanced Analytics</span>
-                </button>
+                  {isTabAllowed('support') && (
+                    <button
+                      onClick={() => setAdminTab('support')}
+                      className={`w-full text-left px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center justify-between cursor-pointer ${
+                        adminTab === 'support' ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-black shadow-lg shadow-amber-500/10' : 'text-white/70 hover:text-white hover:bg-white/5'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <HelpCircle className="w-3.5 h-3.5 shrink-0" />
+                        <span>Support & Tickets</span>
+                      </div>
+                      {supportTickets.filter(t => t.status === 'Open').length > 0 && (
+                        <span className="bg-amber-500 text-black font-extrabold text-[9px] px-2 py-0.5 rounded-full">
+                          {supportTickets.filter(t => t.status === 'Open').length}
+                        </span>
+                      )}
+                    </button>
+                  )}
+                </div>
               )}
             </div>
 
-            {/* ⚙️ SECTION 4: SYSTEM & CONFIG */}
+            {/* GROUP 4: FINANCE */}
             <div className="space-y-1 pt-1 border-t border-white/5">
-              <span className="text-[9px] uppercase font-extrabold text-white/40 tracking-wider px-3 pt-1 block">
-                ⚙️ System & Settings
-              </span>
+              <button
+                onClick={() => toggleSidebarGroup('finance')}
+                className="w-full text-left px-3 py-1.5 rounded-lg flex items-center justify-between text-[10px] uppercase font-extrabold text-white/50 tracking-wider hover:bg-white/5 cursor-pointer transition"
+              >
+                <div className="flex items-center gap-1.5">
+                  <CreditCard className="w-3.5 h-3.5 text-amber-500" />
+                  <span>FINANCE</span>
+                </div>
+                {collapsedGroups.finance ? <ChevronRight className="w-3.5 h-3.5 text-white/40" /> : <ChevronDown className="w-3.5 h-3.5 text-white/40" />}
+              </button>
 
-              {isTabAllowed('languages') && (
-                <button
-                  onClick={() => setAdminTab('languages')}
-                  className={`w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 cursor-pointer ${
-                    adminTab === 'languages' ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-black shadow-lg shadow-amber-500/10' : 'text-white/70 hover:text-white hover:bg-white/5'
-                  }`}
-                >
-                  <Languages className="w-3.5 h-3.5 shrink-0" />
-                  <span>Languages & Translations</span>
-                </button>
+              {!collapsedGroups.finance && (
+                <div className="space-y-0.5 pl-1 animate-fade-in">
+                  {isTabAllowed('payments') && (
+                    <button
+                      onClick={() => setAdminTab('payments')}
+                      className={`w-full text-left px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center justify-between cursor-pointer ${
+                        adminTab === 'payments' ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-black shadow-lg shadow-amber-500/10' : 'text-white/70 hover:text-white hover:bg-white/5'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <CreditCard className="w-3.5 h-3.5 shrink-0" />
+                        <span>Payment & Receipts</span>
+                      </div>
+                      {pendingReceiptsCount > 0 && (
+                        <span className="bg-amber-500 text-black font-extrabold text-[9px] px-2 py-0.5 rounded-full">
+                          {pendingReceiptsCount}
+                        </span>
+                      )}
+                    </button>
+                  )}
+
+                  {isTabAllowed('ads') && (
+                    <button
+                      onClick={() => setAdminTab('ads')}
+                      className={`w-full text-left px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 cursor-pointer ${
+                        adminTab === 'ads' ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-black shadow-lg shadow-amber-500/10' : 'text-white/70 hover:text-white hover:bg-white/5'
+                      }`}
+                    >
+                      <Volume2 className="w-3.5 h-3.5 shrink-0" />
+                      <span>Ads & Campaigns</span>
+                    </button>
+                  )}
+                </div>
               )}
+            </div>
 
-              {isTabAllowed('settings') && (
-                <button
-                  onClick={() => setAdminTab('settings')}
-                  className={`w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 cursor-pointer ${
-                    adminTab === 'settings' ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-black shadow-lg shadow-amber-500/10' : 'text-white/70 hover:text-white hover:bg-white/5'
-                  }`}
-                >
-                  <Settings className="w-3.5 h-3.5 shrink-0" />
-                  <span>System Settings</span>
-                </button>
+            {/* GROUP 5: SYSTEM */}
+            <div className="space-y-1 pt-1 border-t border-white/5">
+              <button
+                onClick={() => toggleSidebarGroup('system')}
+                className="w-full text-left px-3 py-1.5 rounded-lg flex items-center justify-between text-[10px] uppercase font-extrabold text-white/50 tracking-wider hover:bg-white/5 cursor-pointer transition"
+              >
+                <div className="flex items-center gap-1.5">
+                  <Settings className="w-3.5 h-3.5 text-amber-500" />
+                  <span>SYSTEM</span>
+                </div>
+                {collapsedGroups.system ? <ChevronRight className="w-3.5 h-3.5 text-white/40" /> : <ChevronDown className="w-3.5 h-3.5 text-white/40" />}
+              </button>
+
+              {!collapsedGroups.system && (
+                <div className="space-y-0.5 pl-1 animate-fade-in">
+                  {isTabAllowed('analytics') && (
+                    <button
+                      onClick={() => setAdminTab('analytics')}
+                      className={`w-full text-left px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 cursor-pointer ${
+                        adminTab === 'analytics' ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-black shadow-lg shadow-amber-500/10' : 'text-white/70 hover:text-white hover:bg-white/5'
+                      }`}
+                    >
+                      <BarChart3 className="w-3.5 h-3.5 shrink-0" />
+                      <span>Analytics</span>
+                    </button>
+                  )}
+
+                  {isTabAllowed('languages') && (
+                    <button
+                      onClick={() => setAdminTab('languages')}
+                      className={`w-full text-left px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 cursor-pointer ${
+                        adminTab === 'languages' ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-black shadow-lg shadow-amber-500/10' : 'text-white/70 hover:text-white hover:bg-white/5'
+                      }`}
+                    >
+                      <Languages className="w-3.5 h-3.5 shrink-0" />
+                      <span>Languages & Translations</span>
+                    </button>
+                  )}
+
+                  {isTabAllowed('settings') && (
+                    <button
+                      onClick={() => setAdminTab('settings')}
+                      className={`w-full text-left px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 cursor-pointer ${
+                        adminTab === 'settings' ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-black shadow-lg shadow-amber-500/10' : 'text-white/70 hover:text-white hover:bg-white/5'
+                      }`}
+                    >
+                      <Settings className="w-3.5 h-3.5 shrink-0" />
+                      <span>System Settings</span>
+                    </button>
+                  )}
+                </div>
               )}
             </div>
           </div>
@@ -2574,6 +2693,506 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
           )}
 
           {/* 1. DASHBOARD OVERVIEW SECTION */}
+          {adminTab === 'overview' && isTabAllowed('overview') && (
+            <div className="space-y-6 animate-fade-in">
+              <div className="bg-[#0d0d12]/90 border border-white/5 p-6 rounded-3xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div>
+                  <h3 className="text-xl font-serif font-bold text-white mb-1">ADMIN OVERVIEW</h3>
+                  <p className="text-xs text-white/50 leading-relaxed font-light">Real-time indicators mapping registration traffic, pending actions, and financial receipts.</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="px-3 py-1 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 font-extrabold text-[10px] rounded-full uppercase tracking-wider flex items-center gap-1.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" /> Real-time Data
+                  </span>
+                </div>
+              </div>
+
+              {/* 4 Clean Summary Cards (Clickable) */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                {/* 1. Total Users Card */}
+                <button
+                  onClick={() => setAdminTab('users')}
+                  className="bg-[#0d0d12] hover:bg-[#12121a] border border-white/10 hover:border-amber-500/40 p-5 rounded-2xl relative overflow-hidden text-left transition cursor-pointer group shadow-lg"
+                >
+                  <div className="flex justify-between items-start">
+                    <span className="text-white/50 text-[10px] uppercase font-bold tracking-widest block">👥 Total Users</span>
+                    <Users className="text-amber-500/80 group-hover:text-amber-400 w-5 h-5 transition" />
+                  </div>
+                  <p className="text-3xl font-extrabold text-white mt-2">{totalUsersCount}</p>
+                  <div className="flex items-center gap-2 mt-2 pt-2 border-t border-white/5 text-[10px]">
+                    <span className="text-emerald-400 font-bold">● {activeUsersCount} Active</span>
+                    <span className="text-white/30">•</span>
+                    <span className="text-white/50">{users.filter(u => {
+                      const dt = new Date(u.createdAt);
+                      const now = new Date();
+                      return (now.getTime() - dt.getTime()) < 7 * 24 * 3600 * 1000;
+                    }).length} New this week</span>
+                  </div>
+                </button>
+
+                {/* 2. Total Listings Card */}
+                <button
+                  onClick={() => setAdminTab('listings')}
+                  className="bg-[#0d0d12] hover:bg-[#12121a] border border-white/10 hover:border-amber-500/40 p-5 rounded-2xl relative overflow-hidden text-left transition cursor-pointer group shadow-lg"
+                >
+                  <div className="flex justify-between items-start">
+                    <span className="text-white/50 text-[10px] uppercase font-bold tracking-widest block">📋 Total Listings</span>
+                    <Building className="text-amber-500/80 group-hover:text-amber-400 w-5 h-5 transition" />
+                  </div>
+                  <p className="text-3xl font-extrabold text-white mt-2">{totalListingsCount}</p>
+                  <div className="flex items-center gap-2 mt-2 pt-2 border-t border-white/5 text-[10px]">
+                    <span className={pendingListingsCount > 0 ? "text-rose-400 font-bold" : "text-emerald-400 font-bold"}>
+                      ● {pendingListingsCount} Pending
+                    </span>
+                    <span className="text-white/30">•</span>
+                    <span className="text-white/50">{approvedListingsCount} Approved</span>
+                  </div>
+                </button>
+
+                {/* 3. Total Reports Card */}
+                <button
+                  onClick={() => setAdminTab('reports')}
+                  className="bg-[#0d0d12] hover:bg-[#12121a] border border-white/10 hover:border-amber-500/40 p-5 rounded-2xl relative overflow-hidden text-left transition cursor-pointer group shadow-lg"
+                >
+                  <div className="flex justify-between items-start">
+                    <span className="text-white/50 text-[10px] uppercase font-bold tracking-widest block">🚨 Reports</span>
+                    <AlertOctagon className="text-rose-500/80 group-hover:text-rose-400 w-5 h-5 transition" />
+                  </div>
+                  <p className="text-3xl font-extrabold text-rose-400 mt-2">{reports.length}</p>
+                  <div className="flex items-center gap-2 mt-2 pt-2 border-t border-white/5 text-[10px]">
+                    <span className={reportedCount > 0 ? "text-rose-400 font-bold" : "text-emerald-400 font-bold"}>
+                      ● {reportedCount} Unresolved
+                    </span>
+                    <span className="text-white/30">•</span>
+                    <span className="text-white/50">{reports.length - reportedCount} Resolved</span>
+                  </div>
+                </button>
+
+                {/* 4. Pending Payments Card */}
+                <button
+                  onClick={() => setAdminTab('payments')}
+                  className="bg-[#0d0d12] hover:bg-[#12121a] border border-white/10 hover:border-amber-500/40 p-5 rounded-2xl relative overflow-hidden text-left transition cursor-pointer group shadow-lg"
+                >
+                  <div className="flex justify-between items-start">
+                    <span className="text-white/50 text-[10px] uppercase font-bold tracking-widest block">💳 Pending Payments</span>
+                    <CreditCard className="text-amber-500/80 group-hover:text-amber-400 w-5 h-5 transition" />
+                  </div>
+                  <p className="text-3xl font-extrabold text-amber-500 mt-2">{pendingReceiptsCount}</p>
+                  <div className="flex items-center gap-2 mt-2 pt-2 border-t border-white/5 text-[10px]">
+                    <span className="text-amber-400 font-bold">● {receipts.filter(r => r.status === 'Pending').length} Pending Slips</span>
+                    <span className="text-white/30">•</span>
+                    <span className="text-white/50">CBE/Telebirr</span>
+                  </div>
+                </button>
+              </div>
+
+              {/* 3. NEEDS YOUR ATTENTION SECTION */}
+              <div className="bg-[#0d0d12]/90 border border-white/10 p-6 rounded-3xl space-y-4 shadow-xl">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-sm font-bold uppercase tracking-wider text-amber-500 flex items-center gap-2">
+                    <AlertTriangle className="w-4 h-4 text-amber-500" />
+                    <span>NEEDS YOUR ATTENTION</span>
+                  </h4>
+                  <span className="text-[10px] font-mono text-white/40">Requires Admin Action</span>
+                </div>
+
+                {(() => {
+                  const openTicketsCount = supportTickets.filter(t => t.status === 'Open').length;
+                  const totalPendingActions = pendingListingsCount + pendingReceiptsCount + pendingUserVerifications + reportedCount + openTicketsCount;
+
+                  if (totalPendingActions === 0) {
+                    return (
+                      <div className="p-8 text-center bg-black/30 border border-emerald-500/20 rounded-2xl space-y-2">
+                        <CheckCircle2 className="w-10 h-10 text-emerald-400 mx-auto" />
+                        <h5 className="text-base font-bold text-emerald-300">✓ Everything is up to date</h5>
+                        <p className="text-xs text-white/50 max-w-md mx-auto">There are no pending listing reviews, payment receipts, verifications, or unresolved safety reports at this moment.</p>
+                      </div>
+                    );
+                  }
+
+                  return (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                      {pendingListingsCount > 0 && (
+                        <div
+                          onClick={() => setAdminTab('listings')}
+                          className="p-4 bg-[#12121a] hover:bg-white/5 border border-rose-500/30 rounded-2xl transition cursor-pointer flex items-center justify-between"
+                        >
+                          <div className="space-y-0.5">
+                            <span className="text-[10px] font-bold uppercase text-rose-400 block">Pending Listings</span>
+                            <p className="text-sm font-bold text-white">{pendingListingsCount} listings waiting moderation</p>
+                          </div>
+                          <ChevronRight className="w-4 h-4 text-rose-400" />
+                        </div>
+                      )}
+
+                      {pendingReceiptsCount > 0 && (
+                        <div
+                          onClick={() => setAdminTab('payments')}
+                          className="p-4 bg-[#12121a] hover:bg-white/5 border border-amber-500/30 rounded-2xl transition cursor-pointer flex items-center justify-between"
+                        >
+                          <div className="space-y-0.5">
+                            <span className="text-[10px] font-bold uppercase text-amber-400 block">Pending Payments</span>
+                            <p className="text-sm font-bold text-white">{pendingReceiptsCount} payment receipts to verify</p>
+                          </div>
+                          <ChevronRight className="w-4 h-4 text-amber-400" />
+                        </div>
+                      )}
+
+                      {pendingUserVerifications > 0 && (
+                        <div
+                          onClick={() => setAdminTab('verification')}
+                          className="p-4 bg-[#12121a] hover:bg-white/5 border border-amber-500/30 rounded-2xl transition cursor-pointer flex items-center justify-between"
+                        >
+                          <div className="space-y-0.5">
+                            <span className="text-[10px] font-bold uppercase text-amber-400 block">Pending Verifications</span>
+                            <p className="text-sm font-bold text-white">{pendingUserVerifications} user verification requests</p>
+                          </div>
+                          <ChevronRight className="w-4 h-4 text-amber-400" />
+                        </div>
+                      )}
+
+                      {reportedCount > 0 && (
+                        <div
+                          onClick={() => setAdminTab('reports')}
+                          className="p-4 bg-[#12121a] hover:bg-white/5 border border-rose-500/30 rounded-2xl transition cursor-pointer flex items-center justify-between"
+                        >
+                          <div className="space-y-0.5">
+                            <span className="text-[10px] font-bold uppercase text-rose-400 block">Unresolved Reports</span>
+                            <p className="text-sm font-bold text-white">{reportedCount} safety reports filed</p>
+                          </div>
+                          <ChevronRight className="w-4 h-4 text-rose-400" />
+                        </div>
+                      )}
+
+                      {openTicketsCount > 0 && (
+                        <div
+                          onClick={() => setAdminTab('support')}
+                          className="p-4 bg-[#12121a] hover:bg-white/5 border border-amber-500/30 rounded-2xl transition cursor-pointer flex items-center justify-between"
+                        >
+                          <div className="space-y-0.5">
+                            <span className="text-[10px] font-bold uppercase text-amber-400 block">Open Support Tickets</span>
+                            <p className="text-sm font-bold text-white">{openTicketsCount} tickets awaiting reply</p>
+                          </div>
+                          <ChevronRight className="w-4 h-4 text-amber-400" />
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
+              </div>
+
+              {/* 4. PROMOTIONS SECTION & 7. SYSTEM HEALTH */}
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                {/* PROMOTIONS CARD */}
+                <div className="lg:col-span-7 bg-[#0d0d12]/90 border border-white/10 p-6 rounded-3xl space-y-4 shadow-xl flex flex-col justify-between">
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-center">
+                      <h4 className="text-xs font-bold uppercase tracking-wider text-amber-500 flex items-center gap-1.5">
+                        <Zap className="w-4 h-4 text-amber-500" /> PROMOTIONS
+                      </h4>
+                      <span className="text-[10px] bg-amber-500/10 text-amber-400 px-2 py-0.5 rounded-full border border-amber-500/20 font-mono">
+                        Boosts & Ads
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3 pt-1">
+                      <div className="bg-[#12121a] p-3.5 rounded-2xl border border-white/5">
+                        <span className="text-[10px] text-white/40 uppercase font-bold block">Active Boosted Listings</span>
+                        <p className="text-2xl font-extrabold text-white mt-1">{promotedListingsCount}</p>
+                      </div>
+                      <div className="bg-[#12121a] p-3.5 rounded-2xl border border-white/5">
+                        <span className="text-[10px] text-white/40 uppercase font-bold block">Pending Promotion Requests</span>
+                        <p className="text-2xl font-extrabold text-amber-400 mt-1">{pendingPromotionRequestsCount}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="pt-3 border-t border-white/5 flex justify-end">
+                    <button
+                      onClick={() => {
+                        setAdminTab('ads');
+                      }}
+                      className="text-xs font-bold text-amber-400 hover:text-amber-300 flex items-center gap-1 cursor-pointer transition"
+                    >
+                      <span>View Promotions</span>
+                      <ChevronRight className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+
+                {/* SYSTEM HEALTH SECTION */}
+                <div className="lg:col-span-5 bg-[#0d0d12]/90 border border-white/10 p-6 rounded-3xl space-y-4 shadow-xl">
+                  <div className="flex justify-between items-center">
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-emerald-400 flex items-center gap-1.5">
+                      <ShieldCheck className="w-4 h-4 text-emerald-400" /> SYSTEM HEALTH
+                    </h4>
+                    <span className="text-[9px] text-emerald-400 font-mono bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
+                      Operational
+                    </span>
+                  </div>
+
+                  <div className="space-y-2 text-xs font-medium">
+                    <div className="flex items-center justify-between p-2.5 bg-black/40 rounded-xl border border-white/5">
+                      <span className="text-white/80">🟢 Database</span>
+                      <span className="text-emerald-400 font-bold text-[10px] uppercase font-mono">Operational</span>
+                    </div>
+                    <div className="flex items-center justify-between p-2.5 bg-black/40 rounded-xl border border-white/5">
+                      <span className="text-white/80">🟢 Storage</span>
+                      <span className="text-emerald-400 font-bold text-[10px] uppercase font-mono">Operational</span>
+                    </div>
+                    <div className="flex items-center justify-between p-2.5 bg-black/40 rounded-xl border border-white/5">
+                      <span className="text-white/80">🟢 Authentication</span>
+                      <span className="text-emerald-400 font-bold text-[10px] uppercase font-mono">Operational</span>
+                    </div>
+                    <div className="flex items-center justify-between p-2.5 bg-black/40 rounded-xl border border-white/5">
+                      <span className="text-white/80">🟢 Payments</span>
+                      <span className="text-emerald-400 font-bold text-[10px] uppercase font-mono">Operational</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* 5. PLATFORM ACTIVITY WITH TABS */}
+              <div className="bg-[#0d0d12]/90 border border-white/10 p-6 rounded-3xl space-y-4 shadow-xl">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-white/50 flex items-center gap-1.5">
+                    <Activity className="w-4 h-4 text-amber-500" />
+                    Platform Activity — Last 7 Days
+                  </h4>
+
+                  {/* Activity Tabs */}
+                  <div className="flex bg-black/50 p-1 rounded-xl border border-white/10 text-xs">
+                    <button
+                      onClick={() => setActivityTab('users')}
+                      className={`px-3 py-1 rounded-lg font-bold transition cursor-pointer ${activityTab === 'users' ? 'bg-amber-500 text-black shadow' : 'text-white/60 hover:text-white'}`}
+                    >
+                      Users
+                    </button>
+                    <button
+                      onClick={() => setActivityTab('listings')}
+                      className={`px-3 py-1 rounded-lg font-bold transition cursor-pointer ${activityTab === 'listings' ? 'bg-amber-500 text-black shadow' : 'text-white/60 hover:text-white'}`}
+                    >
+                      Listings
+                    </button>
+                    <button
+                      onClick={() => setActivityTab('payments')}
+                      className={`px-3 py-1 rounded-lg font-bold transition cursor-pointer ${activityTab === 'payments' ? 'bg-amber-500 text-black shadow' : 'text-white/60 hover:text-white'}`}
+                    >
+                      Payments
+                    </button>
+                  </div>
+                </div>
+
+                {(() => {
+                  const weeklyActivity = [
+                    { day: 'Mon', users: 0, listings: 0, payments: 0 },
+                    { day: 'Tue', users: 0, listings: 0, payments: 0 },
+                    { day: 'Wed', users: 0, listings: 0, payments: 0 },
+                    { day: 'Thu', users: 0, listings: 0, payments: 0 },
+                    { day: 'Fri', users: 0, listings: 0, payments: 0 },
+                    { day: 'Sat', users: 0, listings: 0, payments: 0 },
+                    { day: 'Sun', users: 0, listings: 0, payments: 0 }
+                  ];
+
+                  const dayMap: { [key: number]: number } = { 1: 0, 2: 1, 3: 2, 4: 3, 5: 4, 6: 5, 0: 6 };
+
+                  users.forEach(u => {
+                    try {
+                      const idx = dayMap[new Date(u.createdAt).getDay()];
+                      if (idx !== undefined) weeklyActivity[idx].users += 1;
+                    } catch (e) {}
+                  });
+
+                  properties.forEach(p => {
+                    try {
+                      const idx = dayMap[new Date(p.createdAt).getDay()];
+                      if (idx !== undefined) weeklyActivity[idx].listings += 1;
+                    } catch (e) {}
+                  });
+
+                  receipts.forEach(r => {
+                    try {
+                      const idx = dayMap[new Date(r.submittedAt).getDay()];
+                      if (idx !== undefined) weeklyActivity[idx].payments += 1;
+                    } catch (e) {}
+                  });
+
+                  const currentMax = Math.max(...weeklyActivity.map(d => d[activityTab]), 1);
+
+                  return (
+                    <div className="space-y-2">
+                      <div className="h-40 flex items-end justify-between gap-3 pt-6 border-b border-white/5 pb-2">
+                        {weeklyActivity.map((d, i) => {
+                          const val = d[activityTab];
+                          const heightPct = val > 0 ? (val / currentMax) * 100 : 4;
+                          return (
+                            <div key={i} className="flex-1 flex flex-col items-center gap-1.5 h-full justify-end group">
+                              <span className="text-[10px] font-mono text-amber-400 font-bold opacity-0 group-hover:opacity-100 transition">
+                                {val}
+                              </span>
+                              <div
+                                className={`w-full max-w-[28px] rounded-t transition-all duration-300 ${
+                                  activityTab === 'users' ? 'bg-purple-500 group-hover:bg-purple-400' :
+                                  activityTab === 'listings' ? 'bg-amber-500 group-hover:bg-amber-400' :
+                                  'bg-emerald-500 group-hover:bg-emerald-400'
+                                }`}
+                                style={{ height: `${heightPct}%` }}
+                                title={`${val} ${activityTab}`}
+                              />
+                              <span className="text-[9px] text-white/40 font-mono font-bold uppercase">{d.day}</span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                      <div className="text-[10px] text-white/40 text-center font-mono">
+                        Showing total {activityTab} registered per day over the last 7 days.
+                      </div>
+                    </div>
+                  );
+                })()}
+              </div>
+
+              {/* 6. QUICK ACTIONS SECTION */}
+              <div className="bg-[#0d0d12]/90 border border-white/10 p-6 rounded-3xl space-y-4 shadow-xl">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-white/50 flex items-center gap-1.5">
+                  <Zap className="w-4 h-4 text-amber-500" /> QUICK ACTIONS
+                </h4>
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+                  <button
+                    onClick={onOpenCreateModal}
+                    className="p-3 bg-gradient-to-r from-amber-500 to-amber-600 text-black font-extrabold text-xs rounded-xl shadow-lg hover:from-amber-400 hover:to-amber-500 transition cursor-pointer text-center flex flex-col items-center justify-center gap-1"
+                  >
+                    <PlusCircle className="w-4 h-4" />
+                    <span>+ Create Listing</span>
+                  </button>
+
+                  <button
+                    onClick={() => setAdminTab('users')}
+                    className="p-3 bg-white/5 hover:bg-white/10 text-white font-bold text-xs rounded-xl border border-white/10 transition cursor-pointer text-center flex flex-col items-center justify-center gap-1"
+                  >
+                    <Users className="w-4 h-4 text-amber-400" />
+                    <span>Users</span>
+                  </button>
+
+                  <button
+                    onClick={() => setAdminTab('listings')}
+                    className="p-3 bg-white/5 hover:bg-white/10 text-white font-bold text-xs rounded-xl border border-white/10 transition cursor-pointer text-center flex flex-col items-center justify-center gap-1"
+                  >
+                    <Building className="w-4 h-4 text-amber-400" />
+                    <span>Moderation</span>
+                  </button>
+
+                  <button
+                    onClick={() => setAdminTab('payments')}
+                    className="p-3 bg-white/5 hover:bg-white/10 text-white font-bold text-xs rounded-xl border border-white/10 transition cursor-pointer text-center flex flex-col items-center justify-center gap-1"
+                  >
+                    <CreditCard className="w-4 h-4 text-amber-400" />
+                    <span>Payments</span>
+                  </button>
+
+                  <button
+                    onClick={() => setAdminTab('analytics')}
+                    className="p-3 bg-white/5 hover:bg-white/10 text-white font-bold text-xs rounded-xl border border-white/10 transition cursor-pointer text-center flex flex-col items-center justify-center gap-1"
+                  >
+                    <BarChart3 className="w-4 h-4 text-amber-400" />
+                    <span>Analytics</span>
+                  </button>
+
+                  <button
+                    onClick={() => setAdminTab('settings')}
+                    className="p-3 bg-white/5 hover:bg-white/10 text-white font-bold text-xs rounded-xl border border-white/10 transition cursor-pointer text-center flex flex-col items-center justify-center gap-1"
+                  >
+                    <Settings className="w-4 h-4 text-amber-400" />
+                    <span>Settings</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Recent Activity Log */}
+              <div className="bg-[#0d0d12]/90 border border-white/5 p-6 rounded-3xl space-y-4">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-white/40 flex items-center gap-1.5">
+                  <Clock className="w-4 h-4 text-amber-500" /> Administrative Audit & Activity Logs
+                </h4>
+                <div className="divide-y divide-white/5 text-xs text-white/80 font-light space-y-3">
+                  {(() => {
+                      const formatTimeAgo = (dateString: string) => {
+                        try {
+                          const now = new Date();
+                          const past = new Date(dateString);
+                          const diffMs = now.getTime() - past.getTime();
+                          if (diffMs < 0) return 'Just now';
+                          const diffMins = Math.floor(diffMs / 60000);
+                          if (diffMins < 1) return 'Just now';
+                          if (diffMins < 60) return `${diffMins}m ago`;
+                          const diffHours = Math.floor(diffMins / 60);
+                          if (diffHours < 24) return `${diffHours}h ago`;
+                          const diffDays = Math.floor(diffHours / 24);
+                          if (diffDays === 1) return 'Yesterday';
+                          return past.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+                        } catch (e) {
+                          return 'Recently';
+                        }
+                      };
+
+                      const liveLogs = [
+                        ...users.map(u => ({
+                          text: `New profile created for `,
+                          boldText: u.fullName,
+                          subText: ` (${u.email})`,
+                          time: formatTimeAgo(u.createdAt),
+                          statusColor: 'text-white/30',
+                          rawDate: new Date(u.createdAt)
+                        })),
+                        ...properties.map(p => ({
+                          text: `New listing `,
+                          boldText: `"${extractString(p.title)}"`,
+                          subText: ` submitted under ${p.majorCategory || 'Properties'}`,
+                          time: formatTimeAgo(p.createdAt),
+                          statusColor: 'text-white/30',
+                          rawDate: new Date(p.createdAt)
+                        })),
+                        ...receipts.map(r => ({
+                          text: `Payment slip of ETB ${r.amount} for `,
+                          boldText: `"${r.relatedPropertyTitle}"`,
+                          subText: ` is ${r.status}`,
+                          time: formatTimeAgo(r.submittedAt),
+                          statusColor: r.status === 'Approved' ? 'text-emerald-400' : r.status === 'Rejected' ? 'text-rose-400' : 'text-amber-400',
+                          rawDate: new Date(r.submittedAt)
+                        })),
+                        ...reports.map(rep => ({
+                          text: `Complaint filed against ${rep.targetType} `,
+                          boldText: `"${rep.targetName}"`,
+                          subText: ` for ${rep.reason}`,
+                          time: formatTimeAgo(rep.createdAt),
+                          statusColor: 'text-rose-400',
+                          rawDate: new Date(rep.createdAt)
+                        }))
+                      ].sort((a, b) => b.rawDate.getTime() - a.rawDate.getTime());
+
+                      if (liveLogs.length === 0) {
+                        return (
+                          <div className="py-4 text-center text-white/30 italic">
+                            No live production activities logged in the database yet.
+                          </div>
+                        );
+                      }
+
+                      return liveLogs.slice(0, 5).map((log, idx) => (
+                        <div key={idx} className="flex justify-between items-center pt-3">
+                          <span className="text-white/60">
+                            {log.text}
+                            <strong className="font-semibold text-white">{log.boldText}</strong>
+                            {log.subText}
+                          </span>
+                          <span className={`text-[10px] font-mono ${log.statusColor}`}>{log.time}</span>
+                        </div>
+                      ));
+                    })()}
+                </div>
+              </div>
+            </div>
+          )}
+
           {adminTab === 'overview' && isTabAllowed('overview') && (
             <div className="space-y-6 animate-fade-in">
               <div className="bg-[#0d0d12]/90 border border-white/5 p-6 rounded-3xl">
