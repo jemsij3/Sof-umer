@@ -1650,6 +1650,11 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
         retailPrice: Number(propForm.retailPrice || propForm.price || 0),
         wholesalePrice: Number(propForm.wholesalePrice || 0),
         minimumOrderQuantity: Number(propForm.minimumOrderQuantity || 1),
+        wholesalePriceTiers: Array.isArray(propForm.wholesalePriceTiers) && propForm.wholesalePriceTiers.length > 0
+          ? propForm.wholesalePriceTiers.map((t: any, idx: number) => idx === 0 ? { ...t, minimumQuantity: Number(propForm.minimumOrderQuantity || 1) } : t)
+          : (Array.isArray(editingProp.wholesalePriceTiers) && editingProp.wholesalePriceTiers.length > 0
+              ? editingProp.wholesalePriceTiers.map((t: any, idx: number) => idx === 0 ? { ...t, minimumQuantity: Number(propForm.minimumOrderQuantity || 1) } : t)
+              : undefined),
         availableQuantity: Number(propForm.availableQuantity || propForm.quantity || 1),
         video: propForm.videoUrl,
         videoUrl: propForm.videoUrl,
@@ -3604,8 +3609,9 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
                       <div>
                         <label className="block text-[10px] text-white/50 font-bold uppercase mb-1">Minimum Order Quantity (MOQ)</label>
                         <input
-                          type="text"
-                          inputMode="text"
+                          type="number"
+                          min="1"
+                          step="1"
                           value={propForm.minimumOrderQuantity}
                           onChange={e => setPropForm({ ...propForm, minimumOrderQuantity: e.target.value as any })}
                           className="w-full px-3.5 py-2.5 bg-black/50 border border-white/10 rounded-xl text-xs text-white font-mono focus:border-amber-500 focus:outline-none"
@@ -3865,7 +3871,8 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
                                   retailPrice: (p as any).retailPrice || p.price || 0,
                                   wholesalePrice: (p as any).wholesalePrice || 0,
                                   wholesaleUnit: (p as any).wholesaleUnit || 'Piece',
-                                  minimumOrderQuantity: (p as any).minimumOrderQuantity || 1,
+                                  minimumOrderQuantity: (p as any).minimumOrderQuantity || (p as any).wholesalePriceTiers?.[0]?.minimumQuantity || 1,
+                                  wholesalePriceTiers: Array.isArray((p as any).wholesalePriceTiers) ? [...(p as any).wholesalePriceTiers] : [],
                                   availableQuantity: (p as any).availableQuantity || 1,
                                   businessType: (p as any).businessType || 'Wholesaler',
                                   deliveryOptions: Array.isArray((p as any).deliveryOptions) ? [...(p as any).deliveryOptions] : [],

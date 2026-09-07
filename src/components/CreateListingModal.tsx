@@ -22,6 +22,7 @@ import { WholesalePriceTier, ProductVariation } from '../types';
 import { 
   normalizeSellingType, 
   validateWholesaleConfig, 
+  getPluralizedUnit,
   STANDARD_UNITS, 
   STANDARD_CONDITIONS,
   NormalizedSellingType 
@@ -1318,7 +1319,7 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
   // Selling Type, Wholesale Pricing Tiers & SKU Variations State
   const [sellingType, setSellingType] = useState<NormalizedSellingType>('Retail');
   const [wholesaleTiers, setWholesaleTiers] = useState<WholesalePriceTier[]>([
-    { minimumQuantity: 10, pricePerUnit: 0 }
+    { minimumQuantity: 1, pricePerUnit: 0 }
   ]);
   const [variationsList, setVariationsList] = useState<ProductVariation[]>([]);
 
@@ -1334,7 +1335,7 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
     availableQuantity: '',
     sellingType: 'Retail',
     businessType: 'Wholesaler',
-    minimumOrderQuantity: '10',
+    minimumOrderQuantity: '1',
     wholesalePrice: '',
     wholesaleNotes: '',
     contactPhone: '',
@@ -1350,6 +1351,7 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
       setSubcategory(subcats[0].id);
     }
     setFieldsState(prev => ({
+      ...prev,
       title: prev.title || '',
       description: prev.description || '',
       location: prev.location || '',
@@ -2936,16 +2938,9 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
                         currency={currency}
                         unit={fieldsState.unit || fieldsState.wholesaleUnit || 'Piece'}
                         moq={fieldsState.minimumOrderQuantity}
-                        initialMoq={Number(fieldsState.minimumOrderQuantity || 10)}
+                        initialMoq={Number(fieldsState.minimumOrderQuantity || 1)}
                         tiers={wholesaleTiers}
                         isRetailAndWholesale={sellingType === 'Retail + Wholesale' || (sellingType as any) === 'Retail & Wholesale'}
-                        onMoqChange={(newMoq) => handleFieldChange('minimumOrderQuantity', newMoq)}
-                        onTiersChange={(newTiers) => {
-                          setWholesaleTiers(newTiers);
-                          if (newTiers[0]?.pricePerUnit) {
-                            handleFieldChange('wholesalePrice', newTiers[0].pricePerUnit);
-                          }
-                        }}
                         onChange={(moq, newTiers) => {
                           setWholesaleTiers(newTiers);
                           handleFieldChange('minimumOrderQuantity', moq);
@@ -3118,7 +3113,7 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
                               <span className="text-xs font-normal text-amber-300/80 ml-1">/ {fieldsState.wholesaleUnit || 'Piece'}</span>
                             </span>
                             <span className="text-[10px] text-amber-300/90 font-bold block mt-0.5">
-                              MOQ: {fieldsState.minimumOrderQuantity || 1} {fieldsState.wholesaleUnit || 'Piece'}s
+                              MOQ: {fieldsState.minimumOrderQuantity || 1} {getPluralizedUnit(Number(fieldsState.minimumOrderQuantity || 1), fieldsState.wholesaleUnit || fieldsState.unit || 'Piece')}
                             </span>
                           </>
                         ) : (
@@ -3128,7 +3123,7 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
                             </span>
                             {(fieldsState.sellingType || 'Retail') === 'Retail & Wholesale' && fieldsState.wholesalePrice && (
                               <span className="text-[10px] text-amber-300 font-bold block mt-0.5">
-                                Wholesale: {Number(fieldsState.wholesalePrice).toLocaleString()} {currency} / {fieldsState.wholesaleUnit || 'Piece'} (MOQ: {fieldsState.minimumOrderQuantity || 1})
+                                Wholesale: {Number(fieldsState.wholesalePrice).toLocaleString()} {currency} / {fieldsState.wholesaleUnit || fieldsState.unit || 'Piece'} (MOQ: {fieldsState.minimumOrderQuantity || 1} {getPluralizedUnit(Number(fieldsState.minimumOrderQuantity || 1), fieldsState.wholesaleUnit || fieldsState.unit || 'Piece')})
                               </span>
                             )}
                           </>
@@ -3143,10 +3138,10 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
                           <span>{fieldsState.sellingType} &bull; {fieldsState.businessType || 'Wholesaler'}</span>
                         </div>
                         <div className="text-[10px] text-amber-400/80 font-mono text-right">
-                          <span>MOQ: {fieldsState.minimumOrderQuantity || 1} {fieldsState.wholesaleUnit || 'Piece'}</span>
+                          <span>MOQ: {fieldsState.minimumOrderQuantity || 1} {getPluralizedUnit(Number(fieldsState.minimumOrderQuantity || 1), fieldsState.wholesaleUnit || fieldsState.unit || 'Piece')}</span>
                           {fieldsState.availableQuantity ? (
                             <span className="ml-2 font-semibold text-amber-300">
-                              &bull; Stock: {fieldsState.availableQuantity} {fieldsState.wholesaleUnit || 'Piece'}s
+                              &bull; Stock: {fieldsState.availableQuantity} {getPluralizedUnit(Number(fieldsState.availableQuantity), fieldsState.wholesaleUnit || fieldsState.unit || 'Piece')}
                             </span>
                           ) : null}
                         </div>

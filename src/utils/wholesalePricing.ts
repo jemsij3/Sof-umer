@@ -204,8 +204,8 @@ export function validateWholesaleConfig(
   tiers: WholesalePriceTier[]
 ): { isValid: boolean; error?: string } {
   const moq = Number(moqInput);
-  if (!moq || isNaN(moq) || moq < 1) {
-    return { isValid: false, error: 'Minimum Order Quantity (MOQ) must be at least 1 unit.' };
+  if (!moq || isNaN(moq) || moq < 1 || !Number.isInteger(moq)) {
+    return { isValid: false, error: 'Minimum Order Quantity (MOQ) must be a positive whole number of at least 1 unit.' };
   }
 
   if (!tiers || !Array.isArray(tiers) || tiers.length === 0) {
@@ -213,7 +213,7 @@ export function validateWholesaleConfig(
   }
 
   // Ensure first tier starts at or matches MOQ
-  if (tiers[0].minimumQuantity !== moq) {
+  if (Number(tiers[0].minimumQuantity) !== moq) {
     return {
       isValid: false,
       error: `The first wholesale pricing tier must start at your MOQ (${moq} units).`
@@ -227,8 +227,8 @@ export function validateWholesaleConfig(
     const qty = Number(tier.minimumQuantity);
     const price = Number(tier.pricePerUnit);
 
-    if (isNaN(qty) || qty < 1) {
-      return { isValid: false, error: `Tier #${i + 1} has an invalid quantity.` };
+    if (isNaN(qty) || qty < 1 || !Number.isInteger(qty)) {
+      return { isValid: false, error: `Tier #${i + 1} quantity must be a positive whole number.` };
     }
 
     if (isNaN(price) || price <= 0) {
@@ -245,7 +245,9 @@ export function validateWholesaleConfig(
       if (qty <= prevQty) {
         return {
           isValid: false,
-          error: `Quantity tiers must strictly increase: Tier #${i + 1} (${qty}) must be greater than Tier #${i} (${prevQty}).`
+          error: i === 1
+            ? `Tier #2 minimum quantity (${qty}) must be greater than Tier #1 Base MOQ (${prevQty}).`
+            : `Quantity tiers must strictly increase: Tier #${i + 1} (${qty}) must be greater than Tier #${i} (${prevQty}).`
         };
       }
     }
