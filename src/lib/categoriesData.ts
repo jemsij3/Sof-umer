@@ -1591,6 +1591,100 @@ export function getTranslatedFieldLabel(label: string, lang: string = 'en'): str
   return hasAsterisk ? `${translated} *` : translated;
 }
 
-
-
-
+// Visual icons for subcategories to match SOF-UMER design system
+export function getSubcategoryVisual(subId: string, fallbackEmoji: string = '📦'): string {
+  const map: Record<string, string> = {
+    // Properties
+    'prop-houses': '🏠',
+    'prop-apartments': '🏢',
+    'prop-villas': '🏡',
+    'prop-land': '🌍',
+    'prop-offices': '🏢',
+    'prop-shops': '🛍️',
+    'prop-warehouse': '📦',
+    'prop-hotels': '🏨',
+    'prop-farms': '🌾',
+    'prop-commercial': '🏬',
+    'prop-services': '🛠️',
+    // Vehicles
+    'veh-cars': '🚗',
+    'veh-motorcycles': '🏍️',
+    'veh-trucks': '🚛',
+    'veh-buses': '🚌',
+    'veh-heavy': '🚜',
+    'veh-parts': '⚙️',
+    'veh-accessories': '🪞',
+    'veh-services': '🔧',
+    // Electronics
+    'el-smartphones': '📱',
+    'el-tablets': '📟',
+    'el-laptops': '💻',
+    'el-desktops': '🖥️',
+    'el-tvs': '📺',
+    'el-cameras': '📷',
+    'el-audio': '🎧',
+    'el-gaming': '🎮',
+    'el-comp-acc': '⌨️',
+    'el-phone-acc': '🔌',
+    'el-watches': '⌚',
+    'el-appliances': '🧊',
+    // Fashion
+    'fas-men': '👔',
+    'fas-women': '👗',
+    'fas-kids': '🧸',
+    'fas-shoes': '👟',
+    'fas-bags': '👜',
+    'fas-watches': '⌚',
+    'fas-jewelry': '💍',
+    'fas-accessories': '🕶️',
+    // Jobs
+    'job-accounting': '💼',
+    'job-admin': '📋',
+    'job-construction': '👷',
+    'job-customer': '📞',
+    'job-design': '🎨',
+    'job-education': '📚',
+    'job-engineering': '⚙️',
+    'job-health': '🩺',
+    'job-hotel': '🍽️',
+    'job-it': '💻',
+    'job-legal': '⚖️',
+    'job-logistics': '🚚',
+    'job-marketing': '📢',
+    'job-sales': '🏷️',
+    // Services
+    'serv-automotive': '🔧',
+    'serv-building': '🔨',
+    'serv-cleaning': '🧹',
+    'serv-computer': '💻',
+    'serv-events': '🎉',
+    'serv-health': '💆',
+    'serv-legal': '⚖️',
+    'serv-logistics': '📦',
+    'serv-repair': '🛠️',
+    // Home & Furniture
+    'home-furniture': '🛋️',
+    'home-appliances': '🧊',
+    'home-decor': '🖼️',
+    'home-garden': '🪴',
+    'home-kitchen': '🍳',
+    // Agriculture
+    'agri-crops': '🌾',
+    'agri-livestock': '🐄',
+    'agri-feeds': '🌱',
+    'agri-equipment': '🚜',
+    // Babies & Kids
+    'kid-clothing': '👶',
+    'kid-toys': '🧸',
+    'kid-gear': '🍼',
+    // Health & Beauty
+    'hb-skincare': '🧴',
+    'hb-hair': '✂️',
+    'hb-perfume': '✨',
+    // Sports
+    'sport-fitness': '🏋️',
+    'sport-outdoor': '⛺',
+    'sport-apparel': '👟',
+  };
+  return map[subId] || fallbackEmoji;
+}

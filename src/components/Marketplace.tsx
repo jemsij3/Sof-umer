@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { useApp } from '../lib/AppContext';
 import { Property, Advertisement } from '../types';
 import { 
-  Search, MapPin, Building, BedDouble, Bath, Maximize, Heart, ArrowRight, 
+  Search, MapPin, Building, BedDouble, Bath, Maximize, Heart, ArrowRight, ArrowLeft,
   SlidersHorizontal, Sparkles, ShieldAlert, Briefcase, Wrench, ShoppingBag, 
   Store, Users, Grid, List, Share2, Bookmark, BookmarkCheck, ChevronRight, 
   X, AlertCircle, Home, Car, Smartphone, Laptop, Sofa, Shirt, FileText, 
@@ -20,6 +20,7 @@ import {
   isListingActiveAndPublished, 
   getSubcategoryListingCount as calcSubCount, 
   getCategoryListingCount as calcCategoryCount, 
+  getSubcategoryVisual,
   extractString,
   getTranslatedCategoryName,
   getTranslatedSubcategoryName,
@@ -682,19 +683,79 @@ export default function Marketplace({
     sortBy
   ]);
 
-  // Handlers for our premium interactive features
-  const handleSelectRedesignedCategory = (cat: CategoryRedesign) => {
+  // Handlers for category navigation with browser history support
+  const handleSelectRedesignedCategory = (cat: CategoryRedesign, sub: Subcategory | null = null) => {
     setSelectedRedesignedCategory(cat);
-    setSelectedSubcategory(null);
+    setSelectedSubcategory(sub);
     setCatSearchQuery('');
     setVisibleCount(6);
     setSelectedMajorCategory(cat.name); // Keeps 100% back-compatibility sync
+
+    try {
+      window.history.pushState({ sofCatNav: true, catId: cat.id, subId: sub?.id || null }, '');
+    } catch (_) {}
     
     // Add to recently viewed list
     const updated = [cat.id, ...recentlyViewedIds.filter(id => id !== cat.id)].slice(0, 5);
     setRecentlyViewedIds(updated);
-    localStorage.setItem('sof_uploader_recently_viewed', JSON.stringify(updated));
+    try {
+      localStorage.setItem('sof_uploader_recently_viewed', JSON.stringify(updated));
+    } catch (_) {}
   };
+
+  const handleGoBackToMainCategory = () => {
+    setSelectedSubcategory(null);
+    try {
+      if (selectedRedesignedCategory) {
+        window.history.pushState({ sofCatNav: true, catId: selectedRedesignedCategory.id, subId: null }, '');
+      }
+    } catch (_) {}
+  };
+
+  const handleGoBackToAllCategories = () => {
+    setSelectedRedesignedCategory(null);
+    setSelectedSubcategory(null);
+    setSelectedMajorCategory('All');
+    try {
+      window.history.pushState({ sofCatNav: true, catId: null, subId: null }, '');
+    } catch (_) {}
+  };
+
+  // Browser back-button event listener for category navigation
+  React.useEffect(() => {
+    const onPopState = (e: PopStateEvent) => {
+      if (e.state && e.state.sofCatNav) {
+        const { catId, subId } = e.state;
+        if (catId) {
+          const matched = REDESIGNED_CATEGORIES.find(c => c.id === catId);
+          if (matched) {
+            setSelectedRedesignedCategory(matched);
+            setSelectedMajorCategory(matched.name);
+            if (subId) {
+              const matchedSub = matched.subcategories.find(s => s.id === subId);
+              setSelectedSubcategory(matchedSub || null);
+            } else {
+              setSelectedSubcategory(null);
+            }
+            return;
+          }
+        }
+        setSelectedRedesignedCategory(null);
+        setSelectedSubcategory(null);
+        setSelectedMajorCategory('All');
+      } else {
+        if (selectedSubcategory) {
+          setSelectedSubcategory(null);
+        } else if (selectedRedesignedCategory) {
+          setSelectedRedesignedCategory(null);
+          setSelectedMajorCategory('All');
+        }
+      }
+    };
+
+    window.addEventListener('popstate', onPopState);
+    return () => window.removeEventListener('popstate', onPopState);
+  }, [selectedRedesignedCategory, selectedSubcategory]);
 
   const handleToggleSaveCategory = (catId: string, e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
@@ -842,7 +903,7 @@ export default function Marketplace({
       )}
 
       {/* Dynamic Hero Advertisement / Welcome Banner */}
-      {heroAds.length > 0 ? (
+      {heroAds.length > 0 && (
         <div className="mb-10 rounded-3xl overflow-hidden relative bg-[#0e0e13] text-[#F5F5F4] min-h-[220px] flex flex-col md:flex-row items-center justify-between p-8 md:p-10 border border-white/5 shadow-2xl relative">
           <div className="z-10 max-w-xl text-left">
             <span className="bg-gradient-to-r from-amber-400 to-amber-600 text-black text-[9px] font-black uppercase px-3 py-1.5 rounded-full mb-4 inline-block tracking-widest shadow-md">
@@ -871,8 +932,11 @@ export default function Marketplace({
           </div>
           <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/40 to-transparent pointer-events-none" />
         </div>
-      ) : (
-        <div className="mb-6 flex justify-start animate-fade-in">
+      )}
+      {/* Category Navigation Bar (Always visible at top when browsing) */}
+      {!selectedRedesignedCategory && (
+        <div className="mb-8 flex flex-wrap items-center justify-between gap-4 animate-fade-in bg-[#0d0d14]/70 border border-white/5 p-4 rounded-3xl backdrop-blur-md">
+          {/* ALL CATEGORIES Primary Trigger */}
           <button
             id="all-categories-trigger"
             onClick={() => setIsAllCategoriesOpen(true)}
@@ -882,6 +946,33 @@ export default function Marketplace({
             <span>{t('all_categories') || 'ALL CATEGORIES'}</span>
             <ChevronDown className="w-3.5 h-3.5" />
           </button>
+
+          {/* RECENTLY VIEWED CATEGORIES (Requirement 8) */}
+          {recentlyViewedIds.length > 0 && (
+            <div className="flex flex-wrap items-center gap-2 text-left">
+              <span className="text-[10px] font-bold text-white/40 uppercase tracking-widest flex items-center gap-1.5 mr-1">
+                <Clock className="w-3.5 h-3.5 text-amber-500" />
+                {t('recently_viewed_categories') || 'RECENTLY VIEWED'}
+              </span>
+              <div className="flex flex-wrap gap-2">
+                {recentlyViewedIds.map(id => {
+                  const matched = REDESIGNED_CATEGORIES.find(c => c.id === id);
+                  if (!matched) return null;
+                  const catName = currentLanguage === 'am' ? (matched.translations?.am || matched.name) : currentLanguage === 'om' ? (matched.translations?.om || matched.name) : matched.name;
+                  return (
+                    <button
+                      key={id}
+                      onClick={() => handleSelectRedesignedCategory(matched)}
+                      className="px-3.5 py-1.5 bg-[#12121a] hover:bg-amber-500 hover:text-black border border-white/5 hover:border-amber-500/30 text-xs text-white/80 rounded-xl transition-all duration-200 cursor-pointer flex items-center gap-1.5 shadow-sm"
+                    >
+                      <span>{matched.emoji}</span>
+                      <span>{catName}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
         </div>
       )}
 
@@ -902,49 +993,77 @@ export default function Marketplace({
 
       {selectedRedesignedCategory ? (
         <div className="animate-fade-in text-left">
-          {/* Breadcrumb Navigation */}
-          <div className="flex flex-wrap items-center gap-2 mb-6 text-xs text-white/50 bg-[#0d0d12]/40 backdrop-blur-md px-4 py-2.5 rounded-2xl border border-white/5 w-fit">
-            <button 
-              onClick={() => { setSelectedRedesignedCategory(null); setSelectedSubcategory(null); setSelectedMajorCategory('All'); }}
-              className="hover:text-amber-400 transition flex items-center gap-1.5 cursor-pointer font-bold uppercase tracking-wider"
-            >
-              <Home className="w-3.5 h-3.5" /> {t('home_tab') || 'Home'}
-            </button>
-            <ChevronRight className="w-3.5 h-3.5 opacity-60 text-amber-500" />
-            <button 
-              onClick={() => setSelectedSubcategory(null)}
-              className={`hover:text-amber-400 transition font-bold uppercase tracking-wider cursor-pointer ${!selectedSubcategory ? 'text-amber-400' : ''}`}
-            >
-              {currentLanguage === 'am' ? selectedRedesignedCategory.nameAm : currentLanguage === 'om' ? selectedRedesignedCategory.nameOm : selectedRedesignedCategory.name}
-            </button>
-            {selectedSubcategory && (
-              <>
-                <ChevronRight className="w-3.5 h-3.5 opacity-60 text-amber-500" />
-                <span className="text-white/80 font-bold uppercase tracking-wider truncate">
-                  {currentLanguage === 'am' ? selectedSubcategory.nameAm : currentLanguage === 'om' ? selectedSubcategory.nameOm : selectedSubcategory.name}
-                </span>
-              </>
+          {/* Breadcrumb Navigation & Obvious Back Navigation (Requirement 5) */}
+          <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
+            <div className="flex flex-wrap items-center gap-2 text-xs text-white/50 bg-[#0d0d12]/40 backdrop-blur-md px-4 py-2.5 rounded-2xl border border-white/5 w-fit">
+              <button 
+                onClick={handleGoBackToAllCategories}
+                className="hover:text-amber-400 transition flex items-center gap-1.5 cursor-pointer font-bold uppercase tracking-wider text-amber-400/90 hover:text-amber-300"
+              >
+                <ArrowLeft className="w-3.5 h-3.5" />
+                <span>{t('all_categories') || 'All Categories'}</span>
+              </button>
+              <ChevronRight className="w-3.5 h-3.5 opacity-40 text-amber-500" />
+              <button 
+                onClick={handleGoBackToMainCategory}
+                className={`hover:text-amber-400 transition font-bold uppercase tracking-wider cursor-pointer ${!selectedSubcategory ? 'text-white' : 'text-white/70'}`}
+              >
+                {currentLanguage === 'am' ? (selectedRedesignedCategory.translations?.am || selectedRedesignedCategory.name) : currentLanguage === 'om' ? (selectedRedesignedCategory.translations?.om || selectedRedesignedCategory.name) : selectedRedesignedCategory.name}
+              </button>
+              {selectedSubcategory && (
+                <>
+                  <ChevronRight className="w-3.5 h-3.5 opacity-40 text-amber-500" />
+                  <span className="text-amber-400 font-bold uppercase tracking-wider truncate">
+                    {currentLanguage === 'am' ? (selectedSubcategory.translations?.am || selectedSubcategory.name) : currentLanguage === 'om' ? (selectedSubcategory.translations?.om || selectedSubcategory.name) : selectedSubcategory.name}
+                  </span>
+                </>
+              )}
+            </div>
+
+            {/* Obvious Back Navigation Button (Requirement 5) */}
+            {selectedSubcategory ? (
+              <button
+                onClick={handleGoBackToMainCategory}
+                className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-amber-400 hover:text-amber-300 border border-white/10 text-xs font-bold uppercase tracking-wider transition cursor-pointer"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                <span>← {currentLanguage === 'am' ? (selectedRedesignedCategory.translations?.am || selectedRedesignedCategory.name) : currentLanguage === 'om' ? (selectedRedesignedCategory.translations?.om || selectedRedesignedCategory.name) : selectedRedesignedCategory.name}</span>
+              </button>
+            ) : (
+              <button
+                onClick={handleGoBackToAllCategories}
+                className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-amber-400 hover:text-amber-300 border border-white/10 text-xs font-bold uppercase tracking-wider transition cursor-pointer"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                <span>← {t('all_categories') || 'All Categories'}</span>
+              </button>
             )}
           </div>
 
-          {/* Interactive Category Header Card / Banner */}
+          {/* Interactive Category Header Card / Banner (Requirement 7) */}
           <div className={`mb-8 rounded-3xl overflow-hidden relative border border-white/10 shadow-2xl min-h-[160px] flex flex-col sm:flex-row items-center justify-between p-6 sm:p-8 ${selectedRedesignedCategory.bannerGradient}`}>
             {/* Ambient Background overlays */}
             <div className="absolute inset-0 bg-black/45 pointer-events-none" />
             <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent pointer-events-none" />
             
             <div className="relative z-10 flex items-center gap-5 text-left w-full sm:w-auto">
-              <div className="p-4 bg-white/10 backdrop-blur-md border border-white/10 rounded-2xl shrink-0 shadow-inner">
-                {renderCategoryIcon(selectedRedesignedCategory.icon, "w-8 h-8 text-white")}
+              <div className="p-4 bg-white/10 backdrop-blur-md border border-white/10 rounded-2xl shrink-0 shadow-inner text-3xl">
+                {selectedSubcategory ? getSubcategoryVisual(selectedSubcategory.id, selectedRedesignedCategory.emoji) : selectedRedesignedCategory.emoji}
               </div>
               <div>
-                <span className="text-[9px] font-black tracking-widest text-amber-300 uppercase block mb-1">{t('so_umer_catalogs') || 'SOF UMER CATALOGS'}</span>
-                <h2 className="text-2xl sm:text-3xl font-serif font-extrabold text-white tracking-wide">
-                  {currentLanguage === 'am' ? selectedRedesignedCategory.nameAm : currentLanguage === 'om' ? selectedRedesignedCategory.nameOm : selectedRedesignedCategory.name}
+                <span className="text-[9px] font-black tracking-widest text-amber-300 uppercase block mb-1">
+                  {selectedSubcategory
+                    ? `${currentLanguage === 'am' ? (selectedRedesignedCategory.translations?.am || selectedRedesignedCategory.name) : currentLanguage === 'om' ? (selectedRedesignedCategory.translations?.om || selectedRedesignedCategory.name) : selectedRedesignedCategory.name} ›`
+                    : (t('so_umer_catalogs') || 'SOF UMER CATALOGS')}
+                </span>
+                <h2 className="text-2xl sm:text-3xl font-serif font-extrabold text-white tracking-wide uppercase">
+                  {selectedSubcategory
+                    ? (currentLanguage === 'am' ? (selectedSubcategory.translations?.am || selectedSubcategory.name) : currentLanguage === 'om' ? (selectedSubcategory.translations?.om || selectedSubcategory.name) : selectedSubcategory.name)
+                    : (currentLanguage === 'am' ? (selectedRedesignedCategory.translations?.am || selectedRedesignedCategory.name) : currentLanguage === 'om' ? (selectedRedesignedCategory.translations?.om || selectedRedesignedCategory.name) : selectedRedesignedCategory.name)}
                 </h2>
                 <p className="text-white/70 text-xs mt-1 font-light tracking-wide flex items-center gap-1.5">
                   <span className="w-2 h-2 rounded-full bg-[#10b981] inline-block animate-pulse" />
-                  {subcategoryProperties.length} {currentLanguage === 'om' ? 'beeksisa soscho\'an argaman' : currentLanguage === 'am' ? 'ንቁ ማስታወቂያዎች ተገኝተዋል' : 'active listings found'}
+                  {filteredProperties.length} {currentLanguage === 'om' ? 'beeksisa soscho\'an argaman' : currentLanguage === 'am' ? 'ንቁ ማስታወቂያዎች ተገኝተዋል' : 'active listings found'}
                 </p>
               </div>
             </div>
@@ -996,7 +1115,7 @@ export default function Marketplace({
               </button>
 
               <button
-                onClick={() => { setSelectedRedesignedCategory(null); setSelectedSubcategory(null); setSelectedMajorCategory('All'); }}
+                onClick={handleGoBackToAllCategories}
                 className="p-3 rounded-2xl bg-white text-black hover:bg-zinc-200 transition-all duration-300 flex items-center gap-2 text-xs font-bold uppercase tracking-wider cursor-pointer shadow-lg ml-auto sm:ml-0"
               >
                 <X className="w-4 h-4" />
@@ -1005,10 +1124,49 @@ export default function Marketplace({
             </div>
           </div>
 
-          {/* Subcategories Selector Bar */}
+          {/* Clean Subcategory Navigation View (Requirement 4) when no subcategory is selected */}
+          {!selectedSubcategory && (
+            <div className="mb-8">
+              <h3 className="text-[10px] font-bold text-white/40 uppercase tracking-widest mb-3.5 flex items-center gap-2">
+                <span>{t('explore_subcategories') || 'EXPLORE SUBCATEGORIES'}</span>
+                <span className="h-[1px] bg-white/5 flex-1" />
+              </h3>
+
+              <div className="divide-y divide-white/5 border border-white/10 rounded-2xl overflow-hidden bg-[#0d0d12]/60 backdrop-blur-md">
+                {selectedRedesignedCategory.subcategories.map((sub) => {
+                  const subCount = getSubcategoryListingCount(sub, selectedRedesignedCategory);
+                  const subName = currentLanguage === 'am' ? (sub.translations?.am || sub.name) : currentLanguage === 'om' ? (sub.translations?.om || sub.name) : sub.name;
+                  const subVisual = getSubcategoryVisual(sub.id, selectedRedesignedCategory.emoji);
+
+                  return (
+                    <button
+                      key={sub.id}
+                      onClick={() => handleSelectRedesignedCategory(selectedRedesignedCategory, sub)}
+                      className="w-full text-left p-3.5 sm:p-4 hover:bg-amber-500/[0.06] transition flex items-center justify-between group cursor-pointer"
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        <span className="text-xl shrink-0">{subVisual}</span>
+                        <span className="text-sm font-semibold text-white/90 group-hover:text-amber-400 transition-colors truncate">
+                          {subName}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-3 shrink-0 ml-3">
+                        <span className="text-xs font-mono px-2.5 py-1 rounded-lg bg-white/5 text-white/60 border border-white/10 group-hover:border-amber-500/30 group-hover:text-amber-400 transition">
+                          {subCount}
+                        </span>
+                        <ChevronRight className="w-4 h-4 text-white/30 group-hover:text-amber-400 group-hover:translate-x-1 transition" />
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Subcategories Horizontal Selector Pills Bar */}
           <div className="mb-8 text-left">
             <h3 className="text-[10px] font-bold text-white/40 uppercase tracking-widest mb-3.5 flex items-center gap-2">
-              <span>EXPLORE SUBCATEGORIES</span>
+              <span>{selectedSubcategory ? (t('change_subcategory') || 'CHANGE SUBCATEGORY') : (t('quick_filters') || 'QUICK FILTERS')}</span>
               <span className="h-[1px] bg-white/5 flex-1" />
             </h3>
             <div className="flex flex-wrap gap-2">
@@ -1016,7 +1174,7 @@ export default function Marketplace({
                 onClick={() => setSelectedSubcategory(null)}
                 className={`px-4 py-2.5 rounded-full text-xs font-medium border transition-all duration-300 cursor-pointer ${
                   !selectedSubcategory
-                    ? 'bg-gradient-to-r from-amber-400 to-amber-600 text-black border-transparent shadow-lg shadow-amber-500/10'
+                    ? 'bg-gradient-to-r from-amber-400 to-amber-600 text-black border-transparent shadow-lg shadow-amber-500/10 font-bold'
                     : 'bg-[#0d0d12]/50 text-white/70 border-white/5 hover:border-white/15 hover:bg-[#12121b]'
                 }`}
               >
@@ -1024,19 +1182,21 @@ export default function Marketplace({
               </button>
               {selectedRedesignedCategory.subcategories.map(sub => {
                 const subCount = getSubcategoryListingCount(sub, selectedRedesignedCategory);
+                const subName = currentLanguage === 'am' ? (sub.translations?.am || sub.name) : currentLanguage === 'om' ? (sub.translations?.om || sub.name) : sub.name;
+                const isSelected = selectedSubcategory?.id === sub.id;
 
                 return (
                   <button
                     key={sub.id}
-                    onClick={() => setSelectedSubcategory(selectedSubcategory?.id === sub.id ? null : sub)}
+                    onClick={() => handleSelectRedesignedCategory(selectedRedesignedCategory, isSelected ? null : sub)}
                     className={`px-4 py-2.5 rounded-full text-xs font-medium border transition-all duration-300 cursor-pointer flex items-center gap-1.5 ${
-                      selectedSubcategory?.id === sub.id
-                        ? 'bg-white text-black border-white shadow-lg'
+                      isSelected
+                        ? 'bg-white text-black border-white shadow-lg font-bold'
                         : 'bg-[#0d0d12]/50 text-white/70 border-white/5 hover:border-white/15 hover:bg-[#12121b]'
                     }`}
                   >
-                    <span>{currentLanguage === 'am' ? (sub.translations?.am || sub.name) : currentLanguage === 'om' ? (sub.translations?.om || sub.name) : sub.name}</span>
-                    <span className={`text-[10px] ${selectedSubcategory?.id === sub.id ? 'text-black/60' : 'text-white/30'}`}>
+                    <span>{subName}</span>
+                    <span className={`text-[10px] ${isSelected ? 'text-black/60' : 'text-white/30'}`}>
                       ({subCount})
                     </span>
                   </button>
@@ -1054,7 +1214,7 @@ export default function Marketplace({
                   type="text"
                   value={catSearchQuery}
                   onChange={e => setCatSearchQuery(e.target.value)}
-                  placeholder={`Search inside ${currentLanguage === 'am' ? selectedRedesignedCategory.nameAm : currentLanguage === 'om' ? selectedRedesignedCategory.nameOm : selectedRedesignedCategory.name}...`}
+                  placeholder={`Search inside ${currentLanguage === 'am' ? (selectedRedesignedCategory.translations?.am || selectedRedesignedCategory.name) : currentLanguage === 'om' ? (selectedRedesignedCategory.translations?.om || selectedRedesignedCategory.name) : selectedRedesignedCategory.name}...`}
                   className="w-full pl-12 pr-4 py-3.5 bg-[#12121a] border border-white/5 focus:border-amber-500/50 focus:outline-none rounded-2xl text-[#F5F5F4] text-sm transition font-sans"
                 />
               </div>
