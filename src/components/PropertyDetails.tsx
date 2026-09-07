@@ -136,7 +136,7 @@ export default function PropertyDetails({
   const [sellerAdsModalOpen, setSellerAdsModalOpen] = useState(false);
 
   // Reviews & Ratings state
-  const [reviewRating, setReviewRating] = useState<number>(5);
+  const [reviewRating, setReviewRating] = useState<number>(0);
   const [reviewComment, setReviewComment] = useState<string>('');
   const [reviewSubmitting, setReviewSubmitting] = useState<boolean>(false);
   const [reviewMsg, setReviewMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
@@ -1120,6 +1120,10 @@ export default function PropertyDetails({
                 else alert('Please log in to submit a review.');
                 return;
               }
+              if (!reviewRating || reviewRating < 1 || reviewRating > 5) {
+                setReviewMsg({ type: 'error', text: 'Please select a star rating (1 to 5).' });
+                return;
+              }
               if (!reviewComment.trim()) {
                 setReviewMsg({ type: 'error', text: 'Please enter a review comment.' });
                 return;
@@ -1136,7 +1140,7 @@ export default function PropertyDetails({
               if (res.success) {
                 setReviewMsg({ type: 'success', text: t('reviews.success_pending') || 'Thank you! Your review has been submitted and is pending approval.' });
                 setReviewComment('');
-                setReviewRating(5);
+                setReviewRating(0);
               } else {
                 setReviewMsg({ type: 'error', text: res.error || t('common.error') || 'Failed to submit review.' });
               }
