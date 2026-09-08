@@ -312,8 +312,59 @@ export function getPluralizedUnit(count: number, rawUnit?: string): string {
   return `${singular}s`;
 }
 
-export function formatQuantityWithUnit(quantity: number, rawUnit?: string): string {
-  const unit = getPluralizedUnit(quantity, rawUnit);
+export function getLocalizedUnit(rawUnit?: string, lang: string = 'en', count: number = 1): string {
+  const clean = (rawUnit || 'piece').trim().toLowerCase();
+  const langKey = (lang === 'om' || lang === 'am') ? lang : 'en';
+
+  const unitMap: Record<string, { en: [string, string]; om: string; am: string }> = {
+    piece: { en: ['piece', 'pieces'], om: 'coraa', am: 'ቁራጭ' },
+    pieces: { en: ['piece', 'pieces'], om: 'coraa', am: 'ቁራጭ' },
+    pcs: { en: ['pc', 'pcs'], om: 'coraa', am: 'ቁራጭ' },
+    pc: { en: ['pc', 'pcs'], om: 'coraa', am: 'ቁራጭ' },
+    box: { en: ['box', 'boxes'], om: 'saanduqa', am: 'ሳጥን' },
+    boxes: { en: ['box', 'boxes'], om: 'saanduqa', am: 'ሳጥን' },
+    carton: { en: ['carton', 'cartons'], om: 'kaartoonii', am: 'ካርቶን' },
+    cartons: { en: ['carton', 'cartons'], om: 'kaartoonii', am: 'ካርቶን' },
+    pack: { en: ['pack', 'packs'], om: 'paakkii', am: 'ፓክ' },
+    packs: { en: ['pack', 'packs'], om: 'paakkii', am: 'ፓክ' },
+    dozen: { en: ['dozen', 'dozens'], om: 'dorsenaa', am: 'ደርዘን' },
+    dozens: { en: ['dozen', 'dozens'], om: 'dorsenaa', am: 'ደርዘን' },
+    pair: { en: ['pair', 'pairs'], om: 'cimdii', am: 'ጥንድ' },
+    pairs: { en: ['pair', 'pairs'], om: 'cimdii', am: 'ጥንድ' },
+    bag: { en: ['bag', 'bags'], om: 'boraatii', am: 'ቦርሳ' },
+    bags: { en: ['bag', 'bags'], om: 'boraatii', am: 'ቦርሳ' },
+    sack: { en: ['sack', 'sacks'], om: 'goniyaa', am: 'ጆንያ' },
+    sacks: { en: ['sack', 'sacks'], om: 'goniyaa', am: 'ጆንያ' },
+    bundle: { en: ['bundle', 'bundles'], om: 'hidhaa', am: 'ጭነት' },
+    roll: { en: ['roll', 'rolls'], om: 'roolii', am: 'ሮል' },
+    bottle: { en: ['bottle', 'bottles'], om: 'qarabaabaa', am: 'ጠርሙስ' },
+    kg: { en: ['kg', 'kg'], om: 'kg', am: 'ኪ.ግ' },
+    kilogram: { en: ['kg', 'kg'], om: 'kg', am: 'ኪ.ግ' },
+    kilograms: { en: ['kg', 'kg'], om: 'kg', am: 'ኪ.ግ' },
+    gram: { en: ['g', 'g'], om: 'g', am: 'ግራም' },
+    grams: { en: ['g', 'g'], om: 'g', am: 'ግራም' },
+    liter: { en: ['liter', 'liters'], om: 'liitira', am: 'ሊትር' },
+    liters: { en: ['liter', 'liters'], om: 'liitira', am: 'ሊትር' },
+    meter: { en: ['meter', 'meters'], om: 'meetira', am: 'ሜትር' },
+    meters: { en: ['meter', 'meters'], om: 'meetira', am: 'ሜትር' },
+    ton: { en: ['ton', 'tons'], om: 'toonii', am: 'ቶን' },
+    tons: { en: ['ton', 'tons'], om: 'toonii', am: 'ቶን' },
+    set: { en: ['set', 'sets'], om: 'seetii', am: 'ሴት' },
+    sets: { en: ['set', 'sets'], om: 'seetii', am: 'ሴት' }
+  };
+
+  if (unitMap[clean]) {
+    if (langKey === 'en') {
+      return count === 1 ? unitMap[clean].en[0] : unitMap[clean].en[1];
+    }
+    return unitMap[clean][langKey];
+  }
+
+  return getPluralizedUnit(count, rawUnit);
+}
+
+export function formatQuantityWithUnit(quantity: number, rawUnit?: string, lang: string = 'en'): string {
+  const unit = getLocalizedUnit(rawUnit, lang, quantity);
   return `${quantity.toLocaleString()} ${unit}`;
 }
 
@@ -328,11 +379,13 @@ export function formatQuantityWithUnit(quantity: number, rawUnit?: string): stri
  * - NO word "Wholesale" in customer pricing display
  * - Displays only what the seller actually entered
  * - Hides all empty/null/zero fields completely (no "N/A" or placeholders)
+ * - Fully localized based on currentLanguage
  */
-export function getListingCustomerPricingDisplay(property: Partial<Property>): ListingCustomerPricingDisplay {
+export function getListingCustomerPricingDisplay(property: Partial<Property>, lang: string = 'en'): ListingCustomerPricingDisplay {
   const currency = property.currency || 'ETB';
   const isProperty = isPropertyListing(property);
   const isPhysicalProduct = isPhysicalProductListing(property);
+  const langKey = (lang === 'om' || lang === 'am') ? lang : 'en';
 
   // Unit resolution based on category
   let cleanUnit = '';
@@ -341,13 +394,13 @@ export function getListingCustomerPricingDisplay(property: Partial<Property>): L
   if (isPhysicalProduct) {
     const rawUnit = property.unit || (property as any).wholesaleUnit || 'piece';
     cleanUnit = rawUnit.trim() || 'piece';
-    unitForPriceSlash = getPluralizedUnit(1, cleanUnit);
+    unitForPriceSlash = getLocalizedUnit(cleanUnit, langKey, 1);
   } else if (!isProperty) {
     // Other categories (Services might have a rate unit like 'hr')
     const rawUnit = (property.unit || '').trim();
     if (rawUnit && rawUnit.toLowerCase() !== 'piece') {
       cleanUnit = rawUnit;
-      unitForPriceSlash = cleanUnit;
+      unitForPriceSlash = getLocalizedUnit(cleanUnit, langKey, 1);
     }
   }
 
@@ -392,7 +445,14 @@ export function getListingCustomerPricingDisplay(property: Partial<Property>): L
       if (!isNaN(q) && q > 0) {
         availableQuantity = q;
         hasAvailableQuantity = true;
-        availableQuantityFormatted = `Available: ${formatQuantityWithUnit(availableQuantity, cleanUnit || 'piece')}`;
+        const qtyFormatted = formatQuantityWithUnit(availableQuantity, cleanUnit || 'piece', langKey);
+        if (langKey === 'om') {
+          availableQuantityFormatted = `Argama: ${qtyFormatted}`;
+        } else if (langKey === 'am') {
+          availableQuantityFormatted = `ይገኛል: ${qtyFormatted}`;
+        } else {
+          availableQuantityFormatted = `Available: ${qtyFormatted}`;
+        }
       }
     }
   }
@@ -419,12 +479,19 @@ export function getListingCustomerPricingDisplay(property: Partial<Property>): L
     }
 
     hasMoq = hasWholesaleTiers && moq !== null && moq > 0;
-    moqFormatted = hasMoq
-      ? `MOQ: ${formatQuantityWithUnit(moq!, cleanUnit || 'piece')}`
-      : null;
+    if (hasMoq) {
+      const moqQtyFormatted = formatQuantityWithUnit(moq!, cleanUnit || 'piece', langKey);
+      if (langKey === 'om') {
+        moqFormatted = `MOQ: ${moqQtyFormatted}`;
+      } else if (langKey === 'am') {
+        moqFormatted = `ዝቅተኛ ትዕዛዝ: ${moqQtyFormatted}`;
+      } else {
+        moqFormatted = `MOQ: ${moqQtyFormatted}`;
+      }
+    }
 
     wholesaleTiersFormatted = tiers.map(tier => {
-      const tierUnit = unitForPriceSlash || 'piece';
+      const tierUnit = unitForPriceSlash || getLocalizedUnit('piece', langKey, 1);
       const label = `${tier.minimumQuantity}+ — ${currency} ${tier.pricePerUnit.toLocaleString()} / ${tierUnit}`;
       return {
         minQuantity: tier.minimumQuantity,

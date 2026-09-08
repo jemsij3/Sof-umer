@@ -3608,6 +3608,30 @@ export const staticTranslations: TranslationKey[] = [
   { key: "media.remove_video", en: "Remove Video", om: "Viidiyoo Haqi", am: "ቪዲዮ አስወግድ", category: "Media" },
   { key: "media.replace_video", en: "Replace Video", om: "Viidiyoo Jijjiiri", am: "ቪዲዮ በቀይር", category: "Media" },
   { key: "media.video_uploading", "en": "Processing & Uploading Video...", om: "Viidiyoo qopheessaa & fe'aa jira...", am: "ቪዲዮ በማዘጋጀት እና በመጫን ላይ...", category: "Media" },
-  { key: "media.reorder_hint", en: "The first photo is your listing's Cover Photo. Reorder photos or set any photo as cover.", om: "Fakkiin jalqabaa fakkii fuula durammee beeksisa keessanii ti. Fakkiiwwan tartiibessi ykn fuula durammee taasisi.", am: "መጀመሪያ ላይ ያለው ፎቶ የማስታወቂያዎ ሽፋን ፎቶ ነው። ፎቶዎችን በቅደም ተከተል ያስቀምጡ።", category: "Media" }
+  { key: "media.reorder_hint", en: "The first photo is your listing's Cover Photo. Reorder photos or set any photo as cover.", om: "Fakkiin jalqabaa fakkii fuula durammee beeksisa keessanii ti. Fakkiiwwan tartiibessi ykn fuula durammee taasisi.", am: "መጀመሪያ ላይ ያለው ፎቶ የማስታወቂያዎ ሽፋን ፎቶ ነው። ፎቶዎችን በቅደም ተከተል ያስቀምጡ።", category: "Media" },
+
+  // Wholesale & Inventory Pricing Localization Keys
+  { key: "inventory.available", en: "Available: {quantity} {unit}", om: "Argama: {quantity} {unit}", am: "ይገኛል: {quantity} {unit}", category: "Wholesale" },
+  { key: "inventory.moq", en: "MOQ: {quantity} {unit}", om: "MOQ: {quantity} {unit}", am: "ዝቅተኛ ትዕዛዝ: {quantity} {unit}", category: "Wholesale" },
+  { key: "wholesale.buyers_must_purchase", en: "Buyers must purchase at least {quantity} {unit}.", om: "Bittoonni yoo xiqqaate {quantity} {unit} bituu qabu.", am: "ገዢዎች ቢያንስ {quantity} {unit} መግዛት አለባቸው።", category: "Wholesale" },
+  { key: "wholesale.qualify_wholesale_pricing", en: "Orders of {quantity}+ {unit} qualify for wholesale pricing. Smaller orders use standard retail price.", om: "Ajajni {quantity}+ {unit} gatii jumlaatiif gahumsa qaba. Ajajni xiqqaataan gatii qinxaaboo idilee fayyadama.", am: "ከ{quantity}+ {unit} በላይ የሆኑ ትዕዛዞች ለጅምላ ዋጋ ብቁ ናቸው። አነስተኛ ትዕዛዞች መደበኛ የችርቻሮ ዋጋ ይጠቀማሉ።", category: "Wholesale" },
+  { key: "wholesale.bulk_pricing", en: "Bulk Pricing", om: "Gatii Jumlaa", am: "የጅምላ ዋጋ", category: "Wholesale" },
+  { key: "wholesale.minimum_order", en: "Minimum Order: {quantity} {unit}", om: "Ajaja Xiqqaa: {quantity} {unit}", am: "ዝቅተኛ ትዕዛዝ: {quantity} {unit}", category: "Wholesale" },
+  { key: "wholesale.tier_pricing", en: "Tier Pricing", om: "Gatii Sadarkaa", am: "የደረጃ ዋጋ", category: "Wholesale" },
+  { key: "wholesale.pricing_tiers", en: "Wholesale Pricing Tiers", om: "Sadarkaa Gatii Jumlaa", am: "የጅምላ ዋጋ ደረጃዎች", category: "Wholesale" },
+  { key: "wholesale.add_tier", en: "Add Pricing Tier", om: "Sadarkaa Gatii Dabali", am: "የዋጋ ደረጃ አክል", category: "Wholesale" },
+  { key: "wholesale.tier", en: "Tier", om: "Sadarkaa", am: "ደረጃ", category: "Wholesale" },
+  { key: "wholesale.min_quantity", en: "Min. Quantity", om: "Baay'ina Xiqqaa", am: "ዝቅተኛ መጠን", category: "Wholesale" },
+  { key: "wholesale.effective_range", en: "Effective Range", om: "Gahumsa Hangaa", am: "ተግባራዊ ክልል", category: "Wholesale" },
+  { key: "wholesale.price_per_unit", en: "Price Per Unit", om: "Gatii Tokkoon Tokkoo", am: "የአንዱ ዋጋ", category: "Wholesale" },
+  { key: "wholesale.pricing_strategy", en: "Pricing Strategy", om: "Tooftaa Gatii", am: "የዋጋ ስትራቴጂ", category: "Wholesale" },
+  { key: "wholesale.pricing_strategy_desc", en: "Wholesale pricing is quantity-based. Lower prices at higher volumes incentivize bulk orders. The first pricing tier is automatically locked to your MOQ.", om: "Gatiin jumlaa baay'ina irratti hundaa'a. Gatiin gadi aanaa baay'ina olaanaaf ajaja jumlaa jajjabeessa. Sadarkaan jalqabaa ofumaan MOQ keessan irratti hidhama.", am: "የጅምላ ዋጋ በመጠን ላይ የተመሰረተ ነው። በከፍተኛ መጠን ዝቅተኛ ዋጋ መስጠት የጅምላ ትዕዛዞችን ያበረታታል። የመጀመሪያው የዋጋ ደረጃ በራስ-ሰር ከእርስዎ MOQ ጋር የተሳሰረ ነው።", category: "Wholesale" },
+  { key: "wholesale.moq_invalid", en: "MOQ must be a positive whole number (at least 1).", om: "MOQ lakkoofsa guutuu eeyyantaa ta'uu qaba (yoo xiqqaate 1).", am: "MOQ አዎንታዊ ሙሉ ቁጥር መሆን አለበት (ቢያንስ 1)።", category: "Wholesale" },
+  { key: "wholesale.additional_terms", en: "Additional Terms / Notes", om: "Waliigaltee / Yaada Dabalataa", am: "ተጨማሪ ውሎች / ማስታወሻዎች", category: "Wholesale" },
+  { key: "reviews.please_select_rating", en: "Please select a star rating between 1 and 5.", om: "Maloomaaatii sadarkaa urjii 1 hanga 5 filadhaa.", am: "እባክዎን ከ 1 እስከ 5 ያለውን የኮከብ ደረጃ ይምረጡ።", category: "Reviews" },
+  { key: "reviews.login_required", en: "Please log in to submit a review.", om: "Yaada kennuuf dura galmaa'aa (log in).", am: "ግምገማ ለማስገባት እባክዎን ይግቡ።", category: "Reviews" },
+  { key: "verified_supplier", en: "Verified Supplier", om: "Dhiyeessaa Mirkanaa'e", am: "የተረጋገጠ አቅራቢ", category: "ListingDetails" },
+  { key: "fast_shipping_available", en: "Fast Shipping Available", om: "Ergaan Ariifataan Ni Jira", am: "ፈጣን ማድረስ አለ", category: "ListingDetails" },
+  { key: "location_not_provided", en: "Location not provided", om: "Bakki hin ibsamne", am: "አድራሻ አልተገለጸም", category: "ListingDetails" }
 ];
 

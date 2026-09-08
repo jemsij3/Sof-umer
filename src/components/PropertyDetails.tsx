@@ -11,9 +11,10 @@ import {
   getTranslatedOption,
   getTranslatedCondition,
   getTranslatedPropertyType,
-  extractString
+  extractString,
+  getTranslatedLocation
 } from '../lib/categoriesData';
-import { getListingCustomerPricingDisplay, calculateDynamicPrice, getPluralizedUnit, normalizeSellingType, getMoq } from '../utils/wholesalePricing';
+import { getListingCustomerPricingDisplay, calculateDynamicPrice, getPluralizedUnit, normalizeSellingType, getMoq, getLocalizedUnit } from '../utils/wholesalePricing';
 import { 
   ArrowLeft, 
   Heart, 
@@ -88,7 +89,7 @@ export default function PropertyDetails({
 
   const [activeImage, setActiveImage] = useState(property.images[0] || '');
   const isProperty = useMemo(() => isPropertyListing(property), [property]);
-  const pricingInfo = useMemo(() => getListingCustomerPricingDisplay(property), [property]);
+  const pricingInfo = useMemo(() => getListingCustomerPricingDisplay(property, currentLanguage), [property, currentLanguage]);
 
   const effectiveMoq = useMemo(() => getMoq(property), [property]);
   const minAllowedQty = useMemo(() => {
@@ -222,7 +223,10 @@ export default function PropertyDetails({
     return extractString(property.location, currentLanguage)?.trim() || '';
   }, [property.location, currentLanguage]);
 
-  const displayLocation = rawLocation || 'Location not provided';
+  const displayLocation = useMemo(() => {
+    if (!rawLocation) return t('location_not_provided') || 'Location not provided';
+    return getTranslatedLocation(rawLocation, currentLanguage);
+  }, [rawLocation, currentLanguage, t]);
 
   // Construct Google Maps query link directly from user-provided location
   const googleMapsUrl = useMemo(() => {
@@ -629,14 +633,14 @@ export default function PropertyDetails({
               {(property.verificationStatus === 'verified' || property.isVerifiedListing || property.ownerId === 'usr-admin') && (
                 <span className="inline-flex items-center gap-1.5 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-3 py-1 rounded-xl text-xs font-bold uppercase tracking-wider">
                   <ShieldCheckIcon className="w-3.5 h-3.5 text-emerald-400" />
-                  Verified Supplier
+                  {t('verified_supplier') || 'Verified Supplier'}
                 </span>
               )}
 
               {(Array.isArray((property as any).deliveryOptions) && (property as any).deliveryOptions.length > 0) && (
                 <span className="inline-flex items-center gap-1.5 bg-purple-500/10 text-purple-300 border border-purple-500/20 px-3 py-1 rounded-xl text-xs font-bold uppercase tracking-wider">
                   <Sparkles className="w-3.5 h-3.5 text-purple-300" />
-                  Fast Shipping Available
+                  {t('fast_shipping_available') || 'Fast Shipping Available'}
                 </span>
               )}
             </div>
@@ -693,11 +697,11 @@ export default function PropertyDetails({
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2 text-xs font-bold text-white/80 uppercase tracking-wider">
                     <Layers className="w-4 h-4 text-amber-400" />
-                    <span>Bulk Pricing</span>
+                    <span>{t('wholesale.bulk_pricing') || 'Bulk Pricing'}</span>
                   </div>
                   {pricingInfo.hasMoq && (
                     <span className="text-xs text-amber-400 font-mono font-bold">
-                      Minimum Order: {pricingInfo.moq} {getPluralizedUnit(pricingInfo.moq, pricingInfo.unit)}
+                      {t('wholesale.minimum_order', { quantity: pricingInfo.moq, unit: getLocalizedUnit(pricingInfo.unit, currentLanguage, pricingInfo.moq) })}
                     </span>
                   )}
                 </div>
@@ -880,7 +884,7 @@ export default function PropertyDetails({
                   <div className="bg-black/40 p-3.5 rounded-2xl border border-white/5">
                     <span className="text-[10px] text-white/50 uppercase font-bold block mb-1">{t('wholesale.unit_of_sale') || 'Unit of Sale'}</span>
                     <span className="text-xs font-bold text-white">
-                      {pricingInfo.unit}
+                      {getLocalizedUnit(pricingInfo.unit, currentLanguage)}
                     </span>
                   </div>
                 )}
@@ -892,7 +896,7 @@ export default function PropertyDetails({
                   <div className="flex flex-wrap gap-2">
                     {((property as any).deliveryOptions as string[]).map((opt, i) => (
                       <span key={i} className="bg-white/5 border border-white/10 px-3 py-1 rounded-xl text-xs text-amber-300 font-medium">
-                        ✓ {opt}
+                        ✓ {getTranslatedOption(opt, currentLanguage) || opt}
                       </span>
                     ))}
                   </div>
@@ -901,7 +905,7 @@ export default function PropertyDetails({
 
               {(property as any).wholesaleNotes && (
                 <div className="pt-2 border-t border-white/10">
-                  <span className="text-[11px] font-bold text-white/60 uppercase tracking-wider block mb-1">📝 Additional Terms / Notes</span>
+                  <span className="text-[11px] font-bold text-white/60 uppercase tracking-wider block mb-1">📝 {t('wholesale.additional_terms') || 'Additional Terms / Notes'}</span>
                   <p className="text-xs text-white/80 font-light leading-relaxed italic">{(property as any).wholesaleNotes}</p>
                 </div>
               )}
@@ -1117,7 +1121,11 @@ export default function PropertyDetails({
               e.preventDefault();
               if (!currentUser) {
                 if (onNavigateToAuth) onNavigateToAuth();
-                else alert('Please log in to submit a review.');
+                else alert(t('reviews.login_required') || 'Please log in to submit a review.');
+                return;
+              }
+              if (!reviewRating || reviewRating < 1 || reviewRating > 5) {
+                setReviewMsg({ type: 'error', text: t('reviews.please_select_rating') || 'Please select a star rating between 1 and 5.' });
                 return;
               }
               if (!reviewRating || reviewRating < 1 || reviewRating > 5) {
@@ -1125,7 +1133,7 @@ export default function PropertyDetails({
                 return;
               }
               if (!reviewComment.trim()) {
-                setReviewMsg({ type: 'error', text: 'Please enter a review comment.' });
+                setReviewMsg({ type: 'error', text: t('reviews.error_empty') || 'Please enter a review comment.' });
                 return;
               }
               setReviewSubmitting(true);

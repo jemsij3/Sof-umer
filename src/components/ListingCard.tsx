@@ -13,7 +13,8 @@ import {
   getTranslatedPropertyType,
   getTranslatedOption,
   getEffectiveMajorCategory,
-  isPropertyListing
+  isPropertyListing,
+  getTranslatedLocation
 } from '../lib/categoriesData';
 import { getListingCustomerPricingDisplay } from '../utils/wholesalePricing';
 
@@ -45,7 +46,7 @@ export function ListingCard({
   const isVerifiedSupplier = property.verificationStatus === 'verified' || property.isVerifiedListing === true || property.ownerId === 'usr-admin';
   const isFeatured = property.isFeatured || property.isRecommended || property.isTopAd || property.boostPlan === 'vip' || property.boostPlan === 'premium';
   const sellingType = (property as any).sellingType || 'Retail';
-  const pricingInfo = useMemo(() => getListingCustomerPricingDisplay(property), [property]);
+  const pricingInfo = useMemo(() => getListingCustomerPricingDisplay(property, currentLanguage), [property, currentLanguage]);
   const isNegotiable = (property as any).isNegotiable === true || 
                        String((property as any).negotiable).toLowerCase() === 'yes' ||
                        property.amenities?.some(a => a.toLowerCase() === 'negotiable: yes' || a.toLowerCase() === 'negotiable: true');
@@ -238,7 +239,7 @@ export function ListingCard({
   const currencyCode = property.currency || 'ETB';
   const titleText = extractString(property.title, currentLanguage) || 'Untitled Listing';
   const rawLocation = (typeof property.location === 'string' ? property.location : extractString(property.location, currentLanguage))?.trim();
-  const locationText = rawLocation || 'Location not provided';
+  const locationText = rawLocation ? getTranslatedLocation(rawLocation, currentLanguage) : (t ? t('location_not_provided') : 'Location not provided');
   const categoryLabel = property.propertyType 
     ? getTranslatedPropertyType(extractString(property.propertyType, currentLanguage), currentLanguage) 
     : getTranslatedCategoryName(extractString(property.majorCategory || 'Properties', currentLanguage), currentLanguage);
