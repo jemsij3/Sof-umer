@@ -512,90 +512,7 @@ const faqData: FAQItem[] = [
   }
 ];
 
-// Content Translation helper
-const staticTexts = {
-  title: {
-    en: 'Help & FAQ Center',
-    om: 'Giddugala Deggarsa & FAQ',
-    am: 'የእርዳታ እና በተደጋጋሚ የሚጠየቁ ጥያቄዎች ማዕከል'
-  },
-  subtitle: {
-    en: 'Search our knowledge base or browse categories to find answers instantly.',
-    om: 'Deebiiwwan battalatti argachuuf beekumsa keenya barbaadi ykn dameewwan dhiyeessi.',
-    am: 'መልሶችን በፍጥነት ለማግኘት የእውቀት ማምረቻችንን ይፈልጉ ወይም ምድቦችን ያስሱ።'
-  },
-  searchPlaceholder: {
-    en: 'Search for questions, keywords, or topics...',
-    om: 'Gaaffilee, jechoota furtuu, ykn mata-dureewwan barbaadi...',
-    am: 'ጥያቄዎችን፣ ቁልፍ ቃላትን ወይም ርዕሶችን ይፈልጉ...'
-  },
-  noResults: {
-    en: 'No questions found matching your search. Try different keywords.',
-    om: 'Gaaffiin barbaaddan hin argamne. Jechoota biraa fayyadamaa.',
-    am: 'ከፍለጋዎ ጋር የሚዛመድ ጥያቄ አልተገኘም። እባክዎን ሌላ ቃል ይሞክሩ።'
-  },
-  copySuccess: {
-    en: 'Copied to clipboard!',
-    om: 'Gara Clipboarditti kofifameera!',
-    am: 'ወደ ቅንጥብ ሰሌዳ ተገልብጧል!'
-  },
-  shareSuccess: {
-    en: 'Link copied! Share this FAQ article.',
-    om: 'Liinkiin kofifameera! Beeksisa FAQ kana hirmaadhu.',
-    am: 'ሊንኩ ተገልብጧል! ይህንን ጥያቄ ያጋሩት።'
-  },
-  contactTitle: {
-    en: 'Still need help? Contact Support',
-    om: 'Gargaarsi dabalataa si barbaachisaa? Nu Quunnamaa',
-    am: 'አሁንም እገዛ ይፈልጋሉ? ድጋፍ ሰጪዎችን ያግኙ'
-  },
-  contactSubtitle: {
-    en: 'Submit a support ticket and our team will get back to you within 2 hours.',
-    om: 'Tikitii deggarsaa ergi, gareen keenya sa\'aatii 2 keessatti si quunnama.',
-    am: 'የድጋፍ መጠየቂያ ቅጽ ያስገቡ፣ ቡድናችን በ 2 ሰዓታት ውስጥ ይመልስልዎታል።'
-  },
-  contactName: {
-    en: 'Your Full Name',
-    om: 'Maqaa Guutuu',
-    am: 'ሙሉ ስምዎ'
-  },
-  contactEmail: {
-    en: 'Email Address',
-    om: 'Imeelii keessan',
-    am: 'ኢሜል አድራሻ'
-  },
-  contactMessage: {
-    en: 'Message / Question Details',
-    om: 'Ergaa / Ibsa Gaaffii',
-    am: 'መልዕክት / የጥያቄው ዝርዝር'
-  },
-  contactSubmit: {
-    en: 'Send Support Message',
-    om: 'Ergaa Deggarsaa Ergi',
-    am: 'የድጋፍ መልዕክት ላክ'
-  },
-  contactSubmitting: {
-    en: 'Sending...',
-    om: 'Ergamaa jira...',
-    am: 'በመላክ ላይ...'
-  },
-  contactSuccessMsg: {
-    en: 'Message sent successfully! Our support team will contact you shortly.',
-    om: 'Ergaan kee milkaa\'inaan ergameera! Gareen keenya dhiyootti si quunnama.',
-    am: 'መልዕክትዎ በተሳካ ሁኔታ ተልኳል! የድጋፍ ቡድናችን በቅርቡ ያገኝዎታል።'
-  },
-  contactErrorMsg: {
-    en: 'Failed to send message. Please try again.',
-    om: 'Ergaan hin ergamne. Maaloo irra deebi\'i yaali.',
-    am: 'መልዕክቱን መላክ አልተቻለም። እባክዎን እንደገና ይሞክሩ።'
-  },
-  quickContact: {
-    en: 'Quick Help Contacts',
-    om: 'Quunnamtii Ariifachiisaa',
-    am: 'የፈጣን እገዛ አድራሻዎች'
-  }
-};
-
+// L10n Consolidated into official translations architecture
 export default function HelpCenter() {
   const { currentLanguage, faqs: contextFaqs, voteFaqHelpful, t } = useApp();
   const [searchQuery, setSearchQuery] = useState('');
@@ -619,16 +536,6 @@ export default function HelpCenter() {
   const tr = (obj: Record<string, string> | undefined | null) => {
     if (!obj) return '';
     return obj[currentLanguage] || obj['en'] || Object.values(obj)[0] || '';
-  };
-
-  // Helper for UI keys: tries global t() first, then staticTexts fallback, then key/default
-  const trText = (key: string, staticFallback?: Record<string, string>): string => {
-    const globalVal = t(key);
-    if (globalVal && globalVal !== key) return globalVal;
-    if (staticFallback) {
-      return staticFallback[currentLanguage] || staticFallback['en'] || Object.values(staticFallback)[0] || '';
-    }
-    return key;
   };
 
   const showToast = (msg: string) => {
@@ -709,7 +616,7 @@ export default function HelpCenter() {
     const textToCopy = `${tr(item.question)}\n\n${tr(item.answer)}`;
     navigator.clipboard.writeText(textToCopy).then(() => {
       setCopiedId(item.id);
-      showToast(trText('help.copy_success', staticTexts.copySuccess));
+      showToast(t('help.copy_success'));
       setTimeout(() => setCopiedId(null), 2000);
     });
   };
@@ -719,7 +626,7 @@ export default function HelpCenter() {
     e.stopPropagation();
     const shareUrl = `${window.location.origin}/?view=info-page&pageId=help-center&faqId=${item.id}`;
     navigator.clipboard.writeText(shareUrl).then(() => {
-      showToast(trText('help.share_success', staticTexts.shareSuccess));
+      showToast(t('help.share_success'));
     });
   };
 
@@ -795,7 +702,7 @@ export default function HelpCenter() {
       <div className="flex items-center gap-2 text-xs text-white/40 font-medium">
         <span className="hover:text-emerald-400 cursor-pointer transition">{t('home') || 'Home'}</span>
         <ChevronRight className="w-3.5 h-3.5 text-white/20" />
-        <span className="text-white/60">{trText('help.title', staticTexts.title)}</span>
+        <span className="text-white/60">{t('help.title')}</span>
         {activeTab !== 'all' && (
           <>
             <ChevronRight className="w-3.5 h-3.5 text-white/20" />
@@ -812,10 +719,10 @@ export default function HelpCenter() {
           </div>
           <div>
             <h2 className="text-2xl md:text-3xl font-serif font-bold text-white tracking-tight">
-              {trText('help.title', staticTexts.title)}
+              {t('help.title')}
             </h2>
             <p className="text-xs md:text-sm text-white/60 font-light mt-1">
-              {trText('help.subtitle', staticTexts.subtitle)}
+              {t('help.subtitle')}
             </p>
           </div>
         </div>
@@ -829,7 +736,7 @@ export default function HelpCenter() {
               type="text"
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
-              placeholder={trText('help.search_placeholder', staticTexts.searchPlaceholder)}
+              placeholder={t('help.search_placeholder')}
               className="w-full bg-black/80 hover:bg-black focus:bg-black border border-white/15 focus:border-emerald-500 rounded-2xl py-3.5 px-11 text-xs md:text-sm text-white placeholder-white/40 focus:outline-none transition duration-300 font-sans shadow-2xl"
             />
             {searchQuery && (
@@ -1039,7 +946,7 @@ export default function HelpCenter() {
           ) : (
             <div className="text-center py-12 bg-white/[0.02] border border-white/5 rounded-3xl space-y-3">
               <HelpCircle className="w-10 h-10 text-white/20 mx-auto" />
-              <p className="text-sm font-medium text-white/60">{trText('help.no_results', staticTexts.noResults)}</p>
+              <p className="text-sm font-medium text-white/60">{t('help.no_results')}</p>
               <button
                 onClick={() => { setSearchQuery(''); setActiveTab('all'); }}
                 className="text-xs text-emerald-400 underline hover:text-emerald-300 font-semibold"
@@ -1057,7 +964,7 @@ export default function HelpCenter() {
           <div className="bg-[#0d0d12]/60 border border-white/5 rounded-2xl p-5 space-y-4">
             <h4 className="text-xs font-black text-white/40 uppercase tracking-widest border-b border-white/5 pb-2 flex items-center gap-2">
               <MessageSquare className="w-4 h-4 text-emerald-400" />
-              <span>{trText('help.quick_contact', staticTexts.quickContact)}</span>
+              <span>{t('help.quick_contact')}</span>
             </h4>
             
             <div className="space-y-3.5 text-xs">
@@ -1100,30 +1007,30 @@ export default function HelpCenter() {
             <div className="space-y-1 border-b border-white/5 pb-3">
               <h4 className="text-xs md:text-sm font-serif font-bold text-white tracking-tight flex items-center gap-2">
                 <Mail className="w-4 h-4 text-emerald-400 shrink-0" />
-                <span>{trText('help.contact_title', staticTexts.contactTitle)}</span>
+                <span>{t('help.contact_title')}</span>
               </h4>
               <p className="text-[10px] text-white/40 leading-relaxed font-light">
-                {trText('help.contact_subtitle', staticTexts.contactSubtitle)}
+                {t('help.contact_subtitle')}
               </p>
             </div>
 
             {formSuccess ? (
               <div className="bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs p-4 rounded-xl font-bold text-center flex flex-col items-center gap-2 animate-in fade-in duration-300">
                 <CheckCircle2 className="w-8 h-8 text-emerald-400" />
-                <span>{trText('help.contact_success_msg', staticTexts.contactSuccessMsg)}</span>
+                <span>{t('help.contact_success_msg')}</span>
               </div>
             ) : (
               <form onSubmit={handleSubmitTicket} className="space-y-4">
                 
                 {formError && (
                   <div className="bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs p-3 rounded-lg text-center font-bold">
-                    {trText('help.contact_error_msg', staticTexts.contactErrorMsg)}
+                    {t('help.contact_error_msg')}
                   </div>
                 )}
 
                 <div>
                   <label className="block text-[9px] font-black text-white/40 uppercase tracking-widest mb-1.5">
-                    {trText('help.contact_name', staticTexts.contactName)}
+                    {t('help.contact_name')}
                   </label>
                   <input
                     type="text"
@@ -1137,7 +1044,7 @@ export default function HelpCenter() {
 
                 <div>
                   <label className="block text-[9px] font-black text-white/40 uppercase tracking-widest mb-1.5">
-                    {trText('help.contact_email', staticTexts.contactEmail)}
+                    {t('help.contact_email')}
                   </label>
                   <input
                     type="email"
@@ -1151,7 +1058,7 @@ export default function HelpCenter() {
 
                 <div>
                   <label className="block text-[9px] font-black text-white/40 uppercase tracking-widest mb-1.5">
-                    {trText('help.contact_message', staticTexts.contactMessage)}
+                    {t('help.contact_message')}
                   </label>
                   <textarea
                     required
@@ -1169,7 +1076,7 @@ export default function HelpCenter() {
                   className="w-full py-2.5 bg-emerald-500 hover:bg-emerald-600 disabled:bg-emerald-500/40 text-black font-bold text-xs uppercase tracking-wider rounded-xl transition flex items-center justify-center gap-1.5 cursor-pointer shadow-lg shadow-emerald-500/10"
                 >
                   <Send className="w-3.5 h-3.5" />
-                  <span>{submitting ? trText('help.contact_submitting', staticTexts.contactSubmitting) : trText('help.contact_submit', staticTexts.contactSubmit)}</span>
+                  <span>{submitting ? t('help.contact_submitting') : t('help.contact_submit')}</span>
                 </button>
               </form>
             )}

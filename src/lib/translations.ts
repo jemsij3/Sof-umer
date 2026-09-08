@@ -7,7 +7,6 @@ export interface TranslationKey {
 }
 
 export const staticTranslations: TranslationKey[] = [
-  // Wizard Namespace Keys
   { key: "wizard.step_category", en: "Category", om: "Garee", am: "ምድብ", category: "Wizard" },
   { key: "wizard.step_subcategory", en: "Subcategory", om: "Garee Xiqqaa", am: "ንኡስ ምድብ", category: "Wizard" },
   { key: "wizard.step_details_photos", en: "Details & Photos", om: "Odeeffannoo & Suuraa", am: "መረጃ እና ፎቶዎች", category: "Wizard" },
@@ -19,8 +18,6 @@ export const staticTranslations: TranslationKey[] = [
   { key: "wizard.btn_back", en: "Back", om: "Dee bi'i", am: "ተመለስ", category: "Wizard" },
   { key: "wizard.btn_clear", en: "Clear", om: "Ha qi", am: "አጽዳ", category: "Wizard" },
   { key: "wizard.btn_submit", en: "Submit Listing", om: "Tarreeffama Galchi", am: "ዝርዝር ያስገቡ", category: "Wizard" },
-
-  // Catalog Namespace Keys
   { key: "catalog.all_categories", en: "ALL CATEGORIES", om: "GAREEWWAN HUNDA", am: "ሁሉንም ምድቦች", category: "Catalog" },
   { key: "catalog.home", en: "Home", om: "Fuula Duraa", am: "መነሻ", category: "Catalog" },
   { key: "catalog.explore_subcategories", en: "EXPLORE SUBCATEGORIES", om: "GAREEWWAN XIQQAA EXPLORE GODHI", am: "ንኡስ ምድቦችን ያስሱ", category: "Catalog" },
@@ -29,8 +26,6 @@ export const staticTranslations: TranslationKey[] = [
   { key: "catalog.favorite", en: "Favorite", om: "Jaallatamoo", am: "ወደዱት", category: "Catalog" },
   { key: "catalog.share", en: "Share", om: "Qoodi", am: "አጋራ", category: "Catalog" },
   { key: "catalog.exit", en: "Exit", om: "Ba'i", am: "ውጣ", category: "Catalog" },
-
-  // Listing Namespace Keys
   { key: "listing.title", en: "Listing Details", om: "Tarreeffama Oomishaa", am: "የእቃ ዝርዝር", category: "Listing" },
   { key: "listing.products", en: "Products", om: "Oomishaalee", am: "ምርቶች", category: "Listing" },
   { key: "listing.price", en: "Price", om: "Gatii", am: "ዋጋ", category: "Listing" },
@@ -63,8 +58,6 @@ export const staticTranslations: TranslationKey[] = [
   { key: "Refurbished", en: "Refurbished", om: "Haaromfame", am: "የታደሰ", category: "Listing" },
   { key: "listing.men", en: "Men", om: "Dhiira", am: "ወንድ", category: "Listing" },
   { key: "listing.clothing_fashion", en: "Clothing & Fashion", om: "Uffata & Faashinii", am: "ልብስ እና ፋሽን", category: "Listing" },
-
-  // Seller Namespace Keys
   { key: "seller.seller_information", en: "SELLER INFORMATION", om: "ODEEFFANNOO GURGURTAA", am: "የሻጭ መረጃ", category: "Seller" },
   { key: "seller.verified_seller", en: "Verified Seller", om: "Gurguraa Mirkanaa'e", am: "የተረጋገጠ ሻጭ", category: "Seller" },
   { key: "seller.active_ads", en: "Active Ads", om: "Beeksisa Hooggana Irra Jiran", am: "ንቁ ማስታወቂያዎች", category: "Seller" },
@@ -74,8 +67,6 @@ export const staticTranslations: TranslationKey[] = [
   { key: "seller.chat_with_seller", en: "Chat with Seller", om: "Gurguraa Wajjin Haasawii", am: "ከሻጩ ጋር ይወያዩ", category: "Seller" },
   { key: "seller.make_offer", en: "Make Offer", om: "Gatii Dhiyeessi", am: "ዋጋ ያቅርቡ", category: "Seller" },
   { key: "seller.show_contact", en: "Show Contact", om: "Lakkoofsa Bilbilaa Agarsiisi", am: "ስልክ ቁጥር አሳይ", category: "Seller" },
-
-  // Safety Namespace Keys
   { key: "safety.safety_tips_title", en: "Safety Tips for Buyers", om: "Odeeffannoo Nageenyaa Bittootaaf", am: "ለገዢዎች የደህንነት ምክሮች", category: "Safety" },
   { key: "safety.tip_meet_public", en: "Meet the seller in a safe public place.", om: "Bakka ummataa nagaa ta'etti gurguraa waliin walqunnamaa.", am: "ሻጩን ደህንነቱ በተጠበቀ பொது ቦታ ያግኙ።", category: "Safety" },
   { key: "safety.tip_inspect_item", en: "Inspect the property before making payment.", om: "Kaffaltii raawwachuun dura meeshicha sirriitti qoradhaa.", am: "ክፍያ ከመፈጸምዎ በፊት እቃውን በጥንቃቄ ይመልከቱ።", category: "Safety" },
@@ -84,8 +75,6 @@ export const staticTranslations: TranslationKey[] = [
   { key: "safety.tip_trusted_payment", en: "Use trusted payment methods whenever possible.", om: "Malleen kaffaltii amanamoo ta'an fayyadamaa.", am: "በተቻለ መጠን አስተማማኝ የክፍያ መንገዶችን ይጠቀሙ።", category: "Safety" },
   { key: "safety.tip_report_suspicious", en: "Report suspicious listings or fraudulent activity immediately.", om: "Beeksisa mamachiisaa ykn gocha gowwoomsaa battalatti gabaasaa.", am: "አጠራጣሪ ማስታወቂያዎችን ወይም የማጭበርበር ድርጊቶችን ወዲያውኑ ሪፖርት ያድርጉ።", category: "Safety" },
   { key: "safety.report_listing", en: "Report Suspicious Listing", om: "Beeksisa Mamachiisaa Gabaasi", am: "አጠራጣሪ ማስታወቂያ ሪፖርት ያድርጉ", category: "Safety" },
-
-  // Categories Namespace Keys
   { key: "categories.properties", en: "Properties", om: "Qabeenya", am: "ንብረቶች", category: "Categories" },
   { key: "categories.vehicles", en: "Vehicles", om: "Konkolaattota", am: "ተሽከርካሪዎች", category: "Categories" },
   { key: "categories.products", en: "Products", om: "Oomishaalee", am: "ምርቶች", category: "Categories" },
@@ -105,8 +94,6 @@ export const staticTranslations: TranslationKey[] = [
   { key: "categories.sports_outdoors", en: "Sports & Outdoors", om: "Ispoortii & Misooma Ala", am: "ስፖርት እና ውጭ እንቅስቃሴዎች", category: "Categories" },
   { key: "categories.commercial_equipment", en: "Commercial Equipment", om: "Meeshaalee Daldalaa", am: "የንግድ መሳሪያዎች", category: "Categories" },
   { key: "categories.other_products", en: "Other Products", om: "Oomishaalee Biroo", am: "ሌሎች ምርቶች", category: "Categories" },
-
-  // Subcategories Namespace Keys
   { key: "subcategories.repair_maintenance", en: "Repair & Maintenance", om: "Suphaa & Suphaa", am: "ጥገና እና ጥገና", category: "Subcategories" },
   { key: "subcategories.construction_renovation", en: "Construction & Renovation", om: "Ijaarsa & Haaromsa", am: "ግንባታ እና እድሳት", category: "Subcategories" },
   { key: "subcategories.transport_moving", en: "Transport & Moving", om: "Geessituu & Geejjiba", am: "ትራንስፖርት እና ማዛወር", category: "Subcategories" },
@@ -127,8 +114,6 @@ export const staticTranslations: TranslationKey[] = [
   { key: "subcategories.pharmacies_clinics", en: "Pharmacies & Clinics", om: "Faarmaasii & Kiliinika", am: "ፋርማሲዎች እና ክሊኒኮች", category: "Subcategories" },
   { key: "subcategories.agencies_consultancy", en: "Agencies & Consultancy", om: "Eejensii & Gorsaa", am: "ኤጀንሲዎች እና ማማከር", category: "Subcategories" },
   { key: "subcategories.hotels_guest_houses", en: "Hotels & Guest Houses", om: "Hoteelota & Manneen Keessummootaa", am: "ሆቴሎች እና የእንግዳ ማረፊያዎች", category: "Subcategories" },
-
-  // Core Marketplace Categories
   { key: "Product", en: "Product", om: "Oomishaalee", am: "ምርቶች", category: "Categories" },
   { key: "Products", en: "Products", om: "Oomishaalee", am: "ምርቶች", category: "Categories" },
   { key: "Property", en: "Property", om: "Qabeenya", am: "ንብረት", category: "Categories" },
@@ -141,8 +126,6 @@ export const staticTranslations: TranslationKey[] = [
   { key: "Services", en: "Services", om: "Tajaajila", am: "አገልግሎቶች", category: "Categories" },
   { key: "Local Businesses", en: "Local Businesses", om: "Daldala Naannoo", am: "የአካባቢ ንግዶች", category: "Categories" },
   { key: "Community", en: "Community", om: "Hawaasa", am: "ማህበረሰብ", category: "Categories" },
-
-  // Create Listing Wizard Navigation & Step Headers
   { key: "Category", en: "Category", om: "Garee Guddaa", am: "ምድብ", category: "CreateListing" },
   { key: "Subcategory", en: "Subcategory", om: "Garee Xiqqaa", am: "ንዑስ ምድብ", category: "CreateListing" },
   { key: "Details & Photos", en: "Details & Photos", om: "Tarreeffama & Fakkii", am: "ዝርዝሮች እና ፎቶዎች", category: "CreateListing" },
@@ -150,8 +133,6 @@ export const staticTranslations: TranslationKey[] = [
   { key: "Boost & Pay", en: "Boost & Pay", om: "Beeksisa Guddisi & Kaffali", am: "ያሳድጉ እና ይክፈሉ", category: "CreateListing" },
   { key: "Specifications & Listing Details", en: "Specifications & Listing Details", om: "Tarreeffama & Ibsa Beeksisaa", am: "ዝርዝሮች እና የማስታወቂያ መረጃ", category: "CreateListing" },
   { key: "Property Owner Contact Details", en: "Property Owner Contact Details", om: "Odeeffannoo Quunnamtii Abbaa Qabeenyaa", am: "የንብረት ባለቤት የመገናኛ መረጃ", category: "CreateListing" },
-
-  // Attributes & Field Labels
   { key: "Item Title", en: "Item Title", om: "Mata Duree Meeshichaa", am: "የእቃው ርዕስ", category: "Fields" },
   { key: "Brand", en: "Brand", om: "Gosa Oomishaa (Brand)", am: "ብራንድ", category: "Fields" },
   { key: "brand", en: "Brand", om: "Gosa Oomishaa (Brand)", am: "ብራንድ", category: "Fields" },
@@ -173,7 +154,6 @@ export const staticTranslations: TranslationKey[] = [
   { key: "location", en: "Location", om: "Bakka / Iddoo", am: "አድራሻ / ቦታ", category: "Fields" },
   { key: "Description", en: "Description", om: "Ibsa Guutuu", am: "ማብራሪያ", category: "Fields" },
   { key: "description", en: "Description", om: "Ibsa Guutuu", am: "ማብራሪያ", category: "Fields" },
-  { key: "Subcategory", en: "Subcategory", om: "Garee Xiqqaa", am: "ንዑስ ምድብ", category: "Fields" },
   { key: "subcategory", en: "Subcategory", om: "Garee Xiqqaa", am: "ንዑስ ምድብ", category: "Fields" },
   { key: "Negotiable", en: "Negotiable", om: "Waliigalteen", am: "በስምምነት", category: "Fields" },
   { key: "negotiable", en: "Negotiable", om: "Waliigalteen", am: "በስምምነት", category: "Fields" },
@@ -189,7 +169,7 @@ export const staticTranslations: TranslationKey[] = [
   { key: "about_service", en: "About this service", om: "Waa'ee Tajaajila Kanaa", am: "ስለዚህ አገልግሎት", category: "ListingDetails" },
   { key: "about_business", en: "About this business", om: "Waa'ee Daldala Kanaa", am: "ስለዚህ ንግድ", category: "ListingDetails" },
   { key: "about_post", en: "About this post", om: "Waa'ee Beeksisa Kanaa", am: "ስለዚህ ማስታወቂያ", category: "ListingDetails" },
-  { key: "about_property", en: "About this property", om: "Waa'ee Qabeenya Kanaa", am: "ስለዚህ ንብረት", category: "ListingDetails" },
+  { key: "about_property", en: "About this property", om: "Waa'ee Qabeenya Kanaa", am: "ስለዚህ ንብረት", category: "Details" },
   { key: "seller_information", en: "SELLER INFORMATION", om: "ODEEFFANNOO GURGURTAA", am: "የሻጭ መረጃ", category: "ListingDetails" },
   { key: "verified_seller", en: "Verified Seller", om: "Gurguraa Mirkanaa'e", am: "የተረጋገጠ ሻጭ", category: "ListingDetails" },
   { key: "active_ads", en: "Active Ads", om: "Beeksisa Hooggana Irra Jiran", am: "ነቁ ማስታወቂያዎች", category: "ListingDetails" },
@@ -202,10 +182,10 @@ export const staticTranslations: TranslationKey[] = [
   { key: "contact_info_revealed", en: "Contact Information Revealed", om: "Odeeffannoo Quunnamtii Mul'ateera", am: "የመገናኛ መረጃ ተገልጧል", category: "ListingDetails" },
   { key: "hide", en: "Hide", om: "Dhoksi", am: "ደብቅ", category: "ListingDetails" },
   { key: "safety_tips_buyers", en: "Safety Tips for Buyers", om: "Odeeffannoo Nageenyaa Bittootaaf", am: "ለገዢዎች የደህንነት ምክሮች", category: "ListingDetails" },
-  { key: "safety_tip_1", en: "Meet the seller in a safe public place.", om: "Bakka ummataa nagaa ta'etti gurguraa waliin walqunnamaa.", am: "በአስተማማኝ የህዝብ ቦታ ከሻጩ ጋር ይገናኙ።", category: "ListingDetails" },
-  { key: "safety_tip_2", en: "Inspect the property before making payment.", om: "Kaffaltii raawwachuun dura meeshicha sirriitti qoradhaa.", am: "ክፍያ ከፈፀሙ በፊት ንብረቱን/እቃውን በጥንቃቄ ይመልከቱ።", category: "ListingDetails" },
+  { key: "safety_tip_1", en: "Meet the seller in a safe public place.", om: "Bakka ummataa nagaa ta'etti gurguraa waliin walqunnamaa.", am: "በአስተማማኝ የህዝብ ቦታ ከሻጩ ጋር ይገናኙ።", category: "General" },
+  { key: "safety_tip_2", en: "Inspect the property before making payment.", om: "Kaffaltii raawwachuun dura meeshicha sirriitti qoradhaa.", am: "ክፍያ ከፈፀሙ በፊት ንብረቱን/እቃውን በጥንቃቄ ይመልከቱ።", category: "General" },
   { key: "safety_tip_3", en: "Never pay before confirming ownership.", om: "Aabbummaa meeshichaa osoo hin mirkaneessin kaffaltii hin raawwatinaa.", am: "ባለቤትነቱን ሳያረጋግጡ በፍጹም ክፍያ አይክፈሉ።", category: "ListingDetails" },
-  { key: "safety_tip_4", en: "Verify all documents carefully.", om: "Sanadoota hunda of-eeggannoon mirkaneessaa.", am: "ሁሉንም ሰነዶች በጥንቃቄ ያረጋግጡ።", category: "ListingDetails" },
+  { key: "safety_tip_4", en: "Verify all documents carefully.", om: "Sanadoota hunda of-eeggannoon mirkaneessaa.", am: "ሁሉንም ሰነዶች በጥንቃቄ ያረጋግጡ።", category: "General" },
   { key: "safety_tip_5", en: "Use trusted payment methods whenever possible.", om: "Malleen kaffaltii amanamoo ta'an fayyadamaa.", am: "ከተቻለ አስተማማኝ የክፍያ ዘዴዎችን ይጠቀሙ።", category: "ListingDetails" },
   { key: "safety_tip_6", en: "Report suspicious listings or fraudulent activity immediately.", om: "Beeksisa mamachiisaa ykn gocha gowwoomsaa battalatti gabaasaa.", am: "አጠራጣሪ ማስታወቂያዎችን ወይም የማጭበርበር ድርጊቶችን ወዲያውኑ ሪፖርት ያድርጉ።", category: "ListingDetails" },
   { key: "report_suspicious_listing", en: "Report Suspicious Listing", om: "Beeksisa Mamachiisaa Gabaasi", am: "አጠራጣሪ ማስታወቂያ ሪፖርት ያድርጉ", category: "ListingDetails" },
@@ -213,7 +193,7 @@ export const staticTranslations: TranslationKey[] = [
   { key: "similar_properties", en: "Similar Properties & Listings", om: "Qabeenya & Beeksisa Wal-fakkaatan", am: "ተመሳሳይ ንብረቶች እና ማስታወቂያዎች", category: "ListingDetails" },
   { key: "ad", en: "Ad", om: "Beeksisa", am: "ማስታወቂያ", category: "ListingDetails" },
   { key: "ads", en: "Ads", om: "Beeksisa", am: "ማስታወቂያዎች", category: "ListingDetails" },
-  { key: "all_categories", en: "ALL CATEGORIES", om: "GAREEWWAN HUNDA", am: "ሁሉም ምድቦች", category: "Catalog" },
+  { key: "all_categories", en: "All Categories", om: "Kategorii Hundumaa", am: "ሁሉም ምድቦች", category: "Marketplace" },
   { key: "select_category_browse", en: "Select a category to browse verified listings", om: "Beeksisa mirkanaa'e filachuuf garee filadhu", am: "የተረጋገጡ ማስታወቂያዎችን ለመመልከት ምድብ ይምረጡ", category: "Catalog" },
   { key: "search_categories_placeholder", en: "Search categories, subcategories & brands (e.g. Nike, Toyota, Smartphones)...", om: "Gareewwan, garee xiqqaa & brandoota barbaadi...", am: "ምድቦችን፣ ንዑስ ምድቦችን እና ብራንዶችን ይፈልጉ...", category: "Catalog" },
   { key: "no_category_matched", en: "No category, subcategory or brand matched", om: "Gareen, gareen xiqqaan ykn brandiin walsimatu hin argamne", am: "ምንም የሚዛመድ ምድብ፣ ንዑስ ምድብ ወይም ብራንድ አልተገኘም", category: "Catalog" },
@@ -221,12 +201,7 @@ export const staticTranslations: TranslationKey[] = [
   { key: "subcategories_label", en: "Subcategories:", om: "GAREEWWAN XIQQAA:", am: "ንዑስ ምድቦች፦", category: "Catalog" },
   { key: "view_all", en: "View All", om: "Hunda Ilaali", am: "ሁሉንም ይመልከቱ", category: "Catalog" },
   { key: "popular_brands", en: "Popular Brands:", om: "Brandoota Beekamoo:", am: "ታዋቂ ብራንዶች፦", category: "Catalog" },
-  { key: "items_suffix", en: "items", om: "beeksisa", am: "እቃዎች", category: "Catalog" },
-  { key: "Price", en: "Price", om: "Gatii", am: "ዋጋ", category: "Fields" },
-  { key: "Location", en: "Location", om: "Bakka / Iddoo", am: "አድራሻ / ቦታ", category: "Fields" },
-  { key: "Description", en: "Description", om: "Ibsa Guutuu", am: "ማብራሪያ", category: "Fields" },
-
-  // Uploads & Action Buttons
+  { key: "items_suffix", en: "items", om: "meeshotta", am: "ዕቃዎች", category: "Marketplace" },
   { key: "Upload photos", en: "Upload photos", om: "Fakkoota Fe'i", am: "ፎቶዎችን ይስቀሉ", category: "Actions" },
   { key: "Upload video", en: "Upload video", om: "Viidiyoo Fe'i", am: "ቪዲዮ ይስቀሉ", category: "Actions" },
   { key: "Publish Listing", en: "Publish Listing", om: "Beeksisa Maxxansi", am: "ማስታወቂያ ይለጥፉ", category: "Actions" },
@@ -234,3169 +209,428 @@ export const staticTranslations: TranslationKey[] = [
   { key: "Next", en: "Next", om: "Kan Itti Aanu", am: "ቀጣይ", category: "Actions" },
   { key: "Back", en: "Back", om: "Deebi'i", am: "ተመለስ", category: "Actions" },
   { key: "Cancel", en: "Cancel", om: "Haqui", am: "ሰርዝ", category: "Actions" },
-
-  // Welcome & Auth Screen
-  {
-    key: "welcome_title",
-    en: "Welcome to SOF-UMER",
-    om: "Baga Gara SOF-UMER Hapiin Dhuftan",
-    am: "ወደ SOF-UMER በደህና መጡ",
-    category: "Welcome"
-  },
-  {
-    key: "welcome_subtitle",
-    en: "Find, buy, rent, and manage properties with confidence.",
-    om: "Amanannaan qabeenya barbaadi, bitadhu, kireeffadhu, akkasumas bulchi.",
-    am: "ንብረቶችን በልበ ሙሉነት ይፈልጉ፣ ይግዙ፣ ያከራዩ እና ያስተዳድሩ።",
-    category: "Welcome"
-  },
-  {
-    key: "homepage_title",
-    en: "Sof Umer",
-    om: "Sof Umer",
-    am: "ሶፍ ኡመር",
-    category: "Welcome"
-  },
-  {
-    key: "homepage_tagline",
-    en: "The smart way to discover, buy, sell, rent, and connect with your local community.",
-    om: "Mala qaruutee qabeenya argachuu, bitachuu, gurguruu, kireeffachuu fi hawaasa naannoo kee waliin wal-qunnamuuf.",
-    am: "በአካባቢዎ ማህበረሰብ ውስጥ ንብረቶችን ለማግኘት፣ ለመግዛት፣ ለመሸጥ፣ ለመከራየት እና ለመገናኘት ብልህ መንገድ።",
-    category: "Welcome"
-  },
-  {
-    key: "login",
-    en: "Login",
-    om: "Seeni",
-    am: "ይግቡ",
-    category: "General"
-  },
-  {
-    key: "signup",
-    en: "Sign Up",
-    om: "Galmee",
-    am: "ይመዝገቡ",
-    category: "General"
-  },
-  {
-    key: "logout",
-    en: "Logout",
-    om: "Ba'i",
-    am: "ውጡ",
-    category: "General"
-  },
-  {
-    key: "email",
-    en: "Email Address",
-    om: "Teessoo Imeelii",
-    am: "የኢሜል አድራሻ",
-    category: "General"
-  },
-  {
-    key: "password",
-    en: "Password",
-    om: "Jecha Icchitii",
-    am: "የይለፍ ቃል",
-    category: "General"
-  },
-  {
-    key: "login_title",
-    en: "Sign In to Sof Umer",
-    om: "Sof Umeritti Seeni",
-    am: "ወደ ሶፍ ኡመር ይግቡ",
-    category: "Auth"
-  },
-  {
-    key: "login_subtitle",
-    en: "Enter your credentials to access the premier real estate marketplace.",
-    om: "Gabaa qabeenyaa olaanaa argachuuf ragaalee kee galchi.",
-    am: "የሪል እስቴት ገበያውን ለመጠቀም መለያዎን ያስገቡ።",
-    category: "Auth"
-  },
-  {
-    key: "sign_in",
-    en: "Sign In",
-    om: "Seeni",
-    am: "ይግቡ",
-    category: "Auth"
-  },
-  {
-    key: "dont_have_account",
-    en: "Don't have an account?",
-    om: "Mila/akawuntii hin qabduu?",
-    am: "መለያ የለዎትም?",
-    category: "Auth"
-  },
-  {
-    key: "register_now",
-    en: "Register Now",
-    om: "Amma Galmee",
-    am: "አሁን ይመዝገቡ",
-    category: "Auth"
-  },
-  {
-    key: "already_have_account",
-    en: "Already have an account?",
-    om: "Duraan akawuntii qabduu?",
-    am: "በፊት መለያ አለዎት?",
-    category: "Auth"
-  },
-  {
-    key: "full_name",
-    en: "Full Name",
-    om: "Maqaa Guutuu",
-    am: "ሙሉ ስም",
-    category: "Auth"
-  },
-  {
-    key: "role_buyer_seller",
-    en: "Account Role (Buyer/Seller)",
-    om: "Gahee Akawuntii (Bitaa/Gurguraa)",
-    am: "የመለያ ሚና (ገዥ/ሻጭ)",
-    category: "Auth"
-  },
-  {
-    key: "role_user",
-    en: "Buyer / Standard User",
-    om: "Bitaa / Fayyadamaa Idilee",
-    am: "ገዢ / መደበኛ ተጠቃሚ",
-    category: "Auth"
-  },
-  {
-    key: "role_agent",
-    en: "Seller / Agent / Landlord",
-    om: "Gurguraa / Ejentii / Abbaa Qabeenyaa",
-    am: "ሻጭ / ወኪል / አከራይ",
-    category: "Auth"
-  },
-  {
-    key: "register_btn",
-    en: "Create Profile",
-    om: "Profaayilii Uumi",
-    am: "መገለጫ ፍጠር",
-    category: "Auth"
-  },
-  {
-    key: "forgot_password",
-    en: "Forgot Password?",
-    om: "Jecha icchitii dagattee?",
-    am: "የይለፍ ቃል ረስተዋል?",
-    category: "Auth"
-  },
-  {
-    key: "reset_password_title",
-    en: "Reset Password",
-    om: "Jecha Icchitii Haaromsi",
-    am: "የይለፍ ቃል መልሰው ያግኙ",
-    category: "Auth"
-  },
-  {
-    key: "reset_password_desc",
-    en: "Enter your email to receive a temporary recovery code.",
-    om: "Koodii bafannaa yeroo gabaabaa argachuuf imeeli kee galchi.",
-    am: "ጊዜያዊ መልሶ ማግኛ ኮድ ለመቀበል ኢሜልዎን ያስገቡ።",
-    category: "Auth"
-  },
-  {
-    key: "send_reset_code",
-    en: "Send Reset Code",
-    om: "Koodii Haaromsaa Ergi",
-    am: "የመልሶ ማግኛ ኮድ ላክ",
-    category: "Auth"
-  },
-  {
-    key: "back_to_login",
-    en: "Back to Login",
-    om: "Gara Seensatti Deebi'i",
-    am: "ወደ መግቢያ ይመለሱ",
-    category: "Auth"
-  },
-  {
-    key: "enter_reset_code",
-    en: "Verification Code",
-    om: "Koodii Mirkaneessaa",
-    am: "የማረጋገጫ ኮድ",
-    category: "Auth"
-  },
-  {
-    key: "new_password",
-    en: "New Password",
-    om: "Jecha Icchitii Haaraa",
-    am: "አዲስ የይለፍ ቃል",
-    category: "Auth"
-  },
-  {
-    key: "confirm_new_password",
-    en: "Confirm New Password",
-    om: "Jecha Icchitii Haaraa Mirkaneessi",
-    am: "አዲሱን የይለፍ ቃል ያረጋግጡ",
-    category: "Auth"
-  },
-  {
-    key: "update_password_btn",
-    en: "Update Password",
-    om: "Jecha Icchitii Haaromsi",
-    am: "የይለፍ ቃል አዘምን",
-    category: "Auth"
-  },
-  {
-    key: "register_success",
-    en: "Registration successful! Use the dev verification code below to verify.",
-    om: "Galmeen milkaa'eera! Mirkaneessuuf koodii gadii fayyadami.",
-    am: "ምዝገባው ተሳክቷል! ለማረጋገጥ ከታች ያለውን ኮድ ይጠቀሙ።",
-    category: "Auth"
-  },
-  {
-    key: "verify_account",
-    en: "Verify Account",
-    om: "Akawuntii Mirkaneessi",
-    am: "መለያ ያረጋግጡ",
-    category: "Auth"
-  },
-  {
-    key: "verify_btn",
-    en: "Verify & Login",
-    om: "Mirkaneessi & Seeni",
-    am: "አረጋግጥ እና ግባ",
-    category: "Auth"
-  },
-  {
-    key: "custom_login_header",
-    en: "Instant Developer Logins",
-    om: "Seensa Injinarootaa Saffisaa",
-    am: "ፈጣን የገንቢዎች መግቢያ",
-    category: "Auth"
-  },
-  {
-    key: "custom_login_desc",
-    en: "Select one of the pre-configured accounts below for testing purposes.",
-    om: "Kanneen gadii keessaa tokko filachuun qorannoodhaaf fayyadami.",
-    am: "ለመሞከር ከታች ካሉት መለያዎች አንዱን ይምረጡ።",
-    category: "Auth"
-  },
-  {
-    key: "verification_code_placeholder",
-    en: "Enter 6-digit code",
-    om: "Koodii digitii 6 galchi",
-    am: "ባለ 6 አሃዝ ኮድ ያስገቡ",
-    category: "Auth"
-  },
-  {
-    key: "resend_code",
-    en: "Resend Code",
-    om: "Koodii Ergi Deebisi",
-    am: "ኮድ ድጋሚ ላክ",
-    category: "Auth"
-  },
-  {
-    key: "guest_login",
-    en: "Browse App as Guest",
-    om: "Akka Keessummaatti Ilaali",
-    am: "በእንግድነት ይግቡ",
-    category: "Auth"
-  },
-
-  // Marketplace & Search Filters
-  {
-    key: "search_placeholder",
-    en: "Search properties by location, title or features...",
-    om: "Qabeenya bakkaan, mata dureen ykn amalaan barbaadi...",
-    am: "ንብረቶችን በቦታ፣ በርዕስ ወይም በባህሪያት ይፈልጉ...",
-    category: "Marketplace"
-  },
-  {
-    key: "filter_location",
-    en: "Location",
-    om: "Bakka",
-    am: "ቦታ",
-    category: "Marketplace"
-  },
-  {
-    key: "filter_category",
-    en: "Category",
-    om: "Ramaddii",
-    am: "ምድብ",
-    category: "Marketplace"
-  },
-  {
-    key: "filter_price",
-    en: "Price Range",
-    om: "Gatiin",
-    am: "የዋጋ ክልል",
-    category: "Marketplace"
-  },
-  {
-    key: "filter_type",
-    en: "Property Type",
-    om: "Gosa Qabeenyaa",
-    am: "የንብረት አይነት",
-    category: "Marketplace"
-  },
-  {
-    key: "filter_bedrooms",
-    en: "Bedrooms",
-    om: "Kutaalee Ciisichaa",
-    am: "መኝታ ክፍሎች",
-    category: "Marketplace"
-  },
-  {
-    key: "filter_bathrooms",
-    en: "Bathrooms",
-    om: "Kutaalee Dhiqannaa",
-    am: "የመታጠቢያ ክፍሎች",
-    category: "Marketplace"
-  },
-  {
-    key: "filter_area",
-    en: "Area Size (sqm)",
-    om: "Bal'ina Imeeraa",
-    am: "የቦታ ስፋት (በካሬ ሜትር)",
-    category: "Marketplace"
-  },
-  {
-    key: "filter_btn",
-    en: "Apply Filters",
-    om: "Filtaroota Fayyadami",
-    am: "ማጣሪያዎችን ተግብር",
-    category: "Marketplace"
-  },
-  {
-    key: "featured_properties",
-    en: "Featured Properties",
-    om: "Qabeenya Filataman",
-    am: "ልዩ ትኩረት የተሰጣቸው ንብረቶች",
-    category: "Marketplace"
-  },
-  {
-    key: "latest_properties",
-    en: "Latest Listings",
-    om: "Galmeewwan Haaraa",
-    am: "አዳዲስ ንብረቶች",
-    category: "Marketplace"
-  },
-  {
-    key: "recommended_properties",
-    en: "Recommended for You",
-    om: "Sitti Kan Agarsiifamu",
-    am: "ለእርስዎ የሚመከሩ",
-    category: "Marketplace"
-  },
-  {
-    key: "view_details",
-    en: "View Details",
-    om: "Bal'inaan Ilaali",
-    am: "ዝርዝሩን ይመልከቱ",
-    category: "Marketplace"
-  },
-  {
-    key: "no_properties_found",
-    en: "No properties found matching your filters.",
-    om: "Qabeenyi filatame argamuu hin dandeenye.",
-    am: "ከማጣሪያዎ ጋር የሚስማማ ንብረት አልተገኘም።",
-    category: "Marketplace"
-  },
-  {
-    key: "clear_filters",
-    en: "Clear Filters",
-    om: "Filtaroota qulqulleessi",
-    am: "ማጣሪያዎችን አጽዳ",
-    category: "Marketplace"
-  },
-  {
-    key: "property_price",
-    en: "Price",
-    om: "Gatii",
-    am: "ዋጋ",
-    category: "Marketplace"
-  },
-  {
-    key: "property_area",
-    en: "Area",
-    om: "Bal'ina",
-    am: "ስፋት",
-    category: "Marketplace"
-  },
-  {
-    key: "property_beds",
-    en: "Beds",
-    om: "Kutaalee",
-    am: "ክፍሎች",
-    category: "Marketplace"
-  },
-  {
-    key: "property_baths",
-    en: "Baths",
-    om: "Dhiqannaa",
-    am: "መታጠቢያ",
-    category: "Marketplace"
-  },
-
-  // Categories
-  {
-    key: "cat_buy",
-    en: "Buy",
-    om: "Bituuf",
-    am: "ለመግዛት",
-    category: "Categories"
-  },
-  {
-    key: "cat_rent",
-    en: "Rent",
-    om: "Kireeffachuu",
-    am: "ለመከራየት",
-    category: "Categories"
-  },
-  {
-    key: "cat_commercial",
-    en: "Commercial",
-    om: "Daldalaa",
-    am: "ለንግድ",
-    category: "Categories"
-  },
-  {
-    key: "cat_land",
-    en: "Land",
-    om: "Lafa",
-    am: "መሬት",
-    category: "Categories"
-  },
-  {
-    key: "cat_apartments",
-    en: "Apartments",
-    om: "Epartimantii",
-    am: "አፓርታማዎች",
-    category: "Categories"
-  },
-  {
-    key: "cat_houses",
-    en: "Houses",
-    om: "Manneen",
-    am: "ቤቶች",
-    category: "Categories"
-  },
-  {
-    key: "cat_offices",
-    en: "Offices",
-    om: "Ofisoota",
-    am: "ቢሮዎች",
-    category: "Categories"
-  },
-  {
-    key: "cat_properties",
-    en: "Properties",
-    om: "Qabeenya",
-    am: "ንብረቶች",
-    category: "Categories"
-  },
-  {
-    key: "cat_jobs",
-    en: "Jobs",
-    om: "Hojiiwwan",
-    am: "ስራዎች",
-    category: "Categories"
-  },
-  {
-    key: "cat_services",
-    en: "Services",
-    om: "Tajaajiloota",
-    am: "አገልግሎቶች",
-    category: "Categories"
-  },
-  {
-    key: "cat_products",
-    en: "Products",
-    om: "Oomishaalee",
-    am: "ምርቶች",
-    category: "Categories"
-  },
-  {
-    key: "cat_localbusinesses",
-    en: "Local Businesses",
-    om: "Daldala Naannoo",
-    am: "የአካባቢ ንግዶች",
-    category: "Categories"
-  },
-  {
-    key: "cat_community",
-    en: "Community",
-    om: "Hawaasa",
-    am: "ማህበረሰብ",
-    category: "Categories"
-  },
-
-  // Dashboard Tabs & Navigation
-  {
-    key: "my_profile",
-    en: "My Profile",
-    om: "Profaayilii Koo",
-    am: "የእኔ መገለጫ",
-    category: "Dashboard"
-  },
-  {
-    key: "messages",
-    en: "Messages",
-    om: "Ergaawwan",
-    am: "መልዕክቶች",
-    category: "Dashboard"
-  },
-  {
-    key: "notifications",
-    en: "Notifications",
-    om: "Beeksisa",
-    am: "ማሳወቂያዎች",
-    category: "Dashboard"
-  },
-  {
-    key: "payment_methods",
-    en: "Payment Methods",
-    om: "Malleen Kafaltii",
-    am: "የክፍያ ዘዴዎች",
-    category: "Dashboard"
-  },
-  {
-    key: "settings",
-    en: "Settings",
-    om: "Sajatoo",
-    am: "ቅንብሮች",
-    category: "Dashboard"
-  },
-  {
-    key: "my_listings",
-    en: "My Listings",
-    om: "Qabeenyawwan Koo",
-    am: "የእኔ ንብረቶች",
-    category: "Dashboard"
-  },
-  {
-    key: "admin_dashboard",
-    en: "Administrative Dashboard",
-    om: "Daashboordii Bulchiinsaa",
-    am: "የአስተዳደር ዳሽቦርድ",
-    category: "Dashboard"
-  },
-  {
-    key: "list_property",
-    en: "List Property",
-    om: "Qabeenya Galmeessi",
-    am: "ንብረት ይመዝግቡ",
-    category: "Dashboard"
-  },
-  {
-    key: "favorites",
-    en: "Favorites",
-    om: "Filataman",
-    am: "ተወዳጆች",
-    category: "Dashboard"
-  },
-
-  // Property Details
-  {
-    key: "back_to_marketplace",
-    en: "Back to Marketplace",
-    om: "Gara Gabaatti Deebi'i",
-    am: "ወደ ገበያ ይመለሱ",
-    category: "Details"
-  },
-  {
-    key: "contact_agent",
-    en: "Contact Agent",
-    om: "Ejentii Quunnami",
-    am: "ወኪሉን ያነጋግሩ",
-    category: "Details"
-  },
-  {
-    key: "property_description",
-    en: "Description",
-    om: "Ibsa",
-    am: "መግለጫ",
-    category: "Details"
-  },
-  {
-    key: "property_features",
-    en: "Key Features",
-    om: "Amala Ijjoo",
-    am: "ዋና ዋና ባህሪያት",
-    category: "Details"
-  },
-  {
-    key: "property_location",
-    en: "Location Context",
-    om: "Haala Bakkaa",
-    am: "የቦታው ሁኔታ",
-    category: "Details"
-  },
-  {
-    key: "payment_verification_required",
-    en: "Payment Verification Required",
-    om: "Mirkaneessaan Kafaltii Barbaachisaadha",
-    am: "የክፍያ ማረጋገጫ ያስፈልጋል",
-    category: "Details"
-  },
-  {
-    key: "payment_instructions",
-    en: "Please upload your bank transaction slip (CBE, Awash, or Telebirr) to activate this listing.",
-    om: "Galmeessuu mirkaneessuuf kofaltii baankii keessan (CBE, Awash ykn Telebirr) ol-fehaa.",
-    am: "ይህን ንብረት ለማንቀሳቀስ እባክዎ የባንክ ማስተላለፊያ ደረሰኝዎን (CBE፣ አዋሽ ወይም ቴሌብር) ይስቀሉ።",
-    category: "Details"
-  },
-  {
-    key: "upload_receipt",
-    en: "Upload Receipt Slip",
-    om: "Slip Kafaltii Ol-fehi",
-    am: "ደረሰኝ ይስቀሉ",
-    category: "Details"
-  },
-  {
-    key: "submitting_receipt",
-    en: "Uploading Receipt...",
-    om: "Slip Ol-fuhamaa jira...",
-    am: "ደረሰኝ በመጫን ላይ...",
-    category: "Details"
-  },
-  {
-    key: "receipt_approved",
-    en: "Receipt Approved & Verified",
-    om: "Slip Kafaltii Mirkanaa'era",
-    am: "ደረሰኝ ጸድቋል እና ተረጋግጧል",
-    category: "Details"
-  },
-  {
-    key: "receipt_pending",
-    en: "Verification Receipt Pending Review",
-    om: "Slip Kafaltii Ilaalamaa Jira",
-    am: "የማረጋገጫ ደረሰኝ በመጠባበቅ ላይ",
-    category: "Details"
-  },
-  {
-    key: "report_listing",
-    en: "Report Listing",
-    om: "Qabeenya Gabaasi",
-    am: "ንብረቱን ያሳውቁ",
-    category: "Details"
-  },
-  {
-    key: "chat_agent_title",
-    en: "Chat with Landlord",
-    om: "Abbaa Qabeenyaa Waliin Haasawi",
-    am: "ከአከራዩ ጋር ይወያዩ",
-    category: "Details"
-  },
-  {
-    key: "send_message_placeholder",
-    en: "Type your inquiry...",
-    om: "Ergaa kee barreessi...",
-    am: "መልዕክትዎን እዚህ ይጻፉ...",
-    category: "Details"
-  },
-  {
-    key: "send_btn",
-    en: "Send",
-    om: "Ergi",
-    am: "ላክ",
-    category: "Details"
-  },
-
-  // Create Listing Modal
-  {
-    key: "create_listing_title",
-    en: "Create New Property Listing",
-    om: "Qabeenya Haaraa Galmeessi",
-    am: "አዲስ ንብረት ይመዝግቡ",
-    category: "CreateListing"
-  },
-  {
-    key: "property_title_label",
-    en: "Property Title",
-    om: "Mata Duree Qabeenyaa",
-    am: "የንብረት ርዕስ",
-    category: "CreateListing"
-  },
-  {
-    key: "property_desc_label",
-    en: "Description",
-    om: "Ibsa",
-    am: "መግለጫ",
-    category: "CreateListing"
-  },
-  {
-    key: "property_price_label",
-    en: "Price (ETB)",
-    om: "Gatii (ETB)",
-    am: "ዋጋ (በኢትዮጵያ ብር)",
-    category: "CreateListing"
-  },
-  {
-    key: "property_location_label",
-    en: "Location / Address",
-    om: "Bakka / Teessoo",
-    am: "ቦታ / አድራሻ",
-    category: "CreateListing"
-  },
-  {
-    key: "property_major_cat_label",
-    en: "Major Category",
-    om: "Ramaddii Guddaa",
-    am: "ዋና ምድብ",
-    category: "CreateListing"
-  },
-  {
-    key: "property_sub_cat_label",
-    en: "Sub Category",
-    om: "Ramaddii Xiqqaa",
-    am: "ንዑስ ምድብ",
-    category: "CreateListing"
-  },
-  {
-    key: "property_image_url_label",
-    en: "Image URL",
-    om: "Teessoo Fakkii (Image URL)",
-    am: "የምስል አድራሻ (URL)",
-    category: "CreateListing"
-  },
-  {
-    key: "property_features_placeholder",
-    en: "e.g. Modern kitchen, Balcony, Parking (comma separated)",
-    om: "fkn. Kushiina Haaraa, Balkoonii, Paarkingii",
-    am: "ምሳሌ፦ ዘመናዊ ወጥ ቤት፣ በረንዳ፣ ማቆሚያ (በኮማ የተለዩ)",
-    category: "CreateListing"
-  },
-  {
-    key: "save_listing_btn",
-    en: "Publish Listing",
-    om: "Qabeenya Gabaatti Baasi",
-    am: "ንብረቱን ያውጡ",
-    category: "CreateListing"
-  },
-  {
-    key: "cancel_btn",
-    en: "Cancel",
-    om: "Dhiisi",
-    am: "ሰርዝ",
-    category: "General"
-  },
-  {
-    key: "validation_title",
-    en: "Title is required",
-    om: "Mata dureen barbaachisaadha",
-    am: "ርዕስ ያስፈልጋል",
-    category: "CreateListing"
-  },
-  {
-    key: "validation_price",
-    en: "Price must be a positive number",
-    om: "Gatiin lakkoofsa sirrii ta'uu qaba",
-    am: "ዋጋ ትክክለኛ ቁጥር መሆን አለበት",
-    category: "CreateListing"
-  },
-
-  // Admin Dashboard
-  {
-    key: "admin_panel_title",
-    en: "Administrator Administrative Console",
-    om: "Konsoolii Bulchiinsa Admin",
-    am: "የአስተዳዳሪ መቆጣጠሪያ ሰሌዳ",
-    category: "Admin"
-  },
-  {
-    key: "admin_users_tab",
-    en: "Users Management",
-    om: "Bulchiinsa Fayyadamtootaa",
-    am: "የተጠቃሚዎች አስተዳደር",
-    category: "Admin"
-  },
-  {
-    key: "admin_listings_tab",
-    en: "Manage Listings",
-    om: "Qabeenya Bulchi",
-    am: "ንብረቶችን ማስተዳደር",
-    category: "Admin"
-  },
-  {
-    key: "admin_slips_tab",
-    en: "Payment Slips Audit",
-    om: "Kafaltii Slip Gamgami",
-    am: "የክፍያ ደረሰኞች ኦዲት",
-    category: "Admin"
-  },
-  {
-    key: "admin_inquiries_tab",
-    en: "Inquiries Support",
-    om: "Gargaarsa Gaaffii",
-    am: "የጥያቄዎች ድጋፍ",
-    category: "Admin"
-  },
-  {
-    key: "admin_ads_tab",
-    en: "Advertisements",
-    om: "Beeksisa",
-    am: "ማስታወቂያዎች",
-    category: "Admin"
-  },
-  {
-    key: "admin_reports_tab",
-    en: "Safety Reports",
-    om: "Gabaasa Nageenyaa",
-    am: "የደህንነት ሪፖርቶች",
-    category: "Admin"
-  },
-  {
-    key: "admin_analytics_tab",
-    en: "Advanced Analytics",
-    om: "Xiinxala Olaanaa",
-    am: "የላቀ ትንታኔ",
-    category: "Admin"
-  },
-  {
-    key: "verify_user_btn",
-    en: "Verify",
-    om: "Mirkaneessi",
-    am: "አረጋግጥ",
-    category: "Admin"
-  },
-  {
-    key: "unverify_user_btn",
-    en: "Unverify",
-    om: "Mirkaneessa Kaasi",
-    am: "ማረጋገጫውን አንሳ",
-    category: "Admin"
-  },
-  {
-    key: "delete_user_btn",
-    en: "Delete",
-    om: "Haqi",
-    am: "ሰርዝ",
-    category: "Admin"
-  },
-  {
-    key: "approve_listing_btn",
-    en: "Approve",
-    om: "Mirkaneessi",
-    am: "አጽድቅ",
-    category: "Admin"
-  },
-  {
-    key: "reject_listing_btn",
-    en: "Reject",
-    om: "Didi",
-    am: "ውድቅ አድርግ",
-    category: "Admin"
-  },
-  {
-    key: "delete_listing_btn",
-    en: "Delete Listing",
-    om: "Qabeenya Haqi",
-    am: "ንብረቱን ሰርዝ",
-    category: "Admin"
-  },
-  {
-    key: "total_revenue",
-    en: "Total Confirmed Revenue",
-    om: "Kafaltii Guutuu Mirkaneessame",
-    am: "ጠቅላላ የተረጋገጠ ገቢ",
-    category: "Admin"
-  },
-  {
-    key: "total_listings",
-    en: "Total Active Listings",
-    om: "Qabeenya Hojirra Jiran",
-    am: "ጠቅላላ ንቁ ንብረቶች",
-    category: "Admin"
-  },
-  {
-    key: "pending_verifications",
-    en: "Pending Verifications",
-    om: "Mirkaneessaan Kan Eegamu",
-    am: "በመጠባበቅ ላይ ያሉ ማረጋገጫዎች",
-    category: "Admin"
-  },
-
-  // Profile, Support, Settings
-  {
-    key: "profile_details_title",
-    en: "Profile Details",
-    om: "Ragaa Profaayilii",
-    am: "የመገለጫ ዝርዝሮች",
-    category: "Profile"
-  },
-  {
-    key: "account_verification_status",
-    en: "Verification Status",
-    om: "Haala Mirkaneessaa",
-    am: "የማረጋገጫ ሁኔታ",
-    category: "Profile"
-  },
-  {
-    key: "verified",
-    en: "Verified Account",
-    om: "Akawuntii Mirkaneessame",
-    am: "የተረጋገጠ መለያ",
-    category: "Profile"
-  },
-  {
-    key: "not_verified",
-    en: "Not Verified",
-    om: "Kan Hin Mirkaneessamne",
-    am: "ያልተረጋገጠ",
-    category: "Profile"
-  },
-  {
-    key: "support_ticket_title",
-    en: "Support & Ticket Center",
-    om: "Giddugala Gargaarsaa",
-    am: "የድጋፍ ማዕከል",
-    category: "Profile"
-  },
-  {
-    key: "subject_label",
-    en: "Subject",
-    om: "Dhimma",
-    am: "ጉዳይ",
-    category: "Profile"
-  },
-  {
-    key: "message_label",
-    en: "Message",
-    om: "Ergaa",
-    am: "መልዕክት",
-    category: "Profile"
-  },
-  {
-    key: "submit_ticket_btn",
-    en: "Submit Ticket",
-    om: "Tikettii Ergi",
-    am: "ጥያቄውን ላክ",
-    category: "Profile"
-  },
-  {
-    key: "save_profile_btn",
-    en: "Save Profile",
-    om: "Profaayilii Ol-kaahi",
-    am: "መገለጫውን አስቀምጥ",
-    category: "Profile"
-  },
-  {
-    key: "payment_methods_title",
-    en: "Saved Payment Methods",
-    om: "Malleen Kafaltii Ol-kaahame",
-    am: "የተቀመጡ የክፍያ ዘዴዎች",
-    category: "Profile"
-  },
-  {
-    key: "add_payment_method",
-    en: "Add Payment Method",
-    om: "Malla Kafaltii Dabali",
-    am: "የክፍያ ዘዴ ያክሉ",
-    category: "Profile"
-  },
-  {
-    key: "account_number_label",
-    en: "Account Number",
-    om: "Lakkoofsa Akawuntii",
-    am: "የሂሳብ ቁጥር",
-    category: "Profile"
-  },
-  {
-    key: "bank_name_label",
-    en: "Bank Name",
-    om: "Maqaa Baankii",
-    am: "የባንክ ስም",
-    category: "Profile"
-  },
-  {
-    key: "save_btn",
-    en: "Save",
-    om: "Ol-kaahi",
-    am: "አስቀምጥ",
-    category: "General"
-  },
-
-  // Chat & Inquiries
-  {
-    key: "no_conversations",
-    en: "No active conversations yet.",
-    om: "Haasawi hojirra jiru hin jiru.",
-    am: "እስካሁን ምንም ንቁ ውይይት የለም።",
-    category: "Chat"
-  },
-  {
-    key: "chat_history",
-    en: "Chat History",
-    om: "Seenaa Haasawaa",
-    am: "የውይይት ታሪክ",
-    category: "Chat"
-  },
-  {
-    key: "support_history",
-    en: "Your Support Tickets",
-    om: "Tikettii Gargaarsa Keessan",
-    am: "የእርስዎ የድጋፍ ጥያቄዎች",
-    category: "Chat"
-  },
-  {
-    key: "all_categories",
-    en: "All Categories",
-    om: "Kategorii Hundumaa",
-    am: "ሁሉም ምድቦች",
-    category: "Marketplace"
-  },
-  {
-    key: "items",
-    en: "items",
-    om: "meeshotta",
-    am: "ዕቃዎች",
-    category: "Marketplace"
-  },
-  {
-    key: "filters",
-    en: "Filters",
-    om: "Gingilchaa",
-    am: "ማጣሪያዎች",
-    category: "Marketplace"
-  },
-  {
-    key: "reset",
-    en: "Reset",
-    om: "Deebisi",
-    am: "ዳግም አስጀምር",
-    category: "Marketplace"
-  },
-  {
-    key: "all_transactions",
-    en: "All Transactions",
-    om: "Daldala Hundumaa",
-    am: "ሁሉም ግብይቶች",
-    category: "Marketplace"
-  },
-  {
-    key: "all_types",
-    en: "All Types",
-    om: "Gosoota Hundumaa",
-    am: "ሁሉም ዓይነቶች",
-    category: "Marketplace"
-  },
-  {
-    key: "all_cities_regions",
-    en: "All Cities / Regions",
-    om: "Magaalota / Naannolee Hundumaa",
-    am: "ሁሉም ከተሞች / ክልሎች",
-    category: "Marketplace"
-  },
-  {
-    key: "currency_status",
-    en: "Currency Status",
-    om: "Haala Maallaqaa",
-    am: "የገንዘብ ሁኔታ",
-    category: "Marketplace"
-  },
-  {
-    key: "all_currencies",
-    en: "All Currencies",
-    om: "Maallaqa Hundumaa",
-    am: "ሁሉም የገንዘብ ዓይነቶች",
-    category: "Marketplace"
-  },
-  {
-    key: "min_price",
-    en: "Min Price",
-    om: "Gatii Xiqqaa",
-    am: "ዝቅተኛ ዋጋ",
-    category: "Marketplace"
-  },
-  {
-    key: "any_value",
-    en: "Any",
-    om: "Kamiyyuu",
-    am: "ማንኛውም",
-    category: "Marketplace"
-  },
-  {
-    key: "max_price",
-    en: "Max Price",
-    om: "Gatii Guddaa",
-    am: "ከፍተኛ ዋጋ",
-    category: "Marketplace"
-  },
-  {
-    key: "min_bedrooms",
-    en: "Min Bedrooms",
-    om: "Kutaa Ciisichaa",
-    am: "ዝቅተኛ የመኝታ ክፍሎች",
-    category: "Marketplace"
-  },
-  {
-    key: "min_area",
-    en: "Min Area (sqm)",
-    om: "Bal'ina Xiqqaa (sqm)",
-    am: "ዝቅተኛ ስፋት (ካሬ ሜትር)",
-    category: "Marketplace"
-  },
-  {
-    key: "no_listings_matching",
-    en: "No listings found matching parameters",
-    om: "Beeksisa dhiyaate tokkollee hin argamne",
-    am: "ከተመረጡት አማራጮች ጋር የሚዛመድ ንብረት አልተገኘም",
-    category: "Marketplace"
-  },
-  {
-    key: "reset_filters_helper",
-    en: "Try resetting search filters or using a broader area name.",
-    om: "Gingilchaa barbaaddii deebisi ykn maqaa bal'aa dhimma bahi.",
-    am: "እባክዎን ማጣሪያዎቹን ዳግም አስጀምሩ ወይም ሌላ ቦታ ይፈልጉ።",
-    category: "Marketplace"
-  },
-  {
-    key: "verified_picks",
-    en: "Verified Select Picks",
-    om: "Filannoowwan Mirkanaa'an",
-    am: "የተረጋገጡ ምርጥ ምርጫዎች",
-    category: "Marketplace"
-  },
-  {
-    key: "personalized_recs",
-    en: "Personalized Recommendation",
-    om: "Yaada Profaayilii Keetiin",
-    am: "የግል ምክሮች",
-    category: "Marketplace"
-  },
-  {
-    key: "curated_match",
-    en: "Curated Match",
-    om: "Waliin Deemu",
-    am: "የተመረጠ ግጥሚያ",
-    category: "Marketplace"
-  },
-  {
-    key: "recent_offers",
-    en: "Recent offers",
-    om: "Dhiyeessii dhiyoo",
-    am: "የቅርብ ጊዜ ቅናሾች",
-    category: "Marketplace"
-  },
-  {
-    key: "sponsored",
-    en: "Sponsored",
-    om: "Ispeensar kan godhame",
-    am: "ስፖንሰር የተደረገ",
-    category: "Marketplace"
-  },
-  {
-    key: "visit_offer",
-    en: "Visit Offer",
-    om: "Dhiyeessii Daawwadhu",
-    am: "ቅናሹን ይጎብኙ",
-    category: "Marketplace"
-  },
-  {
-    key: "safety_guidelines",
-    en: "Safety Guidelines",
-    om: "Qajeelfama Nageenyaa",
-    am: "የደህንነት መመሪያዎች",
-    category: "Marketplace"
-  },
-  {
-    key: "safety_tip_1",
-    en: "Always meet owners/sellers in secure, public, and well-lit coordinates.",
-    om: "Yeroo mara abbootii qabeenyaa/gurgurtoota naannoo nageenya qabuu fi ifa ta'etti walargaa.",
-    am: "ሁልጊዜ ከባለቤቶች/ሻጮች ጋር ደህንነቱ በተጠቀቀ፣ ይፋዊ እና በቂ ብርሃን ባለበት ቦታ ይገናኙ።",
-    category: "Marketplace"
-  },
-  {
-    key: "safety_tip_2",
-    en: "Verify official government owner certificates, registration papers, and identity documents before wire transfer payments.",
-    om: "Waraqaa eenyummaa fi ragaawwan seeraa abbaa qabeenyummaa mirkaneeffadhaa.",
-    am: "ከክፍያ በፊት ይፋዊ የመንግስት የባለቤትነት ማረጋገጫ ምስክር ወረቀቶችን፣ የምዝገባ ወረቀቶችን እና የማንነት ሰነዶችን ያረጋግጡ።",
-    category: "Marketplace"
-  },
-  {
-    key: "safety_tip_3_html",
-    en: "Utilize our Administrative Receipt Verification Desk for fully tracked premium services.",
-    om: "Kafaltii dhiyeessii keessaniif Mana Mirkaneessaa Risiitii keenya dhimma bahaa.",
-    am: "ለተሟላ ክትትል የእኛን የክፍያ ደረሰኝ ማረጋገጫ ክፍል ይጠቀሙ።",
-    category: "Marketplace"
-  },
-  {
-    key: "safety_tip_4",
-    en: "Report suspicious postings, duplicate profiles, or user activities instantly via the reporting console flag.",
-    om: "Beeksisa ykn gocha shakkisiisaa ta'e battalatti gabaasaa.",
-    am: "አጠራጣሪ ማስታወቂያዎችን፣ የተደገሙ መገለጫዎችን ወይም የተጠቃሚ እንቅስቃሴዎችን ወዲያውኑ ሪፖርት ያድርጉ።",
-    category: "Marketplace"
-  },
-  {
-    key: "bed_unit",
-    en: "Bed",
-    om: "Siree",
-    am: "አልጋ",
-    category: "Marketplace"
-  },
-  {
-    key: "bath_unit",
-    en: "Bath",
-    om: "Kutaa Dhiqannaa",
-    am: "መታጠቢያ",
-    category: "Marketplace"
-  },
-  {
-    key: "share_listing",
-    en: "Share listing",
-    om: "Beeksisa Qoodi",
-    am: "ማስታወቂያ ያጋሩ",
-    category: "Details"
-  },
-  {
-    key: "copied",
-    en: "Copied!",
-    om: "Garagalfameera!",
-    am: "ተገልብጧል!",
-    category: "Details"
-  },
-  {
-    key: "copy_link",
-    en: "Copy Link",
-    om: "Liinkii Garagalchi",
-    am: "ሊንክ ኮፒ አድርግ",
-    category: "Details"
-  },
-  {
-    key: "share_whatsapp",
-    en: "Share on WhatsApp",
-    om: "WhatsApp irratti qoodi",
-    am: "በዋትስአፕ ያጋሩ",
-    category: "Details"
-  },
-  {
-    key: "about_property",
-    en: "About this property",
-    om: "Waa'ee qabeenya kanaa",
-    am: "ስለዚህ ንብረት",
-    category: "Details"
-  },
-  {
-    key: "amenities_features",
-    en: "Amenities & Features",
-    om: "Tajaajiloota & Amaloota",
-    am: "መገልገያዎች እና ባህሪያት",
-    category: "Details"
-  },
-  {
-    key: "location_on_map",
-    en: "Location on Map",
-    om: "Bakka Kaartaa Irratti",
-    am: "ቦታ በካርታ ላይ",
-    category: "Details"
-  },
-  {
-    key: "owner_contact",
-    en: "Owner Contact",
-    om: "Quunnamtii Abbaa Qabeenyaa",
-    am: "የንብረቱ ባለቤት እውቂያ",
-    category: "Details"
-  },
-  {
-    key: "registered_partner",
-    en: "Registered Partner",
-    om: "Michuu Galmeeffame",
-    am: "የተመዘገበ አጋር",
-    category: "Details"
-  },
-  {
-    key: "send_inquiry",
-    en: "Send Inquiry",
-    om: "Gaaffii Ergi",
-    am: "ጥያቄ ይላኩ",
-    category: "Details"
-  },
-  {
-    key: "inquiry_helper",
-    en: "Direct message the property manager or request a callback.",
-    om: "Abbaa qabeenyaatti dhimma kana irratti battalatti barreessi.",
-    am: "ለንብረቱ አስተዳዳሪ ቀጥታ መልዕክት ይላኩ ወይም ስልክ እንዲደወልልዎ ይጠይቁ።",
-    category: "Details"
-  },
-  {
-    key: "inquiry_success",
-    en: "Inquiry sent successfully! The owner will be notified.",
-    om: "Gaaffiin kee milkiidhaan ergameera! Abbaan qabeenichaa ni beeksifama.",
-    am: "ጥያቄዎ በተሳካ ሁኔታ ተልኳል! ባለቤቱ ማሳወቂያ ይደርሰዋል።",
-    category: "Details"
-  },
-  {
-    key: "inquiry_placeholder",
-    en: "I am interested in this listing. Can we schedule a physical visit?",
-    om: "Waa'ee beeksisa kanaa beekuu barbaada. Bakka qabeenichaa deemnee arguuf yoom mijata?",
-    am: "ስለዚህ ማስታወቂያ ማወቅ እፈልጋለሁ። ንብረቱን በአካል መጎብኘት እንችላለን?",
-    category: "Details"
-  },
-  {
-    key: "sending",
-    en: "Sending...",
-    om: "Ergamaa jira...",
-    am: "በመላክ ላይ...",
-    category: "General"
-  },
-  {
-    key: "submit_inquiry",
-    en: "Submit Inquiry",
-    om: "Gaaffii Ergi",
-    am: "ጥያቄ ያስገቡ",
-    category: "Details"
-  },
-  {
-    key: "login_to_message",
-    en: "Please register or log in to message the seller.",
-    om: "Gurguricha quunnamuuf maaloo dura galmee ykn seenaa taasisaa.",
-    am: "ሻጩን ለማነጋገር እባክዎ አስቀድመው ይመዝገቡ ወይም ይግቡ።",
-    category: "Details"
-  },
-  {
-    key: "report_suspicious",
-    en: "Report suspicious listing",
-    om: "Beeksisa shakki qabu gabaasi",
-    am: "አጠራጣሪ ማስታወቂያ ሪፖርት ያድርጉ",
-    category: "Details"
-  },
-  {
-    key: "new_notification_suffix",
-    en: "new",
-    om: "haaraa",
-    am: "አዲስ",
-    category: "Dashboard"
-  },
-  {
-    key: "no_notifications_yet",
-    en: "No notifications yet",
-    om: "Beeksisa haaraa hin qabdu",
-    am: "እስካሁን ምንም ማሳወቂያ የለም",
-    category: "Dashboard"
-  },
-  {
-    key: "role_admin_badge",
-    en: "Admin",
-    om: "Bulchaa",
-    am: "አስተዳዳሪ",
-    category: "Dashboard"
-  },
-  {
-    key: "role_agent_badge",
-    en: "Agent / User",
-    om: "Ejentii / Fayyadamaa",
-    am: "ወኪል / ተጠቃሚ",
-    category: "Dashboard"
-  },
-  {
-    key: "report_listing_user",
-    en: "Report Listing / User",
-    om: "Gabaasa Qabeenyaa / Fayyadamaa",
-    am: "ንብረት / ተጠቃሚ ሪፖርት ያድርጉ",
-    category: "General"
-  },
-  {
-    key: "select_reason",
-    en: "Select Reason",
-    om: "Sababa Filadhu",
-    am: "ምክንያት ይምረጡ",
-    category: "General"
-  },
-  {
-    key: "fraudulent_fake",
-    en: "Fraudulent / Fake Listing",
-    om: "Qabeenya Soba",
-    am: "የማጭበርበር / የሐሰት ንብረት",
-    category: "General"
-  },
-  {
-    key: "incorrect_specs",
-    en: "Incorrect Price / Specifications",
-    om: "Gatii ykn Ibsa Soba",
-    am: "ትክክለኛ ያልሆነ ዋጋ / ዝርዝር",
-    category: "General"
-  },
-  {
-    key: "inappropriate_behavior",
-    en: "Inappropriate / Unsafe messaging behavior",
-    om: "Ergaa Amala Hin Taane",
-    am: "ተገቢ ያልሆነ / አደገኛ የመልዕክት ባህሪ",
-    category: "General"
-  },
-  {
-    key: "other_violations",
-    en: "Other Violations",
-    om: "Cabsa Biroo",
-    am: "ሌሎች ጥሰቶች",
-    category: "General"
-  },
-  {
-    key: "describe_violation",
-    en: "Describe violation context *",
-    om: "Haala Cabsa Ibsi *",
-    am: "የጥሰቱን ሁኔታ ይግለጹ *",
-    category: "General"
-  },
-  {
-    key: "violation_placeholder",
-    en: "Provide specific parameters of fraudulent behaviors.",
-    om: "Qunnamtii fi amala sobaa ibsi.",
-    am: "ስለ ማጭበርበሩ ዝርዝር ሁኔታዎችን ያቅርቡ።",
-    category: "General"
-  },
-  {
-    key: "submitting_report",
-    en: "Logging...",
-    om: "Ergamaa Jira...",
-    am: "በመመዝገብ ላይ...",
-    category: "General"
-  },
-  {
-    key: "submit_report",
-    en: "Submit",
-    om: "Ergi",
-    am: "ላክ",
-    category: "General"
-  },
-  {
-    key: "splash_tagline",
-    en: "The Smart Way to Discover, Connect & Grow",
-    om: "Karaa Mala-qabeessa Birmachuuf, Walqunnamuufi Guddisuuf",
-    am: "ማግኘት፣ መገናኘት እና ማደግ የሚችሉበት ብልህ መንገድ",
-    category: "Welcome"
-  },
-  {
-    key: "verified_listings_title",
-    en: "Verified Listings",
-    om: "Galmeewwan Mirkanaa'an",
-    am: "የተረጋገጡ ንብረቶች",
-    category: "Welcome"
-  },
-  {
-    key: "verified_listings_desc",
-    en: "Only authenticated and moderated listings allowed.",
-    om: "Galmeewwan mirkanaa’anii fi to’ataman qofatu hayyamama.",
-    am: "የተረጋገጡ እና በአወያይ የተፈቀዱ ንብረቶች ብቻ ይፈቀዳሉ።",
-    category: "Welcome"
-  },
-  {
-    key: "secure_payments_title",
-    en: "Escrow System",
-    om: "Sirna Kafaltii Amansiisaa",
-    am: "የአስተማማኝ ክፍያ ስርዓት",
-    category: "Welcome"
-  },
-  {
-    key: "secure_payments_desc",
-    en: "Payment receipts are approved directly by admin board.",
-    om: "Risiitiwwan kafaltii kallattiin koree bulchiinsaan mirkanaa’u.",
-    am: "የክፍያ ደረሰኞች በቀጥታ በአስተዳዳሪ ቦርድ ይጸድቃሉ።",
-    category: "Welcome"
-  },
-  {
-    key: "sign_in_account_title",
-    en: "Sign In to Your Account",
-    om: "Gara Akawuntii Keetti Seeni",
-    am: "ወደ መለያዎ ይግቡ",
-    category: "Auth"
-  },
-  {
-    key: "create_new_profile_title",
-    en: "Create New Profile",
-    om: "Profaayilii Haaraa Uumi",
-    am: "አዲስ መገለጫ ይፍጠሩ",
-    category: "Auth"
-  },
-  {
-    key: "register_uppercase",
-    en: "Register",
-    om: "Galmee",
-    am: "ይመዝገቡ",
-    category: "Auth"
-  },
-  {
-    key: "all_rights_reserved",
-    en: "Sof-Umer Ecosystem • All Rights Reserved",
-    om: "Sirna Sof-Umer • Mirgi Hundu Kan Eegameedha",
-    am: "ሶፍ-ኡመር ስነ-ምህዳር • መብቱ በህግ የተጠበቀ ነው",
-    category: "Welcome"
-  },
-  {
-    key: "remember_me",
-    en: "Remember me on this device",
-    om: "Meeshaa kana irratti na yaadadhu",
-    am: "በዚህ መሣሪያ ላይ አስታውሰኝ",
-    category: "Auth"
-  },
-  {
-    key: "authenticating",
-    en: "Authenticating...",
-    om: "Mirkaneessaa Jira...",
-    am: "እያረጋገጠ ነው...",
-    category: "Auth"
-  },
-  {
-    key: "password_strength_label",
-    en: "Password Strength:",
-    om: "Cimina Jecha Icchitii:",
-    am: "የይለፍ ቃል ጥንካሬ:",
-    category: "Auth"
-  },
-  {
-    key: "password_strength_requirement",
-    en: "Requires at least 8 characters, 1 uppercase, 1 lowercase, 1 number, and 1 special symbol.",
-    om: "Yoo xiqqaate qubee 8, qubee guddaa 1, qubee xiqqaa 1, lakkoofsa 1 fi mallattoo addaa 1 gaafata.",
-    am: "ቢያንስ 8 ቁምፊዎች፣ 1 ታላቅ ፊደል፣ 1 ታናሽ ፊደል፣ 1 ቁጥር እና 1 ልዩ ምልክት ያስፈልጋል።",
-    category: "Auth"
-  },
-  {
-    key: "creating_profile",
-    en: "Creating Profile...",
-    om: "Profaayilii Uumaa Jira...",
-    am: "መገለጫ በመፍጠር ላይ...",
-    category: "Auth"
-  },
-  {
-    key: "developer_code",
-    en: "Developer Code",
-    om: "Koodii Developeraa",
-    am: "የገንቢ ኮድ",
-    category: "Auth"
-  },
-  {
-    key: "developer_code_desc",
-    en: "Use this code directly to verify this profile instantly.",
-    om: "Koodii kanaan kallattiin dhiyeenyatti profaayilii kee mirkaneessi.",
-    am: "ይህንን ኮድ በመጠቀም መለያዎን ወዲያውኑ ያረጋግጡ።",
-    category: "Auth"
-  },
-  {
-    key: "digit_6_code_label",
-    en: "6-Digit Verification Code",
-    om: "Koodii Mirkaneessaa Digit-6",
-    am: "ባለ 6-አሃዝ የማረጋገጫ ኮድ",
-    category: "Auth"
-  },
-  {
-    key: "activating_account",
-    en: "Activating account...",
-    om: "Akawuntii banaa jira...",
-    am: "መለያ በመክፈት ላይ...",
-    category: "Auth"
-  },
-  {
-    key: "verify_and_activate",
-    en: "Verify & Activate",
-    om: "Mirkaneessi & Bani",
-    am: "አረጋግጥ & አንቃ",
-    category: "Auth"
-  },
-  {
-    key: "registered_email_address",
-    en: "Registered Email Address",
-    om: "Imeelii Galmeeffame",
-    am: "የተመዘገበ የኢሜል አድራሻ",
-    category: "Auth"
-  },
-  {
-    key: "generating_code",
-    en: "Generating...",
-    om: "Koodii Ergaa Jira...",
-    am: "በማመንጨት ላይ...",
-    category: "Auth"
-  },
-  {
-    key: "dev_reset_code",
-    en: "Developer Reset Code",
-    om: "Koodii Haaromsaa Developeraa",
-    am: "የገንቢ የይለፍ ቃል ማስreset ኮድ",
-    category: "Auth"
-  },
-  {
-    key: "dev_reset_code_desc",
-    en: "Use this code directly in the code box below to reset password.",
-    om: "Koodii kanaan gadiitti fayyadamanii jecha icchiitii haaromsi.",
-    am: "የይለፍ ቃልዎን ለመቀየር ይህንን ኮድ ከታች ባለው ሳጥን ውስጥ በቀጥታ ይጠቀሙ።",
-    category: "Auth"
-  },
-  {
-    key: "reset_code_label",
-    en: "Reset Code",
-    om: "Koodii Haaromsaa",
-    am: "የይለፍ ቃል መቀየሪያ ኮድ",
-    category: "Auth"
-  },
-  {
-    key: "saving",
-    en: "Saving...",
-    om: "Ol-kaayaa Jira...",
-    am: "በማስቀመጥ ላይ...",
-    category: "General"
-  },
-  {
-    key: "report_success_msg",
-    en: "Report logged successfully! Our moderator board will take corrective actions.",
-    om: "Gabaasni kee milkaa'inaan galmaa'eera! Koreen keenya sirreessaa ni taasisa.",
-    am: "ሪፖርቱ በተሳካ ሁኔታ ተመዝግቧል! የእኛ አወያይ ቦርድ የማስተካከያ እርምጃዎችን ይወስዳል።",
-    category: "General"
-  },
-  {
-    key: "report_intro_1",
-    en: "You are filing an official safety complaint against {type} \"{name}\".",
-    om: "Eebba nageenyaa seeraa irratti gabaasa dhiyeessaa jirta {type} \"{name}\" irratti.",
-    am: "በዚህ {type} \"{name}\" ላይ ይፋዊ የደህንነት አቤቱታ እያቀረቡ ነው::",
-    category: "General"
-  },
-  {
-    key: "back_to_marketplace",
-    en: "Back to Marketplace",
-    om: "Gara Gabaatti Deebi'i",
-    am: "ወደ ገበያ ይመለሱ",
-    category: "General"
-  },
-  {
-    key: "price",
-    en: "Price",
-    om: "Gatii",
-    am: "ዋጋ",
-    category: "General"
-  },
-  {
-    key: "bedrooms",
-    en: "Bedrooms",
-    om: "Kuta Ciisichaa",
-    am: "መኝታ ክፍሎች",
-    category: "General"
-  },
-  {
-    key: "bathrooms",
-    en: "Bathrooms",
-    om: "Kuta Dhiqannaa",
-    am: "መታጠቢያ ክፍሎች",
-    category: "General"
-  },
-  {
-    key: "total_area",
-    en: "Total Area",
-    om: "Bal'ina Guutuu",
-    am: "ጠቅላላ ስፋት",
-    category: "General"
-  },
-  {
-    key: "chat_reply_placeholder",
-    en: "Type your reply...",
-    om: "Ergaa kee asitti barreessi...",
-    am: "መልስዎን እዚህ ይጻፉ...",
-    category: "Dashboard"
-  },
-  {
-    key: "select_chat_thread",
-    en: "Select a conversation thread on the left to start chatting.",
-    om: "Haasaa jalqabuuf bitaa irraa nama filadhu.",
-    am: "ማውራት ለመጀመር በስተግራ ካሉት ንግግሮች አንዱን ይምረጡ።",
-    category: "Dashboard"
-  },
-  {
-    key: "notification_logs_desc",
-    en: "Alert logs regarding approvals, chats, and listings.",
-    om: "Gabaasa beeksisa mirkaneessaa, haasaa fi galmeewwanii.",
-    am: "የማጽደቆች፣ ውይይቶች እና ማስታወቂያዎች ማሳወቂያዎች።",
-    category: "Dashboard"
-  },
-  {
-    key: "no_notifications_found",
-    en: "No notifications found",
-    om: "Beeksisi argame hin jiru",
-    am: "ምንም ማሳወቂያ አልተገኘም",
-    category: "Dashboard"
-  },
-  {
-    key: "active_admin_payment_methods",
-    en: "Active Administrative Payment Methods",
-    om: "Tarkaanfii Kafaltii Bulchiinsaa Hojjetan",
-    am: "ንቁ የአስተዳደር ክፍያ ዘዴዎች",
-    category: "Dashboard"
-  },
-  {
-    key: "active_payment_methods_desc",
-    en: "Showcasing payment configurations dynamically activated by our platform administrators. Unconfigured systems are hidden automatically.",
-    om: "Kafaltiiwwan bulchiinsaan banaman dhiyeeffama. Isaan hin qophoofne ni dhokatu.",
-    am: "በአስተዳዳሪዎቻችን በኩል የነቁ የክፍያ አማራጮችን ያሳያል። ያልተዋቀሩ አማራጮች ወዲያውኑ ይደብቃሉ።",
-    category: "Dashboard"
-  },
-  {
-    key: "no_active_payment_methods",
-    en: "No active payment methods found. Please contact the administrator.",
-    om: "Kafaltii hojjetu hin argamne. Maaloo bulchaa qunnamaa.",
-    am: "ምንም ንቁ የክፍያ ዘዴዎች አልተገኙም። እባክዎን አስተዳዳሪውን ያነጋግሩ።",
-    category: "Dashboard"
-  },
-  {
-    key: "account_name_label",
-    en: "Account Name",
-    om: "Maqaa Akkaawuntii",
-    am: "የአካውንት ስም",
-    category: "Dashboard"
-  },
-  {
-    key: "account_wallet_id_label",
-    en: "Account / Wallet ID",
-    om: "Akkaawuntii / Koodii Wallet",
-    am: "የሂሳብ / የኪስ ቁጥር",
-    category: "Dashboard"
-  },
-  {
-    key: "admin_phone_label",
-    en: "Admin Phone",
-    om: "Bilbila Bulchaa",
-    am: "የአስተዳዳሪ ስልክ",
-    category: "Dashboard"
-  },
-  {
-    key: "instructions_label",
-    en: "Instructions:",
-    om: "Qajeelfama:",
-    am: "መመሪያዎች፡",
-    category: "Dashboard"
-  },
-  {
-    key: "submit_receipt_title",
-    en: "Submit Transaction receipt / Proof",
-    om: "Risiitii Kafaltii / Ragaa Ergi",
-    am: "የክፍያ ደረሰኝ / ማስረጃ ያስገቡ",
-    category: "Dashboard"
-  },
-  {
-    key: "submit_receipt_desc",
-    en: "Once submitted, our manual receipt desk will verify the slip and trigger approvals.",
-    om: "Yoo ergite, mana mirkaneessaa keenyaan qoratamee ni mirkana'a.",
-    am: "አንዴ ከገቡ በኋላ፣ የእኛ ደረሰኝ ማረጋገጫ ክፍል ደረሰኙን በማጣራት ያጸድቃል።",
-    category: "Dashboard"
-  },
-  {
-    key: "receipt_success_msg",
-    en: "Payment receipt submitted successfully! Pending admin verification.",
-    om: "Risiitiin kafaltii milkiidhaan dhiyaateera! Mirkaneessaa bulchaa eeggachaa jira.",
-    am: "የክፍያ ደረሰኝ በተሳካ ሁኔታ ገብቷል! የአስተዳዳሪ ማረጋገጫ በመጠባበቅ ላይ።",
-    category: "Dashboard"
-  },
-  {
-    key: "select_payment_method_label",
-    en: "Select Payment Method",
-    om: "Mala Kafaltii Filadhu",
-    am: "የክፍያ ዘዴ ይምረጡ",
-    category: "Dashboard"
-  },
-  {
-    key: "select_active_wallet_option",
-    en: "-- Select Active Bank/Wallet --",
-    om: "-- Bankii/Wallet dammaqaa filadhu --",
-    am: "-- ንቁ ባንክ/ዋሌት ይምረጡ --",
-    category: "Dashboard"
-  },
-  {
-    key: "select_target_property_label",
-    en: "Select Target Property",
-    om: "Beeksisa Targetii Filadhu",
-    am: "ዒላማ ንብረት ይምረጡ",
-    category: "Dashboard"
-  },
-  {
-    key: "select_listing_context_option",
-    en: "-- Select Listing context --",
-    om: "-- Beeksisa filadhu --",
-    am: "-- የማስታወቂያ አውድ ይምረጡ --",
-    category: "Dashboard"
-  },
-  {
-    key: "transferred_amount_label",
-    en: "Transferred Amount",
-    om: "Maallaqa Ergamu",
-    am: "የተላለፈው የገንዘብ መጠን",
-    category: "Dashboard"
-  },
-  {
-    key: "receipt_screenshot_label",
-    en: "Receipt reference slip screenshot",
-    om: "Screenshot Risiitii Kafaltii",
-    am: "የክፍያ ደረሰኝ ቅጽበታዊ ገጽ እይታ (Screenshot)",
-    category: "Dashboard"
-  },
-  {
-    key: "receipt_link_placeholder",
-    en: "Paste Receipt Link or type CBE-TRX-1029472",
-    om: "Liinkii Risiitii deebisi ykn barreessi CBE-TRX-1029472",
-    am: "የደረሰኝ ሊንክ ያስገቡ ወይም CBE-TRX-1029472 ይጻፉ",
-    category: "Dashboard"
-  },
-  {
-    key: "simulate_upload_btn",
-    en: "Simulate Upload",
-    om: "Ol-feesa fakkeessi",
-    am: "መጫንን አስመስል",
-    category: "Dashboard"
-  },
-  {
-    key: "uploading_proof_msg",
-    en: "Uploading Proof...",
-    om: "Ragaa Ol-feesaajira...",
-    am: "ማስረጃ በመጫን ላይ...",
-    category: "Dashboard"
-  },
-  {
-    key: "submit_receipt_btn",
-    en: "Submit Receipt to Verification Desk",
-    om: "Risiitii Mana Mirkaneessaa Ergi",
-    am: "ደረሰኝ ወደ ማረጋገጫ ክፍል ያስገቡ",
-    category: "Dashboard"
-  },
-  {
-    key: "payment_history_title",
-    en: "Your Payment transaction history",
-    om: "Gabaasa Kafaltii Keetii",
-    am: "የእርስዎ የክፍያ ግብይት ታሪክ",
-    category: "Dashboard"
-  },
-  {
-    key: "method_name_th",
-    en: "Method Name",
-    om: "Maqaa Mala Kafaltii",
-    am: "የአሰራር ዘዴ ስም",
-    category: "Dashboard"
-  },
-  {
-    key: "target_property_th",
-    en: "Target Property",
-    om: "Beeksisa Targetii",
-    am: "ዒላማ ንብረት",
-    category: "Dashboard"
-  },
-  {
-    key: "amount_th",
-    en: "Amount",
-    om: "Gatii",
-    am: "ገንዘብ መጠን",
-    category: "Dashboard"
-  },
-  {
-    key: "status_th",
-    en: "Status",
-    om: "Haala",
-    am: "ሁኔታ",
-    category: "Dashboard"
-  },
-  {
-    key: "date_th",
-    en: "Date",
-    om: "Guyyaa",
-    am: "ቀን",
-    category: "Dashboard"
-  },
-  {
-    key: "desk_notes_th",
-    en: "Desk notes",
-    om: "Yaada Mana Mirkaneessaa",
-    am: "የቢሮ ማስታወሻዎች",
-    category: "Dashboard"
-  },
-  {
-    key: "no_transactions_msg",
-    en: "No transactions yet. Complete transfers and submit screenshots.",
-    om: "Kafaltii raawwatame hin jiru. Maaloo kafaltii raawwadhuu screenshot ergi.",
-    am: "እስካሁን ምንም ግብይቶች የሉም። ዝውውሮችን ያጠናቅቁ እና ቅጽበታዊ ገጽ እይታዎችን ያስገቡ።",
-    category: "Dashboard"
-  },
-  {
-    key: "waiting_review_notes",
-    en: "Waiting for review",
-    om: "Mirkaneessaa eeggachaa jira",
-    am: "ማረጋገጫ በመጠባበቅ ላይ",
-    category: "Dashboard"
-  },
-  {
-    key: "settings_tab_desc",
-    en: "Manage notifications and regional parameters.",
-    om: "Beeksisa fi dhimmoota naannoo to'adhu.",
-    am: "ማሳወቂያዎችን እና አካባቢያዊ መለኪያዎችን ያስተዳድሩ።",
-    category: "Dashboard"
-  },
-  {
-    key: "email_notifications_setting",
-    en: "Email Notifications",
-    om: "Beeksisa Imeelii",
-    am: "የኢሜይል ማሳወቂያዎች",
-    category: "Dashboard"
-  },
-  {
-    key: "receive_digests_setting",
-    en: "Receive digests of inquiries",
-    om: "Gabaasa gaaffiiwwanii fudhadhu",
-    am: "የጥያቄዎችን ማጠቃለያ ይቀበሉ",
-    category: "Dashboard"
-  },
-  {
-    key: "two_factor_auth_setting",
-    en: "Two-Factor Authentication",
-    om: "Mirkaneessa Madaallii Lama",
-    am: "ባለ ሁለት ደረጃ ማረጋገጫ",
-    category: "Dashboard"
-  },
-  {
-    key: "secure_logins_setting",
-    en: "Secure logins with mobile code",
-    om: "Seensa amansiisaa koodii bilbilaatiin",
-    am: "በሞባይል ኮድ ደህንነቱ የተጠበቀ መግቢያ",
-    category: "Dashboard"
-  },
-  {
-    key: "auth_required_title",
-    en: "Authentication Required",
-    om: "Mirkaneessi Barbaachisaadha",
-    am: "ማረጋገጫ ያስፈልጋል",
-    category: "Dashboard"
-  },
-  {
-    key: "auth_required_desc",
-    en: "Please register or log in to view your user dashboard.",
-    om: "Maaloo daashboordii fayyadamaa kee arguuf galmee uumi ykn seeni.",
-    am: "እባክዎ የተጠቃሚ ዳሽቦርድዎን ለማየት ይመዝገቡ ወይም ይግቡ።",
-    category: "Dashboard"
-  },
-  {
-    key: "sign_in_now_btn",
-    en: "Sign In Now",
-    om: "Amma Seeni",
-    am: "አሁን ይግቡ",
-    category: "Dashboard"
-  },
-  {
-    key: "profile_details_desc",
-    en: "Keep your account listing coordinates accurate.",
-    om: "Oof-gariinsa akakaawuntii kee sirrii taasisi.",
-    am: "የመለያ መረጃዎን ትክክለኛነት ይጠብቁ።",
-    category: "Dashboard"
-  },
-  {
-    key: "profile_success_msg",
-    en: "Profile updated successfully!",
-    om: "Profaayiliin milkiidhaan haaromfameera!",
-    am: "መገለጫው በተሳካ ሁኔታ ተሻሽሏል!",
-    category: "Dashboard"
-  },
-  {
-    key: "registered_email_label",
-    en: "Registered Email",
-    om: "Imeelii Galmeeffame",
-    am: "የተመዘገበ ኢሜይል",
-    category: "Dashboard"
-  },
-  {
-    key: "full_name_label",
-    en: "Full Name",
-    om: "Maqaa Guutuu",
-    am: "ሙሉ ስም",
-    category: "Dashboard"
-  },
-  {
-    key: "save_profile_updates_btn",
-    en: "Save Profile Updates",
-    om: "Oof-gariinsa Profaayilii Ol-kaa'i",
-    am: "የመገለጫ ማሻሻያዎችን አስቀምጥ",
-    category: "Dashboard"
-  },
-  {
-    key: "verification_title",
-    en: "Ownership & Seller Verification Badge",
-    om: "Waraqaa Eenyummaa fi Mirkaneessa Abbaa Qabeenyummaa",
-    am: "የባለቤትነት እና የሻጭ ማረጋገጫ ባጅ",
-    category: "Dashboard"
-  },
-  {
-    key: "verification_desc",
-    en: "Submit your real estate credentials, land deed ownership ID, or corporate license. Once approved, you will get a Verified Badge on your listings and profile.",
-    om: "Ragaa abbaa qabeenyummaa lafaa ykn hayyama daldalaa kee galchi. Yoo mirkanaa'e, mallattoo mirkanaa'aa ni argatta.",
-    am: "የሪል እስቴት ማስረጃዎችን፣ የይዞታ ማረጋገጫ ካርታ ወይም የንግድ ፈቃድዎን ያስገቡ። አንዴ ሲፈቀድ፣ በማስታወቂያዎችዎ እና በመገለጫዎ ላይ የተረጋገጠ ባጅ ያገኛሉ።",
-    category: "Dashboard"
-  },
-  {
-    key: "account_verified_title",
-    en: "Account Fully Verified",
-    om: "Akkaawuntii Guutummaatti Mirkanaa'eera",
-    am: "መለያው ሙሉ በሙሉ ተረጋግጧል",
-    category: "Dashboard"
-  },
-  {
-    key: "account_verified_desc",
-    en: "Your official verified partner badge is active on the marketplace.",
-    om: "Mallattoon hiriyummaa mirkanaa'aa kee gabaa irratti dammaqadha.",
-    am: "የእርስዎ ይፋዊ የተረጋገጠ አጋር ባጅ በገበያው ላይ ገባሪ ነው።",
-    category: "Dashboard"
-  },
-  {
-    key: "documents_pending_title",
-    en: "Documents Pending Verification",
-    om: "Sanadoonni Mirkaneessaa Eeggachaa Jiru",
-    am: "ሰነዶች ማረጋገጫ በመጠባበቅ ላይ ናቸው",
-    category: "Dashboard"
-  },
-  {
-    key: "documents_pending_desc",
-    en: "Our admins are currently auditing your uploaded certificates.",
-    om: "Bulchitoonni keenya ragaalee kee qorachaa jiru.",
-    am: "አስተዳዳሪዎቻችን በአሁኑ ጊዜ የሰቀሏቸውን የምስክር ወረቀቶች እየገመገሙ ነው።",
-    category: "Dashboard"
-  },
-  {
-    key: "verif_success_msg",
-    en: "Verification documents submitted. Our admins will review them shortly.",
-    om: "Sanadoonni dhiyaatanii jiru. Bulchitoonni keenya dhiyootti ni qoratu.",
-    am: "የማረጋገጫ ሰነዶች ገብተዋል። አስተዳዳሪዎቻችን በቅርቡ ይገመግሟቸዋል።",
-    category: "Dashboard"
-  },
-  {
-    key: "describe_ownership_label",
-    en: "Describe Ownership Credentials & Paste Links/IDs",
-    om: "Ragaalee Abbaa Qabeenyummaa Ibsi & Koodii/ID Barreessi",
-    am: "የባለቤትነት ማረጋገጫዎችን ይግለጹ እና ሊንኮችን/መታወቂያዎችን ያስገቡ",
-    category: "Dashboard"
-  },
-  {
-    key: "describe_ownership_placeholder",
-    en: "Addis Ababa Bole Deed Registration ID: 10928/3429. Attached property is listed under my registered company.",
-    om: "Koodii galmee Deed Finfinnee Bole: 10928/3429. Qabeenyi kun maqaa kubbayya kiyyaatiin galmeeffameera.",
-    am: "የአዲስ አበባ ቦሌ የካርታ ምዝገባ ቁጥር፡ 10928/3429። ንብረቱ በተመዘገበው ድርጅቴ ስር የተመዘገበ ነው።",
-    category: "Dashboard"
-  },
-  {
-    key: "uploading_docs_msg",
-    en: "Uploading Documents...",
-    om: "Sanadoota Ol-feesaajira...",
-    am: "ሰነዶችን በመጫን ላይ...",
-    category: "Dashboard"
-  },
-  {
-    key: "submit_credentials_btn",
-    en: "Submit Credentials",
-    om: "Ragaalee Ergi",
-    am: "ማስረጃዎችን ያስገቡ",
-    category: "Dashboard"
-  },
-  {
-    key: "your_conversations_title",
-    en: "Your Conversations",
-    om: "Waliin Haasaa Kee",
-    am: "የእርስዎ ንግግሮች",
-    category: "Dashboard"
-  },
-  {
-    key: "no_messages_msg",
-    en: "No messages yet",
-    om: "Ergaan hin jiru",
-    am: "እስካሁን ምንም መልእክት የለም",
-    category: "Dashboard"
-  },
-  {
-    key: "contact_prefix",
-    en: "Contact: ",
-    om: "Qunnamtii: ",
-    am: "ዕውቂያ: ",
-    category: "Dashboard"
-  },
-  {
-    key: "owner_label",
-    en: "Owner",
-    om: "Abbaa Qabeenyaa",
-    am: "ባለቤት",
-    category: "Dashboard"
-  },
-  {
-    key: "chat_session_prefix",
-    en: "Chat Session: ",
-    om: "Yeroo Haasaa: ",
-    am: "የውይይት ክፍለ ጊዜ: ",
-    category: "Dashboard"
-  },
-  {
-    key: "auth_intro_desc",
-    en: "Buy, sell, rent, hire, and connect with confidence through verified listings, trusted businesses, and secure services—all in one modern marketplace.",
-    om: "Bitti, gurguri, kireessi, qacari, akkasumas galmeewwan mirkanaa'an, daldala amanamoo fi tajaajiloota nagaa ta'aniin amantummaadhan walqunnami—hunda gabaa ammayyaa tokko keessatti.",
-    am: "በተረጋገጡ ዝርዝሮች፣ ታማኝ ንግዶች እና ደህንነታቸው በተጠበቁ አገልግሎቶች በራስ መተማመን ይግዙ፣ ይሸጡ፣ ያከራዩ፣ ይቀጥሩ እና ይገናኙ—ሁሉም በአንድ ዘመናዊ ገበያ።",
-    category: "Auth"
-  },
-  {
-    key: "login_hero_heading",
-    en: "The Smart Way to Discover, Connect & Grow",
-    om: "Karaa Mala-qabeessa Birmachuuf, Walqunnamuufi Guddisuuf",
-    am: "ማግኘት፣ መገናኘት እና ማደግ የሚችሉበት ብልህ መንገድ",
-    category: "Auth"
-  },
-  {
-    key: "login_hero_subheading",
-    en: "Buy, sell, rent, hire, and connect with confidence through verified listings, trusted businesses, and secure services—all in one modern marketplace.",
-    om: "Bitti, gurguri, kireessi, qacari, akkasumas galmeewwan mirkanaa'an, daldala amanamoo fi tajaajiloota nagaa ta'aniin amantummaadhan walqunnami—hunda gabaa ammayyaa tokko keessatti.",
-    am: "በተረጋገጡ ዝርዝሮች፣ ታማኝ ንግዶች እና ደህንነታቸው በተጠበቁ አገልግሎቶች በራስ መተማመን ይግዙ፣ ይሸጡ፣ ያከራዩ፣ ይቀጥሩ እና ይገናኙ—ሁሉም በአንድ ዘመናዊ ገበያ።",
-    category: "Auth"
-  },
-  {
-    key: "recently_viewed_categories",
-    en: "RECENTLY VIEWED CATEGORIES",
-    om: "Ramaddiiwwan Dhiheenya Kana Ilaalaman",
-    am: "በቅርብ ጊዜ የታዩ ምድቦች",
-    category: "Catalog"
-  },
-  {
-    key: "auth_regional_gateway",
-    en: "Regional Gateway of East Africa",
-    om: "Kellaa Naannoo Baha Afrikaa",
-    am: "የምስራቅ አፍሪካ ቀጣናዊ መግቢያ በር",
-    category: "Auth"
-  },
-  {
-    key: "auth_connecting_markets",
-    en: "The Smart Way to Discover, Connect & Grow",
-    om: "Karaa Mala-qabeessa Birmachuuf, Walqunnamuufi Guddisuuf",
-    am: "ማግኘት፣ መገናኘት እና ማደግ የሚችሉበት ብልህ መንገድ",
-    category: "Auth"
-  },
-  {
-    key: "auth_verified_listings_title",
-    en: "Verified Listings",
-    om: "Galmeewwan Mirkanaa'an",
-    am: "የተረጋገጡ ንብረቶች",
-    category: "Auth"
-  },
-  {
-    key: "auth_verified_listings_desc",
-    en: "Only authenticated and moderated listings allowed.",
-    om: "Galmeewwan mirkanaa’anii fi to’ataman qofatu hayyamama.",
-    am: "የተረጋገጡ እና በአወያይ የተፈቀዱ ንብረቶች ብቻ ይፈቀዳሉ።",
-    category: "Auth"
-  },
-  {
-    key: "auth_secure_payment_title",
-    en: "Escrow System",
-    om: "Sirna Kafaltii Amansiisaa",
-    am: "የአስተማማኝ ክፍያ ስርዓት",
-    category: "Auth"
-  },
-  {
-    key: "auth_secure_payment_desc",
-    en: "Payment receipts are approved directly by admin board.",
-    om: "Risiitiwwan kafaltii kallattiin koree bulchiinsaan mirkanaa’u.",
-    am: "የክፍያ ደረሰኞች በቀጥታ በአስተዳዳሪ ቦርድ ይጸድቃሉ።",
-    category: "Auth"
-  },
-  {
-    key: "auth_sign_in_header",
-    en: "Sign In to Your Account",
-    om: "Gara Akawuntii Keetti Seeni",
-    am: "ወደ መለያዎ ይግቡ",
-    category: "Auth"
-  },
-  {
-    key: "auth_create_profile_header",
-    en: "Create New Profile",
-    om: "Profaayilii Haaraa Uumi",
-    am: "አዲስ መገለጫ ይፍጠሩ",
-    category: "Auth"
-  },
-  {
-    key: "auth_register_label",
-    en: "Register",
-    om: "Galmee",
-    am: "ይመዝገቡ",
-    category: "Auth"
-  },
-  {
-    key: "auth_ecosystem_footer",
-    en: "Sof-Umer Ecosystem • All Rights Reserved",
-    om: "Sirna Sof-Umer • Mirgi Hundu Kan Eegameedha",
-    am: "ሶፍ-ኡመር ስነ-ምህዳር • መብቱ በህግ የተጠበቀ ነው",
-    category: "Auth"
-  },
-  {
-    key: "auth_create_account_title",
-    en: "Create Account",
-    om: "Akawuntii Uumi",
-    am: "መለያ ፍጠር",
-    category: "Auth"
-  },
-  {
-    key: "auth_verify_email_title",
-    en: "Verify Your Email",
-    om: "Imeelii Keetti Mirkaneessi",
-    am: "ኢሜልዎን ያረጋግጡ",
-    category: "Auth"
-  },
-  {
-    key: "auth_verification_email_sent_prefix",
-    en: "A secure 6-digit verification code was sent to ",
-    om: "Koodiin mirkaneessaa digit-6 icciitii gara ",
-    am: "ባለ 6 አሃዝ የደህንነት ማረጋገጫ ኮድ ወደ ",
-    category: "Auth"
-  },
-  {
-    key: "auth_verification_email_sent_suffix",
-    en: ". Please enter it below to activate your account.",
-    om: " ergameera. Akawuntii kee banuuf gadiitti galchi.",
-    am: " ተልኳል። እባክዎን መለያዎን ለማንቃት ከታች ያስገቡት።",
-    category: "Auth"
-  },
-  {
-    key: "auth_set_new_password_title",
-    en: "Set New Password",
-    om: "Jecha Icchitii Haaraa Toftadhu",
-    am: "አዲስ የይለፍ ቃል ያዘጋጁ",
-    category: "Auth"
-  },
-  {
-    key: "auth_join_desc",
-    en: "Join Sof Umer regional digital marketplace",
-    om: "Gabaa dijitaalaa naannoo Sof Umeritti makami",
-    am: "የሶፍ ኡመር ቀጣናዊ ዲጂታል የገበያ ቦታን ይቀላቀሉ",
-    category: "Auth"
-  },
-  {
-    key: "auth_secure_code_desc",
-    en: "Verify your registration with the secure code",
-    om: "Koodii amanamaadhaan galmee kee mirkaneessi",
-    am: "ምዝገባዎን በአስተማማኝ ኮድ ያረጋግጡ",
-    category: "Auth"
-  },
-  {
-    key: "auth_strong_password_desc",
-    en: "Choose a strong, new password",
-    om: "Jecha icciitii cimaa, haaraa filadhu",
-    am: "ጠንካራ እና አዲስ የይለፍ ቃል ይምረጡ",
-    category: "Auth"
-  },
-  {
-    key: "auth_remember_me",
-    en: "Remember me on this device",
-    om: "Meeshaa kana irratti na yaadadhu",
-    am: "በዚህ መሣሪያ ላይ አስታውሰኝ",
-    category: "Auth"
-  },
-  {
-    key: "auth_authenticating",
-    en: "Authenticating...",
-    om: "Mirkaneessaa Jira...",
-    am: "እያረጋገጠ ነው...",
-    category: "Auth"
-  },
-  {
-    key: "auth_password_strength",
-    en: "Password Strength:",
-    om: "Cimina Jecha Icchitii:",
-    am: "የይለፍ ቃል ጥንካሬ:",
-    category: "Auth"
-  },
-  {
-    key: "auth_password_requirements",
-    en: "Requires at least 8 characters, 1 uppercase, 1 lowercase, 1 number, and 1 special symbol.",
-    om: "Yoo xiqqaate qubee 8, qubee guddaa 1, qubee xiqqaa 1, lakkoofsa 1 fi mallattoo addaa 1 gaafata.",
-    am: "ቢያንስ 8 ቁምፊዎች፣ 1 ታላቅ ፊደል፣ 1 ታናሽ ፊደል፣ 1 ቁጥር እና 1 ልዩ ምልክት ያስፈልጋል።",
-    category: "Auth"
-  },
-  {
-    key: "auth_creating_profile",
-    en: "Creating Profile...",
-    om: "Profaayilii Uumaa Jira...",
-    am: "መገለጫ በመፍጠር ላይ...",
-    category: "Auth"
-  },
-  {
-    key: "auth_dev_code_title",
-    en: "Developer Code",
-    om: "Koodii Developeraa",
-    am: "የገንቢ ኮድ",
-    category: "Auth"
-  },
-  {
-    key: "auth_dev_code_desc",
-    en: "Use this code directly to verify this profile instantly.",
-    om: "Koodii kanaan kallattiin dhiyeenyatti profaayilii kee mirkaneessi.",
-    am: "ይህንን ኮድ በመጠቀም መለያዎን ወዲያውኑ ያረጋግጡ።",
-    category: "Auth"
-  },
-  {
-    key: "auth_verification_code_label",
-    en: "6-Digit Verification Code",
-    om: "Koodii Mirkaneessaa Digit-6",
-    am: "ባለ 6-አሃዝ የማረጋገጫ ኮድ",
-    category: "Auth"
-  },
-  {
-    key: "auth_activating_account",
-    en: "Activating account...",
-    om: "Akawuntii banaa jira...",
-    am: "መለያ በመክፈት ላይ...",
-    category: "Auth"
-  },
-  {
-    key: "auth_verify_activate_btn",
-    en: "Verify & Activate",
-    om: "Mirkaneessi & Bani",
-    am: "አረጋግጥ & አንቃ",
-    category: "Auth"
-  },
-  {
-    key: "auth_registered_email_address",
-    en: "Registered Email Address",
-    om: "Imeelii Galmeeffame",
-    am: "የተመዘገበ የኢሜል አድራሻ",
-    category: "Auth"
-  },
-  {
-    key: "auth_cancel_btn",
-    en: "Cancel",
-    om: "Dhiisi",
-    am: "ሰርዝ",
-    category: "Auth"
-  },
-  {
-    key: "auth_generating_code",
-    en: "Generating...",
-    om: "Koodii Ergaa Jira...",
-    am: "በማመንጨት ላይ...",
-    category: "Auth"
-  },
-  {
-    key: "auth_dev_reset_code_title",
-    en: "Developer Reset Code",
-    om: "Koodii Haaromsaa Developeraa",
-    am: "የገንቢ የይለፍ ቃል ማስreset ኮድ",
-    category: "Auth"
-  },
-  {
-    key: "auth_dev_reset_code_desc",
-    en: "Use this code directly in the code box below to reset password.",
-    om: "Koodii kanaan gadiitti fayyadamanii jecha icchiitii haaromsi.",
-    am: "የይለፍ ቃልዎን ለመቀየር ይህንን ኮድ ከታች ባለው ሳጥን ውስጥ በቀጥታ ይጠቀሙ።",
-    category: "Auth"
-  },
-  {
-    key: "auth_reset_code_label",
-    en: "Reset Code",
-    om: "Koodii Haaromsaa",
-    am: "የይለፍ ቃል መቀየሪያ ኮድ",
-    category: "Auth"
-  },
-  {
-    key: "auth_saving_btn",
-    en: "Saving...",
-    om: "Ol-kaayaa Jira...",
-    am: "በማስቀመጥ ላይ...",
-    category: "Auth"
-  },
-  {
-    key: "auth_reset_password_btn",
-    en: "Reset Password",
-    om: "Jecha Icchitii Haaromsi",
-    am: "የይለፍ ቃል ቀይር",
-    category: "Auth"
-  },
-  {
-    key: "auth_dont_have_account",
-    en: "Don't have an account?",
-    om: "Akawuntii hin qabduu?",
-    am: "መለያ የለዎትም?",
-    category: "Auth"
-  },
-  {
-    key: "auth_create_one",
-    en: "Create one",
-    om: "Haaraa uumi",
-    am: "አንድ ይፍጠሩ",
-    category: "Auth"
-  },
-  {
-    key: "auth_already_have_account",
-    en: "Already have an account?",
-    om: "Duraan akawuntii qabdaa?",
-    am: "ቀደም ሲል መለያ አለዎት?",
-    category: "Auth"
-  },
-  {
-    key: "auth_sign_in_link",
-    en: "Sign in",
-    om: "Seeni",
-    am: "ይግቡ",
-    category: "Auth"
-  },
-  {
-    key: "auth_back_to_sign_in",
-    en: "Back to Sign In",
-    om: "Gara Seensaa Deebi'i",
-    am: "ወደ መግቢያው ይመለሱ",
-    category: "Auth"
-  },
-  {
-    key: "all_categories",
-    en: "All Categories",
-    om: "Kategorii Hundumaa",
-    am: "ሁሉም ምድቦች",
-    category: "Marketplace"
-  },
-  {
-    key: "items_suffix",
-    en: "items",
-    om: "meeshotta",
-    am: "ዕቃዎች",
-    category: "Marketplace"
-  },
-  {
-    key: "filters_btn",
-    en: "Filters",
-    om: "Gingilchaa",
-    am: "ማጣሪያዎች",
-    category: "Marketplace"
-  },
-  {
-    key: "reset_btn",
-    en: "Reset",
-    om: "Deebisi",
-    am: "ዳግም አስጀምር",
-    category: "Marketplace"
-  },
-  {
-    key: "all_transactions",
-    en: "All Transactions",
-    om: "Daldala Hundumaa",
-    am: "ሁሉም ግብይቶች",
-    category: "Marketplace"
-  },
-  {
-    key: "all_types",
-    en: "All Types",
-    om: "Gosoota Hundumaa",
-    am: "ሁሉም ዓይነቶች",
-    category: "Marketplace"
-  },
-  {
-    key: "all_locations",
-    en: "All Cities / Regions",
-    om: "Magaalota / Naannolee Hundumaa",
-    am: "ሁሉም ከተሞች / ክልሎች",
-    category: "Marketplace"
-  },
-  {
-    key: "currency_status",
-    en: "Currency Status",
-    om: "Haala Maallaqaa",
-    am: "የገንዘብ ሁኔታ",
-    category: "Marketplace"
-  },
-  {
-    key: "all_currencies",
-    en: "All Currencies",
-    om: "Maallaqa Hundumaa",
-    am: "ሁሉም የገንዘብ ዓይነቶች",
-    category: "Marketplace"
-  },
-  {
-    key: "min_price",
-    en: "Min Price",
-    om: "Gatii Xiqqaa",
-    am: "ዝቅተኛ ዋጋ",
-    category: "Marketplace"
-  },
-  {
-    key: "max_price",
-    en: "Max Price",
-    om: "Gatii Guddaa",
-    am: "ከፍተኛ ዋጋ",
-    category: "Marketplace"
-  },
-  {
-    key: "any_value",
-    en: "Any",
-    om: "Kamiyyuu",
-    am: "ማንኛውም",
-    category: "Marketplace"
-  },
-  {
-    key: "min_bedrooms",
-    en: "Min Bedrooms",
-    om: "Kutaa Ciisichaa",
-    am: "ዝቅተኛ የመኝታ ክፍሎች",
-    category: "Marketplace"
-  },
-  {
-    key: "min_area",
-    en: "Min Area (sqm)",
-    om: "Bal'ina Xiqqaa (sqm)",
-    am: "ዝቅተኛ ስፋት (ካሬ ሜትር)",
-    category: "Marketplace"
-  },
-  {
-    key: "no_listings_found",
-    en: "No listings found matching parameters",
-    om: "Beeksisa dhiyaate tokkollee hin argamne",
-    am: "ከተመረጡት አማራጮች ጋር የሚዛመድ ንብረት አልተገኘም",
-    category: "Marketplace"
-  },
-  {
-    key: "no_listings_found_desc",
-    en: "Try resetting search filters or using a broader area name.",
-    om: "Gingilchaa barbaaddii deebisi ykn maqaa bal'aa dhimma bahi.",
-    am: "እባክዎን ማጣሪያዎቹን ዳግም ያስጀምሩ ወይም ሌላ ቦታ ይፈልጉ።",
-    category: "Marketplace"
-  },
-  {
-    key: "verified_select_picks",
-    en: "Verified Select Picks",
-    om: "Filannoowwan Mirkanaa'an",
-    am: "የተረጋገጡ ምርጥ ምርጫዎች",
-    category: "Marketplace"
-  },
-  {
-    key: "personalized_recommendation",
-    en: "Personalized Recommendation",
-    om: "Yaada Profaayilii Keetiin",
-    am: "የግል ምክሮች",
-    category: "Marketplace"
-  },
-  {
-    key: "curated_match",
-    en: "Curated Match",
-    om: "Waliin Deemu",
-    am: "የተመረጠ ግጥሚያ",
-    category: "Marketplace"
-  },
-  {
-    key: "recent_offers",
-    en: "Recent offers",
-    om: "Dhiyeessii dhiyoo",
-    am: "የቅርብ ጊዜ ቅናሾች",
-    category: "Marketplace"
-  },
-  {
-    key: "sponsored",
-    en: "Sponsored",
-    om: "Ispeensar kan godhame",
-    am: "ስፖንሰር የተደረገ",
-    category: "Marketplace"
-  },
-  {
-    key: "visit_offer",
-    en: "Visit Offer",
-    om: "Dhiyeessii Daawwadhu",
-    am: "ቅናሹን ይጎብኙ",
-    category: "Marketplace"
-  },
-  {
-    key: "safety_guidelines",
-    en: "Safety Guidelines",
-    om: "Qajeelfama Nageenyaa",
-    am: "የደህንነት መመሪያዎች",
-    category: "Marketplace"
-  },
-  {
-    key: "safety_tip_1",
-    en: "Always meet owners/sellers in secure, public, and well-lit coordinates.",
-    om: "Yeroo mara abbootii qabeenyaa/gurgurtoota naannoo nageenya qabuu fi ifa ta'etti walargaa.",
-    am: "ሁልጊዜ ከባለቤቶች/ሻጮች ጋር ደህንነቱ በተጠቀቀ፣ ይፋዊ እና በቂ ብርሃን ባለበት ቦታ ይገናኙ።",
-    category: "Marketplace"
-  },
-  {
-    key: "safety_tip_2",
-    en: "Verify official government owner certificates, registration papers, and identity documents before wire transfer payments.",
-    om: "Waraqaa eenyummaa fi ragaawwan seeraa abbaa qabeenyummaa mirkaneeffadhaa.",
-    am: "ከክፍያ በፊት ይፋዊ የመንግስት የባለቤትነት ማረጋገጫ ምስክር ወረቀቶችን፣ የምዝገባ ወረቀቶችን እና የማንነት ሰነዶችን ያረጋግጡ።",
-    category: "Marketplace"
-  },
-  {
-    key: "safety_tip_3_prefix",
-    en: "Utilize our ",
-    om: "Kafaltii dhiyeessii keessaniif ",
-    am: "ለተሟላ ክትትል የእኛን ",
-    category: "Marketplace"
-  },
-  {
-    key: "safety_tip_3_highlight",
-    en: "Administrative Receipt Verification Desk",
-    om: "Mana Mirkaneessaa Risiitii",
-    am: "የክፍያ ደረሰኝ ማረጋገጫ ክፍል",
-    category: "Marketplace"
-  },
-  {
-    key: "safety_tip_3_suffix",
-    en: " for fully tracked premium services.",
-    om: " keenya dhimma bahaa.",
-    am: " ይጠቀሙ።",
-    category: "Marketplace"
-  },
-  {
-    key: "safety_tip_4",
-    en: "Report suspicious postings, duplicate profiles, or user activities instantly via the reporting console flag.",
-    om: "Beeksisa ykn gocha shakkisiisaa ta'e battalatti gabaasaa.",
-    am: "አጠራጣሪ ማስታወቂያዎችን፣ የተደገሙ መገለጫዎችን ወይም የተጠቃሚ እንቅስቃሴዎችን ወዲያውኑ ሪፖርት ያድርጉ።",
-    category: "Marketplace"
-  },
-  {
-    key: "bed",
-    en: "Bed",
-    om: "Siree",
-    am: "አልጋ",
-    category: "Marketplace"
-  },
-  {
-    key: "bath",
-    en: "Bath",
-    om: "Kutaa Dhiqannaa",
-    am: "መታጠቢያ",
-    category: "Marketplace"
-  },
-  {
-    key: "details_btn",
-    en: "Details",
-    om: "Bal'ina",
-    am: "ዝርዝሮች",
-    category: "Marketplace"
-  },
-  {
-    key: "weak_password",
-    en: "Weak password",
-    om: "Jecha Icchitii Lallafaa",
-    am: "ደካማ የይለፍ ቃል",
-    category: "Auth"
-  },
-  {
-    key: "medium_password",
-    en: "Medium strength password",
-    om: "Jecha Icchitii Giddu-galeessa",
-    am: "መካከለኛ የይለፍ ቃል",
-    category: "Auth"
-  },
-  {
-    key: "strong_password",
-    en: "Strong, cryptographically secure password",
-    om: "Jecha Icchitii Cimaa",
-    am: "ጠንካራ የይለፍ ቃል",
-    category: "Auth"
-  },
-  {
-    key: "fill_all_fields",
-    en: "Please fill in all fields.",
-    om: "Maaloo maggaalota hundaa guutaa.",
-    am: "እባክዎ ሁሉንም መስኮች ይሙሉ::",
-    category: "Auth"
-  },
-  {
-    key: "captcha_required",
-    en: "CAPTCHA verification is required due to multiple failed login attempts.",
-    om: "Mirkaneessi CAPTCHA yeroo baay'ee galmee dadhabuun dhufeef ni barbaachisa.",
-    am: "በተደጋጋሚ በተሳሳተ ሙከራ ምክንያት የCAPTCHA ማረጋገጫ ያስፈልጋል።",
-    category: "Auth"
-  },
-  {
-    key: "verify_email_first",
-    en: "Please verify your email address to log in.",
-    om: "Maaloo seenuuf dura imeelii kee mirkaneessi.",
-    am: "እባክዎ ለመግባት መጀመሪያ ኢሜልዎን ያረጋግጡ።",
-    category: "Auth"
-  },
-  {
-    key: "login_failed",
-    en: "Login failed.",
-    om: "Seenni hin milkoofne.",
-    am: "መግባት አልተሳካም።",
-    category: "Auth"
-  },
-  {
-    key: "server_error_retry",
-    en: "Server error. Please try again.",
-    om: "Rakkina tajaajilaa. Maaloo irra deebi'ii yaali.",
-    am: "የአገልጋይ ስህተት። እባክዎ እንደገና ይሞክሩ።",
-    category: "Auth"
-  },
-  {
-    key: "password_weak_error",
-    en: "Your password is too weak. Please ensure it is at least 8 characters long and contains an uppercase letter, lowercase letter, number, and a special character.",
-    om: "Jechi icciitii kee baay'ee lallafaadha. Maaloo yoo xiqqaate qubee 8, qubee guddaa 1, qubee xiqqaa 1, lakkoofsa 1 fi mallattoo addaa 1 qabaachuu mirkaneessi.",
-    am: "የይለፍ ቃልዎ በጣም ደካማ ነው። እባክዎ ቢያንስ 8 ቁምፊዎች፣ 1 ታላቅ ፊደል፣ 1 ታናሽ ፊደል፣ 1 ቁጥር እና 1 ልዩ ምልክት መያዙን ያረጋግጡ።",
-    category: "Auth"
-  },
-  {
-    key: "registration_failed",
-    en: "Registration failed.",
-    om: "Galmeen hin milkoofne.",
-    am: "ምዝገባ አልተሳካም።",
-    category: "Auth"
-  },
-  {
-    key: "profile_registered_success",
-    en: "Profile registered successfully! A 6-digit verification code has been generated.",
-    om: "Profaayiliin milkiidhaan galmeeffameera! Koodiin mirkaneessaa digit-6 uumameera.",
-    am: "መገለጫው በተሳካ ሁኔታ ተመዝግቧል! ባለ 6-አሃዝ የማረጋገጫ ኮድ ተፈጥሯል።",
-    category: "Auth"
-  },
-  {
-    key: "server_error",
-    en: "Server error.",
-    om: "Rakkina tajaajilaa.",
-    am: "የአገልጋይ ስህተት።",
-    category: "Auth"
-  },
-  {
-    key: "enter_verification_code",
-    en: "Please enter the 6-digit verification code.",
-    om: "Maaloo koodii mirkaneessaa digit-6 galchi.",
-    am: "እባክዎ ባለ 6-አሃዝ የማረጋገጫ ኮዱን ያስገቡ።",
-    category: "Auth"
-  },
-  {
-    key: "verification_failed",
-    en: "Verification failed. Please check your code.",
-    om: "Mirkaneessi hin milkoofne. Maaloo koodii kee deebisii ilaali.",
-    am: "ማረጋገጫው አልተሳካም። እባክዎ ኮዱን ያረጋግጡ።",
-    category: "Auth"
-  },
-  {
-    key: "email_verified_success",
-    en: "Email verified successfully! Logging in...",
-    om: "Imeeliin milkiidhaan mirkanaa'eera! Seenaa taasisaa jira...",
-    am: "ኢሜልዎ በተሳካ ሁኔታ ተረጋግጧል! እየገባ ነው...",
-    category: "Auth"
-  },
-  {
-    key: "invalid_verification_code",
-    en: "Invalid or expired verification code.",
-    om: "Koodii mirkaneessaa sirrii hin taane ykn yeroon isaa darbe.",
-    am: "ልክ ያልሆነ ወይም ጊዜው ያለፈበት የማረጋገጫ ኮድ።",
-    category: "Auth"
-  },
-  {
-    key: "enter_registered_email",
-    en: "Please enter your registered email address.",
-    om: "Maaloo imeelii kee isa galmeeffame galchi.",
-    am: "እባክዎ የተመዘገበበትን የኢሜል አድራሻ ያስገቡ።",
-    category: "Auth"
-  },
-  {
-    key: "recovery_code_failed",
-    en: "Requesting recovery code failed.",
-    om: "Koodii haaromsaa gaafachuun hin milkoofne.",
-    am: "የመልሶ ማግኛ ኮድ መጠየቅ አልተሳካም።",
-    category: "Auth"
-  },
-  {
-    key: "recovery_code_sent",
-    en: "If this email exists in our records, a password reset code has been sent.",
-    om: "Yoo imeeliin kun galmeeffamee jiraate, koodiin icciitii jijjiiruu itti ergameera.",
-    am: "ይህ ኢሜይል በመዝገባችን ውስጥ ካለ፣ የይለፍ ቃል መቀየሪያ ኮድ ተልኳል።",
-    category: "Auth"
-  },
-  {
-    key: "passwords_dont_match",
-    en: "Passwords do not match.",
-    om: "Jechi icciitii lamaan wal hin fudhanne.",
-    am: "የይለፍ ቃላቱ አይዛመዱም።",
-    category: "Auth"
-  },
-  {
-    key: "new_password_weak",
-    en: "The new password is too weak. Please ensure it meets all complexity criteria.",
-    om: "Jechi icciitii haaraan baay'ee lallafaadha. Amaloota barbaachisoo hundaa qabaachuu mirkaneessi.",
-    am: "አዲሱ የይለፍ ቃል በጣም ደካማ ነው። ሁሉንም መስፈርቶች ማሟላቱን ያረጋግጡ።",
-    category: "Auth"
-  },
-  {
-    key: "password_reset_failed",
-    en: "Resetting password failed.",
-    om: "Jecha icciitii jijjiiruun hin milkoofne.",
-    am: "የይለፍ ቃል መቀየር አልተሳካም።",
-    category: "Auth"
-  },
-  {
-    key: "password_reset_success",
-    en: "Your password has been changed successfully! Redirecting to login...",
-    om: "Jechi icciitii jijjiirameera! Gara seensatti dabarsaa jira...",
-    am: "የይለፍ ቃልዎ በተሳካ ሁኔታ ተቀይሯል! ወደ መግቢያው እየመራንዎት ነው...",
-    category: "Auth"
-  },
-  {
-    key: "google_login_failed",
-    en: "Google Sign-In failed.",
-    om: "Seenni Google hin milkoofne.",
-    am: "በGoogle መግባት አልተሳካም።",
-    category: "Auth"
-  },
-  {
-    key: "google_login_attempt_failed",
-    en: "Google login attempt failed.",
-    om: "Milkii seensa Google hin milkoofne.",
-    am: "የGoogle መግባት ሙከራ አልተሳካም።",
-    category: "Auth"
-  },
-  {
-    key: "premier_portal_ethiopia",
-    en: "The Premier Portal of Ethiopia",
-    om: "Portali Olaanaa Itiyoophiyaa",
-    am: "የኢትዮጵያ ቀዳሚ መግቢያ በር",
-    category: "Welcome"
-  },
-  {
-    key: "discover_refined_spaces",
-    en: "Discover refined spaces, premium services, and curated job listings.",
-    om: "Iddoowwan filatamoof qulqullina qaban, tajaajiloota ol’aanoof beeksisa hojii filataman argadhu.",
-    am: "የተመረጡ ቦታዎችን፣ ከፍተኛ ጥራት ያላቸውን አገልግሎቶች እና የተመረጡ የስራ ማስታዋቂያዎችን ያግኙ።",
-    category: "Welcome"
-  },
-  {
-    key: "marketplace_category_label",
-    en: "Marketplace Category *",
-    om: "Ramaddii Gabaa *",
-    am: "የገበያ ምድብ *",
-    category: "CreateListing"
-  },
-  {
-    key: "guideline_label",
-    en: "Guideline:",
-    om: "Hubachiisa:",
-    am: "መመሪያ፦",
-    category: "CreateListing"
-  },
-  {
-    key: "guideline_properties",
-    en: "Use this to list real estate: houses, villas, apartments, commercial offices, or land. Do not use this for jobs, services, or products.",
-    om: "Gurgurtaa ykn kireessa manneenii, epartimantootaa fi lafaaf fayyadami. Hojii, tajaajila ykn meeshaaleef hin fayyadamin.",
-    am: "ሪል እስቴትን ለመዘርዘር ይህንን ይጠቀሙ፡ ቤቶች፣ ቪላዎች፣ አፓርታማዎች፣ የንግድ ቢሮዎች ወይም መሬት። ለስራዎች፣ አገልግሎቶች ወይም ምርቶች አይጠቀሙበት።",
-    category: "CreateListing"
-  },
-  {
-    key: "guideline_jobs",
-    en: "Use this to list job vacancies, career openings, employment, or freelance gigs. Do not use property/housing terms here.",
-    om: "Barsiisa, carraa hojii ykn hojii dhuunfaa galchuuf fayyadami. Jechoota mana ykn qabeenyaa asitti hin fayyadamin.",
-    am: "የስራ ክፍተቶችን፣ የስራ እድሎችን፣ ቅጥርን ወይም ፍሪላንስ ስራዎችን ለመዘርዘር ይህንን ይጠቀሙ። እዚህ የቤት ወይም የንብረት ቃላትን አይጠቀሙ።",
-    category: "CreateListing"
-  },
-  {
-    key: "guideline_services",
-    en: "Use this to list professional services like plumbing, consulting, tech support, or tutoring. Explain the service scope.",
-    om: "Tajaajiloota ogummaa kan akka bishaan hojjechuu, gorsa, deeggarsa teeknoolojii ykn barsiisa galchi. Scope tajaajilaa ibsi.",
-    am: "እንደ ቧንቧ ስራ፣ ማማከር፣ የቴክኖሎጂ ድጋፍ ወይም ትምህርት ያሉ ሙያዊ አገልግሎቶችን ለመዘርዘር ይህንን ይጠቀሙ። የአገልግሎቱን ወሰን ያብራሩ።",
-    category: "CreateListing"
-  },
-  {
-    key: "guideline_products",
-    en: "Use this to list goods, electronics, clothing, vehicles, crafts, or furniture. Specify the item's condition and price clearly.",
-    om: "Meeshaalee, elektironiksii, uffata, konkolaataa ykn miyoota daldalaa galchuuf fayyadami. Haala fi gatii meeshichaa addaan baasi.",
-    am: "እቃዎችን፣ ኤሌክትሮኒክስን፣ አልባሳትን፣ ተሽከርካሪዎችን፣ ጥበቦችን ወይም የቤት እቃዎችን ለመዘርዘር ይህንን ይጠቀሙ። የእቃውን ሁኔታ እና ዋጋ በግልፅ ይግለጹ።",
-    category: "CreateListing"
-  },
-  {
-    key: "guideline_local_businesses",
-    en: "Use this to list local shops, restaurants, cafes, agencies, or retail centers. Provide address and business hours.",
-    om: "Suuqii, mana nyaataa, kaaffee, ejensii ykn giddugala daldalaa naannoo galchi. Teessoo fi sa'aatii hojii dhiyeessi.",
-    am: "የአካባቢ ሱቆችን፣ ሬስቶራንቶችን፣ ካፌዎችን፣ ኤጀንሲዎችን ወይም የችርቻሮ ማእከላትን ለመዘርዘር ይህንን ይጠቀሙ። አድራሻ እና የስራ ሰዓት ያቅርቡ።",
-    category: "CreateListing"
-  },
-  {
-    key: "guideline_community",
-    en: "Use this to list events, social groups, local announcements, or community activities. Mention dates and locations.",
-    om: "Taateewwan, gareewwan hawaasaa, beeksisa naannoo ykn sochiiwwan hawaasummaa galchi. Guyyaa fi bakka ibsi.",
-    am: "ክስተቶችን፣ ማህበራዊ ቡድኖችን፣ የአካባቢ ማስታወቂያዎችን ወይም የማህበረሰብ እንቅስቃሴዎችን ለመዘርዘር ይህንን ይጠቀሙ። ቀኖችን እና ቦታዎችን ይጠቅሱ።",
-    category: "CreateListing"
-  },
-  {
-    key: "title_property_label",
-    en: "Property Title *",
-    om: "Mata Duree Qabeenyaa *",
-    am: "የንብረት ርዕስ *",
-    category: "CreateListing"
-  },
-  {
-    key: "title_listing_label",
-    en: "Listing Title *",
-    om: "Mata Duree Beeksisaa *",
-    am: "የማስታወቂያ ርዕስ *",
-    category: "CreateListing"
-  },
-  {
-    key: "placeholder_property_title",
-    en: "e.g. Beautiful 4-Bedroom Villa in Bole",
-    om: "fkn. Villa Bareedaa Kutaalee 4 Bolee",
-    am: "ምሳሌ፦ ቦሌ የሚገኝ ባለ 4 መኝታ ክፍል የሚያምር ቪላ",
-    category: "CreateListing"
-  },
-  {
-    key: "placeholder_listing_title",
-    en: "e.g. Graphic Design Services / Toyota Corolla 2022",
-    om: "fkn. Tajaajila Diizaayinii ykn Toyota Corolla 2022",
-    am: "ምሳሌ፦ የግራፊክስ ዲዛይን አገልግሎት / ቶዮታ ኮሮላ 2022",
-    category: "CreateListing"
-  },
-  {
-    key: "full_description_label",
-    en: "Full Description *",
-    om: "Ibsa Guutuu *",
-    am: "ሙሉ መግለጫ *",
-    category: "CreateListing"
-  },
-  {
-    key: "placeholder_property_desc",
-    en: "Provide a detailed layout of bedrooms, bathrooms, compounds, location and safety attributes.",
-    om: "Ibsa guutuu kutaalee ciisichaa, kutaalee dhiqannaa, gadi-lakkisaa, bakka fi nageenya galchi.",
-    am: "ስለ መኝታ ክፍሎች፣ መታጠቢያዎች፣ ግቢ፣ ቦታ እና ደህንነት ዝርዝር መግለጫ ያስገቡ።",
-    category: "CreateListing"
-  },
-  {
-    key: "placeholder_listing_desc",
-    en: "Provide a detailed layout, features, specifications, or details about what is offered.",
-    om: "Ibsa guutuu amala, specifications, ykn dhimma dhiyaate irratti galchi.",
-    am: "ስለሚቀርበው ነገር ዝርዝር መግለጫ፣ ባህሪያት、 ዝርዝሮች ወይም መረጃዎችን ያስገቡ።",
-    category: "CreateListing"
-  },
-  {
-    key: "property_type_label",
-    en: "Property Type *",
-    om: "Gosa Qabeenyaa *",
-    am: "የንብረት ዓይነት *",
-    category: "CreateListing"
-  },
-  {
-    key: "option_apartments",
-    en: "Apartments",
-    om: "Epartimantoota",
-    am: "አፓርታማዎች",
-    category: "CreateListing"
-  },
-  {
-    key: "option_houses",
-    en: "Houses",
-    om: "Manneen",
-    am: "ቤቶች",
-    category: "CreateListing"
-  },
-  {
-    key: "option_offices",
-    en: "Offices",
-    om: "Waajjiroota",
-    am: "ቢሮዎች",
-    category: "CreateListing"
-  },
-  {
-    key: "option_commercial",
-    en: "Commercial",
-    om: "Daldalaa",
-    am: "ንግድ ቤቶች",
-    category: "CreateListing"
-  },
-  {
-    key: "option_land",
-    en: "Land",
-    om: "Lafa",
-    am: "መሬት",
-    category: "CreateListing"
-  },
-  {
-    key: "listing_category_label",
-    en: "Listing Category *",
-    om: "Ramaddii Beeksisaa *",
-    am: "የማስታወቂያ ምድብ *",
-    category: "CreateListing"
-  },
-  {
-    key: "option_for_sale",
-    en: "For Sale",
-    om: "Gurgurtaadhaaf",
-    am: "ለሽያጭ",
-    category: "CreateListing"
-  },
-  {
-    key: "option_for_rent",
-    en: "For Rent",
-    om: "Kiraayidhaaf",
-    am: "ለኪራይ",
-    category: "CreateListing"
-  },
-  {
-    key: "price_label",
-    en: "Price *",
-    om: "Gatii *",
-    am: "ዋጋ *",
-    category: "CreateListing"
-  },
-  {
-    key: "pricing_currency_label",
-    en: "Pricing Currency *",
-    om: "Gosa Maallaqaa *",
-    am: "የክፍያ ገንዘብ አይነት *",
-    category: "CreateListing"
-  },
-  {
-    key: "currency_etb",
-    en: "ETB (Ethiopian Birr)",
-    om: "ETB (Birrii Itoophiyaa)",
-    am: "ETB (የኢትዮጵያ ብር)",
-    category: "CreateListing"
-  },
-  {
-    key: "currency_usd",
-    en: "USD (US Dollar)",
-    om: "USD (Doolaarii)",
-    am: "USD (የአሜሪካ ዶላር)",
-    category: "CreateListing"
-  },
-  {
-    key: "currency_sar",
-    en: "SAR (Saudi Riyal)",
-    om: "SAR (Riyaala)",
-    am: "SAR (የሳዑዲ ሪያል)",
-    category: "CreateListing"
-  },
-  {
-    key: "currency_eur",
-    en: "EUR (Euro)",
-    om: "EUR (Yuuroo)",
-    am: "EUR (ዩሮ)",
-    category: "CreateListing"
-  },
-  {
-    key: "currency_aed",
-    en: "AED (UAE Dirham)",
-    om: "AED (Dirhaamii)",
-    am: "AED (የተባበሩት አረብ ኤምሬትስ ድርሃም)",
-    category: "CreateListing"
-  },
-  {
-    key: "bedrooms_label",
-    en: "Bedrooms",
-    om: "Kutaalee Ciisichaa",
-    am: "መኝታ ክፍሎች",
-    category: "CreateListing"
-  },
-  {
-    key: "bathrooms_label",
-    en: "Bathrooms",
-    om: "Kutaalee Dhiqannaa",
-    am: "የመታጠቢያ ክፍሎች",
-    category: "CreateListing"
-  },
-  {
-    key: "area_size_label",
-    en: "Area Size (sqm) *",
-    om: "Bal'ina Imeeraa (sqm) *",
-    am: "የቦታ ስፋት (በካሬ ሜትር) *",
-    category: "CreateListing"
-  },
-  {
-    key: "specific_location_label",
-    en: "Specific Location *",
-    om: "Bakka Murtaa'e *",
-    am: "የተወሰነ ቦታ *",
-    category: "CreateListing"
-  },
-  {
-    key: "placeholder_location",
-    en: "e.g. Bole, Addis Ababa",
-    om: "fkn. Bolee, Finfinnee",
-    am: "ምሳሌ፦ ቦሌ፣ አዲስ አበባ",
-    category: "CreateListing"
-  },
-  {
-    key: "contact_phone_label",
-    en: "Contact Phone *",
-    om: "Bilbila Quunnamtii *",
-    am: "የእውቂያ ስልክ ቁጥር *",
-    category: "CreateListing"
-  },
-  {
-    key: "owner_fullname_label",
-    en: "Property Owner Full Name *",
-    om: "Maqaa Guutuu Abbaa Qabeenyaa *",
-    am: "የንብረት ባለቤት ሙሉ ስም *",
-    category: "CreateListing"
-  },
-  {
-    key: "placeholder_owner_name",
-    en: "e.g. Lalisa Addisu",
-    om: "fkn. Lalisaa Addisuu",
-    am: "ምሳሌ፦ ላሊሳ አዲሱ",
-    category: "CreateListing"
-  },
-  {
-    key: "owner_email_label",
-    en: "Property Owner Email *",
-    om: "Imeeli Abbaa Qabeenyaa *",
-    am: "የንብረት ባለቤት ኢሜይል *",
-    category: "CreateListing"
-  },
-  {
-    key: "images_showcase_label",
-    en: "Property Images Showcase *",
-    om: "Agarsiisa Fakkii Qabeenyaa *",
-    am: "የንብረት ምስሎች ማሳያ *",
-    category: "CreateListing"
-  },
-  {
-    key: "add_image_device_btn",
-    en: "Add Image from Phone or Camera",
-    om: "Bilbila ykn Kaameraa irraa Fakkii Dabali",
-    am: "ከስልክ ወይም ከካሜራ ምስል ያክሉ",
-    category: "CreateListing"
-  },
-  {
-    key: "quick_add_image_btn",
-    en: "Quick Add Premium Image",
-    om: "Fakkii Bareedaa Saffisaan Dabali",
-    am: "ጥራት ያለው ምስል በፍጥነት ያክሉ",
-    category: "CreateListing"
-  },
-  {
-    key: "placeholder_image_url",
-    en: "Paste Unsplash Image URL here",
-    om: "Teessoo Fakkii Unsplash asitti barreessi",
-    am: "የUnsplash ምስል አድራሻ እዚህ ይለጥፉ",
-    category: "CreateListing"
-  },
-  {
-    key: "add_image_btn",
-    en: "Add Image",
-    om: "Fakkii Dabali",
-    am: "ምስል ያክሉ",
-    category: "CreateListing"
-  },
-  {
-    key: "publishing_progress",
-    en: "Publishing...",
-    om: "Gabaatti Bahaa jira...",
-    am: "በማውጣት ላይ...",
-    category: "CreateListing"
-  },
-  {
-    key: "publish_listing_online",
-    en: "Publish Listing Online",
-    om: "Beeksisa Sarara Irratti Baasi",
-    am: "ማስታወቂያውን በቀጥታ ያውጡ",
-    category: "CreateListing"
-  },
-  {
-    key: "publish_listing_instant_hint",
-    en: "Clicking this button will instantly publish this property listing live on the Sof Umer digital marketplace.",
-    om: "Fayyadama kana cuqaasuun beeksisa qabeenya keetii battalatti gabaa dijitaalaa Sof Umer irratti baasa.",
-    am: "ይህን ቁልፍ ሲጫኑ የንብረትዎ ማስታወቂያ ወዲያውኑ በሶፍ ኡመር ዲጂታል ገበያ ላይ በቀጥታ ይወጣል።",
-    category: "CreateListing"
-  },
-  {
-    key: "saving_progress",
-    en: "Publishing...",
-    om: "Maxxanfamaa jira...",
-    am: "በማውጣት ላይ...",
-    category: "CreateListing"
-  },
-  {
-    key: "cancel_btn",
-    en: "Cancel",
-    om: "Dhiisi",
-    am: "ሰርዝ",
-    category: "CreateListing"
-  },
-  {
-    key: "publish_listing_btn",
-    en: "Publish Listing",
-    om: "Gabaatti Baasi",
-    am: "ንብረቱን ያውጡ",
-    category: "CreateListing"
-  },
-
-  // FAQ Namespace Keys
+  { key: "welcome_title", en: "Welcome to SOF-UMER", om: "Baga Gara SOF-UMER Hapiin Dhuftan", am: "ወደ SOF-UMER በደህና መጡ", category: "Welcome" },
+  { key: "welcome_subtitle", en: "Find, buy, rent, and manage properties with confidence.", om: "Amanannaan qabeenya barbaadi, bitadhu, kireeffadhu, akkasumas bulchi.", am: "ንብረቶችን በልበ ሙሉነት ይፈልጉ፣ ይግዙ፣ ያከራዩ እና ያስተዳድሩ።", category: "Welcome" },
+  { key: "homepage_title", en: "Sof Umer", om: "Sof Umer", am: "ሶፍ ኡመር", category: "Welcome" },
+  { key: "homepage_tagline", en: "The smart way to discover, buy, sell, rent, and connect with your local community.", om: "Mala qaruutee qabeenya argachuu, bitachuu, gurguruu, kireeffachuu fi hawaasa naannoo kee waliin wal-qunnamuuf.", am: "በአካባቢዎ ማህበረሰብ ውስጥ ንብረቶችን ለማግኘት፣ ለመግዛት፣ ለመሸጥ፣ ለመከራየት እና ለመገናኘት ብልህ መንገድ።", category: "Welcome" },
+  { key: "login", en: "Login", om: "Seeni", am: "ይግቡ", category: "General" },
+  { key: "signup", en: "Sign Up", om: "Galmee", am: "ይመዝገቡ", category: "General" },
+  { key: "logout", en: "Logout", om: "Ba'i", am: "ውጡ", category: "General" },
+  { key: "email", en: "Email Address", om: "Teessoo Imeelii", am: "የኢሜል አድራሻ", category: "General" },
+  { key: "password", en: "Password", om: "Jecha Icchitii", am: "የይለፍ ቃል", category: "General" },
+  { key: "login_title", en: "Sign In to Sof Umer", om: "Sof Umeritti Seeni", am: "ወደ ሶፍ ኡመር ይግቡ", category: "Auth" },
+  { key: "login_subtitle", en: "Enter your credentials to access the premier real estate marketplace.", om: "Gabaa qabeenyaa olaanaa argachuuf ragaalee kee galchi.", am: "የሪል እስቴት ገበያውን ለመጠቀም መለያዎን ያስገቡ።", category: "Auth" },
+  { key: "sign_in", en: "Sign In", om: "Seeni", am: "ይግቡ", category: "Auth" },
+  { key: "dont_have_account", en: "Don't have an account?", om: "Mila/akawuntii hin qabduu?", am: "መለያ የለዎትም?", category: "Auth" },
+  { key: "register_now", en: "Register Now", om: "Amma Galmee", am: "አሁን ይመዝገቡ", category: "Auth" },
+  { key: "already_have_account", en: "Already have an account?", om: "Duraan akawuntii qabduu?", am: "በፊት መለያ አለዎት?", category: "Auth" },
+  { key: "full_name", en: "Full Name", om: "Maqaa Guutuu", am: "ሙሉ ስም", category: "Auth" },
+  { key: "role_buyer_seller", en: "Account Role (Buyer/Seller)", om: "Gahee Akawuntii (Bitaa/Gurguraa)", am: "የመለያ ሚና (ገዥ/ሻጭ)", category: "Auth" },
+  { key: "role_user", en: "Buyer / Standard User", om: "Bitaa / Fayyadamaa Idilee", am: "ገዢ / መደበኛ ተጠቃሚ", category: "Auth" },
+  { key: "role_agent", en: "Seller / Agent / Landlord", om: "Gurguraa / Ejentii / Abbaa Qabeenyaa", am: "ሻጭ / ወኪል / አከራይ", category: "Auth" },
+  { key: "register_btn", en: "Create Profile", om: "Profaayilii Uumi", am: "መገለጫ ፍጠር", category: "Auth" },
+  { key: "forgot_password", en: "Forgot Password?", om: "Jecha icchitii dagattee?", am: "የይለፍ ቃል ረስተዋል?", category: "Auth" },
+  { key: "reset_password_title", en: "Reset Password", om: "Jecha Icchitii Haaromsi", am: "የይለፍ ቃል መልሰው ያግኙ", category: "Auth" },
+  { key: "reset_password_desc", en: "Enter your email to receive a temporary recovery code.", om: "Koodii bafannaa yeroo gabaabaa argachuuf imeeli kee galchi.", am: "ጊዜያዊ መልሶ ማግኛ ኮድ ለመቀበል ኢሜልዎን ያስገቡ።", category: "Auth" },
+  { key: "send_reset_code", en: "Send Reset Code", om: "Koodii Haaromsaa Ergi", am: "የመልሶ ማግኛ ኮድ ላክ", category: "Auth" },
+  { key: "back_to_login", en: "Back to Login", om: "Gara Seensatti Deebi'i", am: "ወደ መግቢያ ይመለሱ", category: "Auth" },
+  { key: "enter_reset_code", en: "Verification Code", om: "Koodii Mirkaneessaa", am: "የማረጋገጫ ኮድ", category: "Auth" },
+  { key: "new_password", en: "New Password", om: "Jecha Icchitii Haaraa", am: "አዲስ የይለፍ ቃል", category: "Auth" },
+  { key: "confirm_new_password", en: "Confirm New Password", om: "Jecha Icchitii Haaraa Mirkaneessi", am: "አዲሱን የይለፍ ቃል ያረጋግጡ", category: "Auth" },
+  { key: "update_password_btn", en: "Update Password", om: "Jecha Icchitii Haaromsi", am: "የይለፍ ቃል አዘምን", category: "Auth" },
+  { key: "register_success", en: "Registration successful! Use the dev verification code below to verify.", om: "Galmeen milkaa'eera! Mirkaneessuuf koodii gadii fayyadami.", am: "ምዝገባው ተሳክቷል! ለማረጋገጥ ከታች ያለውን ኮድ ይጠቀሙ።", category: "Auth" },
+  { key: "verify_account", en: "Verify Account", om: "Akawuntii Mirkaneessi", am: "መለያ ያረጋግጡ", category: "Auth" },
+  { key: "verify_btn", en: "Verify & Login", om: "Mirkaneessi & Seeni", am: "አረጋግጥ እና ግባ", category: "Auth" },
+  { key: "custom_login_header", en: "Instant Developer Logins", om: "Seensa Injinarootaa Saffisaa", am: "ፈጣን የገንቢዎች መግቢያ", category: "Auth" },
+  { key: "custom_login_desc", en: "Select one of the pre-configured accounts below for testing purposes.", om: "Kanneen gadii keessaa tokko filachuun qorannoodhaaf fayyadami.", am: "ለመሞከር ከታች ካሉት መለያዎች አንዱን ይምረጡ።", category: "Auth" },
+  { key: "verification_code_placeholder", en: "Enter 6-digit code", om: "Koodii digitii 6 galchi", am: "ባለ 6 አሃዝ ኮድ ያስገቡ", category: "Auth" },
+  { key: "resend_code", en: "Resend Code", om: "Koodii Ergi Deebisi", am: "ኮድ ድጋሚ ላክ", category: "Auth" },
+  { key: "guest_login", en: "Browse App as Guest", om: "Akka Keessummaatti Ilaali", am: "በእንግድነት ይግቡ", category: "Auth" },
+  { key: "search_placeholder", en: "Search properties by location, title or features...", om: "Qabeenya bakkaan, mata dureen ykn amalaan barbaadi...", am: "ንብረቶችን በቦታ፣ በርዕስ ወይም በባህሪያት ይፈልጉ...", category: "Marketplace" },
+  { key: "filter_location", en: "Location", om: "Bakka", am: "ቦታ", category: "Marketplace" },
+  { key: "filter_category", en: "Category", om: "Ramaddii", am: "ምድብ", category: "Marketplace" },
+  { key: "filter_price", en: "Price Range", om: "Gatiin", am: "የዋጋ ክልል", category: "Marketplace" },
+  { key: "filter_type", en: "Property Type", om: "Gosa Qabeenyaa", am: "የንብረት አይነት", category: "Marketplace" },
+  { key: "filter_bedrooms", en: "Bedrooms", om: "Kutaalee Ciisichaa", am: "መኝታ ክፍሎች", category: "Marketplace" },
+  { key: "filter_bathrooms", en: "Bathrooms", om: "Kutaalee Dhiqannaa", am: "የመታጠቢያ ክፍሎች", category: "Marketplace" },
+  { key: "filter_area", en: "Area Size (sqm)", om: "Bal'ina Imeeraa", am: "የቦታ ስፋት (በካሬ ሜትር)", category: "Marketplace" },
+  { key: "filter_btn", en: "Apply Filters", om: "Filtaroota Fayyadami", am: "ማጣሪያዎችን ተግብር", category: "Marketplace" },
+  { key: "featured_properties", en: "Featured Properties", om: "Qabeenya Filataman", am: "ልዩ ትኩረት የተሰጣቸው ንብረቶች", category: "Marketplace" },
+  { key: "latest_properties", en: "Latest Listings", om: "Galmeewwan Haaraa", am: "አዳዲስ ንብረቶች", category: "Marketplace" },
+  { key: "recommended_properties", en: "Recommended for You", om: "Sitti Kan Agarsiifamu", am: "ለእርስዎ የሚመከሩ", category: "Marketplace" },
+  { key: "view_details", en: "View Details", om: "Bal'inaan Ilaali", am: "ዝርዝሩን ይመልከቱ", category: "Marketplace" },
+  { key: "no_properties_found", en: "No properties found matching your filters.", om: "Qabeenyi filatame argamuu hin dandeenye.", am: "ከማጣሪያዎ ጋር የሚስማማ ንብረት አልተገኘም።", category: "Marketplace" },
+  { key: "clear_filters", en: "Clear Filters", om: "Filtaroota qulqulleessi", am: "ማጣሪያዎችን አጽዳ", category: "Marketplace" },
+  { key: "property_price", en: "Price", om: "Gatii", am: "ዋጋ", category: "Marketplace" },
+  { key: "property_area", en: "Area", om: "Bal'ina", am: "ስፋት", category: "Marketplace" },
+  { key: "property_beds", en: "Beds", om: "Kutaalee", am: "ክፍሎች", category: "Marketplace" },
+  { key: "property_baths", en: "Baths", om: "Dhiqannaa", am: "መታጠቢያ", category: "Marketplace" },
+  { key: "cat_buy", en: "Buy", om: "Bituuf", am: "ለመግዛት", category: "Categories" },
+  { key: "cat_rent", en: "Rent", om: "Kireeffachuu", am: "ለመከራየት", category: "Categories" },
+  { key: "cat_commercial", en: "Commercial", om: "Daldalaa", am: "ለንግድ", category: "Categories" },
+  { key: "cat_land", en: "Land", om: "Lafa", am: "መሬት", category: "Categories" },
+  { key: "cat_apartments", en: "Apartments", om: "Epartimantii", am: "አፓርታማዎች", category: "Categories" },
+  { key: "cat_houses", en: "Houses", om: "Manneen", am: "ቤቶች", category: "Categories" },
+  { key: "cat_offices", en: "Offices", om: "Ofisoota", am: "ቢሮዎች", category: "Categories" },
+  { key: "cat_properties", en: "Properties", om: "Qabeenya", am: "ንብረቶች", category: "Categories" },
+  { key: "cat_jobs", en: "Jobs", om: "Hojiiwwan", am: "ስራዎች", category: "Categories" },
+  { key: "cat_services", en: "Services", om: "Tajaajiloota", am: "አገልግሎቶች", category: "Categories" },
+  { key: "cat_products", en: "Products", om: "Oomishaalee", am: "ምርቶች", category: "Categories" },
+  { key: "cat_localbusinesses", en: "Local Businesses", om: "Daldala Naannoo", am: "የአካባቢ ንግዶች", category: "Categories" },
+  { key: "cat_community", en: "Community", om: "Hawaasa", am: "ማህበረሰብ", category: "Categories" },
+  { key: "my_profile", en: "My Profile", om: "Profaayilii Koo", am: "የእኔ መገለጫ", category: "Dashboard" },
+  { key: "messages", en: "Messages", om: "Ergaawwan", am: "መልዕክቶች", category: "Dashboard" },
+  { key: "notifications", en: "Notifications", om: "Beeksisa", am: "ማሳወቂያዎች", category: "Dashboard" },
+  { key: "payment_methods", en: "Payment Methods", om: "Malleen Kafaltii", am: "የክፍያ ዘዴዎች", category: "Dashboard" },
+  { key: "settings", en: "Settings", om: "Sajatoo", am: "ቅንብሮች", category: "Dashboard" },
+  { key: "my_listings", en: "My Listings", om: "Qabeenyawwan Koo", am: "የእኔ ንብረቶች", category: "Dashboard" },
+  { key: "admin_dashboard", en: "Administrative Dashboard", om: "Daashboordii Bulchiinsaa", am: "የአስተዳደር ዳሽቦርድ", category: "Dashboard" },
+  { key: "list_property", en: "List Property", om: "Qabeenya Galmeessi", am: "ንብረት ይመዝግቡ", category: "Dashboard" },
+  { key: "favorites", en: "Favorites", om: "Filataman", am: "ተወዳጆች", category: "Dashboard" },
+  { key: "back_to_marketplace", en: "Back to Marketplace", om: "Gara Gabaatti Deebi'i", am: "ወደ ገበያ ይመለሱ", category: "Details" },
+  { key: "contact_agent", en: "Contact Agent", om: "Ejentii Quunnami", am: "ወኪሉን ያነጋግሩ", category: "Details" },
+  { key: "property_description", en: "Description", om: "Ibsa", am: "መግለጫ", category: "Details" },
+  { key: "property_features", en: "Key Features", om: "Amala Ijjoo", am: "ዋና ዋና ባህሪያት", category: "Details" },
+  { key: "property_location", en: "Location Context", om: "Haala Bakkaa", am: "የቦታው ሁኔታ", category: "Details" },
+  { key: "payment_verification_required", en: "Payment Verification Required", om: "Mirkaneessaan Kafaltii Barbaachisaadha", am: "የክፍያ ማረጋገጫ ያስፈልጋል", category: "Details" },
+  { key: "payment_instructions", en: "Please upload your bank transaction slip (CBE, Awash, or Telebirr) to activate this listing.", om: "Galmeessuu mirkaneessuuf kofaltii baankii keessan (CBE, Awash ykn Telebirr) ol-fehaa.", am: "ይህን ንብረት ለማንቀሳቀስ እባክዎ የባንክ ማስተላለፊያ ደረሰኝዎን (CBE፣ አዋሽ ወይም ቴሌብር) ይስቀሉ።", category: "Details" },
+  { key: "upload_receipt", en: "Upload Receipt Slip", om: "Slip Kafaltii Ol-fehi", am: "ደረሰኝ ይስቀሉ", category: "Details" },
+  { key: "submitting_receipt", en: "Uploading Receipt...", om: "Slip Ol-fuhamaa jira...", am: "ደረሰኝ በመጫን ላይ...", category: "Details" },
+  { key: "receipt_approved", en: "Receipt Approved & Verified", om: "Slip Kafaltii Mirkanaa'era", am: "ደረሰኝ ጸድቋል እና ተረጋግጧል", category: "Details" },
+  { key: "receipt_pending", en: "Verification Receipt Pending Review", om: "Slip Kafaltii Ilaalamaa Jira", am: "የማረጋገጫ ደረሰኝ በመጠባበቅ ላይ", category: "Details" },
+  { key: "report_listing", en: "Report Listing", om: "Qabeenya Gabaasi", am: "ንብረቱን ያሳውቁ", category: "Details" },
+  { key: "chat_agent_title", en: "Chat with Landlord", om: "Abbaa Qabeenyaa Waliin Haasawi", am: "ከአከራዩ ጋር ይወያዩ", category: "Details" },
+  { key: "send_message_placeholder", en: "Type your inquiry...", om: "Ergaa kee barreessi...", am: "መልዕክትዎን እዚህ ይጻፉ...", category: "Details" },
+  { key: "send_btn", en: "Send", om: "Ergi", am: "ላክ", category: "Details" },
+  { key: "create_listing_title", en: "Create New Property Listing", om: "Qabeenya Haaraa Galmeessi", am: "አዲስ ንብረት ይመዝግቡ", category: "CreateListing" },
+  { key: "property_title_label", en: "Property Title", om: "Mata Duree Qabeenyaa", am: "የንብረት ርዕስ", category: "CreateListing" },
+  { key: "property_desc_label", en: "Description", om: "Ibsa", am: "መግለጫ", category: "CreateListing" },
+  { key: "property_price_label", en: "Price (ETB)", om: "Gatii (ETB)", am: "ዋጋ (በኢትዮጵያ ብር)", category: "CreateListing" },
+  { key: "property_location_label", en: "Location / Address", om: "Bakka / Teessoo", am: "ቦታ / አድራሻ", category: "CreateListing" },
+  { key: "property_major_cat_label", en: "Major Category", om: "Ramaddii Guddaa", am: "ዋና ምድብ", category: "CreateListing" },
+  { key: "property_sub_cat_label", en: "Sub Category", om: "Ramaddii Xiqqaa", am: "ንዑስ ምድብ", category: "CreateListing" },
+  { key: "property_image_url_label", en: "Image URL", om: "Teessoo Fakkii (Image URL)", am: "የምስል አድራሻ (URL)", category: "CreateListing" },
+  { key: "property_features_placeholder", en: "e.g. Modern kitchen, Balcony, Parking (comma separated)", om: "fkn. Kushiina Haaraa, Balkoonii, Paarkingii", am: "ምሳሌ፦ ዘመናዊ ወጥ ቤት፣ በረንዳ፣ ማቆሚያ (በኮማ የተለዩ)", category: "CreateListing" },
+  { key: "save_listing_btn", en: "Publish Listing", om: "Qabeenya Gabaatti Baasi", am: "ንብረቱን ያውጡ", category: "CreateListing" },
+  { key: "cancel_btn", en: "Cancel", om: "Dhiisi", am: "ሰርዝ", category: "General" },
+  { key: "validation_title", en: "Title is required", om: "Mata dureen barbaachisaadha", am: "ርዕስ ያስፈልጋል", category: "CreateListing" },
+  { key: "validation_price", en: "Price must be a positive number", om: "Gatiin lakkoofsa sirrii ta'uu qaba", am: "ዋጋ ትክክለኛ ቁጥር መሆን አለበት", category: "CreateListing" },
+  { key: "admin_panel_title", en: "Administrator Administrative Console", om: "Konsoolii Bulchiinsa Admin", am: "የአስተዳዳሪ መቆጣጠሪያ ሰሌዳ", category: "Admin" },
+  { key: "admin_users_tab", en: "Users Management", om: "Bulchiinsa Fayyadamtootaa", am: "የተጠቃሚዎች አስተዳደር", category: "Admin" },
+  { key: "admin_listings_tab", en: "Manage Listings", om: "Qabeenya Bulchi", am: "ንብረቶችን ማስተዳደር", category: "Admin" },
+  { key: "admin_slips_tab", en: "Payment Slips Audit", om: "Kafaltii Slip Gamgami", am: "የክፍያ ደረሰኞች ኦዲት", category: "Admin" },
+  { key: "admin_inquiries_tab", en: "Inquiries Support", om: "Gargaarsa Gaaffii", am: "የጥያቄዎች ድጋፍ", category: "Admin" },
+  { key: "admin_ads_tab", en: "Advertisements", om: "Beeksisa", am: "ማስታወቂያዎች", category: "Admin" },
+  { key: "admin_reports_tab", en: "Safety Reports", om: "Gabaasa Nageenyaa", am: "የደህንነት ሪፖርቶች", category: "Admin" },
+  { key: "admin_analytics_tab", en: "Advanced Analytics", om: "Xiinxala Olaanaa", am: "የላቀ ትንታኔ", category: "Admin" },
+  { key: "verify_user_btn", en: "Verify", om: "Mirkaneessi", am: "አረጋግጥ", category: "Admin" },
+  { key: "unverify_user_btn", en: "Unverify", om: "Mirkaneessa Kaasi", am: "ማረጋገጫውን አንሳ", category: "Admin" },
+  { key: "delete_user_btn", en: "Delete", om: "Haqi", am: "ሰርዝ", category: "Admin" },
+  { key: "approve_listing_btn", en: "Approve", om: "Mirkaneessi", am: "አጽድቅ", category: "Admin" },
+  { key: "reject_listing_btn", en: "Reject", om: "Didi", am: "ውድቅ አድርግ", category: "Admin" },
+  { key: "delete_listing_btn", en: "Delete Listing", om: "Qabeenya Haqi", am: "ንብረቱን ሰርዝ", category: "Admin" },
+  { key: "total_revenue", en: "Total Confirmed Revenue", om: "Kafaltii Guutuu Mirkaneessame", am: "ጠቅላላ የተረጋገጠ ገቢ", category: "Admin" },
+  { key: "total_listings", en: "Total Active Listings", om: "Qabeenya Hojirra Jiran", am: "ጠቅላላ ንቁ ንብረቶች", category: "Admin" },
+  { key: "pending_verifications", en: "Pending Verifications", om: "Mirkaneessaan Kan Eegamu", am: "በመጠባበቅ ላይ ያሉ ማረጋገጫዎች", category: "Admin" },
+  { key: "profile_details_title", en: "Profile Details", om: "Ragaa Profaayilii", am: "የመገለጫ ዝርዝሮች", category: "Profile" },
+  { key: "account_verification_status", en: "Verification Status", om: "Haala Mirkaneessaa", am: "የማረጋገጫ ሁኔታ", category: "Profile" },
+  { key: "verified", en: "Verified Account", om: "Akawuntii Mirkaneessame", am: "የተረጋገጠ መለያ", category: "Profile" },
+  { key: "not_verified", en: "Not Verified", om: "Kan Hin Mirkaneessamne", am: "ያልተረጋገጠ", category: "Profile" },
+  { key: "support_ticket_title", en: "Support & Ticket Center", om: "Giddugala Gargaarsaa", am: "የድጋፍ ማዕከል", category: "Profile" },
+  { key: "subject_label", en: "Subject", om: "Dhimma", am: "ጉዳይ", category: "Profile" },
+  { key: "message_label", en: "Message", om: "Ergaa", am: "መልዕክት", category: "Profile" },
+  { key: "submit_ticket_btn", en: "Submit Ticket", om: "Tikettii Ergi", am: "ጥያቄውን ላክ", category: "Profile" },
+  { key: "save_profile_btn", en: "Save Profile", om: "Profaayilii Ol-kaahi", am: "መገለጫውን አስቀምጥ", category: "Profile" },
+  { key: "payment_methods_title", en: "Saved Payment Methods", om: "Malleen Kafaltii Ol-kaahame", am: "የተቀመጡ የክፍያ ዘዴዎች", category: "Profile" },
+  { key: "add_payment_method", en: "Add Payment Method", om: "Malla Kafaltii Dabali", am: "የክፍያ ዘዴ ያክሉ", category: "Profile" },
+  { key: "account_number_label", en: "Account Number", om: "Lakkoofsa Akawuntii", am: "የሂሳብ ቁጥር", category: "Profile" },
+  { key: "bank_name_label", en: "Bank Name", om: "Maqaa Baankii", am: "የባንክ ስም", category: "Profile" },
+  { key: "save_btn", en: "Save", om: "Ol-kaahi", am: "አስቀምጥ", category: "General" },
+  { key: "no_conversations", en: "No active conversations yet.", om: "Haasawi hojirra jiru hin jiru.", am: "እስካሁን ምንም ንቁ ውይይት የለም።", category: "Chat" },
+  { key: "chat_history", en: "Chat History", om: "Seenaa Haasawaa", am: "የውይይት ታሪክ", category: "Chat" },
+  { key: "support_history", en: "Your Support Tickets", om: "Tikettii Gargaarsa Keessan", am: "የእርስዎ የድጋፍ ጥያቄዎች", category: "Chat" },
+  { key: "items", en: "items", om: "meeshotta", am: "ዕቃዎች", category: "Marketplace" },
+  { key: "filters", en: "Filters", om: "Gingilchaa", am: "ማጣሪያዎች", category: "Marketplace" },
+  { key: "reset", en: "Reset", om: "Deebisi", am: "ዳግም አስጀምር", category: "Marketplace" },
+  { key: "all_transactions", en: "All Transactions", om: "Daldala Hundumaa", am: "ሁሉም ግብይቶች", category: "Marketplace" },
+  { key: "all_types", en: "All Types", om: "Gosoota Hundumaa", am: "ሁሉም ዓይነቶች", category: "Marketplace" },
+  { key: "all_cities_regions", en: "All Cities / Regions", om: "Magaalota / Naannolee Hundumaa", am: "ሁሉም ከተሞች / ክልሎች", category: "Marketplace" },
+  { key: "currency_status", en: "Currency Status", om: "Haala Maallaqaa", am: "የገንዘብ ሁኔታ", category: "Marketplace" },
+  { key: "all_currencies", en: "All Currencies", om: "Maallaqa Hundumaa", am: "ሁሉም የገንዘብ ዓይነቶች", category: "Marketplace" },
+  { key: "min_price", en: "Min Price", om: "Gatii Xiqqaa", am: "ዝቅተኛ ዋጋ", category: "Marketplace" },
+  { key: "any_value", en: "Any", om: "Kamiyyuu", am: "ማንኛውም", category: "Marketplace" },
+  { key: "max_price", en: "Max Price", om: "Gatii Guddaa", am: "ከፍተኛ ዋጋ", category: "Marketplace" },
+  { key: "min_bedrooms", en: "Min Bedrooms", om: "Kutaa Ciisichaa", am: "ዝቅተኛ የመኝታ ክፍሎች", category: "Marketplace" },
+  { key: "min_area", en: "Min Area (sqm)", om: "Bal'ina Xiqqaa (sqm)", am: "ዝቅተኛ ስፋት (ካሬ ሜትር)", category: "Marketplace" },
+  { key: "no_listings_matching", en: "No listings found matching parameters", om: "Beeksisa dhiyaate tokkollee hin argamne", am: "ከተመረጡት አማራጮች ጋር የሚዛመድ ንብረት አልተገኘም", category: "Marketplace" },
+  { key: "reset_filters_helper", en: "Try resetting search filters or using a broader area name.", om: "Gingilchaa barbaaddii deebisi ykn maqaa bal'aa dhimma bahi.", am: "እባክዎን ማጣሪያዎቹን ዳግም አስጀምሩ ወይም ሌላ ቦታ ይፈልጉ።", category: "Marketplace" },
+  { key: "verified_picks", en: "Verified Select Picks", om: "Filannoowwan Mirkanaa'an", am: "የተረጋገጡ ምርጥ ምርጫዎች", category: "Marketplace" },
+  { key: "personalized_recs", en: "Personalized Recommendation", om: "Yaada Profaayilii Keetiin", am: "የግል ምክሮች", category: "Marketplace" },
+  { key: "curated_match", en: "Curated Match", om: "Waliin Deemu", am: "የተመረጠ ግጥሚያ", category: "Marketplace" },
+  { key: "recent_offers", en: "Recent offers", om: "Dhiyeessii dhiyoo", am: "የቅርብ ጊዜ ቅናሾች", category: "Marketplace" },
+  { key: "sponsored", en: "Sponsored", om: "Ispeensar kan godhame", am: "ስፖንሰር የተደረገ", category: "Marketplace" },
+  { key: "visit_offer", en: "Visit Offer", om: "Dhiyeessii Daawwadhu", am: "ቅናሹን ይጎብኙ", category: "Marketplace" },
+  { key: "safety_guidelines", en: "Safety Guidelines", om: "Qajeelfama Nageenyaa", am: "የደህንነት መመሪያዎች", category: "Marketplace" },
+  { key: "safety_tip_3_html", en: "Utilize our Administrative Receipt Verification Desk for fully tracked premium services.", om: "Kafaltii dhiyeessii keessaniif Mana Mirkaneessaa Risiitii keenya dhimma bahaa.", am: "ለተሟላ ክትትል የእኛን የክፍያ ደረሰኝ ማረጋገጫ ክፍል ይጠቀሙ።", category: "Marketplace" },
+  { key: "bed_unit", en: "Bed", om: "Siree", am: "አልጋ", category: "Marketplace" },
+  { key: "bath_unit", en: "Bath", om: "Kutaa Dhiqannaa", am: "መታጠቢያ", category: "Marketplace" },
+  { key: "share_listing", en: "Share listing", om: "Beeksisa Qoodi", am: "ማስታወቂያ ያጋሩ", category: "Details" },
+  { key: "copied", en: "Copied!", om: "Garagalfameera!", am: "ተገልብጧል!", category: "Details" },
+  { key: "copy_link", en: "Copy Link", om: "Liinkii Garagalchi", am: "ሊንክ ኮፒ አድርግ", category: "Details" },
+  { key: "share_whatsapp", en: "Share on WhatsApp", om: "WhatsApp irratti qoodi", am: "በዋትስአፕ ያጋሩ", category: "Details" },
+  { key: "amenities_features", en: "Amenities & Features", om: "Tajaajiloota & Amaloota", am: "መገልገያዎች እና ባህሪያት", category: "Details" },
+  { key: "location_on_map", en: "Location on Map", om: "Bakka Kaartaa Irratti", am: "ቦታ በካርታ ላይ", category: "Details" },
+  { key: "owner_contact", en: "Owner Contact", om: "Quunnamtii Abbaa Qabeenyaa", am: "የንብረቱ ባለቤት እውቂያ", category: "Details" },
+  { key: "registered_partner", en: "Registered Partner", om: "Michuu Galmeeffame", am: "የተመዘገበ አጋር", category: "Details" },
+  { key: "send_inquiry", en: "Send Inquiry", om: "Gaaffii Ergi", am: "ጥያቄ ይላኩ", category: "Details" },
+  { key: "inquiry_helper", en: "Direct message the property manager or request a callback.", om: "Abbaa qabeenyaatti dhimma kana irratti battalatti barreessi.", am: "ለንብረቱ አስተዳዳሪ ቀጥታ መልዕክት ይላኩ ወይም ስልክ እንዲደወልልዎ ይጠይቁ።", category: "Details" },
+  { key: "inquiry_success", en: "Inquiry sent successfully! The owner will be notified.", om: "Gaaffiin kee milkiidhaan ergameera! Abbaan qabeenichaa ni beeksifama.", am: "ጥያቄዎ በተሳካ ሁኔታ ተልኳል! ባለቤቱ ማሳወቂያ ይደርሰዋል።", category: "Details" },
+  { key: "inquiry_placeholder", en: "I am interested in this listing. Can we schedule a physical visit?", om: "Waa'ee beeksisa kanaa beekuu barbaada. Bakka qabeenichaa deemnee arguuf yoom mijata?", am: "ስለዚህ ማስታወቂያ ማወቅ እፈልጋለሁ። ንብረቱን በአካል መጎብኘት እንችላለን?", category: "Details" },
+  { key: "sending", en: "Sending...", om: "Ergamaa jira...", am: "በመላክ ላይ...", category: "General" },
+  { key: "submit_inquiry", en: "Submit Inquiry", om: "Gaaffii Ergi", am: "ጥያቄ ያስገቡ", category: "Details" },
+  { key: "login_to_message", en: "Please register or log in to message the seller.", om: "Gurguricha quunnamuuf maaloo dura galmee ykn seenaa taasisaa.", am: "ሻጩን ለማነጋገር እባክዎ አስቀድመው ይመዝገቡ ወይም ይግቡ።", category: "Details" },
+  { key: "report_suspicious", en: "Report suspicious listing", om: "Beeksisa shakki qabu gabaasi", am: "አጠራጣሪ ማስታወቂያ ሪፖርት ያድርጉ", category: "Details" },
+  { key: "new_notification_suffix", en: "new", om: "haaraa", am: "አዲስ", category: "Dashboard" },
+  { key: "no_notifications_yet", en: "No notifications yet", om: "Beeksisa haaraa hin qabdu", am: "እስካሁን ምንም ማሳወቂያ የለም", category: "Dashboard" },
+  { key: "role_admin_badge", en: "Admin", om: "Bulchaa", am: "አስተዳዳሪ", category: "Dashboard" },
+  { key: "role_agent_badge", en: "Agent / User", om: "Ejentii / Fayyadamaa", am: "ወኪል / ተጠቃሚ", category: "Dashboard" },
+  { key: "report_listing_user", en: "Report Listing / User", om: "Gabaasa Qabeenyaa / Fayyadamaa", am: "ንብረት / ተጠቃሚ ሪፖርት ያድርጉ", category: "General" },
+  { key: "select_reason", en: "Select Reason", om: "Sababa Filadhu", am: "ምክንያት ይምረጡ", category: "General" },
+  { key: "fraudulent_fake", en: "Fraudulent / Fake Listing", om: "Qabeenya Soba", am: "የማጭበርበር / የሐሰት ንብረት", category: "General" },
+  { key: "incorrect_specs", en: "Incorrect Price / Specifications", om: "Gatii ykn Ibsa Soba", am: "ትክክለኛ ያልሆነ ዋጋ / ዝርዝር", category: "General" },
+  { key: "inappropriate_behavior", en: "Inappropriate / Unsafe messaging behavior", om: "Ergaa Amala Hin Taane", am: "ተገቢ ያልሆነ / አደገኛ የመልዕክት ባህሪ", category: "General" },
+  { key: "other_violations", en: "Other Violations", om: "Cabsa Biroo", am: "ሌሎች ጥሰቶች", category: "General" },
+  { key: "describe_violation", en: "Describe violation context *", om: "Haala Cabsa Ibsi *", am: "የጥሰቱን ሁኔታ ይግለጹ *", category: "General" },
+  { key: "violation_placeholder", en: "Provide specific parameters of fraudulent behaviors.", om: "Qunnamtii fi amala sobaa ibsi.", am: "ስለ ማጭበርበሩ ዝርዝር ሁኔታዎችን ያቅርቡ።", category: "General" },
+  { key: "submitting_report", en: "Logging...", om: "Ergamaa Jira...", am: "በመመዝገብ ላይ...", category: "General" },
+  { key: "submit_report", en: "Submit", om: "Ergi", am: "ላክ", category: "General" },
+  { key: "splash_tagline", en: "The Smart Way to Discover, Connect & Grow", om: "Karaa Mala-qabeessa Birmachuuf, Walqunnamuufi Guddisuuf", am: "ማግኘት፣ መገናኘት እና ማደግ የሚችሉበት ብልህ መንገድ", category: "Welcome" },
+  { key: "verified_listings_title", en: "Verified Listings", om: "Galmeewwan Mirkanaa'an", am: "የተረጋገጡ ንብረቶች", category: "Welcome" },
+  { key: "verified_listings_desc", en: "Only authenticated and moderated listings allowed.", om: "Galmeewwan mirkanaa’anii fi to’ataman qofatu hayyamama.", am: "የተረጋገጡ እና በአወያይ የተፈቀዱ ንብረቶች ብቻ ይፈቀዳሉ።", category: "Welcome" },
+  { key: "secure_payments_title", en: "Escrow System", om: "Sirna Kafaltii Amansiisaa", am: "የአስተማማኝ ክፍያ ስርዓት", category: "Welcome" },
+  { key: "secure_payments_desc", en: "Payment receipts are approved directly by admin board.", om: "Risiitiwwan kafaltii kallattiin koree bulchiinsaan mirkanaa’u.", am: "የክፍያ ደረሰኞች በቀጥታ በአስተዳዳሪ ቦርድ ይጸድቃሉ።", category: "Welcome" },
+  { key: "sign_in_account_title", en: "Sign In to Your Account", om: "Gara Akawuntii Keetti Seeni", am: "ወደ መለያዎ ይግቡ", category: "Auth" },
+  { key: "create_new_profile_title", en: "Create New Profile", om: "Profaayilii Haaraa Uumi", am: "አዲስ መገለጫ ይፍጠሩ", category: "Auth" },
+  { key: "register_uppercase", en: "Register", om: "Galmee", am: "ይመዝገቡ", category: "Auth" },
+  { key: "all_rights_reserved", en: "Sof-Umer Ecosystem • All Rights Reserved", om: "Sirna Sof-Umer • Mirgi Hundu Kan Eegameedha", am: "ሶፍ-ኡመር ስነ-ምህዳር • መብቱ በህግ የተጠበቀ ነው", category: "Welcome" },
+  { key: "remember_me", en: "Remember me on this device", om: "Meeshaa kana irratti na yaadadhu", am: "በዚህ መሣሪያ ላይ አስታውሰኝ", category: "Auth" },
+  { key: "authenticating", en: "Authenticating...", om: "Mirkaneessaa Jira...", am: "እያረጋገጠ ነው...", category: "Auth" },
+  { key: "password_strength_label", en: "Password Strength:", om: "Cimina Jecha Icchitii:", am: "የይለፍ ቃል ጥንካሬ:", category: "Auth" },
+  { key: "password_strength_requirement", en: "Requires at least 8 characters, 1 uppercase, 1 lowercase, 1 number, and 1 special symbol.", om: "Yoo xiqqaate qubee 8, qubee guddaa 1, qubee xiqqaa 1, lakkoofsa 1 fi mallattoo addaa 1 gaafata.", am: "ቢያንስ 8 ቁምፊዎች፣ 1 ታላቅ ፊደል፣ 1 ታናሽ ፊደል፣ 1 ቁጥር እና 1 ልዩ ምልክት ያስፈልጋል።", category: "Auth" },
+  { key: "creating_profile", en: "Creating Profile...", om: "Profaayilii Uumaa Jira...", am: "መገለጫ በመፍጠር ላይ...", category: "Auth" },
+  { key: "developer_code", en: "Developer Code", om: "Koodii Developeraa", am: "የገንቢ ኮድ", category: "Auth" },
+  { key: "developer_code_desc", en: "Use this code directly to verify this profile instantly.", om: "Koodii kanaan kallattiin dhiyeenyatti profaayilii kee mirkaneessi.", am: "ይህንን ኮድ በመጠቀም መለያዎን ወዲያውኑ ያረጋግጡ።", category: "Auth" },
+  { key: "digit_6_code_label", en: "6-Digit Verification Code", om: "Koodii Mirkaneessaa Digit-6", am: "ባለ 6-አሃዝ የማረጋገጫ ኮድ", category: "Auth" },
+  { key: "activating_account", en: "Activating account...", om: "Akawuntii banaa jira...", am: "መለያ በመክፈት ላይ...", category: "Auth" },
+  { key: "verify_and_activate", en: "Verify & Activate", om: "Mirkaneessi & Bani", am: "አረጋግጥ & አንቃ", category: "Auth" },
+  { key: "registered_email_address", en: "Registered Email Address", om: "Imeelii Galmeeffame", am: "የተመዘገበ የኢሜል አድራሻ", category: "Auth" },
+  { key: "generating_code", en: "Generating...", om: "Koodii Ergaa Jira...", am: "በማመንጨት ላይ...", category: "Auth" },
+  { key: "dev_reset_code", en: "Developer Reset Code", om: "Koodii Haaromsaa Developeraa", am: "የገንቢ የይለፍ ቃል ማስreset ኮድ", category: "Auth" },
+  { key: "dev_reset_code_desc", en: "Use this code directly in the code box below to reset password.", om: "Koodii kanaan gadiitti fayyadamanii jecha icchiitii haaromsi.", am: "የይለፍ ቃልዎን ለመቀየር ይህንን ኮድ ከታች ባለው ሳጥን ውስጥ በቀጥታ ይጠቀሙ።", category: "Auth" },
+  { key: "reset_code_label", en: "Reset Code", om: "Koodii Haaromsaa", am: "የይለፍ ቃል መቀየሪያ ኮድ", category: "Auth" },
+  { key: "saving", en: "Saving...", om: "Ol-kaayaa Jira...", am: "በማስቀመጥ ላይ...", category: "General" },
+  { key: "report_success_msg", en: "Report logged successfully! Our moderator board will take corrective actions.", om: "Gabaasni kee milkaa'inaan galmaa'eera! Koreen keenya sirreessaa ni taasisa.", am: "ሪፖርቱ በተሳካ ሁኔታ ተመዝግቧል! የእኛ አወያይ ቦርድ የማስተካከያ እርምጃዎችን ይወስዳል።", category: "General" },
+  { key: "report_intro_1", en: "You are filing an official safety complaint against {type} \"{name}\".", om: "Eebba nageenyaa seeraa irratti gabaasa dhiyeessaa jirta {type} \"{name}\" irratti.", am: "በዚህ {type} \"{name}\" ላይ ይፋዊ የደህንነት አቤቱታ እያቀረቡ ነው::", category: "General" },
+  { key: "bedrooms", en: "Bedrooms", om: "Kuta Ciisichaa", am: "መኝታ ክፍሎች", category: "General" },
+  { key: "bathrooms", en: "Bathrooms", om: "Kuta Dhiqannaa", am: "መታጠቢያ ክፍሎች", category: "General" },
+  { key: "total_area", en: "Total Area", om: "Bal'ina Guutuu", am: "ጠቅላላ ስፋት", category: "General" },
+  { key: "chat_reply_placeholder", en: "Type your reply...", om: "Ergaa kee asitti barreessi...", am: "መልስዎን እዚህ ይጻፉ...", category: "Dashboard" },
+  { key: "select_chat_thread", en: "Select a conversation thread on the left to start chatting.", om: "Haasaa jalqabuuf bitaa irraa nama filadhu.", am: "ማውራት ለመጀመር በስተግራ ካሉት ንግግሮች አንዱን ይምረጡ።", category: "Dashboard" },
+  { key: "notification_logs_desc", en: "Alert logs regarding approvals, chats, and listings.", om: "Gabaasa beeksisa mirkaneessaa, haasaa fi galmeewwanii.", am: "የማጽደቆች፣ ውይይቶች እና ማስታወቂያዎች ማሳወቂያዎች።", category: "Dashboard" },
+  { key: "no_notifications_found", en: "No notifications found", om: "Beeksisi argame hin jiru", am: "ምንም ማሳወቂያ አልተገኘም", category: "Dashboard" },
+  { key: "active_admin_payment_methods", en: "Active Administrative Payment Methods", om: "Tarkaanfii Kafaltii Bulchiinsaa Hojjetan", am: "ንቁ የአስተዳደር ክፍያ ዘዴዎች", category: "Dashboard" },
+  { key: "active_payment_methods_desc", en: "Showcasing payment configurations dynamically activated by our platform administrators. Unconfigured systems are hidden automatically.", om: "Kafaltiiwwan bulchiinsaan banaman dhiyeeffama. Isaan hin qophoofne ni dhokatu.", am: "በአስተዳዳሪዎቻችን በኩል የነቁ የክፍያ አማራጮችን ያሳያል። ያልተዋቀሩ አማራጮች ወዲያውኑ ይደብቃሉ።", category: "Dashboard" },
+  { key: "no_active_payment_methods", en: "No active payment methods found. Please contact the administrator.", om: "Kafaltii hojjetu hin argamne. Maaloo bulchaa qunnamaa.", am: "ምንም ንቁ የክፍያ ዘዴዎች አልተገኙም። እባክዎን አስተዳዳሪውን ያነጋግሩ።", category: "Dashboard" },
+  { key: "account_name_label", en: "Account Name", om: "Maqaa Akkaawuntii", am: "የአካውንት ስም", category: "Dashboard" },
+  { key: "account_wallet_id_label", en: "Account / Wallet ID", om: "Akkaawuntii / Koodii Wallet", am: "የሂሳብ / የኪስ ቁጥር", category: "Dashboard" },
+  { key: "admin_phone_label", en: "Admin Phone", om: "Bilbila Bulchaa", am: "የአስተዳዳሪ ስልክ", category: "Dashboard" },
+  { key: "instructions_label", en: "Instructions:", om: "Qajeelfama:", am: "መመሪያዎች፡", category: "Dashboard" },
+  { key: "submit_receipt_title", en: "Submit Transaction receipt / Proof", om: "Risiitii Kafaltii / Ragaa Ergi", am: "የክፍያ ደረሰኝ / ማስረጃ ያስገቡ", category: "Dashboard" },
+  { key: "submit_receipt_desc", en: "Once submitted, our manual receipt desk will verify the slip and trigger approvals.", om: "Yoo ergite, mana mirkaneessaa keenyaan qoratamee ni mirkana'a.", am: "አንዴ ከገቡ በኋላ፣ የእኛ ደረሰኝ ማረጋገጫ ክፍል ደረሰኙን በማጣራት ያጸድቃል።", category: "Dashboard" },
+  { key: "receipt_success_msg", en: "Payment receipt submitted successfully! Pending admin verification.", om: "Risiitiin kafaltii milkiidhaan dhiyaateera! Mirkaneessaa bulchaa eeggachaa jira.", am: "የክፍያ ደረሰኝ በተሳካ ሁኔታ ገብቷል! የአስተዳዳሪ ማረጋገጫ በመጠባበቅ ላይ።", category: "Dashboard" },
+  { key: "select_payment_method_label", en: "Select Payment Method", om: "Mala Kafaltii Filadhu", am: "የክፍያ ዘዴ ይምረጡ", category: "Dashboard" },
+  { key: "select_active_wallet_option", en: "-- Select Active Bank/Wallet --", om: "-- Bankii/Wallet dammaqaa filadhu --", am: "-- ንቁ ባንክ/ዋሌት ይምረጡ --", category: "Dashboard" },
+  { key: "select_target_property_label", en: "Select Target Property", om: "Beeksisa Targetii Filadhu", am: "ዒላማ ንብረት ይምረጡ", category: "Dashboard" },
+  { key: "select_listing_context_option", en: "-- Select Listing context --", om: "-- Beeksisa filadhu --", am: "-- የማስታወቂያ አውድ ይምረጡ --", category: "Dashboard" },
+  { key: "transferred_amount_label", en: "Transferred Amount", om: "Maallaqa Ergamu", am: "የተላለፈው የገንዘብ መጠን", category: "Dashboard" },
+  { key: "receipt_screenshot_label", en: "Receipt reference slip screenshot", om: "Screenshot Risiitii Kafaltii", am: "የክፍያ ደረሰኝ ቅጽበታዊ ገጽ እይታ (Screenshot)", category: "Dashboard" },
+  { key: "receipt_link_placeholder", en: "Paste Receipt Link or type CBE-TRX-1029472", om: "Liinkii Risiitii deebisi ykn barreessi CBE-TRX-1029472", am: "የደረሰኝ ሊንክ ያስገቡ ወይም CBE-TRX-1029472 ይጻፉ", category: "Dashboard" },
+  { key: "simulate_upload_btn", en: "Simulate Upload", om: "Ol-feesa fakkeessi", am: "መጫንን አስመስል", category: "Dashboard" },
+  { key: "uploading_proof_msg", en: "Uploading Proof...", om: "Ragaa Ol-feesaajira...", am: "ማስረጃ በመጫን ላይ...", category: "Dashboard" },
+  { key: "submit_receipt_btn", en: "Submit Receipt to Verification Desk", om: "Risiitii Mana Mirkaneessaa Ergi", am: "ደረሰኝ ወደ ማረጋገጫ ክፍል ያስገቡ", category: "Dashboard" },
+  { key: "payment_history_title", en: "Your Payment transaction history", om: "Gabaasa Kafaltii Keetii", am: "የእርስዎ የክፍያ ግብይት ታሪክ", category: "Dashboard" },
+  { key: "method_name_th", en: "Method Name", om: "Maqaa Mala Kafaltii", am: "የአሰራር ዘዴ ስም", category: "Dashboard" },
+  { key: "target_property_th", en: "Target Property", om: "Beeksisa Targetii", am: "ዒላማ ንብረት", category: "Dashboard" },
+  { key: "amount_th", en: "Amount", om: "Gatii", am: "ገንዘብ መጠን", category: "Dashboard" },
+  { key: "status_th", en: "Status", om: "Haala", am: "ሁኔታ", category: "Dashboard" },
+  { key: "date_th", en: "Date", om: "Guyyaa", am: "ቀን", category: "Dashboard" },
+  { key: "desk_notes_th", en: "Desk notes", om: "Yaada Mana Mirkaneessaa", am: "የቢሮ ማስታወሻዎች", category: "Dashboard" },
+  { key: "no_transactions_msg", en: "No transactions yet. Complete transfers and submit screenshots.", om: "Kafaltii raawwatame hin jiru. Maaloo kafaltii raawwadhuu screenshot ergi.", am: "እስካሁን ምንም ግብይቶች የሉም። ዝውውሮችን ያጠናቅቁ እና ቅጽበታዊ ገጽ እይታዎችን ያስገቡ።", category: "Dashboard" },
+  { key: "waiting_review_notes", en: "Waiting for review", om: "Mirkaneessaa eeggachaa jira", am: "ማረጋገጫ በመጠባበቅ ላይ", category: "Dashboard" },
+  { key: "settings_tab_desc", en: "Manage notifications and regional parameters.", om: "Beeksisa fi dhimmoota naannoo to'adhu.", am: "ማሳወቂያዎችን እና አካባቢያዊ መለኪያዎችን ያስተዳድሩ።", category: "Dashboard" },
+  { key: "email_notifications_setting", en: "Email Notifications", om: "Beeksisa Imeelii", am: "የኢሜይል ማሳወቂያዎች", category: "Dashboard" },
+  { key: "receive_digests_setting", en: "Receive digests of inquiries", om: "Gabaasa gaaffiiwwanii fudhadhu", am: "የጥያቄዎችን ማጠቃለያ ይቀበሉ", category: "Dashboard" },
+  { key: "two_factor_auth_setting", en: "Two-Factor Authentication", om: "Mirkaneessa Madaallii Lama", am: "ባለ ሁለት ደረጃ ማረጋገጫ", category: "Dashboard" },
+  { key: "secure_logins_setting", en: "Secure logins with mobile code", om: "Seensa amansiisaa koodii bilbilaatiin", am: "በሞባይል ኮድ ደህንነቱ የተጠበቀ መግቢያ", category: "Dashboard" },
+  { key: "auth_required_title", en: "Authentication Required", om: "Mirkaneessi Barbaachisaadha", am: "ማረጋገጫ ያስፈልጋል", category: "Dashboard" },
+  { key: "auth_required_desc", en: "Please register or log in to view your user dashboard.", om: "Maaloo daashboordii fayyadamaa kee arguuf galmee uumi ykn seeni.", am: "እባክዎ የተጠቃሚ ዳሽቦርድዎን ለማየት ይመዝገቡ ወይም ይግቡ።", category: "Dashboard" },
+  { key: "sign_in_now_btn", en: "Sign In Now", om: "Amma Seeni", am: "አሁን ይግቡ", category: "Dashboard" },
+  { key: "profile_details_desc", en: "Keep your account listing coordinates accurate.", om: "Oof-gariinsa akakaawuntii kee sirrii taasisi.", am: "የመለያ መረጃዎን ትክክለኛነት ይጠብቁ።", category: "Dashboard" },
+  { key: "profile_success_msg", en: "Profile updated successfully!", om: "Profaayiliin milkiidhaan haaromfameera!", am: "መገለጫው በተሳካ ሁኔታ ተሻሽሏል!", category: "Dashboard" },
+  { key: "registered_email_label", en: "Registered Email", om: "Imeelii Galmeeffame", am: "የተመዘገበ ኢሜይል", category: "Dashboard" },
+  { key: "full_name_label", en: "Full Name", om: "Maqaa Guutuu", am: "ሙሉ ስም", category: "Dashboard" },
+  { key: "save_profile_updates_btn", en: "Save Profile Updates", om: "Oof-gariinsa Profaayilii Ol-kaa'i", am: "የመገለጫ ማሻሻያዎችን አስቀምጥ", category: "Dashboard" },
+  { key: "verification_title", en: "Ownership & Seller Verification Badge", om: "Waraqaa Eenyummaa fi Mirkaneessa Abbaa Qabeenyummaa", am: "የባለቤትነት እና የሻጭ ማረጋገጫ ባጅ", category: "Dashboard" },
+  { key: "verification_desc", en: "Submit your real estate credentials, land deed ownership ID, or corporate license. Once approved, you will get a Verified Badge on your listings and profile.", om: "Ragaa abbaa qabeenyummaa lafaa ykn hayyama daldalaa kee galchi. Yoo mirkanaa'e, mallattoo mirkanaa'aa ni argatta.", am: "የሪል እስቴት ማስረጃዎችን፣ የይዞታ ማረጋገጫ ካርታ ወይም የንግድ ፈቃድዎን ያስገቡ። አንዴ ሲፈቀድ፣ በማስታወቂያዎችዎ እና በመገለጫዎ ላይ የተረጋገጠ ባጅ ያገኛሉ።", category: "Dashboard" },
+  { key: "account_verified_title", en: "Account Fully Verified", om: "Akkaawuntii Guutummaatti Mirkanaa'eera", am: "መለያው ሙሉ በሙሉ ተረጋግጧል", category: "Dashboard" },
+  { key: "account_verified_desc", en: "Your official verified partner badge is active on the marketplace.", om: "Mallattoon hiriyummaa mirkanaa'aa kee gabaa irratti dammaqadha.", am: "የእርስዎ ይፋዊ የተረጋገጠ አጋር ባጅ በገበያው ላይ ገባሪ ነው።", category: "Dashboard" },
+  { key: "documents_pending_title", en: "Documents Pending Verification", om: "Sanadoonni Mirkaneessaa Eeggachaa Jiru", am: "ሰነዶች ማረጋገጫ በመጠባበቅ ላይ ናቸው", category: "Dashboard" },
+  { key: "documents_pending_desc", en: "Our admins are currently auditing your uploaded certificates.", om: "Bulchitoonni keenya ragaalee kee qorachaa jiru.", am: "አስተዳዳሪዎቻችን በአሁኑ ጊዜ የሰቀሏቸውን የምስክር ወረቀቶች እየገመገሙ ነው።", category: "Dashboard" },
+  { key: "verif_success_msg", en: "Verification documents submitted. Our admins will review them shortly.", om: "Sanadoonni dhiyaatanii jiru. Bulchitoonni keenya dhiyootti ni qoratu.", am: "የማረጋገጫ ሰነዶች ገብተዋል። አስተዳዳሪዎቻችን በቅርቡ ይገመግሟቸዋል።", category: "Dashboard" },
+  { key: "describe_ownership_label", en: "Describe Ownership Credentials & Paste Links/IDs", om: "Ragaalee Abbaa Qabeenyummaa Ibsi & Koodii/ID Barreessi", am: "የባለቤትነት ማረጋገጫዎችን ይግለጹ እና ሊንኮችን/መታወቂያዎችን ያስገቡ", category: "Dashboard" },
+  { key: "describe_ownership_placeholder", en: "Addis Ababa Bole Deed Registration ID: 10928/3429. Attached property is listed under my registered company.", om: "Koodii galmee Deed Finfinnee Bole: 10928/3429. Qabeenyi kun maqaa kubbayya kiyyaatiin galmeeffameera.", am: "የአዲስ አበባ ቦሌ የካርታ ምዝገባ ቁጥር፡ 10928/3429። ንብረቱ በተመዘገበው ድርጅቴ ስር የተመዘገበ ነው።", category: "Dashboard" },
+  { key: "uploading_docs_msg", en: "Uploading Documents...", om: "Sanadoota Ol-feesaajira...", am: "ሰነዶችን በመጫን ላይ...", category: "Dashboard" },
+  { key: "submit_credentials_btn", en: "Submit Credentials", om: "Ragaalee Ergi", am: "ማስረጃዎችን ያስገቡ", category: "Dashboard" },
+  { key: "your_conversations_title", en: "Your Conversations", om: "Waliin Haasaa Kee", am: "የእርስዎ ንግግሮች", category: "Dashboard" },
+  { key: "no_messages_msg", en: "No messages yet", om: "Ergaan hin jiru", am: "እስካሁን ምንም መልእክት የለም", category: "Dashboard" },
+  { key: "contact_prefix", en: "Contact: ", om: "Qunnamtii: ", am: "ዕውቂያ: ", category: "Dashboard" },
+  { key: "owner_label", en: "Owner", om: "Abbaa Qabeenyaa", am: "ባለቤት", category: "Dashboard" },
+  { key: "chat_session_prefix", en: "Chat Session: ", om: "Yeroo Haasaa: ", am: "የውይይት ክፍለ ጊዜ: ", category: "Dashboard" },
+  { key: "auth_intro_desc", en: "Buy, sell, rent, hire, and connect with confidence through verified listings, trusted businesses, and secure services—all in one modern marketplace.", om: "Bitti, gurguri, kireessi, qacari, akkasumas galmeewwan mirkanaa'an, daldala amanamoo fi tajaajiloota nagaa ta'aniin amantummaadhan walqunnami—hunda gabaa ammayyaa tokko keessatti.", am: "በተረጋገጡ ዝርዝሮች፣ ታማኝ ንግዶች እና ደህንነታቸው በተጠበቁ አገልግሎቶች በራስ መተማመን ይግዙ፣ ይሸጡ፣ ያከራዩ፣ ይቀጥሩ እና ይገናኙ—ሁሉም በአንድ ዘመናዊ ገበያ።", category: "Auth" },
+  { key: "login_hero_heading", en: "The Smart Way to Discover, Connect & Grow", om: "Karaa Mala-qabeessa Birmachuuf, Walqunnamuufi Guddisuuf", am: "ማግኘት፣ መገናኘት እና ማደግ የሚችሉበት ብልህ መንገድ", category: "Auth" },
+  { key: "login_hero_subheading", en: "Buy, sell, rent, hire, and connect with confidence through verified listings, trusted businesses, and secure services—all in one modern marketplace.", om: "Bitti, gurguri, kireessi, qacari, akkasumas galmeewwan mirkanaa'an, daldala amanamoo fi tajaajiloota nagaa ta'aniin amantummaadhan walqunnami—hunda gabaa ammayyaa tokko keessatti.", am: "በተረጋገጡ ዝርዝሮች፣ ታማኝ ንግዶች እና ደህንነታቸው በተጠበቁ አገልግሎቶች በራስ መተማመን ይግዙ፣ ይሸጡ፣ ያከራዩ፣ ይቀጥሩ እና ይገናኙ—ሁሉም በአንድ ዘመናዊ ገበያ።", category: "Auth" },
+  { key: "recently_viewed_categories", en: "RECENTLY VIEWED CATEGORIES", om: "Ramaddiiwwan Dhiheenya Kana Ilaalaman", am: "በቅርብ ጊዜ የታዩ ምድቦች", category: "Catalog" },
+  { key: "auth_regional_gateway", en: "Regional Gateway of East Africa", om: "Kellaa Naannoo Baha Afrikaa", am: "የምስራቅ አፍሪካ ቀጣናዊ መግቢያ በር", category: "Auth" },
+  { key: "auth_connecting_markets", en: "The Smart Way to Discover, Connect & Grow", om: "Karaa Mala-qabeessa Birmachuuf, Walqunnamuufi Guddisuuf", am: "ማግኘት፣ መገናኘት እና ማደግ የሚችሉበት ብልህ መንገድ", category: "Auth" },
+  { key: "auth_verified_listings_title", en: "Verified Listings", om: "Galmeewwan Mirkanaa'an", am: "የተረጋገጡ ንብረቶች", category: "Auth" },
+  { key: "auth_verified_listings_desc", en: "Only authenticated and moderated listings allowed.", om: "Galmeewwan mirkanaa’anii fi to’ataman qofatu hayyamama.", am: "የተረጋገጡ እና በአወያይ የተፈቀዱ ንብረቶች ብቻ ይፈቀዳሉ።", category: "Auth" },
+  { key: "auth_secure_payment_title", en: "Escrow System", om: "Sirna Kafaltii Amansiisaa", am: "የአስተማማኝ ክፍያ ስርዓት", category: "Auth" },
+  { key: "auth_secure_payment_desc", en: "Payment receipts are approved directly by admin board.", om: "Risiitiwwan kafaltii kallattiin koree bulchiinsaan mirkanaa’u.", am: "የክፍያ ደረሰኞች በቀጥታ በአስተዳዳሪ ቦርድ ይጸድቃሉ።", category: "Auth" },
+  { key: "auth_sign_in_header", en: "Sign In to Your Account", om: "Gara Akawuntii Keetti Seeni", am: "ወደ መለያዎ ይግቡ", category: "Auth" },
+  { key: "auth_create_profile_header", en: "Create New Profile", om: "Profaayilii Haaraa Uumi", am: "አዲስ መገለጫ ይፍጠሩ", category: "Auth" },
+  { key: "auth_register_label", en: "Register", om: "Galmee", am: "ይመዝገቡ", category: "Auth" },
+  { key: "auth_ecosystem_footer", en: "Sof-Umer Ecosystem • All Rights Reserved", om: "Sirna Sof-Umer • Mirgi Hundu Kan Eegameedha", am: "ሶፍ-ኡመር ስነ-ምህዳር • መብቱ በህግ የተጠበቀ ነው", category: "Auth" },
+  { key: "auth_create_account_title", en: "Create Account", om: "Akawuntii Uumi", am: "መለያ ፍጠር", category: "Auth" },
+  { key: "auth_verify_email_title", en: "Verify Your Email", om: "Imeelii Keetti Mirkaneessi", am: "ኢሜልዎን ያረጋግጡ", category: "Auth" },
+  { key: "auth_verification_email_sent_prefix", en: "A secure 6-digit verification code was sent to ", om: "Koodiin mirkaneessaa digit-6 icciitii gara ", am: "ባለ 6 አሃዝ የደህንነት ማረጋገጫ ኮድ ወደ ", category: "Auth" },
+  { key: "auth_verification_email_sent_suffix", en: ". Please enter it below to activate your account.", om: " ergameera. Akawuntii kee banuuf gadiitti galchi.", am: " ተልኳል። እባክዎን መለያዎን ለማንቃት ከታች ያስገቡት።", category: "Auth" },
+  { key: "auth_set_new_password_title", en: "Set New Password", om: "Jecha Icchitii Haaraa Toftadhu", am: "አዲስ የይለፍ ቃል ያዘጋጁ", category: "Auth" },
+  { key: "auth_join_desc", en: "Join Sof Umer regional digital marketplace", om: "Gabaa dijitaalaa naannoo Sof Umeritti makami", am: "የሶፍ ኡመር ቀጣናዊ ዲጂታል የገበያ ቦታን ይቀላቀሉ", category: "Auth" },
+  { key: "auth_secure_code_desc", en: "Verify your registration with the secure code", om: "Koodii amanamaadhaan galmee kee mirkaneessi", am: "ምዝገባዎን በአስተማማኝ ኮድ ያረጋግጡ", category: "Auth" },
+  { key: "auth_strong_password_desc", en: "Choose a strong, new password", om: "Jecha icciitii cimaa, haaraa filadhu", am: "ጠንካራ እና አዲስ የይለፍ ቃል ይምረጡ", category: "Auth" },
+  { key: "auth_remember_me", en: "Remember me on this device", om: "Meeshaa kana irratti na yaadadhu", am: "በዚህ መሣሪያ ላይ አስታውሰኝ", category: "Auth" },
+  { key: "auth_authenticating", en: "Authenticating...", om: "Mirkaneessaa Jira...", am: "እያረጋገጠ ነው...", category: "Auth" },
+  { key: "auth_password_strength", en: "Password Strength:", om: "Cimina Jecha Icchitii:", am: "የይለፍ ቃል ጥንካሬ:", category: "Auth" },
+  { key: "auth_password_requirements", en: "Requires at least 8 characters, 1 uppercase, 1 lowercase, 1 number, and 1 special symbol.", om: "Yoo xiqqaate qubee 8, qubee guddaa 1, qubee xiqqaa 1, lakkoofsa 1 fi mallattoo addaa 1 gaafata.", am: "ቢያንስ 8 ቁምፊዎች፣ 1 ታላቅ ፊደል፣ 1 ታናሽ ፊደል፣ 1 ቁጥር እና 1 ልዩ ምልክት ያስፈልጋል።", category: "Auth" },
+  { key: "auth_creating_profile", en: "Creating Profile...", om: "Profaayilii Uumaa Jira...", am: "መገለጫ በመፍጠር ላይ...", category: "Auth" },
+  { key: "auth_dev_code_title", en: "Developer Code", om: "Koodii Developeraa", am: "የገንቢ ኮድ", category: "Auth" },
+  { key: "auth_dev_code_desc", en: "Use this code directly to verify this profile instantly.", om: "Koodii kanaan kallattiin dhiyeenyatti profaayilii kee mirkaneessi.", am: "ይህንን ኮድ በመጠቀም መለያዎን ወዲያውኑ ያረጋግጡ።", category: "Auth" },
+  { key: "auth_verification_code_label", en: "6-Digit Verification Code", om: "Koodii Mirkaneessaa Digit-6", am: "ባለ 6-አሃዝ የማረጋገጫ ኮድ", category: "Auth" },
+  { key: "auth_activating_account", en: "Activating account...", om: "Akawuntii banaa jira...", am: "መለያ በመክፈት ላይ...", category: "Auth" },
+  { key: "auth_verify_activate_btn", en: "Verify & Activate", om: "Mirkaneessi & Bani", am: "አረጋግጥ & አንቃ", category: "Auth" },
+  { key: "auth_registered_email_address", en: "Registered Email Address", om: "Imeelii Galmeeffame", am: "የተመዘገበ የኢሜል አድራሻ", category: "Auth" },
+  { key: "auth_cancel_btn", en: "Cancel", om: "Dhiisi", am: "ሰርዝ", category: "Auth" },
+  { key: "auth_generating_code", en: "Generating...", om: "Koodii Ergaa Jira...", am: "በማመንጨት ላይ...", category: "Auth" },
+  { key: "auth_dev_reset_code_title", en: "Developer Reset Code", om: "Koodii Haaromsaa Developeraa", am: "የገንቢ የይለፍ ቃል ማስreset ኮድ", category: "Auth" },
+  { key: "auth_dev_reset_code_desc", en: "Use this code directly in the code box below to reset password.", om: "Koodii kanaan gadiitti fayyadamanii jecha icchiitii haaromsi.", am: "የይለፍ ቃልዎን ለመቀየር ይህንን ኮድ ከታች ባለው ሳጥን ውስጥ በቀጥታ ይጠቀሙ።", category: "Auth" },
+  { key: "auth_reset_code_label", en: "Reset Code", om: "Koodii Haaromsaa", am: "የይለፍ ቃል መቀየሪያ ኮድ", category: "Auth" },
+  { key: "auth_saving_btn", en: "Saving...", om: "Ol-kaayaa Jira...", am: "በማስቀመጥ ላይ...", category: "Auth" },
+  { key: "auth_reset_password_btn", en: "Reset Password", om: "Jecha Icchitii Haaromsi", am: "የይለፍ ቃል ቀይር", category: "Auth" },
+  { key: "auth_dont_have_account", en: "Don't have an account?", om: "Akawuntii hin qabduu?", am: "መለያ የለዎትም?", category: "Auth" },
+  { key: "auth_create_one", en: "Create one", om: "Haaraa uumi", am: "አንድ ይፍጠሩ", category: "Auth" },
+  { key: "auth_already_have_account", en: "Already have an account?", om: "Duraan akawuntii qabdaa?", am: "ቀደም ሲል መለያ አለዎት?", category: "Auth" },
+  { key: "auth_sign_in_link", en: "Sign in", om: "Seeni", am: "ይግቡ", category: "Auth" },
+  { key: "auth_back_to_sign_in", en: "Back to Sign In", om: "Gara Seensaa Deebi'i", am: "ወደ መግቢያው ይመለሱ", category: "Auth" },
+  { key: "filters_btn", en: "Filters", om: "Gingilchaa", am: "ማጣሪያዎች", category: "Marketplace" },
+  { key: "reset_btn", en: "Reset", om: "Deebisi", am: "ዳግም አስጀምር", category: "Marketplace" },
+  { key: "all_locations", en: "All Cities / Regions", om: "Magaalota / Naannolee Hundumaa", am: "ሁሉም ከተሞች / ክልሎች", category: "Marketplace" },
+  { key: "no_listings_found", en: "No listings found matching parameters", om: "Beeksisa dhiyaate tokkollee hin argamne", am: "ከተመረጡት አማራጮች ጋር የሚዛመድ ንብረት አልተገኘም", category: "Marketplace" },
+  { key: "no_listings_found_desc", en: "Try resetting search filters or using a broader area name.", om: "Gingilchaa barbaaddii deebisi ykn maqaa bal'aa dhimma bahi.", am: "እባክዎን ማጣሪያዎቹን ዳግም ያስጀምሩ ወይም ሌላ ቦታ ይፈልጉ።", category: "Marketplace" },
+  { key: "verified_select_picks", en: "Verified Select Picks", om: "Filannoowwan Mirkanaa'an", am: "የተረጋገጡ ምርጥ ምርጫዎች", category: "Marketplace" },
+  { key: "personalized_recommendation", en: "Personalized Recommendation", om: "Yaada Profaayilii Keetiin", am: "የግል ምክሮች", category: "Marketplace" },
+  { key: "safety_tip_3_prefix", en: "Utilize our ", om: "Kafaltii dhiyeessii keessaniif ", am: "ለተሟላ ክትትል የእኛን ", category: "Marketplace" },
+  { key: "safety_tip_3_highlight", en: "Administrative Receipt Verification Desk", om: "Mana Mirkaneessaa Risiitii", am: "የክፍያ ደረሰኝ ማረጋገጫ ክፍል", category: "Marketplace" },
+  { key: "safety_tip_3_suffix", en: " for fully tracked premium services.", om: " keenya dhimma bahaa.", am: " ይጠቀሙ።", category: "Marketplace" },
+  { key: "bed", en: "Bed", om: "Siree", am: "አልጋ", category: "Marketplace" },
+  { key: "bath", en: "Bath", om: "Kutaa Dhiqannaa", am: "መታጠቢያ", category: "Marketplace" },
+  { key: "details_btn", en: "Details", om: "Bal'ina", am: "ዝርዝሮች", category: "Marketplace" },
+  { key: "weak_password", en: "Weak password", om: "Jecha Icchitii Lallafaa", am: "ደካማ የይለፍ ቃል", category: "Auth" },
+  { key: "medium_password", en: "Medium strength password", om: "Jecha Icchitii Giddu-galeessa", am: "መካከለኛ የይለፍ ቃል", category: "Auth" },
+  { key: "strong_password", en: "Strong, cryptographically secure password", om: "Jecha Icchitii Cimaa", am: "ጠንካራ የይለፍ ቃል", category: "Auth" },
+  { key: "fill_all_fields", en: "Please fill in all fields.", om: "Maaloo maggaalota hundaa guutaa.", am: "እባክዎ ሁሉንም መስኮች ይሙሉ::", category: "Auth" },
+  { key: "captcha_required", en: "CAPTCHA verification is required due to multiple failed login attempts.", om: "Mirkaneessi CAPTCHA yeroo baay'ee galmee dadhabuun dhufeef ni barbaachisa.", am: "በተደጋጋሚ በተሳሳተ ሙከራ ምክንያት የCAPTCHA ማረጋገጫ ያስፈልጋል።", category: "Auth" },
+  { key: "verify_email_first", en: "Please verify your email address to log in.", om: "Maaloo seenuuf dura imeelii kee mirkaneessi.", am: "እባክዎ ለመግባት መጀመሪያ ኢሜልዎን ያረጋግጡ።", category: "Auth" },
+  { key: "login_failed", en: "Login failed.", om: "Seenni hin milkoofne.", am: "መግባት አልተሳካም።", category: "Auth" },
+  { key: "server_error_retry", en: "Server error. Please try again.", om: "Rakkina tajaajilaa. Maaloo irra deebi'ii yaali.", am: "የአገልጋይ ስህተት። እባክዎ እንደገና ይሞክሩ።", category: "Auth" },
+  { key: "password_weak_error", en: "Your password is too weak. Please ensure it is at least 8 characters long and contains an uppercase letter, lowercase letter, number, and a special character.", om: "Jechi icciitii kee baay'ee lallafaadha. Maaloo yoo xiqqaate qubee 8, qubee guddaa 1, qubee xiqqaa 1, lakkoofsa 1 fi mallattoo addaa 1 qabaachuu mirkaneessi.", am: "የይለፍ ቃልዎ በጣም ደካማ ነው። እባክዎ ቢያንስ 8 ቁምፊዎች፣ 1 ታላቅ ፊደል፣ 1 ታናሽ ፊደል፣ 1 ቁጥር እና 1 ልዩ ምልክት መያዙን ያረጋግጡ።", category: "Auth" },
+  { key: "registration_failed", en: "Registration failed.", om: "Galmeen hin milkoofne.", am: "ምዝገባ አልተሳካም።", category: "Auth" },
+  { key: "profile_registered_success", en: "Profile registered successfully! A 6-digit verification code has been generated.", om: "Profaayiliin milkiidhaan galmeeffameera! Koodiin mirkaneessaa digit-6 uumameera.", am: "መገለጫው በተሳካ ሁኔታ ተመዝግቧል! ባለ 6-አሃዝ የማረጋገጫ ኮድ ተፈጥሯል።", category: "Auth" },
+  { key: "server_error", en: "Server error.", om: "Rakkina tajaajilaa.", am: "የአገልጋይ ስህተት።", category: "Auth" },
+  { key: "enter_verification_code", en: "Please enter the 6-digit verification code.", om: "Maaloo koodii mirkaneessaa digit-6 galchi.", am: "እባክዎ ባለ 6-አሃዝ የማረጋገጫ ኮዱን ያስገቡ።", category: "Auth" },
+  { key: "verification_failed", en: "Verification failed. Please check your code.", om: "Mirkaneessi hin milkoofne. Maaloo koodii kee deebisii ilaali.", am: "ማረጋገጫው አልተሳካም። እባክዎ ኮዱን ያረጋግጡ።", category: "Auth" },
+  { key: "email_verified_success", en: "Email verified successfully! Logging in...", om: "Imeeliin milkiidhaan mirkanaa'eera! Seenaa taasisaa jira...", am: "ኢሜልዎ በተሳካ ሁኔታ ተረጋግጧል! እየገባ ነው...", category: "Auth" },
+  { key: "invalid_verification_code", en: "Invalid or expired verification code.", om: "Koodii mirkaneessaa sirrii hin taane ykn yeroon isaa darbe.", am: "ልክ ያልሆነ ወይም ጊዜው ያለፈበት የማረጋገጫ ኮድ።", category: "Auth" },
+  { key: "enter_registered_email", en: "Please enter your registered email address.", om: "Maaloo imeelii kee isa galmeeffame galchi.", am: "እባክዎ የተመዘገበበትን የኢሜል አድራሻ ያስገቡ።", category: "Auth" },
+  { key: "recovery_code_failed", en: "Requesting recovery code failed.", om: "Koodii haaromsaa gaafachuun hin milkoofne.", am: "የመልሶ ማግኛ ኮድ መጠየቅ አልተሳካም።", category: "Auth" },
+  { key: "recovery_code_sent", en: "If this email exists in our records, a password reset code has been sent.", om: "Yoo imeeliin kun galmeeffamee jiraate, koodiin icciitii jijjiiruu itti ergameera.", am: "ይህ ኢሜይል በመዝገባችን ውስጥ ካለ፣ የይለፍ ቃል መቀየሪያ ኮድ ተልኳል።", category: "Auth" },
+  { key: "passwords_dont_match", en: "Passwords do not match.", om: "Jechi icciitii lamaan wal hin fudhanne.", am: "የይለፍ ቃላቱ አይዛመዱም።", category: "Auth" },
+  { key: "new_password_weak", en: "The new password is too weak. Please ensure it meets all complexity criteria.", om: "Jechi icciitii haaraan baay'ee lallafaadha. Amaloota barbaachisoo hundaa qabaachuu mirkaneessi.", am: "አዲሱ የይለፍ ቃል በጣም ደካማ ነው። ሁሉንም መስፈርቶች ማሟላቱን ያረጋግጡ።", category: "Auth" },
+  { key: "password_reset_failed", en: "Resetting password failed.", om: "Jecha icciitii jijjiiruun hin milkoofne.", am: "የይለፍ ቃል መቀየር አልተሳካም።", category: "Auth" },
+  { key: "password_reset_success", en: "Your password has been changed successfully! Redirecting to login...", om: "Jechi icciitii jijjiirameera! Gara seensatti dabarsaa jira...", am: "የይለፍ ቃልዎ በተሳካ ሁኔታ ተቀይሯል! ወደ መግቢያው እየመራንዎት ነው...", category: "Auth" },
+  { key: "google_login_failed", en: "Google Sign-In failed.", om: "Seenni Google hin milkoofne.", am: "በGoogle መግባት አልተሳካም።", category: "Auth" },
+  { key: "google_login_attempt_failed", en: "Google login attempt failed.", om: "Milkii seensa Google hin milkoofne.", am: "የGoogle መግባት ሙከራ አልተሳካም።", category: "Auth" },
+  { key: "premier_portal_ethiopia", en: "The Premier Portal of Ethiopia", om: "Portali Olaanaa Itiyoophiyaa", am: "የኢትዮጵያ ቀዳሚ መግቢያ በር", category: "Welcome" },
+  { key: "discover_refined_spaces", en: "Discover refined spaces, premium services, and curated job listings.", om: "Iddoowwan filatamoof qulqullina qaban, tajaajiloota ol’aanoof beeksisa hojii filataman argadhu.", am: "የተመረጡ ቦታዎችን፣ ከፍተኛ ጥራት ያላቸውን አገልግሎቶች እና የተመረጡ የስራ ማስታዋቂያዎችን ያግኙ።", category: "Welcome" },
+  { key: "marketplace_category_label", en: "Marketplace Category *", om: "Ramaddii Gabaa *", am: "የገበያ ምድብ *", category: "CreateListing" },
+  { key: "guideline_label", en: "Guideline:", om: "Hubachiisa:", am: "መመሪያ፦", category: "CreateListing" },
+  { key: "guideline_properties", en: "Use this to list real estate: houses, villas, apartments, commercial offices, or land. Do not use this for jobs, services, or products.", om: "Gurgurtaa ykn kireessa manneenii, epartimantootaa fi lafaaf fayyadami. Hojii, tajaajila ykn meeshaaleef hin fayyadamin.", am: "ሪል እስቴትን ለመዘርዘር ይህንን ይጠቀሙ፡ ቤቶች፣ ቪላዎች፣ አፓርታማዎች፣ የንግድ ቢሮዎች ወይም መሬት። ለስራዎች፣ አገልግሎቶች ወይም ምርቶች አይጠቀሙበት።", category: "CreateListing" },
+  { key: "guideline_jobs", en: "Use this to list job vacancies, career openings, employment, or freelance gigs. Do not use property/housing terms here.", om: "Barsiisa, carraa hojii ykn hojii dhuunfaa galchuuf fayyadami. Jechoota mana ykn qabeenyaa asitti hin fayyadamin.", am: "የስራ ክፍተቶችን፣ የስራ እድሎችን፣ ቅጥርን ወይም ፍሪላንስ ስራዎችን ለመዘርዘር ይህንን ይጠቀሙ። እዚህ የቤት ወይም የንብረት ቃላትን አይጠቀሙ።", category: "CreateListing" },
+  { key: "guideline_services", en: "Use this to list professional services like plumbing, consulting, tech support, or tutoring. Explain the service scope.", om: "Tajaajiloota ogummaa kan akka bishaan hojjechuu, gorsa, deeggarsa teeknoolojii ykn barsiisa galchi. Scope tajaajilaa ibsi.", am: "እንደ ቧንቧ ስራ፣ ማማከር፣ የቴክኖሎጂ ድጋፍ ወይም ትምህርት ያሉ ሙያዊ አገልግሎቶችን ለመዘርዘር ይህንን ይጠቀሙ። የአገልግሎቱን ወሰን ያብራሩ።", category: "CreateListing" },
+  { key: "guideline_products", en: "Use this to list goods, electronics, clothing, vehicles, crafts, or furniture. Specify the item's condition and price clearly.", om: "Meeshaalee, elektironiksii, uffata, konkolaataa ykn miyoota daldalaa galchuuf fayyadami. Haala fi gatii meeshichaa addaan baasi.", am: "እቃዎችን፣ ኤሌክትሮኒክስን፣ አልባሳትን፣ ተሽከርካሪዎችን፣ ጥበቦችን ወይም የቤት እቃዎችን ለመዘርዘር ይህንን ይጠቀሙ። የእቃውን ሁኔታ እና ዋጋ በግልፅ ይግለጹ።", category: "CreateListing" },
+  { key: "guideline_local_businesses", en: "Use this to list local shops, restaurants, cafes, agencies, or retail centers. Provide address and business hours.", om: "Suuqii, mana nyaataa, kaaffee, ejensii ykn giddugala daldalaa naannoo galchi. Teessoo fi sa'aatii hojii dhiyeessi.", am: "የአካባቢ ሱቆችን፣ ሬስቶራንቶችን፣ ካፌዎችን፣ ኤጀንሲዎችን ወይም የችርቻሮ ማእከላትን ለመዘርዘር ይህንን ይጠቀሙ። አድራሻ እና የስራ ሰዓት ያቅርቡ።", category: "CreateListing" },
+  { key: "guideline_community", en: "Use this to list events, social groups, local announcements, or community activities. Mention dates and locations.", om: "Taateewwan, gareewwan hawaasaa, beeksisa naannoo ykn sochiiwwan hawaasummaa galchi. Guyyaa fi bakka ibsi.", am: "ክስተቶችን፣ ማህበራዊ ቡድኖችን፣ የአካባቢ ማስታወቂያዎችን ወይም የማህበረሰብ እንቅስቃሴዎችን ለመዘርዘር ይህንን ይጠቀሙ። ቀኖችን እና ቦታዎችን ይጠቅሱ።", category: "CreateListing" },
+  { key: "title_property_label", en: "Property Title *", om: "Mata Duree Qabeenyaa *", am: "የንብረት ርዕስ *", category: "CreateListing" },
+  { key: "title_listing_label", en: "Listing Title *", om: "Mata Duree Beeksisaa *", am: "የማስታወቂያ ርዕስ *", category: "CreateListing" },
+  { key: "placeholder_property_title", en: "e.g. Beautiful 4-Bedroom Villa in Bole", om: "fkn. Villa Bareedaa Kutaalee 4 Bolee", am: "ምሳሌ፦ ቦሌ የሚገኝ ባለ 4 መኝታ ክፍል የሚያምር ቪላ", category: "CreateListing" },
+  { key: "placeholder_listing_title", en: "e.g. Graphic Design Services / Toyota Corolla 2022", om: "fkn. Tajaajila Diizaayinii ykn Toyota Corolla 2022", am: "ምሳሌ፦ የግራፊክስ ዲዛይን አገልግሎት / ቶዮታ ኮሮላ 2022", category: "CreateListing" },
+  { key: "full_description_label", en: "Full Description *", om: "Ibsa Guutuu *", am: "ሙሉ መግለጫ *", category: "CreateListing" },
+  { key: "placeholder_property_desc", en: "Provide a detailed layout of bedrooms, bathrooms, compounds, location and safety attributes.", om: "Ibsa guutuu kutaalee ciisichaa, kutaalee dhiqannaa, gadi-lakkisaa, bakka fi nageenya galchi.", am: "ስለ መኝታ ክፍሎች፣ መታጠቢያዎች፣ ግቢ፣ ቦታ እና ደህንነት ዝርዝር መግለጫ ያስገቡ።", category: "CreateListing" },
+  { key: "placeholder_listing_desc", en: "Provide a detailed layout, features, specifications, or details about what is offered.", om: "Ibsa guutuu amala, specifications, ykn dhimma dhiyaate irratti galchi.", am: "ስለሚቀርበው ነገር ዝርዝር መግለጫ፣ ባህሪያት、 ዝርዝሮች ወይም መረጃዎችን ያስገቡ።", category: "CreateListing" },
+  { key: "property_type_label", en: "Property Type *", om: "Gosa Qabeenyaa *", am: "የንብረት ዓይነት *", category: "CreateListing" },
+  { key: "option_apartments", en: "Apartments", om: "Epartimantoota", am: "አፓርታማዎች", category: "CreateListing" },
+  { key: "option_houses", en: "Houses", om: "Manneen", am: "ቤቶች", category: "CreateListing" },
+  { key: "option_offices", en: "Offices", om: "Waajjiroota", am: "ቢሮዎች", category: "CreateListing" },
+  { key: "option_commercial", en: "Commercial", om: "Daldalaa", am: "ንግድ ቤቶች", category: "CreateListing" },
+  { key: "option_land", en: "Land", om: "Lafa", am: "መሬት", category: "CreateListing" },
+  { key: "listing_category_label", en: "Listing Category *", om: "Ramaddii Beeksisaa *", am: "የማስታወቂያ ምድብ *", category: "CreateListing" },
+  { key: "option_for_sale", en: "For Sale", om: "Gurgurtaadhaaf", am: "ለሽያጭ", category: "CreateListing" },
+  { key: "option_for_rent", en: "For Rent", om: "Kiraayidhaaf", am: "ለኪራይ", category: "CreateListing" },
+  { key: "price_label", en: "Price *", om: "Gatii *", am: "ዋጋ *", category: "CreateListing" },
+  { key: "pricing_currency_label", en: "Pricing Currency *", om: "Gosa Maallaqaa *", am: "የክፍያ ገንዘብ አይነት *", category: "CreateListing" },
+  { key: "currency_etb", en: "ETB (Ethiopian Birr)", om: "ETB (Birrii Itoophiyaa)", am: "ETB (የኢትዮጵያ ብር)", category: "CreateListing" },
+  { key: "currency_usd", en: "USD (US Dollar)", om: "USD (Doolaarii)", am: "USD (የአሜሪካ ዶላር)", category: "CreateListing" },
+  { key: "currency_sar", en: "SAR (Saudi Riyal)", om: "SAR (Riyaala)", am: "SAR (የሳዑዲ ሪያል)", category: "CreateListing" },
+  { key: "currency_eur", en: "EUR (Euro)", om: "EUR (Yuuroo)", am: "EUR (ዩሮ)", category: "CreateListing" },
+  { key: "currency_aed", en: "AED (UAE Dirham)", om: "AED (Dirhaamii)", am: "AED (የተባበሩት አረብ ኤምሬትስ ድርሃም)", category: "CreateListing" },
+  { key: "bedrooms_label", en: "Bedrooms", om: "Kutaalee Ciisichaa", am: "መኝታ ክፍሎች", category: "CreateListing" },
+  { key: "bathrooms_label", en: "Bathrooms", om: "Kutaalee Dhiqannaa", am: "የመታጠቢያ ክፍሎች", category: "CreateListing" },
+  { key: "area_size_label", en: "Area Size (sqm) *", om: "Bal'ina Imeeraa (sqm) *", am: "የቦታ ስፋት (በካሬ ሜትር) *", category: "CreateListing" },
+  { key: "specific_location_label", en: "Specific Location *", om: "Bakka Murtaa'e *", am: "የተወሰነ ቦታ *", category: "CreateListing" },
+  { key: "placeholder_location", en: "e.g. Bole, Addis Ababa", om: "fkn. Bolee, Finfinnee", am: "ምሳሌ፦ ቦሌ፣ አዲስ አበባ", category: "CreateListing" },
+  { key: "contact_phone_label", en: "Contact Phone *", om: "Bilbila Quunnamtii *", am: "የእውቂያ ስልክ ቁጥር *", category: "CreateListing" },
+  { key: "owner_fullname_label", en: "Property Owner Full Name *", om: "Maqaa Guutuu Abbaa Qabeenyaa *", am: "የንብረት ባለቤት ሙሉ ስም *", category: "CreateListing" },
+  { key: "placeholder_owner_name", en: "e.g. Lalisa Addisu", om: "fkn. Lalisaa Addisuu", am: "ምሳሌ፦ ላሊሳ አዲሱ", category: "CreateListing" },
+  { key: "owner_email_label", en: "Property Owner Email *", om: "Imeeli Abbaa Qabeenyaa *", am: "የንብረት ባለቤት ኢሜይል *", category: "CreateListing" },
+  { key: "images_showcase_label", en: "Property Images Showcase *", om: "Agarsiisa Fakkii Qabeenyaa *", am: "የንብረት ምስሎች ማሳያ *", category: "CreateListing" },
+  { key: "add_image_device_btn", en: "Add Image from Phone or Camera", om: "Bilbila ykn Kaameraa irraa Fakkii Dabali", am: "ከስልክ ወይም ከካሜራ ምስል ያክሉ", category: "CreateListing" },
+  { key: "quick_add_image_btn", en: "Quick Add Premium Image", om: "Fakkii Bareedaa Saffisaan Dabali", am: "ጥራት ያለው ምስል በፍጥነት ያክሉ", category: "CreateListing" },
+  { key: "placeholder_image_url", en: "Paste Unsplash Image URL here", om: "Teessoo Fakkii Unsplash asitti barreessi", am: "የUnsplash ምስል አድራሻ እዚህ ይለጥፉ", category: "CreateListing" },
+  { key: "add_image_btn", en: "Add Image", om: "Fakkii Dabali", am: "ምስል ያክሉ", category: "CreateListing" },
+  { key: "publishing_progress", en: "Publishing...", om: "Gabaatti Bahaa jira...", am: "በማውጣት ላይ...", category: "CreateListing" },
+  { key: "publish_listing_online", en: "Publish Listing Online", om: "Beeksisa Sarara Irratti Baasi", am: "ማስታወቂያውን በቀጥታ ያውጡ", category: "CreateListing" },
+  { key: "publish_listing_instant_hint", en: "Clicking this button will instantly publish this property listing live on the Sof Umer digital marketplace.", om: "Fayyadama kana cuqaasuun beeksisa qabeenya keetii battalatti gabaa dijitaalaa Sof Umer irratti baasa.", am: "ይህን ቁልፍ ሲጫኑ የንብረትዎ ማስታወቂያ ወዲያውኑ በሶፍ ኡመር ዲጂታል ገበያ ላይ በቀጥታ ይወጣል።", category: "CreateListing" },
+  { key: "saving_progress", en: "Publishing...", om: "Maxxanfamaa jira...", am: "በማውጣት ላይ...", category: "CreateListing" },
+  { key: "publish_listing_btn", en: "Publish Listing", om: "Gabaatti Baasi", am: "ንብረቱን ያውጡ", category: "CreateListing" },
   { key: "faq.title", en: "Frequently Asked Questions (FAQ)", om: "Gaaffilee Yeroo Baay'ee Gaafataman (FAQ)", am: "በተደጋጋሚ የሚጠየቁ ጥያቄዎች (FAQ)", category: "FAQ" },
   { key: "faq.subtitle", en: "Search our knowledge base or browse categories to find answers instantly.", om: "Deebiiwwan battalatti argachuuf beekumsa keenya barbaadi ykn dameewwan dhiyeessi.", am: "መልሶችን በፍጥነት ለማግኘት የእውቀት ማምረቻችንን ይፈልጉ ወይም ምድቦችን ያስሱ።", category: "FAQ" },
   { key: "faq.search_placeholder", en: "Search for questions, keywords, or topics...", om: "Gaaffilee, jechoota furtuu, ykn mata-dureewwan barbaadi...", am: "ጥያቄዎችን፣ ቁልፍ ቃላትን ወይም ርዕሶችን ይፈልጉ...", category: "FAQ" },
@@ -3423,8 +657,6 @@ export const staticTranslations: TranslationKey[] = [
   { key: "faq.mark_popular", en: "Mark as Popular FAQ", om: "Akka FAQ Beekamaatti Galmeessi", am: "እንደ ታዋቂ FAQ ምልክት አድርግ", category: "FAQ" },
   { key: "faq.question_label", en: "Question", om: "Gaaffii", am: "ጥያቄ", category: "FAQ" },
   { key: "faq.answer_label", en: "Answer", om: "Deebii", am: "መልስ", category: "FAQ" },
-
-  // Payment Module Namespace Keys
   { key: "payment.payment", en: "Payment", om: "Kaffaltii", am: "ክፍያ", category: "Payment" },
   { key: "payment.pay_now", en: "Pay Now", om: "Amma Kaffali", am: "አሁኑኑ ይክፈሉ", category: "Payment" },
   { key: "payment.complete_payment", en: "Complete Payment", om: "Kaffaltii Xumuri", am: "ክፍያን ያጠናቅቁ", category: "Payment" },
@@ -3452,8 +684,6 @@ export const staticTranslations: TranslationKey[] = [
   { key: "payment.top_up_history", en: "Top Up History", om: "Seenaa Waaletiyaa", am: "የዋሌት ታሪክ", category: "Payment" },
   { key: "payment.account_number", en: "Account Number", om: "Lakkoofsa Baankii", am: "የሂሳብ ቁጥር", category: "Payment" },
   { key: "payment.account_name", en: "Account Name", om: "Maqaa Baankii", am: "የመለያ ስም", category: "Payment" },
-
-  // Receipt Module Namespace Keys
   { key: "receipt.receipt", en: "Payment Receipt", om: "Nagahee Kaffaltii", am: "የክፍያ ደረሰኝ", category: "Receipt" },
   { key: "receipt.official_receipt", en: "Official Payment Receipt", om: "Nagahee Kaffaltii Seeraa", am: "ህጋዊ የክፍያ ደረሰኝ", category: "Receipt" },
   { key: "receipt.download", en: "Download Receipt", om: "Nagahee Buufadhu", am: "ደረሰኝ አውርድ", category: "Receipt" },
@@ -3473,8 +703,6 @@ export const staticTranslations: TranslationKey[] = [
   { key: "receipt.thank_you", en: "Thank you for choosing Sof Umer Marketplace!", om: "Sof Umer Filachuu Keessaniif Galatoomaa!", am: "ሶፍ ኡመርን ስለመረጡ እናመሰግናለን!", category: "Receipt" },
   { key: "receipt.footer", en: "This is a computer-generated official receipt issued by Sof Umer Marketplace.", om: "Kun nagahee seeraa kompiyuutaraan oomishameedha, Sof Umer irraa kenname.", am: "ይህ በሶፍ ኡመር የተሰጠ ህጋዊ የኮምፒውተር ደረሰኝ ነው።", category: "Receipt" },
   { key: "receipt.proof_attachment", en: "Payment Proof Attachment", om: "Dabaleetti Suuraa Kaffaltii", am: "የክፍያ ማረጋገጫ ምስል", category: "Receipt" },
-
-  // Navigation & Common UI Keys
   { key: "nav.marketplace", en: "Marketplace", om: "Gabaa", am: "ገበያ", category: "Navigation" },
   { key: "nav.home", en: "Home", om: "Fuula Duraa", am: "መነሻ", category: "Navigation" },
   { key: "nav.categories", en: "Categories", om: "Gareewwan", am: "ምድቦች", category: "Navigation" },
@@ -3501,8 +729,6 @@ export const staticTranslations: TranslationKey[] = [
   { key: "common.search", en: "Search", om: "Barbaadi", am: "ፈልግ", category: "Common" },
   { key: "common.filter", en: "Filter", om: "Filtarii", am: "ማጣሪያ", category: "Common" },
   { key: "common.close", en: "Close", om: "Cufi", am: "ዝጋ", category: "Common" },
-
-  // About SOF-UMER Section Keys
   { key: "about.title", en: "About SOF-UMER", om: "Waa'ee SOF-UMER", am: "ስለ SOF-UMER", category: "About" },
   { key: "about.subtitle", en: "Ethiopia's premier multi-category marketplace connecting people, businesses, and opportunities.", om: "Gabaa dhiyeessii hedduu Itoophiyaa isa duraa kan namoota, daldalaafi carraawwan walitti hidhu.", am: "ሰዎችን፣ ንግዶችን እና እድሎችን የሚያገናኝ የኢትዮጵያ ግንባር ቀደም ባለብዙ-ምድብ ገበያ።", category: "About" },
   { key: "about.p1", en: "SOF-UMER is a modern multi-category marketplace built to help people discover, buy, sell, rent, hire, and connect with confidence. From real estate, vehicles, electronics, jobs, services, local businesses, and everyday products, our platform brings everything together in one secure and intelligent marketplace.", om: "SOF-UMER'n gabaa dhiyeessii hedduu hammate kan ammayyaa yoo ta'u, namoonni amanantaadhaan akka bira gahan, bitan, gurguran, kireeffatan, hojjachiisanii fi walittiเชื่อมamaan gargaaruuf kan ijaarameedha. Qabeenya manaa fi lafaa, konkolaattota, meeshaalee elektroniksii, hojiiwwan, tajaajiloota, daldala naannoo fi meeshaalee guyyaa guyyaa irraa kaasee, plaatfoormiin keenya waan hunda gabaa amansiisaa fi qaroo ta'e tokko keessatti walitti fida.", am: "SOF-UMER ሰዎች በራስ መተማመን እንዲያገኙ፣ እንዲገዙ፣ እንዲሸጡ፣ እንዲከራዩ፣ እንዲቀጥሩ እና እንዲገናኙ ለመርዳት የተገነባ ዘመናዊ ባለብዙ-ምድብ ገበያ ነው። ከሪል እስቴት፣ ተሽከርካሪዎች፣ ኤሌክትሮኒክስ፣ ሥራዎች፣ አገልግሎቶች፣ የሀገር ውስጥ ንግዶች እና የዕለት ተዕለት ምርቶች ጀምሮ፣ ፕላትፎርማችን ሁሉንም በአንድ ደህንነቱ በተጠበቀ እና ብልህ ገበያ ውስጥ ያገናኛል።", category: "About" },
@@ -3512,8 +738,6 @@ export const staticTranslations: TranslationKey[] = [
   { key: "about.verified_listings", en: "Verified Listings", om: "Beeksisa Mirkanaa'e", am: "የተረጋገጡ ማስታወቂያዎች", category: "About" },
   { key: "about.active_profiles", en: "Active Profiles", om: "Profeelii Socho'aa", am: "ንቁ መገለጫዎች", category: "About" },
   { key: "about.ethiopian_languages", en: "Ethiopian Languages", om: "Afaanota Itoophiyaa", am: "የኢትዮጵያ ቋንቋዎች", category: "About" },
-
-  // Wholesale Namespace Keys
   { key: "wholesale.wholesale_config_title", en: "📦 Wholesale Information", om: "📦 Odeeffannoo Gurgurtaa Jumlaa", am: "📦 የጅምላ መረጃ", category: "Wholesale" },
   { key: "wholesale.selling_type", en: "Selling Type", om: "Gosa Gurgurtaa", am: "የሽያጭ ዓይነት", category: "Wholesale" },
   { key: "wholesale.retail", en: "Retail", om: "Qindaaii", am: "ችርቻሮ", category: "Wholesale" },
@@ -3578,8 +802,6 @@ export const staticTranslations: TranslationKey[] = [
   { key: "wholesale.wholesale_terms", en: "Wholesale Terms", om: "Waliigaltee & Haala Gurgurtaa Jumlaa", am: "የጅምላ ሽያጭ ውሎች", category: "Wholesale" },
   { key: "wholesale.all_types", en: "All Types", om: "Gosa Hundaa", am: "ሁሉም ዓይነቶች", category: "Wholesale" },
   { key: "wholesale.no_info", en: "No wholesale information available.", om: "Odeeffannoon gurgurtaa jumlaa hin jiru.", am: "ምንም የጅምላ መረጃ አይገኝም።", category: "Wholesale" },
-
-  // Reviews & Ratings Namespace Keys
   { key: "reviews.reviews_and_ratings", en: "Reviews & Ratings", om: "Yaadota & Sadarkaa", am: "ግምገማዎች እና ደረጃዎች", category: "Reviews" },
   { key: "reviews.rating", en: "Rating", om: "Sadarkaa", am: "ደረጃ", category: "Reviews" },
   { key: "reviews.average_rating", en: "Average Rating", om: "Sadarkaa Avireejii", am: "አማካይ ደረጃ", category: "Reviews" },
@@ -3593,8 +815,6 @@ export const staticTranslations: TranslationKey[] = [
   { key: "reviews.success_pending", en: "Thank you! Your review has been submitted and is pending approval.", om: "Galatoomaa! Yaadni keessan galmaa'ee mirkaneessa eegaa jira.", am: "እናመሰግናለን! ግምገማዎ ቀርቧል እና ማረጋገጫ በመጠባበቅ ላይ ነው።", category: "Reviews" },
   { key: "reviews.error_empty", en: "Please enter a review comment.", om: "Maloomaaatii yaada keessan barreessaa.", am: "እባክዎን የግምገማ አስተያየት ያስገቡ።", category: "Reviews" },
   { key: "reviews.verified_reviews_count", en: "verified review(s) for this listing", om: "yaada(os) mirkanaa'e beeksisa kanaaf", am: "የተረጋገጡ ግምገማዎች ለዚህ ማስታወቂያ", category: "Reviews" },
-
-  // Media Upload Namespace Keys
   { key: "media.photos_limit_title", en: "Photos & Media (Max 10 Photos, 1 Video)", om: "Suulii & Miidiyaa (Murtii Fakkii 10, Viidiyoo 1)", am: "ፎቶዎች እና ሚዲያ (ከፍተኛ 10 ፎቶዎች፣ 1 ቪዲዮ)", category: "Media" },
   { key: "media.max_photos_exceeded", en: "Maximum 10 photos allowed per listing.", om: "Beeksisa tokkoof fakkii 10 ol heyyamamu hin danda'amu.", am: "በአንድ ማስታወቂያ ቢበዛ 10 ፎቶዎች ብቻ ይፈቀዳሉ።", category: "Media" },
   { key: "media.image_size_exceeded", en: "Image file size exceeds 10 MB limit.", om: "Hangatni fakkii 10 MB irra darbaa.", am: "የፎቶው መጠን ከ 10 MB ይበልጣል።", category: "Media" },
@@ -3607,10 +827,8 @@ export const staticTranslations: TranslationKey[] = [
   { key: "media.upload_video_btn", en: "Upload Video", om: "Viidiyoo Fe'i", am: "ቪዲዮ ይስቀሉ", category: "Media" },
   { key: "media.remove_video", en: "Remove Video", om: "Viidiyoo Haqi", am: "ቪዲዮ አስወግድ", category: "Media" },
   { key: "media.replace_video", en: "Replace Video", om: "Viidiyoo Jijjiiri", am: "ቪዲዮ በቀይር", category: "Media" },
-  { key: "media.video_uploading", "en": "Processing & Uploading Video...", om: "Viidiyoo qopheessaa & fe'aa jira...", am: "ቪዲዮ በማዘጋጀት እና በመጫን ላይ...", category: "Media" },
+  { key: "media.video_uploading", en: "Processing & Uploading Video...", om: "Viidiyoo qopheessaa & fe'aa jira...", am: "ቪዲዮ በማዘጋጀት እና በመጫን ላይ...", category: "Media" },
   { key: "media.reorder_hint", en: "The first photo is your listing's Cover Photo. Reorder photos or set any photo as cover.", om: "Fakkiin jalqabaa fakkii fuula durammee beeksisa keessanii ti. Fakkiiwwan tartiibessi ykn fuula durammee taasisi.", am: "መጀመሪያ ላይ ያለው ፎቶ የማስታወቂያዎ ሽፋን ፎቶ ነው። ፎቶዎችን በቅደም ተከተል ያስቀምጡ።", category: "Media" },
-
-  // Wholesale & Inventory Pricing Localization Keys
   { key: "inventory.available", en: "Available: {quantity} {unit}", om: "Argama: {quantity} {unit}", am: "ይገኛል: {quantity} {unit}", category: "Wholesale" },
   { key: "inventory.moq", en: "MOQ: {quantity} {unit}", om: "MOQ: {quantity} {unit}", am: "ዝቅተኛ ትዕዛዝ: {quantity} {unit}", category: "Wholesale" },
   { key: "wholesale.buyers_must_purchase", en: "Buyers must purchase at least {quantity} {unit}.", om: "Bittoonni yoo xiqqaate {quantity} {unit} bituu qabu.", am: "ገዢዎች ቢያንስ {quantity} {unit} መግዛት አለባቸው።", category: "Wholesale" },
@@ -3633,8 +851,6 @@ export const staticTranslations: TranslationKey[] = [
   { key: "verified_supplier", en: "Verified Supplier", om: "Dhiyeessaa Mirkanaa'e", am: "የተረጋገጠ አቅራቢ", category: "ListingDetails" },
   { key: "fast_shipping_available", en: "Fast Shipping Available", om: "Ergaan Ariifataan Ni Jira", am: "ፈጣን ማድረስ አለ", category: "ListingDetails" },
   { key: "location_not_provided", en: "Location not provided", om: "Bakki hin ibsamne", am: "አድራሻ አልተገለጸም", category: "ListingDetails" },
-
-  // HelpCenter Namespace Keys
   { key: "help.title", en: "Help & FAQ Center", om: "Giddugala Deggarsa & FAQ", am: "የእርዳታ እና በተደጋጋሚ የሚጠየቁ ጥያቄዎች ማዕከል", category: "Help" },
   { key: "help.subtitle", en: "Search our knowledge base or browse categories to find answers instantly.", om: "Deebiiwwan battalatti argachuuf beekumsa keenya barbaadi ykn dameewwan dhiyeessi.", am: "መልሶችን በፍጥነት ለማግኘት የእውቀት ማምረቻችንን ይፈልጉ ወይም ምድቦችን ያስሱ።", category: "Help" },
   { key: "help.search_placeholder", en: "Search for questions, keywords, or topics...", om: "Gaaffilee, jechoota furtuu, ykn mata-dureewwan barbaadi...", am: "ጥያቄዎችን፣ ቁልፍ ቃላትን ወይም ርዕሶችን ይፈልጉ...", category: "Help" },
@@ -3651,8 +867,6 @@ export const staticTranslations: TranslationKey[] = [
   { key: "help.contact_success_msg", en: "Message sent successfully! Our support team will contact you shortly.", om: "Ergaan kee milkaa'inaan ergameera! Gareen keenya dhiyootti si quunnama.", am: "መልዕክትዎ በተሳካ ሁኔታ ተልኳል! የድጋፍ ቡድናችን በቅርቡ ያገኝዎታል።", category: "Help" },
   { key: "help.contact_error_msg", en: "Failed to send message. Please try again.", om: "Ergaan hin ergamne. Maaloo irra deebi'i yaali.", am: "መልዕክቱን መላክ አልተቻለም። እባክዎን እንደገና ይሞክሩ።", category: "Help" },
   { key: "help.quick_contact", en: "Quick Help Contacts", om: "Quunnamtii Ariifachiisaa", am: "የፈጣን እገዛ አድራሻዎች", category: "Help" },
-
-  // User Dashboard Namespace Keys
   { key: "dashboard.registered_customer", en: "REGISTERED CUSTOMER", om: "MAAMILA GALMAA'E", am: "የተመዘገበ ደንበኛ", category: "Dashboard" },
   { key: "dashboard.account_center_menu", en: "Account Center Menu", om: "Baafata Herregaa", am: "የመለያ ማዕከል ምናሌ", category: "Dashboard" },
   { key: "dashboard.listings_count", en: "Listings", om: "Beeksisa", am: "ማስታወቂያዎች", category: "Dashboard" },
@@ -3695,6 +909,351 @@ export const staticTranslations: TranslationKey[] = [
   { key: "dashboard.save_changes", en: "Save Changes", om: "Jijjiirama Olkaa'i", am: "ለውጦችን አስቀምጥ", category: "Dashboard" },
   { key: "dashboard.saving", en: "Saving...", om: "Olkaa'aa jira...", am: "በማስቀመጥ ላይ...", category: "Dashboard" },
   { key: "dashboard.edit_listing_details", en: "Edit Listing Details", om: "Bal'ina Beeksisaa Gulaali", am: "የማስታወቂያ ዝርዝሮችን ያርትዑ", category: "Dashboard" },
-  { key: "dashboard.reapproval_warning", en: "Re-Approval Required: Any edits made to an approved listing will immediately require admin re-approval. Your listing will be temporarily hidden from public pages until approved by an administrator.", om: "Mirkaneessa Lammaffaa Barbaada: Gulaalli beeksisa mirkanaa'e irratti godhamu hundi mirkaneessa bulchaa barbaada. Beeksisa keessan hamma mirkanaa'utti yeroodhaaf ni dhokfama.", am: "እንደገና ማረጋገጫ ያስፈልጋል፡ በጸደቀ ማስታወቂያ ላይ የተደረጉ ማናቸውም አርትዖቶች የአስተዳዳሪ ድጋሚ ማረጋገጫ ያስፈልጋቸዋል። ማስታወቂያዎ በአስተዳዳሪ እስኪፈቀድ ድረስ ለጊዜው ይደበቃል።", category: "Dashboard" }
+  { key: "dashboard.reapproval_warning", en: "Re-Approval Required: Any edits made to an approved listing will immediately require admin re-approval. Your listing will be temporarily hidden from public pages until approved by an administrator.", om: "Mirkaneessa Lammaffaa Barbaada: Gulaalli beeksisa mirkanaa'e irratti godhamu hundi mirkaneessa bulchaa barbaada. Beeksisa keessan hamma mirkanaa'utti yeroodhaaf ni dhokfama.", am: "እንደገና ማረጋገጫ ያስፈልጋል፡ በጸደቀ ማስታወቂያ ላይ የተደረጉ ማናቸውም አርትዖቶች የአስተዳዳሪ ድጋሚ ማረጋገጫ ያስፈልጋቸዋል። ማስታወቂያዎ በአስተዳዳሪ እስኪፈቀድ ድረስ ለጊዜው ይደበቃል።", category: "Dashboard" },
+  { key: "welcome", en: "Welcome back", om: "Baga nagaan dhufte", am: "እንኳን ደህና መጡ", category: "Dashboard" },
+  { key: "active_badge", en: "Active Account", om: "Hojataa Jira", am: "ገባሪ መለያ", category: "Dashboard" },
+  { key: "verified_badge", en: "Verified Account", om: "Mirkanaa'eera", am: "የተረጋገጠ መለያ", category: "Dashboard" },
+  { key: "pending_badge", en: "Pending Verification", om: "Qorannoorra Jira", am: "ግምገማ ላይ ያለ", category: "Dashboard" },
+  { key: "unverified_badge", en: "Unverified Account", om: "Hin Mirkanoofne", am: "ያልተረጋገጠ መለያ", category: "Dashboard" },
+  { key: "edit_profile_btn", en: "Edit Profile Info", om: "Profaayilii Gulaali", am: "መገለጫ ያስተካክሉ", category: "Dashboard" },
+  { key: "save_changes", en: "Save Profile Updates", om: "Haaromsi Herregaa", am: "መገለጫ አሻሽል", category: "Dashboard" },
+  { key: "change_photo", en: "Change Photo URL", om: "URL Fakkii Jijjiiri", am: "የፎቶ ሊንክ ቀይር", category: "Dashboard" },
+  { key: "my_listings_title", en: "Manage My Listings", om: "Beeksisa Koo Bulchi", am: "የእኔ ማስታወቂያዎች አስተዳድር", category: "Dashboard" },
+  { key: "no_listings", en: "You have not uploaded any properties/listings yet.", om: "Hanga ammaatti beeksisa tokkollee hin olshitsine.", am: "እስካሁን ምንም አይነት ማስታወቂያ አልለጠፉም።", category: "Dashboard" },
+  { key: "no_saved", en: "Your favorites list is currently empty.", om: "Kutaan jaallatamoowwan kee duwwaadha.", am: "የተቀመጡ ማስታወቂያዎች ዝርዝር ባዶ ነው።", category: "Dashboard" },
+  { key: "no_messages", en: "No active inbox chat conversations.", om: "Ergaan haasawaa argame hin jiru.", am: "ምንም ገባሪ የውይይት መልእክቶች የሉም።", category: "Dashboard" },
+  { key: "no_notifications", en: "You do not have any new system alerts.", om: "Beeksisa haaraa hin qabdu.", am: "ምንም አዲስ የስርዓት ማሳወቂያዎች የሉም።", category: "Dashboard" },
+  { key: "no_recent", en: "You have not viewed any listings in this session.", om: "Hanga ammaatti beeksisa hin daawwanne.", am: "በቅርብ ጊዜ የታዩ ማስታወቂያዎች የሉም።", category: "Dashboard" },
+  { key: "ticket_submit", en: "Submit Support Ticket", om: "Tikeettii Deggarsaa Ergi", am: "የድጋፍ ጥያቄ አስገባ", category: "Dashboard" },
+  { key: "ticket_success_msg", en: "Your support ticket has been logged successfully!", om: "Tikeettiin kee milkiidhaan galmeeffameera!", am: "የድጋፍ ጥያቄዎ በተሳካ ሁኔታ ተመዝግቧል!", category: "Dashboard" },
+  { key: "report_btn", en: "File Report", om: "Rakkina Gabaasi", am: "ችግር ሪፖርት አድርግ", category: "Dashboard" },
+  { key: "logout_confirm", en: "Log Out Safely", om: "Herrega Koo keessaa Ba'i", am: "በደህና ውጣ", category: "Dashboard" },
+  { key: "logout_desc", en: "Are you sure you want to log out of your session? You will need to log back in to contact sellers or manage your active listings.", om: "Herrega kee keessaa ba'uu ni barbaaddaa? Beeksisa kee bulchuuf deebitee seenuun si barbaachisa.", am: "እርግጠኛ ነዎት ከመለያዎ መውጣት ይፈልጋሉ? ማስታወቂያዎችዎን ለማስተዳደር ተመልሰው መግባት ይኖርብዎታል።", category: "Dashboard" },
+  { key: "close", en: "Close", om: "Cufi", am: "ዝጋ", category: "Dashboard" },
+  { key: "promote_action", en: "Promote Listing", om: "Beeksisa Guddisi", am: "ማስታወቂያ አስተዋውቅ", category: "Dashboard" },
+  { key: "registered_customer", en: "REGISTERED CUSTOMER", om: "MAAMILA GALMAA'E", am: "የተመዘገበ ደንበኛ", category: "Dashboard" },
+  { key: "listings_count", en: "Listings", om: "Beeksisa", am: "ማስታወቂያዎች", category: "Dashboard" },
+  { key: "favorites_count", en: "Favorites", om: "Jaallatamoo", am: "ተወዳጆች", category: "Dashboard" },
+  { key: "inbox_chats", en: "Inbox Chats", om: "Haasawaa", am: "የገቢ ውይይቶች", category: "Dashboard" },
+  { key: "account_center_menu", en: "Account Center Menu", om: "Baafata Herregaa", am: "የመለያ ማዕከል ምናሌ", category: "Dashboard" },
+  { key: "profile_details", en: "Profile Details", om: "Bal'ina Profaayilii", am: "የመገለጫ ዝርዝሮች", category: "Dashboard" },
+  { key: "profile_subtitle", en: "Manage your user registration credentials and marketplace identity.", om: "Odeeffannoo galmee keessanii fi eenyummaa gabaa keessan bulchaa.", am: "የምዝገባ መረጃዎን እና የገበያ ቦታ ማንነትዎን ያስተዳድሩ።", category: "Dashboard" },
+  { key: "email_address", en: "Email Address", om: "Teessoo Imeelii", am: "የኢሜል አድራሻ", category: "Dashboard" },
+  { key: "phone_number", en: "Phone Number", om: "Lakkoofsa Bilbilaa", am: "ስልክ ቁጥር", category: "Dashboard" },
+  { key: "not_provided", en: "Not provided", om: "Hin kennamne", am: "አልተሰጠም", category: "Dashboard" },
+  { key: "profile_pic_title", en: "User Profile Picture", om: "Fakkii Profaayilii Fayyadamaa", am: "የተጠቃሚ መገለጫ ፎቶ", category: "Dashboard" },
+  { key: "saved_to_account", en: "Saved to Account", om: "Gara Herregaatti Olkaa'ame", am: "ወደ መለያ ተቀምጧል", category: "Dashboard" },
+  { key: "profile_pic_desc", en: "Upload a photo from your device gallery or files to personalize your account across the marketplace.", om: "Gabaa guutuutti herrega keessan dhuunfachiisuuf suuraa meeshaa keessan irraa fe'aa.", am: "በገበያ ቦታው ሁሉ መለያዎን ለግል ለማበጀት ከመሳሪያዎ ጋለሪ ፎቶ ይስቀሉ።", category: "Dashboard" },
+  { key: "profile_pic_hint", en: "Allowed formats: PNG, JPG, JPEG, WEBP, GIF • Max size: 5 MB", om: "Bifa heyyamamu: PNG, JPG, JPEG, WEBP, GIF • Hangatni guddaan: 5 MB", am: "የተፈቀዱ ቅርጸቶች: PNG, JPG, JPEG, WEBP, GIF • ከፍተኛ መጠን: 5 MB", category: "Dashboard" },
+  { key: "uploading", en: "Uploading...", om: "Fe'aa jira...", am: "በመጫን ላይ...", category: "Dashboard" },
+  { key: "change_profile_pic", en: "Change Profile Picture", om: "Suuraa Profaayilii Jijjiiri", am: "የመገለጫ ፎቶ ቀይር", category: "Dashboard" },
+  { key: "add_profile_pic", en: "Add Profile Picture", om: "Suuraa Profaayilii Dabali", am: "የመገለጫ ፎቶ አክል", category: "Dashboard" },
+  { key: "remove_photo", en: "Remove Photo", om: "Suuraa Haqi", am: "ፎቶ አስወግድ", category: "Dashboard" },
+  { key: "edit_profile_info", en: "Edit Profile Information", om: "Odeeffannoo Profaayilii Gulaali", am: "የመገለጫ መረጃን ያርትዑ", category: "Dashboard" },
+  { key: "profile_photo_url_label", en: "Profile Image URL", om: "URL Fakkii Profaayilii", am: "የመገለጫ ፎቶ ሊንክ", category: "Dashboard" },
+  { key: "post_new_listing", en: "Post New Listing", om: "Beeksisa Haaraa Baasi", am: "አዲስ ማስታወቂያ ለጥፍ", category: "Dashboard" },
+  { key: "edit_listing_subtitle", en: "Edit, pause, promote or delete your properties and assets.", om: "Qabeenya keessan gulaalaa, tursiisaa, guddisaa ykn haqaa.", am: "ንብረቶችዎን ያርትዑ፣ ያቁሙ፣ ያስተዋውቁ ወይም ይሰርዙ።", category: "Dashboard" },
+  { key: "campaign_status", en: "Campaign Status", om: "Haala Duulaa", am: "የዘመቻው ሁኔታ", category: "Dashboard" },
+  { key: "free_listing_quota", en: "Free Listing Quota", om: "Qooda Beeksisa Bilisaa", am: "የነፃ ማስታወቂያ ኮታ", category: "Dashboard" },
+  { key: "quota_used", en: "Used", om: "Kan Fayyadame", am: "ጥቅም ላይ የዋለ", category: "Dashboard" },
+  { key: "quota_remaining", en: "Remaining", om: "Kan Hafe", am: "የቀረ", category: "Dashboard" },
+  { key: "active_status", en: "Active", om: "Hojjataa", am: "ንቁ", category: "Dashboard" },
+  { key: "paused_status", en: "Paused", om: "Dhaabbate", am: "ቆሟል", category: "Dashboard" },
+  { key: "sold_status", en: "Sold", om: "Gurgurame", am: "ተሽጧል", category: "Dashboard" },
+  { key: "draft_status", en: "Draft", om: "Wixinee", am: "ረቂቅ", category: "Dashboard" },
+  { key: "expired_status", en: "Expired", om: "Yeroon Darbe", am: "ጊዜው ያለፈበት", category: "Dashboard" },
+  { key: "pending_reapproval_status", en: "Pending Re-Approval (Edited)", om: "Mirkaneessa Lammaffaa Eegaa Jira", am: "እንደገና ማረጋገጫ በመጠባበቅ ላይ", category: "Dashboard" },
+  { key: "pending_audit_status", en: "Pending Audit", om: "Qorannoo Eegaa Jira", am: "ግምገማ በመጠባበቅ ላይ", category: "Dashboard" },
+  { key: "rejected_status", en: "Rejected", om: "Kufaa Ta'e", am: "ውድቅ ተደርጓል", category: "Dashboard" },
+  { key: "action_edit", en: "Edit", om: "Gulaali", am: "አርትዕ", category: "Dashboard" },
+  { key: "action_pause", en: "Pause", om: "Dhaabi", am: "አቁም", category: "Dashboard" },
+  { key: "action_activate", en: "Activate", om: "Kakaasi", am: "አንቃ", category: "Dashboard" },
+  { key: "action_mark_sold", en: "Mark Sold", om: "Gurgurame Jedhi", am: "እንደተሸጠ ምልክት አድርግ", category: "Dashboard" },
+  { key: "action_mark_active", en: "Mark Active", om: "Hojjataa Jedhi", am: "እንደነቃ ምልክት አድርግ", category: "Dashboard" },
+  { key: "action_promote", en: "Promote", om: "Guddisi", am: "አስተዋውቅ", category: "Dashboard" },
+  { key: "action_delete", en: "Delete", om: "Haqi", am: "ሰርዝ", category: "Dashboard" },
+  { key: "cancel", en: "Cancel", om: "Dhiisi", am: "ይቅር", category: "Dashboard" },
+  { key: "save_changes_btn", en: "Save Changes", om: "Jijjiirama Olkaa'i", am: "ለውጦችን አስቀምጥ", category: "Dashboard" },
+  { key: "edit_listing_details", en: "Edit Listing Details", om: "Bal'ina Beeksisaa Gulaali", am: "የማስታወቂያ ዝርዝሮችን ያርትዑ", category: "Dashboard" },
+  { key: "reapproval_required", en: "Re-Approval Required:", om: "Mirkaneessa Lammaffaa Barbaada:", am: "እንደገና ማረጋገጫ ያስፈልጋል፡", category: "Dashboard" },
+  { key: "reapproval_warning", en: "Any edits made to an approved listing will immediately require admin re-approval. Your listing will be temporarily hidden from public pages until approved by an administrator.", om: "Gulaalli beeksisa mirkanaa'e irratti godhamu hundi mirkaneessa bulchaa barbaada. Beeksisa keessan hamma mirkanaa'utti yeroodhaaf ni dhokfama.", am: "በጸደቀ ማስታወቂያ ላይ የተደረጉ ማናቸውም አርትዖቶች የአስተዳዳሪ ድጋሚ ማረጋገጫ ያስፈልጋቸዋል። ማስታወቂያዎ በአስተዳዳሪ እስኪፈቀድ ድረስ ለጊዜው ይደበቃል።", category: "Dashboard" },
+  { key: "price_etb", en: "Price (ETB)", om: "Gatii (ETB)", am: "ዋጋ (ብር)", category: "Dashboard" },
+  { key: "item_description", en: "Item Description", om: "Ibsa Meeshichaa", am: "የእቃው መግለጫ", category: "Dashboard" },
+  { key: "wallet_payment_center", en: "Wallet & Payment Center", om: "Giddugala Boorsaa & Kaffaltii", am: "የቦርሳ እና የክፍያ ማዕከል", category: "Dashboard" },
+  { key: "wallet_center_desc", en: "Top up your marketplace wallet, pay for ad boosts, and review payment history.", om: "Boorsaa gabaa keessanii guutaa, beeksisa guddisuuf kaffalaa, seenaa kaffaltii ilaalaa.", am: "የገበያ ቦታ ቦርሳዎን ይሙሉ፣ ለማስታወቂያ ማሳደጊያ ይክፈሉ እና የክፍያ ታሪክን ይገምግሙ።", category: "Dashboard" },
+  { key: "available_wallet_balance", en: "AVAILABLE WALLET BALANCE", om: "HANGA MAALLAQA BOORSAA", am: "የቦርሳ ሂሳብ ቀሪ", category: "Dashboard" },
+  { key: "wallet_credits_desc", en: "Use your wallet credits for instant 1-click ad boost promotions.", om: "Guddisa beeksisaa battalatti cuqaasa tokkoon raawwachuuf kireeditii boorsaa fayyadamaa.", am: "ለፈጣን ባለ 1-ጠቅታ የማስታወቂያ ማሳደጊያዎች የቦርሳ ክሬዲቶችዎን ይጠቀሙ።", category: "Dashboard" },
+  { key: "wallet_credit_rate", en: "1 ETB = 1 Credit", om: "1 ETB = 1 Kireediti", am: "1 ብር = 1 ክሬዲት", category: "Dashboard" },
+  { key: "top_up_wallet_credits", en: "Top Up Wallet Credits", om: "Maallaqa Boorsaa Guuti", am: "የቦርሳ ክሬዲት ይሙሉ", category: "Dashboard" },
+  { key: "top_up_deposit_desc", en: "Deposit funds using your preferred payment method and submit the transaction reference.", om: "Mala kaffaltii barbaaddan fayyadamuun maallaqa galchaa, lakk. dabarsaa ergaa.", am: "የመረጡትን የክፍያ ዘዴ በመጠቀም ገንዘብ ያስገቡ እና የግብይት ማጣቀሻውን ያስገቡ።", category: "Dashboard" },
+  { key: "payment_channel", en: "Payment Channel", om: "Sarara Kaffaltii", am: "የክፍያ መስመር", category: "Dashboard" },
+  { key: "select_payment_method", en: "-- Select Payment Method --", om: "-- Mala Kaffaltii Filadhaa --", am: "-- የክፍያ ዘዴ ይምረጡ --", category: "Dashboard" },
+  { key: "top_up_amount_label", en: "Top-Up Amount (ETB)", om: "Hanga Maallaqaa (ETB)", am: "የሚሞላ መጠን (ብር)", category: "Dashboard" },
+  { key: "quick_amounts", en: "Quick Amounts:", om: "Hanga Ariifachiisaa:", am: "ፈጣን መጠኖች:", category: "Dashboard" },
+  { key: "tx_ref_label", en: "Transaction Ref / FT Reference SMS", om: "Lakk. Dabarsaa / SMS Mirkaneessaa FT", am: "የግብይት ማጣቀሻ / የFT ማረጋገጫ የኤስኤምኤስ ቁጥር", category: "Dashboard" },
+  { key: "submit_top_up", en: "Submit Top-Up Request", om: "Gaaffii Boorsaa Guutuu Galchi", am: "የቦርሳ መሙላት ጥያቄ አስገባ", category: "Dashboard" },
+  { key: "my_receipts_title", en: "My Payment Receipts & Boost History", om: "Nagahee Kaffaltii & Seenaa Guddisaa Koo", am: "የእኔ የክፍያ ደረሰኞች እና የማሳደጊያ ታሪክ", category: "Dashboard" },
+  { key: "no_receipts_found", en: "No payment receipts or boost history records found.", om: "Nagaheen kaffaltii ykn galmeen seenaa hin argamne.", am: "ምንም የክፍያ ደረሰኞች ወይም የማሳደጊያ ታሪክ አልተገኘም።", category: "Dashboard" },
+  { key: "saved_items_title", en: "Saved Items", om: "Meeshaalee Qusataman", am: "የተቀመጡ እቃዎች", category: "Dashboard" },
+  { key: "saved_items_subtitle", en: "Quickly view or contact sellers of saved marketplace listings.", om: "Beeksisa qusatame saffisaan ilaalaa ykn gurgurtuu quunnamaa.", am: "የተቀመጡ የገበያ ማስታወቂያዎችን በፍጥነት ይመልከቱ ወይም ሻጮችን ያግኙ።", category: "Dashboard" },
+  { key: "messages_title", en: "Messages", om: "Ergawwan", am: "መልእክቶች", category: "Dashboard" },
+  { key: "messages_subtitle", en: "Instant secure inbox communication history with buyers and sellers.", om: "Seenaa quunnamtii nageenya qabu bittoota fi gurgurtoota waliin.", am: "ደህንነቱ የተጠበቀ የገቢ መልእክት ሳጥን ከገዢዎች እና ሻጮች ጋር።", category: "Dashboard" },
+  { key: "delete_all_conversations", en: "Delete All Conversations", om: "Haasawwan Hunda Haqi", am: "ሁሉንም ውይይቶች ሰርዝ", category: "Dashboard" },
+  { key: "conversations_label", en: "Conversations", om: "Haasawwan", am: "ውይይቶች", category: "Dashboard" },
+  { key: "secure_chat_mode", en: "Secure End-to-End Chat Mode", om: "Haala Haasawaa Nageenya Qabu", am: "ደህንነቱ የተጠበቀ የውይይት ሁነታ", category: "Dashboard" },
+  { key: "type_chat_reply", en: "Type your secure chat reply...", om: "Deebii haasawaa keessan barreessaa...", am: "የውይይት መልስዎን እዚህ ይጻፉ...", category: "Dashboard" },
+  { key: "select_conversation_hint", en: "Select a conversation thread on the left side to review or send messages.", om: "Ergaa dubbisuuf ykn erguuf haasawaa bitaa irra jiru filadhaa.", am: "መልዕክቶችን ለመገምገም ወይም ለመላክ በስተግራ ያለውን የውይይት ክር ይምረጡ።", category: "Dashboard" },
+  { key: "notifications_title", en: "Notifications Center", om: "Giddugala Beeksisaa", am: "የማሳወቂያዎች ማዕከል", category: "Dashboard" },
+  { key: "notifications_subtitle", en: "Stay updated with listing status reports and chat notification alerts.", om: "Gabaasa haala beeksisaa fi beeksisa haasawaa hordofaa.", am: "የማስታወቂያ ሁኔታ ሪፖርቶችን እና የውይይት ማንቂያዎችን ይከታተሉ።", category: "Dashboard" },
+  { key: "mark_all_read", en: "Mark All as Read", om: "Hunda Akka Dubbifametti Galchi", am: "ሁሉንም እንደተነበቡ ምልክት አድርግ", category: "Dashboard" },
+  { key: "clear_all", en: "Clear All", om: "Hunda Qulqulleessi", am: "ሁሉንም አጽዳ", category: "Dashboard" },
+  { key: "recently_viewed_title", en: "Recently Viewed", om: "Dhiyeenatti Daawwatame", am: "በቅርቡ የታዩ", category: "Dashboard" },
+  { key: "recently_viewed_subtitle", en: "Quickly revisit active listings you opened recently in this browser session.", om: "Beeksisa hojjatu kan dhiyeenya baname saffisaan deebi'aa ilaalaa.", am: "በዚህ አሰሳ ክፍለ-ጊዜ በቅርቡ የከፈቷቸውን ንቁ ማስታወቂያዎች በፍጥነት እንደገና ይጎብኙ።", category: "Dashboard" },
+  { key: "support_safety_title", en: "Support, Rules & Safety Guide", om: "Qajeelfama Deggarsaa, Seeraa & Nageenyaa", am: "የድጋፍ፣ ደንቦች እና ደህንነት መመሪያ", category: "Dashboard" },
+  { key: "support_safety_subtitle", en: "Explore secure guidelines, report problem tickets, or log official support requests.", om: "Qajeelfama nageenyaa qoradhaa, rakkoo gabaasaa, ykn gaaffii deggarsaa galchaa.", am: "ደህንነቱ የተጠበቀ መመሪያዎችን ያስሱ፣ የችግር ቲኬቶችን ሪፖርት ያድርጉ ወይም የድጋፍ ጥያቄዎችን ይመዝግቡ।", category: "Dashboard" },
+  { key: "guideTitle", en: "Category Guidance", om: "Qajeelfama Garee", am: "የምድብ መመሪያ", category: "CreateListing" },
+  { key: "subcatTitle", en: "Subcategory Explanation", om: "Ibsa Garee Xiqqaa", am: "የንዑስ ምድብ ማብራሪያ", category: "CreateListing" },
+  { key: "yes", en: "Yes", om: "Eeyyee", am: "አዎ", category: "CreateListing" },
+  { key: "no", en: "No", om: "Lakki", am: "አይደለም", category: "CreateListing" },
+  { key: "catLabel", en: "Listing Category", om: "Garee Beeksisaa", am: "የማስታወቂያ ምድብ", category: "CreateListing" },
+  { key: "catDesc", en: "Select the major category that matches what you are creating.", om: "Garee guddaa beeksisa keetii wajjiin wal-simu filadhu.", am: "ለሚፈጥሩት ማስታወቂያ ትክክለኛውን ዋና ምድብ ይምረጡ።", category: "CreateListing" },
+  { key: "propGuide", en: "List houses, apartments, land, commercial buildings, offices, and rental properties.", om: "Manneen, kireeffamu, lafa, ijaarsota daldalaa fi manneen qabeenyaa galmeessi.", am: "ቤቶች፣ አፓርታማዎች፣ መሬቶች፣ የንግድ ህንፃዎች፣ ቢሮዎች እና የሚከራዩ ንብረቶችን ይዘርዝሩ።", category: "CreateListing" },
+  { key: "vehGuide", en: "List cars, motorcycles, trucks, buses, agricultural vehicles, spare parts, and accessories.", om: "Konkolaattota, mootoroota, kutaalee mii'aa dabalataa fi konkolaattota qonnaa galmeessi.", am: "መኪናዎች፣ ሞተር ብስክሌቶች፣ የጭነት መኪናዎች፣ አውቶቡሶች፣ የእርሻ ተሽከርካሪዎች እና መለዋወጫዎችን ይዘርዝሩ።", category: "CreateListing" },
+  { key: "prodGuide", en: "List new or used items available for sale.", om: "Meeshaalee haaraa ykn fayyadaman kan gurgurtaaf dhiyaatan galmeessi.", am: "ለሽያጭ የሚቀርቡ አዳዲስ ወይም ያገለገሉ እቃዎችን ይዘርዝሩ።", category: "CreateListing" },
+  { key: "jobGuide", en: "Create job vacancies, internships, freelance work, and recruitment listings.", om: "Carraa hojii, shaakala, hojii dhuunfaa fi qaxara uumi.", am: "ክፍት የስራ መደቦች፣ የልምምድ ስራዎች፣ የፍሪላንስ ስራዎች እና የቀጥር ማስታወቂያዎችን ይፍጠሩ።", category: "CreateListing" },
+  { key: "srvGuide", en: "Advertise professional or local services offered by individuals or businesses.", om: "Tajaajila dhuunfaa ykn daldalaa beeksisi.", am: "በግለሰቦች ወይም በድርጅቶች የሚቀርቡ ሙያዊ ወይም የአካባቢ አገልግሎቶችን ያስተዋውቁ።", category: "CreateListing" },
+  { key: "bizGuide", en: "Register and promote verified businesses, shops, restaurants, hotels, and companies.", om: "Daldala, suuqota, nyaataa, hoteelota fi dhaabbata mirkanaa'an galmeessi.", am: "የተረጋገጡ የንግድ ድርጅቶችን፣ ሱቆችን፣ ምግብ ቤቶችን፣ ሆቴሎችን እና ኩባንያዎችን ይመዝግቡ እና ያስተዋውቁ።", category: "CreateListing" },
+  { key: "commGuide", en: "Share community announcements, local events, educational activities, charity programs, and public notices.", om: "Beeksisa hawaasaa, qophii, barumsaa fi gargaarsa hawaasaa ergi.", am: "የማህበረሰብ ማስታወቂያዎችን፣ የአካባቢ ዝግጅቶችን፣ የትምህርት እንቅስቃሴዎችን፣ የበጎ አድራጎት ፕሮግራሞችን እና የህዝብ ማስታወቂያዎችን ያጋሩ።", category: "CreateListing" },
+  { key: "step1", en: "1. Category", om: "1. Garee Guddaa", am: "1. ዋና ምድብ", category: "CreateListing" },
+  { key: "step2", en: "2. Subcategory", om: "2. Garee Xiqqaa", am: "2. ንዑስ ምድብ", category: "CreateListing" },
+  { key: "step3", en: "3. Details & Photos", om: "3. Tarreeffama & Fakkii", am: "3. ዝርዝር እና ፎቶ", category: "CreateListing" },
+  { key: "step4", en: "4. Preview Ad", om: "4. Beeksisa Ilaali", am: "4. ቅድመ እይታ", category: "CreateListing" },
+  { key: "step5", en: "5. Boost & Pay", om: "5. Beeksisa Guddisi & Kaffali", am: "5. ማስተዋወቅ እና ክፍያ", category: "CreateListing" },
+  { key: "subcatLabel", en: "Subcategory Type *", om: "Gosa Garee Xiqqaa *", am: "የንዑስ ምድብ አይነት *", category: "CreateListing" },
+  { key: "subcatDesc", en: "Choose the exact classification for your listing.", om: "Akaakuu beeksisa keetii sirrii ta'e filadhu.", am: "ለማስታወቂያዎ ትክክለኛውን ምድብ ይምረጡ።", category: "CreateListing" },
+  { key: "specHeader", en: "Specifications & Listing Details", om: "Tarreeffama & Ibsa Beeksisaa", am: "ዝርዝሮች እና የማስታወቂያ መረጃ", category: "CreateListing" },
+  { key: "specSubtext", en: "Please fill out all required attributes accurately to attract buyers.", om: "Bitoota harkisuudhaaf ulaagaalee barbaachisan guutuu galchi.", am: "ገዢዎችን ለመሳብ ሁሉንም አስፈላጊ መረጃዎች በትክክል ይሙሉ::", category: "CreateListing" },
+  { key: "adminOwnerTitle", en: "Property Owner Contact Details (Admin Entry)", om: "Odeeffannoo Abbaa Qabeenyaa (Admin)", am: "የንብረቱ ባለቤት መረጃ (የአድሚን መመዝገቢያ)", category: "CreateListing" },
+  { key: "adminOwnerDesc", en: "Enter the property owner's phone number and email so buyers contact the owner directly instead of admin.", om: "Bitoonni abbaa qabeenyaa dhiyootti akka quunnamaniif lakk. bilbilaa fi imeelii galchi.", am: "ገዢዎች ባለቤቱን በቀጥታ እንዲያገኙት የባለቤቱን ስልክ እና ኢሜል ያስገቡ።", category: "CreateListing" },
+  { key: "ownerNameLabel", en: "Property Owner Name *", om: "Maqaa Abbaa Qabeenyaa *", am: "የባለቤቱ ሙሉ ስም *", category: "CreateListing" },
+  { key: "ownerPhoneLabel", en: "Property Owner Phone *", om: "Bilbila Abbaa Qabeenyaa *", am: "የባለቤቱ ስልክ ቁጥር *", category: "CreateListing" },
+  { key: "ownerEmailLabel", en: "Property Owner Email *", om: "Imeelii Abbaa Qabeenyaa *", am: "የባለቤቱ ኢሜል አድራሻ *", category: "CreateListing" },
+  { key: "deviceUpload", en: "Device File Upload", om: "Fakkii Moobaayilaa irraa Fe'i", am: "ምስሎችን ከስልክዎ ይጫኑ", category: "CreateListing" },
+  { key: "deviceUploadSub", en: "Select JPEG/PNG photographs.", om: "Fakkoota JPEG/PNG filadhu.", am: "የJPEG/PNG ምስሎችን ይምረጡ።", category: "CreateListing" },
+  { key: "needStock", en: "Need stock photo?", om: "Fakkii naamuunaa barbaadaa?", am: "ናሙና ፎቶ ይፈልጋሉ?", category: "CreateListing" },
+  { key: "addedPhotos", en: "Added Photos", om: "Fakkoota Dabalaman", am: "የተጨመሩ ፎቶዎች", category: "CreateListing" },
+  { key: "previewHeader", en: "Live Ad Card Preview", om: "Gargarsa Beeksisaa Qulqulluu", am: "የማስታወቂያው ቅድመ እይታ", category: "CreateListing" },
+  { key: "previewSubtext", en: "Verify how buyers will view your listing.", om: "Bitoonni akkamitti beeksisa kee akka argan mirkaneeffadhu.", am: "ገዢዎች ማስታወቂያዎን እንዴት እንደሚያዩ ያረጋግጡ።", category: "CreateListing" },
+  { key: "untitled", en: "Untitled Listing", om: "Mata duree Malee", am: "ርዕስ የሌለው", category: "CreateListing" },
+  { key: "noLocation", en: "Location Not Specified", om: "Iddoon Hin Murtaa'in", am: "ቦታ አልተጠቀሰም", category: "CreateListing" },
+  { key: "contactPrice", en: "Contact for Price", om: "Gatiidhaaf Quunnamii", am: "ለዋጋ ያነጋግሩ", category: "CreateListing" },
+  { key: "photosCount", en: "Photos", om: "Fakkoota", am: "ፎቶዎች", category: "CreateListing" },
+  { key: "noDesc", en: "No description provided.", om: "Ibsi Hin Kennamne.", am: "መግለጫ አልተሰጠም።", category: "CreateListing" },
+  { key: "verifiedPublisher", en: "Verified Publisher", om: "Galmeessaa Mirkanaa'e", am: "የተረጋገጠ አውጪ", category: "CreateListing" },
+  { key: "propOwnerRole", en: "Property Owner", om: "Abbaa Qabeenyaa", am: "የንብረቱ ባለቤት", category: "CreateListing" },
+  { key: "boostTitle", en: "Select Promotion Boost Plan", om: "Karoora Beeksisa Guddisuu Filadhu", am: "የማስታወቂያ ማስተዋወቂያ ፕላን ይምረጡ", category: "CreateListing" },
+  { key: "boostSubtext", en: "Boost your ad visibility to sell or rent 5x faster on Sof Umer Marketplace.", om: "Argaamuu beeksisa keetii guddisuun dafee akka gurguramu ykn kireeffamu godhi.", am: "ማስታወቂያዎ በፍጥነት እንዲሸጥ ወይም እንዲከራይ እይታውን ያሳድጉ።", category: "CreateListing" },
+  { key: "addonsTitle", en: "Optional Visibility Add-ons", om: "Filannoo Dabaltaa Mul'inaa", am: "ተጨማሪ የመታየት አማራጮች", category: "CreateListing" },
+  { key: "topAd", en: "Top Ad Placement", om: "Gubaarra Maxxansuu", am: "በአናት ላይ የሚቀመጥ", category: "CreateListing" },
+  { key: "topAdDesc", en: "Pin to top of search results", om: "Barbaacha gubaarratti rarraasi", am: "በፍለጋ ውጤቶች አናት ላይ ያስቀምጡ", category: "CreateListing" },
+  { key: "spotlight", en: "Homepage Spotlight", om: "Fuula Jalqabaarratti Agarsiisi", am: "በመነሻ ገጽ ላይ አሳይ", category: "CreateListing" },
+  { key: "spotlightDesc", en: "Featured on main home banner", om: "Banner fuula guddaarratti agarsiisi", am: "በዋናው መነሻ ባነር ላይ አሳይ", category: "CreateListing" },
+  { key: "totalInvestment", en: "Total Promotion Investment", om: "Ida'ama Kaffaltii Beeksisaa", am: "ጠቅላላ የማስተዋወቂያ ክፍያ", category: "CreateListing" },
+  { key: "totalInvestmentSub", en: "Includes plan duration and active add-ons.", om: "Yeroo karooraa fi dabalata mul'inaa dabalata.", am: "የፕላኑን ጊዜ እና ተጨማሪ አማራጮችን ያካትታል።", category: "CreateListing" },
+  { key: "payMethodLabel", en: "Select Payment Method *", om: "Mala Kaffaltii Filadhu *", am: "የክፍያ ዘዴ ይምረጡ *", category: "CreateListing" },
+  { key: "accWallet", en: "Account Wallet", om: "Kaffaltii Waletii", am: "የመለያ ቦርሳ (Wallet)", category: "CreateListing" },
+  { key: "walletBal", en: "Balance:", om: "Hafee:", am: "ቀሪ ሂሳብ:", category: "CreateListing" },
+  { key: "directBank", en: "Direct Bank Transfer / Telebirr", om: "Baankii ykn Telebirr Direct", am: "በቀጥታ በባንክ / በቴሌብር", category: "CreateListing" },
+  { key: "directSub", en: "Upload transaction reference", om: "Koodii kaffaltii galchuun", am: "የክፍያ ማረጋገጫ ቁጥር ያስገቡ", category: "CreateListing" },
+  { key: "yourBal", en: "Your Wallet Balance:", om: "Hafee Waletii Keetii:", am: "የቦርሳዎ ቀሪ ሂሳብ:", category: "CreateListing" },
+  { key: "deduction", en: "Deduction Amount:", om: "Hanga Hir'ifamu:", am: "የሚቀነሰው መጠን:", category: "CreateListing" },
+  { key: "insufficientBal", en: "Insufficient wallet balance! Please switch to Direct Bank Transfer or Top Up your wallet.", om: "Hafteen saanduqa maallaqaa gahaa miti! Maaloo kaffaltii Baankii filadhu ykn Waletii kee gutadhu.", am: "በቂ የቦርሳ ሂሳብ የለም! እባክዎ በቀጥታ በባንክ ይክፈሉ::", category: "CreateListing" },
+  { key: "sufficientBal", en: "Sufficient wallet balance. Payment will be processed instantly upon posting.", om: "Hafteen saanduqa maallaqaa gahaadha. Kaffaltiin yeruma sana raawwatama.", am: "በቂ ሂሳብ አለዎት። ክፍያው ወዲያውኑ ይፈጸማል።", category: "CreateListing" },
+  { key: "payChannel", en: "Select Payment Channel", om: "Sarara Kaffaltii Filadhu", am: "የክፍያ መስመር ይምረጡ", category: "CreateListing" },
+  { key: "payChannelPlaceholder", en: "Select Bank / Mobile Money Account...", om: "Akkaantaa Baankii ykn Mobile Money filadhu...", am: "የባንክ ወይም ሞባይል ባንኪንግ መለያ ይምረጡ...", category: "CreateListing" },
+  { key: "txnRefLabel", en: "Transaction Reference Number / Receipt Ref *", om: "Lakk. Koodii Kaffaltii / Telebirr Ref *", am: "የክፍያ ማረጋገጫ ቁጥር (Reference) *", category: "CreateListing" },
+  { key: "txnRefPlaceholder", en: "e.g. TXN-89410294 or Telebirr Ref", om: "fkn TXN-89410294 ykn Telebirr Ref", am: "ምሳሌ: TXN-89410294 ወይም የቴሌብር ቁጥር", category: "CreateListing" },
+  { key: "txnRefSub", en: "Provide your mobile banking or Telebirr reference code for instant verification.", om: "Koodii kaffaltii baankii ykn Telebirr kee mirkaneessaaf galchi.", am: "የሞባይል ባንኪንግ ወይም የቴሌብር ማረጋገጫ ቁጥር ያስገቡ።", category: "CreateListing" },
+  { key: "backBtn", en: "Back", om: "Deebi'i", am: "ተመለስ", category: "CreateListing" },
+  { key: "chooseSubBtn", en: "Choose Subcategory", om: "Garee Xiqqaa Filadhu", am: "ንዑስ ምድብ ይምረጡ", category: "CreateListing" },
+  { key: "fillSpecsBtn", en: "Fill Specifications", om: "Tarreeffama Galchi", am: "ዝርዝሮችን ያስገቡ", category: "CreateListing" },
+  { key: "previewAdBtn", en: "Preview Ad Card", om: "Beeksisa Ilaali", am: "ማስታወቂያውን ይመልከቱ", category: "CreateListing" },
+  { key: "selectPromoBtn", en: "Select Promotion & Post", om: "Beeksisa Guddisi & Maxxansi", am: "ማስተዋወቂያ ይምረጡ & ይለጥፉ", category: "CreateListing" },
+  { key: "pubFreeBtn", en: "Publish Ad For Free", om: "Beeksisa Bilisaan Maxxansi", am: "ማስታወቂያውን በነጻ ይለጥፉ", category: "CreateListing" },
+  { key: "payAndPostBtn", en: "Pay {cost} ETB & Post Ad", om: "{cost} ETB Kaffali & Maxxansi", am: "{cost} ብር ከፍለው ይለጥፉ", category: "CreateListing" },
+  { key: "pubProgress", en: "Publishing Ad...", om: "Maxxansaa Jira...", am: "በመለጠፍ ላይ...", category: "CreateListing" },
+  { key: "ownerNameVal", en: "Please enter the Property Owner's full name.", om: "Maaloo maqaa guutuu abbaa qabeenyaa galchi.", am: "እባክዎ የንብረቱን ባለቤት ሙሉ ስም ያስገቡ።", category: "CreateListing" },
+  { key: "ownerPhoneVal", en: "Please enter the Property Owner's contact phone number.", om: "Maaloo lakk. bilbila abbaa qabeenyaa galchi.", am: "እባክዎ የንብረቱን ባለቤት ስልክ ቁጥር ያስገቡ።", category: "CreateListing" },
+  { key: "ownerEmailVal", en: "Please enter the Property Owner's email address.", om: "Maaloo imeelii abbaa qabeenyaa galchi.", am: "እባክዎ የንብረቱን ባለቤት ኢሜል ያስገቡ።", category: "CreateListing" },
+  { key: "fieldReqVal", en: "Please fill in the required field:", om: "Maaloo dirree dirqamaa galchi:", am: "እባክዎ የሚፈለገውን ቦታ ይሙሉ:", category: "CreateListing" },
+  { key: "titleLabel", en: "Listing Title", om: "Mata duree Beeksisaa", am: "የማስታወቂያው ርዕስ", category: "CreateListing" },
+  { key: "titleDesc", en: "Enter a short, clear, and descriptive title for your listing.", om: "Mata duree gabaabaa, ifa ta'e fi ibsu galchi.", am: "አጭር፣ ግልጽ እና ገላጭ የሆነ የማስታወቂያ ርዕስ ያስገቡ።", category: "CreateListing" },
+  { key: "titlePlaceholder", en: "e.g., 3 Bedroom Modern House for Rent", om: "fkn, Mana Kireessu Kutta 3 qabu Boleetti", am: "ምሳሌ: ባለ 3 መኝታ ክፍል የሚከራይ ዘመናዊ ቤት ቦሌ", category: "CreateListing" },
+  { key: "titleVal", en: "Please enter a listing title.", om: "Maaloo mata duree beeksisaa galchi.", am: "እባክዎ የማስታወቂያ ርዕስ ያስገቡ።", category: "CreateListing" },
+  { key: "descLabel", en: "Description", om: "Ibsa Guutuu", am: "ማብራሪያ/ዝርዝር መግለጫ", category: "CreateListing" },
+  { key: "descDesc", en: "Provide comprehensive details about what you are listing.", om: "Waa'ee meeshaa ykn qabeenya keetii ibsa bal'aa kenni.", am: "ስለ ንብረቱ ወይም ስለ ማስታወቂያው ሙሉ ዝርዝር መረጃ ይስጡ።", category: "CreateListing" },
+  { key: "descPlaceholder", en: "Describe key features, condition, benefits, and special terms...", om: "Haala meeshichaa, amala isaa, fi haalawwan addaa ibsi...", am: "ቁልፍ ባህሪያትን፣ ሁኔታውን፣ ጥቅሞቹን እና ልዩ ቅድመ ሁኔታዎችን ይግለጹ...", category: "CreateListing" },
+  { key: "descVal", en: "Please enter a description.", om: "Maaloo ibsa beeksisaa galchi.", am: "እባክዎ ዝርዝር ማብራሪያ ያስገቡ።", category: "CreateListing" },
+  { key: "locLabel", en: "Location", om: "Bakka Jireenyaa / Iddoo", am: "አድራሻ / ቦታ", category: "CreateListing" },
+  { key: "locDesc", en: "Specify the exact address, neighborhood, or city location.", om: "Teessoo sirrii, naannoo, ykn magaalaa adda baasi.", am: "ትክክለኛውን ሰፈር፣ አድራሻ ወይም ከተማ ይግለጹ።", category: "CreateListing" },
+  { key: "locPlaceholder", en: "e.g., Bole, Addis Ababa, Ethiopia", om: "fkn, Bolee, Finfinnee, Itoophiyaa", am: "ምሳሌ: ቦሌ፣ አዲስ አበባ፣ ኢትዮጵያ", category: "CreateListing" },
+  { key: "locVal", en: "Please specify the location.", om: "Maaloo iddoo beeksisaa galchi.", am: "እባክዎ አድራሻ ያስገቡ።", category: "CreateListing" },
+  { key: "priceLabel", en: "Price", om: "Gatii", am: "ዋጋ", category: "CreateListing" },
+  { key: "priceDesc", en: "Set the monetary value or rate for the listing.", om: "Gatii ykn kaffaltii beeksisa kanaa murteessi.", am: "ለዚህ ማስታወቂያ የሚፈልጉትን ዋጋ ያስገቡ።", category: "CreateListing" },
+  { key: "pricePlaceholder", en: "e.g., 15000", om: "fkn, 15000", am: "ምሳሌ: 15000", category: "CreateListing" },
+  { key: "priceVal", en: "Please specify a price.", om: "Maaloo gatii galchi.", am: "እባክዎ ዋጋ ያስገቡ።", category: "CreateListing" },
+  { key: "currLabel", en: "Currency", om: "Maallaqa", am: "የገንዘብ አይነት", category: "CreateListing" },
+  { key: "currDesc", en: "Select the primary billing currency.", om: "Gosa maallaqaa kaffaltii filadhu.", am: "ክፍያ የሚፈጸምበትን የገንዘብ አይነት ይምረጡ።", category: "CreateListing" },
+  { key: "phoneLabel", en: "Contact Phone Number", om: "Lakk. Bilbila Quunnamtii", am: "የመገናኛ ስልክ ቁጥር", category: "CreateListing" },
+  { key: "phoneDesc", en: "The primary phone number for inquiries.", om: "Bilbila quunnamtii jalqabaa (koodii biyyaa wajjiin).", am: "ለመገናኛ የሚሆን ዋና የስልክ ቁጥር (ከነአገር መለያ ኮዱ)።", category: "CreateListing" },
+  { key: "phonePlaceholder", en: "e.g., +251911223344", om: "fkn, +251911223344", am: "ምሳሌ: +251911223344", category: "CreateListing" },
+  { key: "phoneVal", en: "Please enter a contact phone number.", om: "Maaloo lakk. bilbila quunnamtii galchi.", am: "እባክዎ የስልክ ቁጥር ያስገቡ።", category: "CreateListing" },
+  { key: "ownerLabel", en: "Contact Full Name", om: "Maqaa Guutuu Quunnamtii", am: "የባለቤቱ/አገናኙ ሙሉ ስም", category: "CreateListing" },
+  { key: "ownerDesc", en: "Enter the full name of the primary contact person.", om: "Maqaa guutuu abbaa qabeenyaa ykn quunnamtii galchi.", am: "የማስታወቂያውን ባለቤት ወይም ተጠሪ ሙሉ ስም ያስገቡ።", category: "CreateListing" },
+  { key: "ownerPlaceholder", en: "e.g., Jemal Jimma", om: "fkn, Jemal Jimma", am: "ምሳሌ: ጀማል ጅማ", category: "CreateListing" },
+  { key: "ownerVal", en: "Please enter the contact name.", om: "Maaloo maqaa guutuu galchi.", am: "እባክዎ ሙሉ ስም ያስገቡ።", category: "CreateListing" },
+  { key: "emailLabel", en: "Contact Email Address", om: "Imeelii Quunnamtii", am: "የመገናኛ ኢሜል አድራሻ", category: "CreateListing" },
+  { key: "emailDesc", en: "The email address for communications.", om: "Teessoo imeelii quunnamtiidhaaf gargaaru galchi.", am: "የስርዓቱን ግንኙነቶች ለመቀበል የሚጠቅም የኢሜል አድራሻ።", category: "CreateListing" },
+  { key: "emailPlaceholder", en: "e.g., contact@sofumer.com", om: "fkn, contact@sofumer.com", am: "ምሳሌ: contact@sofumer.com", category: "CreateListing" },
+  { key: "emailVal", en: "Please enter a valid email address.", om: "Maaloo imeelii sirrii galchi.", am: "እባክዎ ትክክለኛ የኢሜል አድራሻ ያስገቡ።", category: "CreateListing" },
+  { key: "dealLabel", en: "Transaction Type", om: "Gosa Daldalaa", am: "የስምምነት አይነት", category: "CreateListing" },
+  { key: "dealDesc", en: "Are you selling or renting this property?", om: "Qabeenya kana gurguruuf moo kireessuuf dhiyeessite?", am: "ይህን ንብረት የሚሸጡት ነው ወይስ የሚያከራዩት?", category: "CreateListing" },
+  { key: "bedLabel", en: "Number of Bedrooms", om: "Baay'ina Kutaa Ciisichaa", am: "የመኝታ ክፍሎች ብዛት", category: "CreateListing" },
+  { key: "bedDesc", en: "Count of sleep-ready rooms.", om: "Baay'ina kutaa ciisichaa adda baasi (0 lafaaf).", am: "ለመኝታ የተዘጋጁ ክፍሎች ብዛት ያስገቡ (ለመሬት 0 ያስገቡ)።", category: "CreateListing" },
+  { key: "bathLabel", en: "Number of Bathrooms", om: "Baay'ina Kutaa Fincaanii", am: "የመታጠቢያ ክፍሎች ብዛት", category: "CreateListing" },
+  { key: "bathDesc", en: "Count of bathrooms available.", om: "Baay'ina kutaa fincaanii sirrii ta'e galchi.", am: "የመታጠቢያ ክፍሎችን ብዛት ይጥቀሱ።", category: "CreateListing" },
+  { key: "areaLabel", en: "Total Area Size (m²)", om: "Bal'ina Lafa/Manaa (m²)", am: "ጠቅላላ ስፋት (በካሬ ሜትር)", category: "CreateListing" },
+  { key: "areaDesc", en: "Total land or floor area in square meters.", om: "Bal'ina guutuu iskuweer meetiriin galchi.", am: "ጠቅላላ ስፋቱን በካሬ ሜትር ያስገቡ።", category: "CreateListing" },
+  { key: "areaVal", en: "Please enter the area size.", om: "Maaloo bal'ina lafaa galchi.", am: "እባክዎ ስፋት ያስገቡ።", category: "CreateListing" },
+  { key: "furLabel", en: "Furnished Status", om: "Mi'aan Guutamuu", am: "የቤት እቃዎች ያሉት (ፈርኒሽድ)", category: "CreateListing" },
+  { key: "furDesc", en: "Does it include furniture?", om: "Manichi mi'a mana keessaa qabaa?", am: "ንብረቱ የቤት እቃዎች ተሟልተውለታል?", category: "CreateListing" },
+  { key: "parkLabel", en: "Parking", om: "Iddoo Konkolaataa", am: "የመኪና ማቆሚያ (ፓርኪንግ)", category: "CreateListing" },
+  { key: "parkDesc", en: "Is dedicated parking available?", om: "Iddoon dhaabbannaa konkolaataa jiraa?", am: "የተለየ የመኪና ማቆሚያ ቦታ አለው?", category: "CreateListing" },
+  { key: "ownLabel", en: "Ownership Status", om: "Haala Abbummaa", am: "የባለቤትነት ሁኔታ", category: "CreateListing" },
+  { key: "ownDesc", en: "Status of the listing publisher.", om: "Gahee namicha beeksisa kana galche.", am: "ማስታወቂያውን ያወጣው ሰው የስራ ድርሻ።", category: "CreateListing" },
+  { key: "brandLabel", en: "Brand", om: "Gosa Konkolaataa (Brand)", am: "የተሽከርካሪው ብራንድ (አምራች)", category: "CreateListing" },
+  { key: "brandDesc", en: "The manufacturer of the item.", om: "Maqaa dhaabbata konkolaatichaa oomishe.", am: "የተሽከርካሪውን አምራች ኩባንያ ስም።", category: "CreateListing" },
+  { key: "brandPlaceholder", en: "e.g., Toyota, Samsung, Nike", om: "fkn, Toyota, Suzuki, Hyundai", am: "ምሳሌ: ቶዮታ፣ ሱዙኪ፣ ሃዩንዳይ", category: "CreateListing" },
+  { key: "brandVal", en: "Please enter the brand.", om: "Maaloo gosa konkolaatichaa galchi.", am: "እባክዎ የተሽከርካሪውን ብራንድ ያስገቡ።", category: "CreateListing" },
+  { key: "modelLabel", en: "Model", om: "Moodela Konkolaataa", am: "የተሽከርካሪው ሞዴል", category: "CreateListing" },
+  { key: "modelDesc", en: "Specific model name or number.", om: "Maqaa moodela konkolaataa addaa.", am: "የተሽከርካሪውን የተለየ የሞዴል ስም ያስገቡ።", category: "CreateListing" },
+  { key: "modelPlaceholder", en: "e.g., Corolla, Galaxy S24, Air Max", om: "fkn, Corolla, Swift, Tucson", am: "ምሳሌ: ኮሮላ፣ ስዊፍት፣ ቱክሰን", category: "CreateListing" },
+  { key: "modelVal", en: "Please enter the model.", om: "Maaloo moodela konkolaataa galchi.", am: "እባክዎ ሞዴሉን ያስገቡ።", category: "CreateListing" },
+  { key: "yearLabel", en: "Year", om: "Bara Oomishame", am: "የተመረተበት አመት", category: "CreateListing" },
+  { key: "yearDesc", en: "Manufacturing year.", om: "Bara konkolaatichi itti oomishame.", am: "ተሽከርካሪው የተመረተበት አመተ ምህረት።", category: "CreateListing" },
+  { key: "yearPlaceholder", en: "e.g., 2024", om: "fkn, 2024", am: "ምሳሌ: 2024", category: "CreateListing" },
+  { key: "yearVal", en: "Please enter the year.", om: "Maaloo bara oomishame galchi.", am: "እባክዎ የተመረተበትን አመት ያስገቡ።", category: "CreateListing" },
+  { key: "mileLabel", en: "Mileage (km)", om: "Kilomeetira Deeme (Mileage)", am: "የተጓዘው ርቀት (ኪሎሜትር)", category: "CreateListing" },
+  { key: "mileDesc", en: "Odometer reading of the vehicle.", om: "Baay'ina kilomeetira konkolaatichi deeme.", am: "ተሽከርካሪው እስካሁን የተጓዘው ጠቅላላ ኪሎሜትር።", category: "CreateListing" },
+  { key: "milePlaceholder", en: "e.g., 15000", om: "fkn, 12500", am: "ምሳሌ: 12500", category: "CreateListing" },
+  { key: "mileVal", en: "Please enter the mileage.", om: "Maaloo kilomeetira deeme galchi.", am: "እባክዎ የተጓዘበትን ርቀት ያስገቡ።", category: "CreateListing" },
+  { key: "fuelLabel", en: "Fuel Type", om: "Gosa Bifa Inerjii (Fuel)", am: "የነዳጅ አይነት", category: "CreateListing" },
+  { key: "fuelDesc", en: "Primary fuel source.", om: "Mootorri gosa boba'aa kam fayyadama?", am: "ተሽከርካሪው የሚጠቀመው የሃይል/ነዳጅ አይነት።", category: "CreateListing" },
+  { key: "transLabel", en: "Transmission", om: "Giraasii (Transmission)", am: "ማስተላለፊያ (ትራንስሚሽን)", category: "CreateListing" },
+  { key: "transDesc", en: "Gearbox type.", om: "Gosa daddabarsa humna konkolaatichaa.", am: "የማርሽ አይነት (አውቶማቲክ ወይም ማኑዋል)።", category: "CreateListing" },
+  { key: "engLabel", en: "Engine Size / CC", om: "Hafata Mootoraa (Engine Size)", am: "የሞተር መጠን / ሲሲ", category: "CreateListing" },
+  { key: "engDesc", en: "Engine displacement.", om: "Bal'ina mootora konkolaataa (fkn, 1.6L, 2000cc).", am: "የተሽከርካሪው የሞተር አቅም (ምሳሌ: 1.6L, 2000cc)።", category: "CreateListing" },
+  { key: "engPlaceholder", en: "e.g., 1.6L", om: "fkn, 1.6L", am: "ምሳሌ: 1.6L", category: "CreateListing" },
+  { key: "engVal", en: "Please enter the engine size.", om: "Maaloo hafata mootoraa galchi.", am: "እባክዎ የሞተር መጠን ያስገቡ።", category: "CreateListing" },
+  { key: "colLabel", en: "Color", om: "Bifa Konkolaataa alaa", am: "የውጪ ቀለም", category: "CreateListing" },
+  { key: "colDesc", en: "Exterior or body color.", om: "Bifa guddaa qaama konkolaatichaa.", am: "የተሽከርካሪው አካል ዋና ቀለም።", category: "CreateListing" },
+  { key: "colPlaceholder", en: "e.g., Black", om: "fkn, Diimaa, Adii", am: "ምሳሌ: ብርማ ቀለም፣ ነጭ", category: "CreateListing" },
+  { key: "colVal", en: "Please enter the color.", om: "Maaloo bifa konkolaatichaa galchi.", am: "እባክዎ የተሽከርካሪውን ቀለም ያስገቡ።", category: "CreateListing" },
+  { key: "condLabel", en: "Condition", om: "Haala Meeshichaa", am: "ሁኔታ (ኮንዲሽን)", category: "CreateListing" },
+  { key: "condDesc", en: "Physical and functional state.", om: "Meeshichi haaraa dhaa moo kan hojjetame?", am: "የእቃው ወይም የተሽከርካሪው የአሁኑ ሁኔታ።", category: "CreateListing" },
+  { key: "qtyLabel", en: "Quantity", om: "Baay'ina Meeshichaa", am: "የሚገኝ ብዛት", category: "CreateListing" },
+  { key: "qtyDesc", en: "Units currently in stock.", om: "Meeshaalee ammaan tana jiran kiyya.", am: "በአሁኑ ሰዓት በክምችት ውስጥ የሚገኘው የእቃ ብዛት።", category: "CreateListing" },
+  { key: "qtyPlaceholder", en: "e.g., 5", om: "fkn, 5", am: "ምሳሌ: 5", category: "CreateListing" },
+  { key: "qtyVal", en: "Please enter the quantity.", om: "Maaloo baay'ina galchi.", am: "እባክዎ የምርት ብዛት ያስገቡ።", category: "CreateListing" },
+  { key: "warLabel", en: "Warranty", om: "Warranty", am: "Warranty", category: "CreateListing" },
+  { key: "warDesc", en: "Is active warranty included?", om: "Is active warranty included?", am: "Is active warranty included?", category: "CreateListing" },
+  { key: "compLabel", en: "Company Name", om: "Maqaa Dhaabbataa", am: "የድርጅቱ ስም", category: "CreateListing" },
+  { key: "compDesc", en: "Hiring organization name.", om: "Maqaa dhaabbata qaxaruu barbaaduu.", am: "ቀጣሪው ድርጅት ወይም ኩባንያ ስም።", category: "CreateListing" },
+  { key: "compPlaceholder", en: "e.g., Sof Umer Real Estate", om: "fkn, Sof Umer Real Estate", am: "ምሳሌ: ሶፍ ኡመር ሪል እስቴት", category: "CreateListing" },
+  { key: "compVal", en: "Please enter the company name.", om: "Maaloo maqaa dhaabbataa galchi.", am: "እባክዎ የድርጅቱን ስም ያስገቡ።", category: "CreateListing" },
+  { key: "empLabel", en: "Employment Type", om: "Haala Hojii (Employment)", am: "የቀጥር ሁኔታ", category: "CreateListing" },
+  { key: "empDesc", en: "Schedule format.", om: "Gosa yeroo hojichaa.", am: "የስራው ሰዓት አወቃቀር።", category: "CreateListing" },
+  { key: "salLabel", en: "Salary / Compensation", om: "Kaffaltii / Mindaa", am: "ደሞዝ / ክፍያ", category: "CreateListing" },
+  { key: "salDesc", en: "Proposed pay details.", om: "Mindaa ji'aa ykn pirojektiidhaan kaffalamu.", am: "ለስራው የሚከፈለው ወርሃዊ ወይም በኮንትራት የሚወሰን ክፍያ።", category: "CreateListing" },
+  { key: "salPlaceholder", en: "e.g., 40000 ETB", om: "fkn, mindaa 40,000 ETB / ji'a", am: "ምሳሌ: 40,000 ETB / በወር", category: "CreateListing" },
+  { key: "expLabel", en: "Experience Required", om: "Yeroo Muuxannoo", am: "የስራ ልምድ", category: "CreateListing" },
+  { key: "expDesc", en: "Required experience level.", om: "Waggaa muuxannoo hojichaa barbaadamu.", am: "የሚጠየቀው አነስተኛ የስራ ልምድ አመታት።", category: "CreateListing" },
+  { key: "expPlaceholder", en: "e.g., 2+ years", om: "fkn, Waggaa 2+ muuxannoo", am: "ምሳሌ: 2+ አመት የስራ ልምድ", category: "CreateListing" },
+  { key: "expVal", en: "Please enter required experience.", om: "Maaloo yeroo muuxannoo galchi.", am: "እባክዎ የስራ ልምድ ያስገቡ።", category: "CreateListing" },
+  { key: "eduLabel", en: "Education", om: "Sajataa Barnootaa", am: "የትምህርት ደረጃ", category: "CreateListing" },
+  { key: "eduDesc", en: "Minimum qualification required.", om: "Barnoota gadi aanaa barbaadamu.", am: "ለስራው የሚጠየቀው ዝቅተኛ የትምህርት ዝግጅት።", category: "CreateListing" },
+  { key: "eduPlaceholder", en: "e.g., Bachelor's Degree", om: "fkn, Digrii marketing dhaan", am: "ምሳሌ: የመጀመሪያ ዲግሪ በማርኬቲንግ", category: "CreateListing" },
+  { key: "eduVal", en: "Please enter education requirement.", om: "Maaloo sajataa barnootaa galchi.", am: "እባክዎ የትምህርት ደረጃ ያስገቡ።", category: "CreateListing" },
+  { key: "deadLabel", en: "Application Deadline", om: "Guyyaa Xumuraa Beeksisaa", am: "የማመልከቻው ማብቂያ ቀን", category: "CreateListing" },
+  { key: "deadDesc", en: "Final date to apply.", om: "Guyyaa dhumaa iyyannoo fudhatamu.", am: "ማመልከቻዎችን ለመቀበል የመጨረሻው ቀን።", category: "CreateListing" },
+  { key: "deadVal", en: "Please enter application deadline.", om: "Maaloo guyyaa xumuraa murteessi.", am: "እባክዎ የማመልከቻ ማብቂያ ቀን ያስገቡ።", category: "CreateListing" },
+  { key: "covLabel", en: "Coverage Area", om: "Iddoo Tajaajilichaa", am: "አገልግሎት የሚሸፍነው ቦታ", category: "CreateListing" },
+  { key: "covDesc", en: "Cities or regions served.", om: "Magaalota tajaajilli kee itti kennamu.", am: "አገልግሎቱን የሚያቀርቡባቸው ከተሞች ወይም ክልሎች።", category: "CreateListing" },
+  { key: "covPlaceholder", en: "e.g., Addis Ababa", om: "fkn, Finfinnee fi naannoo ishee", am: "ምሳሌ: አዲስ አበባ እና አከባቢዋ", category: "CreateListing" },
+  { key: "covVal", en: "Please specify coverage area.", om: "Maaloo iddoo tajaajilichaa galchi.", am: "እባክዎ የሚሸፍነውን ቦታ ያስገቡ።", category: "CreateListing" },
+  { key: "avLabel", en: "Availability", om: "Yeroo Tajaajilaa", am: "የአገልግሎት ሰዓት", category: "CreateListing" },
+  { key: "avDesc", en: "Working schedule format.", om: "Yeroo hoji tajaajila keetii murteessi.", am: "አገልግሎቱን የሚሰጡበትን የጊዜ ሰሌዳ ይግለጹ።", category: "CreateListing" },
+  { key: "hoursLabel", en: "Opening Hours", om: "Yeroo Banamaa", am: "የስራ ሰዓት", category: "CreateListing" },
+  { key: "hoursDesc", en: "Regular working schedule hours.", om: "Sa'aatii hojii daldala keetii.", am: "ድርጅቱ ለደንበኞች ክፍት የሚሆንበት ሰዓት።", category: "CreateListing" },
+  { key: "hoursPlaceholder", en: "e.g., Mon - Sat 8:00 AM - 6:00 PM", om: "fkn, Wiixata - Sanbata (8:00 AM - 9:00 PM)", am: "ምሳሌ: ከሰኞ - ቅዳሜ (ከሰዓት 2:00 - ማታ 3:00)", category: "CreateListing" },
+  { key: "hoursVal", en: "Please enter opening hours.", om: "Maaloo yeroo banamaa galchi.", am: "እባክዎ የስራ ሰዓት ያስገቡ።", category: "CreateListing" },
+  { key: "webLabel", en: "Website (Optional)", om: "Toora Website (Optional)", am: "ድረ-ገጽ (አማራጭ)", category: "CreateListing" },
+  { key: "webDesc", en: "Official website URL.", om: "Linkii website daldala keetii.", am: "የንግድ ድርጅቱ ይፋዊ ድረ-ገጽ ካለ ሊንኩን ያስገቡ።", category: "CreateListing" },
+  { key: "webPlaceholder", en: "e.g., https://sofumer.com", om: "fkn, https://www.mybusiness.com", am: "ምሳሌ: https://www.mybusiness.com", category: "CreateListing" },
+  { key: "orgLabel", en: "Organizer", om: "Qopheessituu Sagantichaa", am: "አዘጋጅ", category: "CreateListing" },
+  { key: "orgDesc", en: "Entity hosting the activity.", om: "Qaama saganticha qopheesse galchi.", am: "ዝግጅቱን የሚያስተናግደው አካል ወይም ግለሰብ ስም።", category: "CreateListing" },
+  { key: "orgPlaceholder", en: "e.g., Bale Committee", om: "fkn, Koree Seenaa Bale", am: "ምሳሌ: የባሌ ቅርስ ኮሚቴ", category: "CreateListing" },
+  { key: "orgVal", en: "Please enter the organizer.", om: "Maaloo maqaa qopheessituu galchi.", am: "እባክዎ የአዘጋጁን ስም ያስገቡ።", category: "CreateListing" },
+  { key: "venueLabel", en: "Venue", om: "Iddoo Qophii (Venue)", am: "የዝግጅቱ ቦታ (አዳራሽ/ሜዳ)", category: "CreateListing" },
+  { key: "venueDesc", en: "Specific location of the activity.", om: "Gamoo ykn iddoo qophiin itti godhamu.", am: "ዝግጅቱ የሚካሄድበት ህንፃ፣ አዳራሽ ወይም ድረ-ገጽ።", category: "CreateListing" },
+  { key: "venuePlaceholder", en: "e.g., Millennium Hall", om: "fkn, Millennium Hall, Finfinnee", am: "ምሳሌ: ሚሊኒየም አዳራሽ፣ አዲስ አበባ", category: "CreateListing" },
+  { key: "venueVal", en: "Please enter the venue.", om: "Maaloo iddoo qophii galchi.", am: "እባክዎ የዝግጅቱን ቦታ ያስገቡ።", category: "CreateListing" },
+  { key: "dateLabel", en: "Date", om: "Guyyaa Sagantichaa", am: "የዝግጅቱ ቀን", category: "CreateListing" },
+  { key: "dateDesc", en: "Calendar day of the event.", om: "Guyyaa sagantichi itti ta'u.", am: "ዝግጅቱ የሚካሄድበት የተወሰነው ቀን።", category: "CreateListing" },
+  { key: "dateVal", en: "Please enter the date.", om: "Maaloo guyyaa sagantichaa galchi.", am: "እባክዎ ቀኑን ያስገቡ።", category: "CreateListing" },
+  { key: "timeLabel", en: "Time", om: "Sa'aatii Sagantichaa", am: "የመጀመሪያ ሰዓት", category: "CreateListing" },
+  { key: "timeDesc", en: "Activities start time.", om: "Sa'aatii sagantichi itti jalqabu.", am: "ዝግጅቱ የሚጀመርበት ሰዓት።", category: "CreateListing" },
+  { key: "timePlaceholder", en: "e.g., 10:00 AM", om: "fkn, 10:00 AM", am: "ምሳሌ: ከጠዋቱ 4:00 ሰዓት", category: "CreateListing" },
+  { key: "timeVal", en: "Please enter the time.", om: "Maaloo sa'aatii sagantichaa galchi.", am: "እባክዎ ሰዓቱን ያስገቡ።", category: "CreateListing" },
+  { key: "imgLabel", en: "Showcase Images", om: "Fakkii Beeksisaa", am: "የማሳያ ምስሎች", category: "CreateListing" },
+  { key: "imgDesc", en: "Add photographs of the item/location.", om: "Fakkoota qulqullina qaban dabaladhaa.", am: "ለማስታወቂያው የሚሆኑ ጥራት ያላቸውን ፎቶዎች ያክሉ።", category: "CreateListing" },
+  { key: "imgUrlLabel", en: "Image Web URL", om: "URL Fakkii", am: "የምስሉ ድረ-ገጽ አድራሻ (URL)", category: "CreateListing" },
+  { key: "imgUrlPlaceholder", en: "Paste direct image link...", om: "Linkii fakkichaa toora intarneetii irraa...", am: "የምስሉን ሊንክ እዚህ ይለጥፉ...", category: "CreateListing" },
+  { key: "addBtn", en: "Add URL", om: "Dabaladhu", am: "አክል", category: "CreateListing" },
+  { key: "uploadBtn", en: "From Device", om: "Moobaayila irraa", am: "ከስልክዎ ይጫኑ", category: "CreateListing" },
+  { key: "quickBtn", en: "Stock Photo", om: "Fakkii Naamuunaa", am: "ናሙና ፎቶ", category: "CreateListing" },
+  { key: "cancelBtn", en: "Cancel", om: "Haqi", am: "ይቅር", category: "CreateListing" },
+  { key: "submitBtn", en: "Publish Listing", om: "Beeksisa Maxxansi", am: "ማስታወቂያውን አውጣ", category: "CreateListing" },
+  { key: "publishing", en: "Publishing Listing...", om: "Maxxansaa jira...", am: "በማውጣት ላይ...", category: "CreateListing" },
+  { key: "sub_properties_houses", en: "Residential single-family homes, multi-family homes, and townhouses.", om: "Manneen jireenyaa dhuunfaa ykn maatii hedduuf ta'an.", am: "ለነጠላ ወይም ለብዙ ቤተሰብ መኖሪያ የሚሆኑ ቤቶች እና ቪላዎች።", category: "CreateListing" },
+  { key: "sub_properties_apartments", en: "Rental apartments, flats, condominiums, and studios.", om: "Apaartaamota kireeffaman fi manneen fooyya'an.", am: "የሚከራዩ አፓርታማዎች፣ ኮንዶሚኒየሞች እና ስቱዲዮዎች።", category: "CreateListing" },
+  { key: "sub_properties_offices", en: "Commercial office spaces, corporate suites, and coworking locations.", om: "Iddoo barkumee daldalaa fi gamoo biroo.", am: "የንግድ ቢሮዎች፣ የጋራ የስራ ቦታዎች እና የንግድ ክፍሎች።", category: "CreateListing" },
+  { key: "sub_properties_commercial", en: "Retail shops, showrooms, warehouses, and factories.", om: "Suuqota, kuusaa meeshaa, fi warshaalee daldalaa.", am: "ሱቆች፣ ማሳያ ክፍሎች፣ መጋዘኖች እና ፋብሪካዎች።", category: "CreateListing" },
+  { key: "sub_properties_land", en: "Residential, commercial, and agricultural plots of land.", om: "Iddoo jireenyaa, daldalaa, fi lafa qonnaa.", am: "ለመኖሪያ፣ ለንግድ ወይም ለእርሻ የሚውሉ መሬቶች/ቦታዎች።", category: "CreateListing" },
+  { key: "sub_vehicles_cars", en: "Passenger cars, sedans, SUVs, hatchbacks, and coupes.", om: "Konkolaattota dhuunfaa, sedan, SUV, fi kanneen biroo.", am: "የቤት መኪናዎች፣ ሰዳኖች፣ ጆፎች/ኤስዩቪ፣ ሃችባኮች እና ኩፔዎች።", category: "CreateListing" },
+  { key: "sub_vehicles_motorcycles", en: "Motorbikes, scooters, sports bikes, and three-wheelers.", om: "Mootoroota, iskuutaroota fi saayikilii.", am: "ሞተር ብስክሌቶች፣ ስኩተሮች እና ባለሶስት እግር ተሽከርካሪዎች (ባጃጅ)።", category: "CreateListing" },
+  { key: "sub_vehicles_trucks", en: "Cargo trucks, delivery vehicles, and heavy-duty logistics.", om: "Konkolaattota fe'umsaa, meeshaa geessan, fi gurguddaa.", am: "የጭነት መኪናዎች፣ የቤት እቃ ማጓጓዣዎች እና ከባድ ተሽከርካሪዎች።", category: "CreateListing" },
+  { key: "sub_vehicles_spareparts", en: "Engine parts, brakes, suspension, tires, and components.", om: "Maashinaroota, taayirra, fi kutaalee mootoraa.", am: "የሞተር መለዋወጫዎች፣ ፍሬኖች፣ ጎማዎች እና ሜካኒካል እቃዎች።", category: "CreateListing" },
+  { key: "sub_vehicles_accessories", en: "Car audio, seat covers, dash cams, and styling.", om: "Sagalee, uffata teessumaa, fi mi'a dabalataa.", am: "የመኪና ድምጽ ማጉያዎች፣ የውስጥ ወንበር ልብሶች እና ተጨማሪ እቃዎች።", category: "CreateListing" },
+  { key: "sub_products_electronics", en: "Laptops, computers, TVs, cameras, and audio equipment.", om: "Laaptooppii, kompiitara, TV, fi meeshaa sagalee.", am: "ላፕቶፖች፣ ኮምፒውተሮች፣ ቲቪዎች፣ ካሜራዎች እና የድምጽ እቃዎች።", category: "CreateListing" },
+  { key: "sub_products_phonesandtablets", en: "Smartphones, tablets, smartwatches, and accessories.", om: "Bilbiloota zamaanbillee, taableetii fi chaarjeroota.", am: "ስማርት ስልኮች፣ ታብሌቶች፣ ስማርት ሰዓቶች እና መለዋወጫዎች።", category: "CreateListing" },
+  { key: "sub_products_furniture", en: "Home furniture, office desks, beds, and appliances.", om: "Kofaa, siree, minjaala fi meeshaalee mana keessaa.", am: "የቤት እቃዎች፣ ወንበሮች፣ አልጋዎች፣ ጠረጴዛዎች እና የቤት ውስጥ ኤሌክትሮኒክስ።", category: "CreateListing" },
+  { key: "sub_products_clothingandfashion", en: "Apparel, footwear, fashion accessories, and jewelry.", om: "Uffata, kophee, fi faayoota adda addaa.", am: "Apparel, footwear, fashion accessories, and jewelry.", category: "CreateListing" },
+  { key: "sub_products_others", en: "Books, toys, sports gear, and consumer goods.", om: "Kitaabota, taphoota mucoolii, fi meeshaalee biroo.", am: "Books, toys, sports gear, and consumer goods.", category: "CreateListing" },
+  { key: "sub_jobs_fulltime", en: "Standard full-time employment roles (35-40 hours per week).", om: "Hojii yeroo guutuu (torbanitti sa'aatii 35-40).", am: "Standard full-time employment roles (35-40 hours per week).", category: "CreateListing" },
+  { key: "sub_jobs_parttime", en: "Flexible part-time jobs with variable or fixed hours.", om: "Hojii yeroo gabaabaa sa'aatii muraasa qabu.", am: "Flexible part-time jobs with variable or fixed hours.", category: "CreateListing" },
+  { key: "sub_jobs_internship", en: "Internship positions for students or recent graduates.", om: "Shaakala hojii barattoota ykn eebbifamtoota haaraaf.", am: "Internship positions for students or recent graduates.", category: "CreateListing" },
+  { key: "sub_jobs_freelance", en: "Contract-based, project-driven, or freelancer roles.", om: "Hojii dhuunfaa koontiraataan ykn pirojektiin hojjetamu.", am: "Contract-based, project-driven, or freelancer roles.", category: "CreateListing" },
+  { key: "sub_services_homeservices", en: "Plumbing, electrical, painting, masonry, and carpentry.", om: "Tajaajila suuphaa ujummoo, elektiriikii, fi kkf.", am: "Plumbing, electrical, painting, masonry, and carpentry.", category: "CreateListing" },
+  { key: "sub_services_cleaningservices", en: "Residential cleaning, deep-cleaning, and sanitation.", om: "Qulqullina mana jireenyaa fi dhaabbata daldalaa.", am: "Residential cleaning, deep-cleaning, and sanitation.", category: "CreateListing" },
+  { key: "sub_services_deliverymoving", en: "Courier services, package delivery, and moving.", om: "Ergama saffisaa, geessituu meeshaa fi geejjiba.", am: "Courier services, package delivery, and moving.", category: "CreateListing" },
+  { key: "sub_services_professionalservices", en: "Consulting, accounting, legal services, and translations.", om: "Gorsa seeraa, herregaa, hiikkaa, fi pirofeeshinaala.", am: "Consulting, accounting, legal services, and translations.", category: "CreateListing" },
+  { key: "sub_services_educationtraining", en: "Private tutors, school tutoring, and skills training.", om: "Barsiisaa dhuunfaa, leenjii adda addaa fi kofii.", am: "Private tutors, school tutoring, and skills training.", category: "CreateListing" },
+  { key: "sub_businesses_fooddrink", en: "Restaurants, cafes, bars, bakery shops, and food stalls.", om: "Nyaata, kaaffee, daabboo, fi suuqii nyaataa.", am: "Restaurants, cafes, bars, bakery shops, and food stalls.", category: "CreateListing" },
+  { key: "sub_businesses_lodginghotels", en: "Hotels, guest houses, resort stays, and pensions.", om: "Hoteelota, manneen keessummaa fi bultii.", am: "Hotels, guest houses, resort stays, and pensions.", category: "CreateListing" },
+  { key: "sub_businesses_shoppingretail", en: "Supermarkets, retail stores, boutiques, and centers.", om: "Suupermallii, suuqii uffataa, fi gabaalee daldalaa.", am: "Supermarkets, retail stores, boutiques, and centers.", category: "CreateListing" },
+  { key: "sub_businesses_others", en: "Local salons, workshops, travel agencies, and offices.", om: "Saallonii bareedinaa, garaajii, fi biiroolee.", am: "Local salons, workshops, travel agencies, and offices.", category: "CreateListing" },
+  { key: "sub_community_events", en: "Concerts, conferences, local events, and exhibitions.", om: "Qophii muuziqaa, konfiraansii, walga'ii, fi agarsiisa.", am: "Concerts, conferences, local events, and exhibitions.", category: "CreateListing" },
+  { key: "sub_community_announcements", en: "Public notices, community announcements, lost & found.", om: "Beeksisa hawaasaa, meeshaa bade argame, fi of-eeggannoo.", am: "Public notices, community announcements, lost & found.", category: "CreateListing" },
+  { key: "sub_community_charityvolunteering", en: "Fundraisers, charity programs, and volunteering.", om: "Gargaarsa gandaa, arjooma, fi hojii tola ooltummaa.", am: "Fundraisers, charity programs, and volunteering.", category: "CreateListing" },
 ];
-
