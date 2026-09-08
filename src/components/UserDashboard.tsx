@@ -6,6 +6,12 @@ import { TwoFactorSecurityModule } from './TwoFactorSecurityModule';
 import { ReceiptUploadInput } from './ReceiptUploadInput';
 import { getCampaignStatusInfo } from '../utils/campaignUtils';
 import { 
+  getTranslatedCategoryName, 
+  getTranslatedSubcategoryName, 
+  getTranslatedPropertyType, 
+  getTranslatedLocation 
+} from '../lib/categoriesData';
+import { 
   User, MessageSquare, Bell, CreditCard, Settings, LogOut, CheckCircle2, 
   ChevronRight, UploadCloud, HelpCircle, FileText, AlertTriangle, Send, 
   ShieldCheck, Camera, Heart, Eye, Trash2, Edit2, Play, Pause, TrendingUp, 
@@ -68,7 +74,90 @@ const DICT = {
     logout_confirm: "Log Out Safely",
     logout_desc: "Are you sure you want to log out of your session? You will need to log back in to contact sellers or manage your active listings.",
     close: "Close",
-    promote_action: "Promote Listing"
+    promote_action: "Promote Listing",
+    registered_customer: "REGISTERED CUSTOMER",
+    listings_count: "Listings",
+    favorites_count: "Favorites",
+    inbox_chats: "Inbox Chats",
+    account_center_menu: "Account Center Menu",
+    profile_details: "Profile Details",
+    profile_subtitle: "Manage your user registration credentials and marketplace identity.",
+    full_name: "Full Name",
+    email_address: "Email Address",
+    phone_number: "Phone Number",
+    member_since: "Member Since",
+    not_provided: "Not provided",
+    profile_pic_title: "User Profile Picture",
+    saved_to_account: "Saved to Account",
+    profile_pic_desc: "Upload a photo from your device gallery or files to personalize your account across the marketplace.",
+    profile_pic_hint: "Allowed formats: PNG, JPG, JPEG, WEBP, GIF • Max size: 5 MB",
+    uploading: "Uploading...",
+    change_profile_pic: "Change Profile Picture",
+    add_profile_pic: "Add Profile Picture",
+    remove_photo: "Remove Photo",
+    edit_profile_info: "Edit Profile Information",
+    profile_photo_url_label: "Profile Image URL",
+    post_new_listing: "Post New Listing",
+    edit_listing_subtitle: "Edit, pause, promote or delete your properties and assets.",
+    campaign_status: "Campaign Status",
+    free_listing_quota: "Free Listing Quota",
+    quota_used: "Used",
+    quota_remaining: "Remaining",
+    active_status: "Active",
+    paused_status: "Paused",
+    sold_status: "Sold",
+    draft_status: "Draft",
+    expired_status: "Expired",
+    pending_reapproval_status: "Pending Re-Approval (Edited)",
+    pending_audit_status: "Pending Audit",
+    rejected_status: "Rejected",
+    action_edit: "Edit",
+    action_pause: "Pause",
+    action_activate: "Activate",
+    action_mark_sold: "Mark Sold",
+    action_mark_active: "Mark Active",
+    action_promote: "Promote",
+    action_delete: "Delete",
+    cancel: "Cancel",
+    saving: "Saving...",
+    save_changes_btn: "Save Changes",
+    edit_listing_details: "Edit Listing Details",
+    reapproval_required: "Re-Approval Required:",
+    reapproval_warning: "Any edits made to an approved listing will immediately require admin re-approval. Your listing will be temporarily hidden from public pages until approved by an administrator.",
+    price_etb: "Price (ETB)",
+    item_description: "Item Description",
+    wallet_payment_center: "Wallet & Payment Center",
+    wallet_center_desc: "Top up your marketplace wallet, pay for ad boosts, and review payment history.",
+    available_wallet_balance: "AVAILABLE WALLET BALANCE",
+    wallet_credits_desc: "Use your wallet credits for instant 1-click ad boost promotions.",
+    wallet_credit_rate: "1 ETB = 1 Credit",
+    top_up_wallet_credits: "Top Up Wallet Credits",
+    top_up_deposit_desc: "Deposit funds using your preferred payment method and submit the transaction reference.",
+    payment_channel: "Payment Channel",
+    select_payment_method: "-- Select Payment Method --",
+    top_up_amount_label: "Top-Up Amount (ETB)",
+    quick_amounts: "Quick Amounts:",
+    tx_ref_label: "Transaction Ref / FT Reference SMS",
+    submit_top_up: "Submit Top-Up Request",
+    my_receipts_title: "My Payment Receipts & Boost History",
+    no_receipts_found: "No payment receipts or boost history records found.",
+    saved_items_title: "Saved Items",
+    saved_items_subtitle: "Quickly view or contact sellers of saved marketplace listings.",
+    messages_title: "Messages",
+    messages_subtitle: "Instant secure inbox communication history with buyers and sellers.",
+    delete_all_conversations: "Delete All Conversations",
+    conversations_label: "Conversations",
+    secure_chat_mode: "Secure End-to-End Chat Mode",
+    type_chat_reply: "Type your secure chat reply...",
+    select_conversation_hint: "Select a conversation thread on the left side to review or send messages.",
+    notifications_title: "Notifications Center",
+    notifications_subtitle: "Stay updated with listing status reports and chat notification alerts.",
+    mark_all_read: "Mark All as Read",
+    clear_all: "Clear All",
+    recently_viewed_title: "Recently Viewed",
+    recently_viewed_subtitle: "Quickly revisit active listings you opened recently in this browser session.",
+    support_safety_title: "Support, Rules & Safety Guide",
+    support_safety_subtitle: "Explore secure guidelines, report problem tickets, or log official support requests."
   },
   om: {
     welcome: "Baga nagaan dhufte",
@@ -91,7 +180,90 @@ const DICT = {
     logout_confirm: "Herrega Koo keessaa Ba'i",
     logout_desc: "Herrega kee keessaa ba'uu ni barbaaddaa? Beeksisa kee bulchuuf deebitee seenuun si barbaachisa.",
     close: "Cufi",
-    promote_action: "Beeksisa Guddisi"
+    promote_action: "Beeksisa Guddisi",
+    registered_customer: "MAAMILA GALMAA'E",
+    listings_count: "Beeksisa",
+    favorites_count: "Jaallatamoo",
+    inbox_chats: "Haasawaa",
+    account_center_menu: "Baafata Herregaa",
+    profile_details: "Bal'ina Profaayilii",
+    profile_subtitle: "Odeeffannoo galmee keessanii fi eenyummaa gabaa keessan bulchaa.",
+    full_name: "Maqaa Guutuu",
+    email_address: "Teessoo Imeelii",
+    phone_number: "Lakkoofsa Bilbilaa",
+    member_since: "Miseensa Ta'e",
+    not_provided: "Hin kennamne",
+    profile_pic_title: "Fakkii Profaayilii Fayyadamaa",
+    saved_to_account: "Gara Herregaatti Olkaa'ame",
+    profile_pic_desc: "Gabaa guutuutti herrega keessan dhuunfachiisuuf suuraa meeshaa keessan irraa fe'aa.",
+    profile_pic_hint: "Bifa heyyamamu: PNG, JPG, JPEG, WEBP, GIF • Hangatni guddaan: 5 MB",
+    uploading: "Fe'aa jira...",
+    change_profile_pic: "Suuraa Profaayilii Jijjiiri",
+    add_profile_pic: "Suuraa Profaayilii Dabali",
+    remove_photo: "Suuraa Haqi",
+    edit_profile_info: "Odeeffannoo Profaayilii Gulaali",
+    profile_photo_url_label: "URL Fakkii Profaayilii",
+    post_new_listing: "Beeksisa Haaraa Baasi",
+    edit_listing_subtitle: "Qabeenya keessan gulaalaa, tursiisaa, guddisaa ykn haqaa.",
+    campaign_status: "Haala Duulaa",
+    free_listing_quota: "Qooda Beeksisa Bilisaa",
+    quota_used: "Kan Fayyadame",
+    quota_remaining: "Kan Hafe",
+    active_status: "Hojjataa",
+    paused_status: "Dhaabbate",
+    sold_status: "Gurgurame",
+    draft_status: "Wixinee",
+    expired_status: "Yeroon Darbe",
+    pending_reapproval_status: "Mirkaneessa Lammaffaa Eegaa Jira",
+    pending_audit_status: "Qorannoo Eegaa Jira",
+    rejected_status: "Kufaa Ta'e",
+    action_edit: "Gulaali",
+    action_pause: "Dhaabi",
+    action_activate: "Kakaasi",
+    action_mark_sold: "Gurgurame Jedhi",
+    action_mark_active: "Hojjataa Jedhi",
+    action_promote: "Guddisi",
+    action_delete: "Haqi",
+    cancel: "Dhiisi",
+    saving: "Olkaa'aa jira...",
+    save_changes_btn: "Jijjiirama Olkaa'i",
+    edit_listing_details: "Bal'ina Beeksisaa Gulaali",
+    reapproval_required: "Mirkaneessa Lammaffaa Barbaada:",
+    reapproval_warning: "Gulaalli beeksisa mirkanaa'e irratti godhamu hundi mirkaneessa bulchaa barbaada. Beeksisa keessan hamma mirkanaa'utti yeroodhaaf ni dhokfama.",
+    price_etb: "Gatii (ETB)",
+    item_description: "Ibsa Meeshichaa",
+    wallet_payment_center: "Giddugala Boorsaa & Kaffaltii",
+    wallet_center_desc: "Boorsaa gabaa keessanii guutaa, beeksisa guddisuuf kaffalaa, seenaa kaffaltii ilaalaa.",
+    available_wallet_balance: "HANGA MAALLAQA BOORSAA",
+    wallet_credits_desc: "Guddisa beeksisaa battalatti cuqaasa tokkoon raawwachuuf kireeditii boorsaa fayyadamaa.",
+    wallet_credit_rate: "1 ETB = 1 Kireediti",
+    top_up_wallet_credits: "Maallaqa Boorsaa Guuti",
+    top_up_deposit_desc: "Mala kaffaltii barbaaddan fayyadamuun maallaqa galchaa, lakk. dabarsaa ergaa.",
+    payment_channel: "Sarara Kaffaltii",
+    select_payment_method: "-- Mala Kaffaltii Filadhaa --",
+    top_up_amount_label: "Hanga Maallaqaa (ETB)",
+    quick_amounts: "Hanga Ariifachiisaa:",
+    tx_ref_label: "Lakk. Dabarsaa / SMS Mirkaneessaa FT",
+    submit_top_up: "Gaaffii Boorsaa Guutuu Galchi",
+    my_receipts_title: "Nagahee Kaffaltii & Seenaa Guddisaa Koo",
+    no_receipts_found: "Nagaheen kaffaltii ykn galmeen seenaa hin argamne.",
+    saved_items_title: "Meeshaalee Qusataman",
+    saved_items_subtitle: "Beeksisa qusatame saffisaan ilaalaa ykn gurgurtuu quunnamaa.",
+    messages_title: "Ergawwan",
+    messages_subtitle: "Seenaa quunnamtii nageenya qabu bittoota fi gurgurtoota waliin.",
+    delete_all_conversations: "Haasawwan Hunda Haqi",
+    conversations_label: "Haasawwan",
+    secure_chat_mode: "Haala Haasawaa Nageenya Qabu",
+    type_chat_reply: "Deebii haasawaa keessan barreessaa...",
+    select_conversation_hint: "Ergaa dubbisuuf ykn erguuf haasawaa bitaa irra jiru filadhaa.",
+    notifications_title: "Giddugala Beeksisaa",
+    notifications_subtitle: "Gabaasa haala beeksisaa fi beeksisa haasawaa hordofaa.",
+    mark_all_read: "Hunda Akka Dubbifametti Galchi",
+    clear_all: "Hunda Qulqulleessi",
+    recently_viewed_title: "Dhiyeenatti Daawwatame",
+    recently_viewed_subtitle: "Beeksisa hojjatu kan dhiyeenya baname saffisaan deebi'aa ilaalaa.",
+    support_safety_title: "Qajeelfama Deggarsaa, Seeraa & Nageenyaa",
+    support_safety_subtitle: "Qajeelfama nageenyaa qoradhaa, rakkoo gabaasaa, ykn gaaffii deggarsaa galchaa."
   },
   am: {
     welcome: "እንኳን ደህና መጡ",
@@ -114,7 +286,90 @@ const DICT = {
     logout_confirm: "በደህና ውጣ",
     logout_desc: "እርግጠኛ ነዎት ከመለያዎ መውጣት ይፈልጋሉ? ማስታወቂያዎችዎን ለማስተዳደር ተመልሰው መግባት ይኖርብዎታል።",
     close: "ዝጋ",
-    promote_action: "ማስታወቂያ አስተዋውቅ"
+    promote_action: "ማስታወቂያ አስተዋውቅ",
+    registered_customer: "የተመዘገበ ደንበኛ",
+    listings_count: "ማስታወቂያዎች",
+    favorites_count: "ተወዳጆች",
+    inbox_chats: "የገቢ ውይይቶች",
+    account_center_menu: "የመለያ ማዕከል ምናሌ",
+    profile_details: "የመገለጫ ዝርዝሮች",
+    profile_subtitle: "የምዝገባ መረጃዎን እና የገበያ ቦታ ማንነትዎን ያስተዳድሩ።",
+    full_name: "ሙሉ ስም",
+    email_address: "የኢሜል አድራሻ",
+    phone_number: "ስልክ ቁጥር",
+    member_since: "አባል የሆኑበት ጊዜ",
+    not_provided: "አልተሰጠም",
+    profile_pic_title: "የተጠቃሚ መገለጫ ፎቶ",
+    saved_to_account: "ወደ መለያ ተቀምጧል",
+    profile_pic_desc: "በገበያ ቦታው ሁሉ መለያዎን ለግል ለማበጀት ከመሳሪያዎ ጋለሪ ፎቶ ይስቀሉ።",
+    profile_pic_hint: "የተፈቀዱ ቅርጸቶች: PNG, JPG, JPEG, WEBP, GIF • ከፍተኛ መጠን: 5 MB",
+    uploading: "በመጫን ላይ...",
+    change_profile_pic: "የመገለጫ ፎቶ ቀይር",
+    add_profile_pic: "የመገለጫ ፎቶ አክል",
+    remove_photo: "ፎቶ አስወግድ",
+    edit_profile_info: "የመገለጫ መረጃን ያርትዑ",
+    profile_photo_url_label: "የመገለጫ ፎቶ ሊንክ",
+    post_new_listing: "አዲስ ማስታወቂያ ለጥፍ",
+    edit_listing_subtitle: "ንብረቶችዎን ያርትዑ፣ ያቁሙ፣ ያስተዋውቁ ወይም ይሰርዙ።",
+    campaign_status: "የዘመቻው ሁኔታ",
+    free_listing_quota: "የነፃ ማስታወቂያ ኮታ",
+    quota_used: "ጥቅም ላይ የዋለ",
+    quota_remaining: "የቀረ",
+    active_status: "ንቁ",
+    paused_status: "ቆሟል",
+    sold_status: "ተሽጧል",
+    draft_status: "ረቂቅ",
+    expired_status: "ጊዜው ያለፈበት",
+    pending_reapproval_status: "እንደገና ማረጋገጫ በመጠባበቅ ላይ",
+    pending_audit_status: "ግምገማ በመጠባበቅ ላይ",
+    rejected_status: "ውድቅ ተደርጓል",
+    action_edit: "አርትዕ",
+    action_pause: "አቁም",
+    action_activate: "አንቃ",
+    action_mark_sold: "እንደተሸጠ ምልክት አድርግ",
+    action_mark_active: "እንደነቃ ምልክት አድርግ",
+    action_promote: "አስተዋውቅ",
+    action_delete: "ሰርዝ",
+    cancel: "ይቅር",
+    saving: "በማስቀመጥ ላይ...",
+    save_changes_btn: "ለውጦችን አስቀምጥ",
+    edit_listing_details: "የማስታወቂያ ዝርዝሮችን ያርትዑ",
+    reapproval_required: "እንደገና ማረጋገጫ ያስፈልጋል፡",
+    reapproval_warning: "በጸደቀ ማስታወቂያ ላይ የተደረጉ ማናቸውም አርትዖቶች የአስተዳዳሪ ድጋሚ ማረጋገጫ ያስፈልጋቸዋል። ማስታወቂያዎ በአስተዳዳሪ እስኪፈቀድ ድረስ ለጊዜው ይደበቃል።",
+    price_etb: "ዋጋ (ብር)",
+    item_description: "የእቃው መግለጫ",
+    wallet_payment_center: "የቦርሳ እና የክፍያ ማዕከል",
+    wallet_center_desc: "የገበያ ቦታ ቦርሳዎን ይሙሉ፣ ለማስታወቂያ ማሳደጊያ ይክፈሉ እና የክፍያ ታሪክን ይገምግሙ።",
+    available_wallet_balance: "የቦርሳ ሂሳብ ቀሪ",
+    wallet_credits_desc: "ለፈጣን ባለ 1-ጠቅታ የማስታወቂያ ማሳደጊያዎች የቦርሳ ክሬዲቶችዎን ይጠቀሙ።",
+    wallet_credit_rate: "1 ብር = 1 ክሬዲት",
+    top_up_wallet_credits: "የቦርሳ ክሬዲት ይሙሉ",
+    top_up_deposit_desc: "የመረጡትን የክፍያ ዘዴ በመጠቀም ገንዘብ ያስገቡ እና የግብይት ማጣቀሻውን ያስገቡ።",
+    payment_channel: "የክፍያ መስመር",
+    select_payment_method: "-- የክፍያ ዘዴ ይምረጡ --",
+    top_up_amount_label: "የሚሞላ መጠን (ብር)",
+    quick_amounts: "ፈጣን መጠኖች:",
+    tx_ref_label: "የግብይት ማጣቀሻ / የFT ማረጋገጫ የኤስኤምኤስ ቁጥር",
+    submit_top_up: "የቦርሳ መሙላት ጥያቄ አስገባ",
+    my_receipts_title: "የእኔ የክፍያ ደረሰኞች እና የማሳደጊያ ታሪክ",
+    no_receipts_found: "ምንም የክፍያ ደረሰኞች ወይም የማሳደጊያ ታሪክ አልተገኘም።",
+    saved_items_title: "የተቀመጡ እቃዎች",
+    saved_items_subtitle: "የተቀመጡ የገበያ ማስታወቂያዎችን በፍጥነት ይመልከቱ ወይም ሻጮችን ያግኙ።",
+    messages_title: "መልእክቶች",
+    messages_subtitle: "ደህንነቱ የተጠበቀ የገቢ መልእክት ሳጥን ከገዢዎች እና ሻጮች ጋር።",
+    delete_all_conversations: "ሁሉንም ውይይቶች ሰርዝ",
+    conversations_label: "ውይይቶች",
+    secure_chat_mode: "ደህንነቱ የተጠበቀ የውይይት ሁነታ",
+    type_chat_reply: "የውይይት መልስዎን እዚህ ይጻፉ...",
+    select_conversation_hint: "መልዕክቶችን ለመገምገም ወይም ለመላክ በስተግራ ያለውን የውይይት ክር ይምረጡ።",
+    notifications_title: "የማሳወቂያዎች ማዕከል",
+    notifications_subtitle: "የማስታወቂያ ሁኔታ ሪፖርቶችን እና የውይይት ማንቂያዎችን ይከታተሉ።",
+    mark_all_read: "ሁሉንም እንደተነበቡ ምልክት አድርግ",
+    clear_all: "ሁሉንም አጽዳ",
+    recently_viewed_title: "በቅርቡ የታዩ",
+    recently_viewed_subtitle: "በዚህ አሰሳ ክፍለ-ጊዜ በቅርቡ የከፈቷቸውን ንቁ ማስታወቂያዎች በፍጥነት እንደገና ይጎብኙ።",
+    support_safety_title: "የድጋፍ፣ ደንቦች እና ደህንነት መመሪያ",
+    support_safety_subtitle: "ደህንነቱ የተጠበቀ መመሪያዎችን ያስሱ፣ የችግር ቲኬቶችን ሪፖርት ያድርጉ ወይም የድጋፍ ጥያቄዎችን ይመዝግቡ।"
   }
 };
 
@@ -270,8 +525,12 @@ export default function UserDashboard({
 
   // Translate helpers
   const lang = (currentLanguage === 'om' || currentLanguage === 'am') ? currentLanguage : 'en';
-  const tLocal = (key: keyof typeof DICT['en']): string => {
-    return DICT[lang][key] || DICT['en'][key];
+  const tLocal = (key: string, params?: Record<string, any>): string => {
+    const globalRes = t(key, params);
+    if (globalRes && globalRes !== key) return globalRes;
+    if ((DICT[lang] as any)?.[key]) return (DICT[lang] as any)[key];
+    if ((DICT['en'] as any)?.[key]) return (DICT['en'] as any)[key];
+    return key;
   };
 
   // Form states
@@ -987,7 +1246,7 @@ export default function UserDashboard({
           </div>
 
           <div>
-            <span className="text-[10px] font-black tracking-widest text-amber-500 uppercase block mb-1">REGISTERED CUSTOMER</span>
+            <span className="text-[10px] font-black tracking-widest text-amber-500 uppercase block mb-1">{tLocal('registered_customer')}</span>
             <h2 className="text-2xl md:text-3xl font-bold text-white tracking-tight">
               {currentUser.fullName}
             </h2>
@@ -1016,15 +1275,15 @@ export default function UserDashboard({
         {/* Quick status counters */}
         <div className="flex gap-4 relative z-10">
           <div className="px-4 py-3 bg-white/5 border border-white/5 rounded-2xl text-center min-w-[90px]">
-            <span className="text-xs text-white/40 block">Listings</span>
+            <span className="text-xs text-white/40 block">{tLocal('listings_count')}</span>
             <span className="text-xl font-bold text-white">{myListings.length}</span>
           </div>
           <div className="px-4 py-3 bg-white/5 border border-white/5 rounded-2xl text-center min-w-[90px]">
-            <span className="text-xs text-white/40 block">Favorites</span>
+            <span className="text-xs text-white/40 block">{tLocal('favorites_count')}</span>
             <span className="text-xl font-bold text-white">{mySavedItems.length}</span>
           </div>
           <div className="px-4 py-3 bg-white/5 border border-white/5 rounded-2xl text-center min-w-[90px]">
-            <span className="text-xs text-white/40 block">Inbox Chats</span>
+            <span className="text-xs text-white/40 block">{tLocal('inbox_chats')}</span>
             <span className="text-xl font-bold text-white">{myInquiries.length}</span>
           </div>
         </div>
@@ -1035,7 +1294,7 @@ export default function UserDashboard({
         {/* Navigation Sidebar (Desktop: Left Rail / Mobile: Premium grid for instant selection) */}
         <div className="lg:col-span-4 space-y-4">
           <div className="bg-[#0d0d12]/95 border border-white/5 p-4 rounded-3xl shadow-xl">
-            <h3 className="text-[10px] font-black uppercase text-white/40 tracking-wider mb-4 px-2">Account Center Menu</h3>
+            <h3 className="text-[10px] font-black uppercase text-white/40 tracking-wider mb-4 px-2">{tLocal('account_center_menu')}</h3>
             
             {/* Desktop Menu List / Mobile Grid */}
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-1 gap-2">
@@ -1098,26 +1357,26 @@ export default function UserDashboard({
                 <div className="space-y-6">
                   <div className="flex justify-between items-center border-b border-white/5 pb-4">
                     <div>
-                      <h3 className="text-lg font-bold text-white">Profile Details</h3>
-                      <p className="text-[11px] text-white/40 mt-0.5">Manage your user registration credentials and marketplace identity.</p>
+                      <h3 className="text-lg font-bold text-white">{tLocal('profile_details')}</h3>
+                      <p className="text-[11px] text-white/40 mt-0.5">{tLocal('profile_subtitle')}</p>
                     </div>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-black/40 p-5 rounded-2xl border border-white/5">
                     <div>
-                      <span className="text-[10px] font-bold text-white/40 uppercase block mb-1 font-mono">Full Name</span>
+                      <span className="text-[10px] font-bold text-white/40 uppercase block mb-1 font-mono">{tLocal('full_name')}</span>
                       <p className="text-sm font-semibold text-white">{currentUser.fullName}</p>
                     </div>
                     <div>
-                      <span className="text-[10px] font-bold text-white/40 uppercase block mb-1 font-mono">Email Address</span>
+                      <span className="text-[10px] font-bold text-white/40 uppercase block mb-1 font-mono">{tLocal('email_address')}</span>
                       <p className="text-sm font-semibold text-white/80">{currentUser.email}</p>
                     </div>
                     <div>
-                      <span className="text-[10px] font-bold text-white/40 uppercase block mb-1 font-mono">Phone Number</span>
-                      <p className="text-sm font-semibold text-white">{currentUser.phone || "Not provided"}</p>
+                      <span className="text-[10px] font-bold text-white/40 uppercase block mb-1 font-mono">{tLocal('phone_number')}</span>
+                      <p className="text-sm font-semibold text-white">{currentUser.phone || tLocal('not_provided')}</p>
                     </div>
                     <div>
-                      <span className="text-[10px] font-bold text-white/40 uppercase block mb-1 font-mono">Member Since</span>
+                      <span className="text-[10px] font-bold text-white/40 uppercase block mb-1 font-mono">{tLocal('member_since')}</span>
                       <p className="text-sm font-semibold text-white/60">{new Date(currentUser.createdAt).toLocaleDateString()}</p>
                     </div>
                   </div>
@@ -1144,18 +1403,18 @@ export default function UserDashboard({
                         <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2">
                           <h4 className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-1.5">
                             <Camera className="w-4 h-4 text-amber-500" />
-                            <span>User Profile Picture</span>
+                            <span>{tLocal('profile_pic_title')}</span>
                           </h4>
                           <span className="text-[9px] bg-amber-500/10 text-amber-400 border border-amber-500/20 px-2 py-0.5 rounded font-mono">
-                            Saved to Account
+                            {tLocal('saved_to_account')}
                           </span>
                         </div>
 
                         <p className="text-xs text-white/70">
-                          Upload a photo from your device gallery or files to personalize your account across the marketplace.
+                          {tLocal('profile_pic_desc')}
                         </p>
                         <p className="text-[10px] text-white/40 font-mono">
-                          Allowed formats: PNG, JPG, JPEG, WEBP, GIF • Max size: 5 MB
+                          {tLocal('profile_pic_hint')}
                         </p>
 
                         {/* Hidden File Input */}
@@ -1175,7 +1434,7 @@ export default function UserDashboard({
                             className="px-4 py-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black font-extrabold text-xs rounded-xl flex items-center gap-2 transition shadow-lg cursor-pointer uppercase tracking-wider disabled:opacity-50"
                           >
                             <UploadCloud className="w-4 h-4" />
-                            <span>{uploadingAvatar ? 'Uploading...' : profilePhotoUrl ? 'Change Profile Picture' : 'Add Profile Picture'}</span>
+                            <span>{uploadingAvatar ? tLocal('uploading') : profilePhotoUrl ? tLocal('change_profile_pic') : tLocal('add_profile_pic')}</span>
                           </button>
 
                           {profilePhotoUrl && (
@@ -1186,7 +1445,7 @@ export default function UserDashboard({
                               className="px-3.5 py-2 bg-white/5 hover:bg-rose-500/20 text-rose-400 border border-white/10 hover:border-rose-500/30 font-bold text-xs rounded-xl flex items-center gap-1.5 transition cursor-pointer"
                             >
                               <Trash2 className="w-3.5 h-3.5" />
-                              <span>Remove Photo</span>
+                              <span>{tLocal('remove_photo')}</span>
                             </button>
                           )}
                         </div>
@@ -1196,7 +1455,7 @@ export default function UserDashboard({
 
                   {/* Edit Profile Sub-Section */}
                   <div className="border-t border-white/5 pt-6">
-                    <h4 className="text-xs font-black uppercase text-amber-500 tracking-wider mb-4">Edit Profile Information</h4>
+                    <h4 className="text-xs font-black uppercase text-amber-500 tracking-wider mb-4">{tLocal('edit_profile_info')}</h4>
                     
                     {profileSuccess && <p className="p-3 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs rounded-xl mb-4 text-center">{profileSuccess}</p>}
                     {profileError && <p className="p-3 bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs rounded-xl mb-4 text-center">{profileError}</p>}
@@ -1204,7 +1463,7 @@ export default function UserDashboard({
                     <form onSubmit={handleUpdateProfile} className="space-y-4">
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
-                          <label className="block text-[10px] font-bold text-white/40 uppercase mb-1.5 font-mono">Full Name</label>
+                          <label className="block text-[10px] font-bold text-white/40 uppercase mb-1.5 font-mono">{tLocal('full_name')}</label>
                           <input 
                             type="text" 
                             required 
@@ -1214,7 +1473,7 @@ export default function UserDashboard({
                           />
                         </div>
                         <div>
-                          <label className="block text-[10px] font-bold text-white/40 uppercase mb-1.5 font-mono">Phone Number</label>
+                          <label className="block text-[10px] font-bold text-white/40 uppercase mb-1.5 font-mono">{tLocal('phone_number')}</label>
                           <input 
                             type="text" 
                             value={profilePhone} 
@@ -1225,7 +1484,7 @@ export default function UserDashboard({
                         </div>
                       </div>
                       <div>
-                        <label className="block text-[10px] font-bold text-white/40 uppercase mb-1.5 font-mono">Profile Image URL</label>
+                        <label className="block text-[10px] font-bold text-white/40 uppercase mb-1.5 font-mono">{tLocal('profile_photo_url_label')}</label>
                         <input 
                           type="text" 
                           value={profilePhotoUrl} 
@@ -1250,8 +1509,8 @@ export default function UserDashboard({
                 <div className="space-y-6">
                   <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-white/5 pb-4">
                     <div>
-                      <h3 className="text-lg font-bold text-white">My Listings</h3>
-                      <p className="text-[11px] text-white/40 mt-0.5">Edit, pause, promote or delete your properties and assets.</p>
+                      <h3 className="text-lg font-bold text-white">{tLocal('my_listings_title')}</h3>
+                      <p className="text-[11px] text-white/40 mt-0.5">{tLocal('edit_listing_subtitle')}</p>
                     </div>
                     {onOpenCreateModal && (
                       <button 
@@ -1259,7 +1518,7 @@ export default function UserDashboard({
                         className="bg-amber-500 hover:bg-amber-400 text-black text-xs font-black px-4 py-2 rounded-xl transition flex items-center gap-1.5 cursor-pointer"
                       >
                         <Plus className="w-4 h-4" />
-                        <span>Post New Listing</span>
+                        <span>{tLocal('post_new_listing')}</span>
                       </button>
                     )}
                   </div>
@@ -1278,7 +1537,7 @@ export default function UserDashboard({
                           <div className="space-y-1.5 text-left">
                             <div className="flex flex-wrap items-center gap-2">
                               <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-extrabold font-mono uppercase border ${campaignInfo.badgeColor}`}>
-                                Campaign Status: {campaignInfo.status}
+                                {tLocal('campaign_status')}: {campaignInfo.status}
                               </span>
                               <span className="text-[10px] text-amber-400 font-mono font-bold bg-amber-500/10 px-2 py-0.5 rounded-md border border-amber-500/20">
                                 {campaignInfo.displayText}
@@ -1298,11 +1557,11 @@ export default function UserDashboard({
                           </div>
 
                           <div className="bg-black/60 border border-white/10 p-3.5 rounded-2xl text-center shrink-0 min-w-[200px]">
-                            <span className="text-[10px] uppercase font-bold text-white/40 block mb-1">Free Listing Quota</span>
+                            <span className="text-[10px] uppercase font-bold text-white/40 block mb-1">{tLocal('free_listing_quota')}</span>
                             <div className="flex justify-center items-center gap-2 text-xs font-mono font-extrabold">
-                              <span className="text-white/60">Used: <strong className="text-amber-400">{userFreeUsed} / {maxFree}</strong></span>
+                              <span className="text-white/60">{tLocal('quota_used')}: <strong className="text-amber-400">{userFreeUsed} / {maxFree}</strong></span>
                               <span className="text-white/30">•</span>
-                              <span className="text-emerald-400">Remaining: <strong className="text-white">{remainingFree}</strong></span>
+                              <span className="text-emerald-400">{tLocal('quota_remaining')}: <strong className="text-white">{remainingFree}</strong></span>
                             </div>
                             {campaignInfo.isActive && (
                               <p className="text-[9px] text-emerald-400/90 font-medium mt-1">
@@ -1331,17 +1590,17 @@ export default function UserDashboard({
                         const isExpired = desc.includes('**EXPIRED**');
                         const isEditedReapproval = (p.approvalStatus === 'pending' || p.verificationStatus === 'pending') && ((p as any).lastEditReason === 'Edited after approval' || ((p as any).editHistory && (p as any).editHistory.length > 0));
 
-                        let statusBadge = <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[9px] px-2 py-0.5 rounded-full font-bold uppercase">Active</span>;
-                        if (isPaused) statusBadge = <span className="bg-zinc-500/10 text-zinc-400 border border-zinc-500/20 text-[9px] px-2 py-0.5 rounded-full font-bold uppercase">Paused</span>;
-                        if (isSold) statusBadge = <span className="bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 text-[9px] px-2 py-0.5 rounded-full font-bold uppercase">Sold</span>;
-                        if (isDraft) statusBadge = <span className="bg-amber-500/10 text-amber-500 border border-amber-500/20 text-[9px] px-2 py-0.5 rounded-full font-bold uppercase">Draft</span>;
-                        if (isExpired) statusBadge = <span className="bg-red-500/10 text-red-400 border border-red-500/20 text-[9px] px-2 py-0.5 rounded-full font-bold uppercase">Expired</span>;
+                        let statusBadge = <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[9px] px-2 py-0.5 rounded-full font-bold uppercase">{tLocal('active_status')}</span>;
+                        if (isPaused) statusBadge = <span className="bg-zinc-500/10 text-zinc-400 border border-zinc-500/20 text-[9px] px-2 py-0.5 rounded-full font-bold uppercase">{tLocal('paused_status')}</span>;
+                        if (isSold) statusBadge = <span className="bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 text-[9px] px-2 py-0.5 rounded-full font-bold uppercase">{tLocal('sold_status')}</span>;
+                        if (isDraft) statusBadge = <span className="bg-amber-500/10 text-amber-500 border border-amber-500/20 text-[9px] px-2 py-0.5 rounded-full font-bold uppercase">{tLocal('draft_status')}</span>;
+                        if (isExpired) statusBadge = <span className="bg-red-500/10 text-red-400 border border-red-500/20 text-[9px] px-2 py-0.5 rounded-full font-bold uppercase">{tLocal('expired_status')}</span>;
                         if (isEditedReapproval) {
-                          statusBadge = <span className="bg-amber-500/20 text-amber-400 border border-amber-500/40 text-[9px] px-2 py-0.5 rounded-full font-extrabold uppercase animate-pulse">Pending Re-Approval (Edited)</span>;
+                          statusBadge = <span className="bg-amber-500/20 text-amber-400 border border-amber-500/40 text-[9px] px-2 py-0.5 rounded-full font-extrabold uppercase animate-pulse">{tLocal('pending_reapproval_status')}</span>;
                         } else if (p.verificationStatus === 'pending' || p.approvalStatus === 'pending') {
-                          statusBadge = <span className="bg-yellow-500/10 text-yellow-500 border border-yellow-500/20 text-[9px] px-2 py-0.5 rounded-full font-bold uppercase">Pending Audit</span>;
+                          statusBadge = <span className="bg-yellow-500/10 text-yellow-500 border border-yellow-500/20 text-[9px] px-2 py-0.5 rounded-full font-bold uppercase">{tLocal('pending_audit_status')}</span>;
                         }
-                        if (p.verificationStatus === 'rejected' || p.approvalStatus === 'rejected') statusBadge = <span className="bg-rose-500/10 text-rose-400 border border-rose-500/20 text-[9px] px-2 py-0.5 rounded-full font-bold uppercase">Rejected</span>;
+                        if (p.verificationStatus === 'rejected' || p.approvalStatus === 'rejected') statusBadge = <span className="bg-rose-500/10 text-rose-400 border border-rose-500/20 text-[9px] px-2 py-0.5 rounded-full font-bold uppercase">{tLocal('rejected_status')}</span>;
 
                         return (
                           <div key={p.id} className="bg-black/30 hover:bg-black/50 border border-white/5 rounded-2xl p-4 transition duration-300 flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -1361,7 +1620,9 @@ export default function UserDashboard({
                                   {statusBadge}
                                 </div>
                                 <p className="text-[11px] text-amber-500 font-bold mt-1 font-mono">{Number(p.price).toLocaleString()} ETB</p>
-                                <p className="text-[10px] text-white/30 mt-0.5">{p.majorCategory} • {p.propertyType} • {p.location || 'Location not provided'}</p>
+                                <p className="text-[10px] text-white/30 mt-0.5">
+                                  {getTranslatedCategoryName(p.majorCategory, currentLanguage)} • {getTranslatedSubcategoryName(p.propertyType, currentLanguage) || getTranslatedPropertyType(p.propertyType, currentLanguage)} • {getTranslatedLocation(p.location, currentLanguage) || t('location_not_provided')}
+                                </p>
                               </div>
                             </div>
 
@@ -1376,7 +1637,7 @@ export default function UserDashboard({
                                 className="p-2 bg-white/5 hover:bg-white/10 text-white hover:text-amber-400 border border-white/5 rounded-xl transition text-[11px] flex items-center gap-1 cursor-pointer"
                               >
                                 <Edit2 className="w-3.5 h-3.5" />
-                                <span>Edit</span>
+                                <span>{tLocal('action_edit')}</span>
                               </button>
                               
                               <button 
@@ -1384,7 +1645,7 @@ export default function UserDashboard({
                                 className="p-2 bg-white/5 hover:bg-white/10 text-white hover:text-amber-400 border border-white/5 rounded-xl transition text-[11px] flex items-center gap-1 cursor-pointer"
                               >
                                 {isPaused ? <Play className="w-3.5 h-3.5 text-emerald-400" /> : <Pause className="w-3.5 h-3.5 text-zinc-400" />}
-                                <span>{isPaused ? 'Activate' : 'Pause'}</span>
+                                <span>{isPaused ? tLocal('action_activate') : tLocal('action_pause')}</span>
                               </button>
 
                               <button 
@@ -1396,7 +1657,7 @@ export default function UserDashboard({
                                 }`}
                               >
                                 <CheckCircle2 className="w-3.5 h-3.5" />
-                                <span>{isSold ? 'Mark Active' : 'Mark Sold'}</span>
+                                <span>{isSold ? tLocal('action_mark_active') : tLocal('action_mark_sold')}</span>
                               </button>
 
                               <button 
@@ -1407,7 +1668,7 @@ export default function UserDashboard({
                                 className="p-2 bg-amber-500/10 hover:bg-amber-500/25 text-amber-400 border border-amber-500/15 rounded-xl transition text-[11px] flex items-center gap-1 cursor-pointer font-bold"
                               >
                                 <Zap className="w-3.5 h-3.5" />
-                                <span>Promote</span>
+                                <span>{tLocal('action_promote')}</span>
                               </button>
 
                               <button 
@@ -1745,30 +2006,30 @@ export default function UserDashboard({
                       >
                         <X className="w-4 h-4" />
                       </button>
-                      <h4 className="text-sm font-bold text-white mb-1">Edit Listing Details</h4>
-                      <p className="text-[10px] text-white/40 mb-3">Edit the details of "{editingProperty.title}"</p>
+                      <h4 className="text-sm font-bold text-white mb-1">{tLocal('edit_listing_details')}</h4>
+                      <p className="text-[10px] text-white/40 mb-3">{tLocal('edit_details_of')} "{editingProperty.title}"</p>
                       
                       <div className="bg-amber-500/10 border border-amber-500/30 p-3 rounded-xl mb-4 text-[11px] text-amber-300 flex items-start gap-2">
                         <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
                         <div>
-                          <strong>Re-Approval Required:</strong> Any edits made to an approved listing will immediately require admin re-approval. Your listing will be temporarily hidden from public pages until approved by an administrator.
+                          <strong>{tLocal('reapproval_required')}</strong> {tLocal('reapproval_warning')}
                         </div>
                       </div>
                       <form onSubmit={handleSaveListingEdit} className="space-y-4">
                         <div>
-                          <label className="block text-[10px] font-bold text-white/40 uppercase mb-1 font-mono">Price (ETB)</label>
+                          <label className="block text-[10px] font-bold text-white/40 uppercase mb-1 font-mono">{tLocal('price_etb')}</label>
                           <input type="text" inputMode="text" value={editPrice} onChange={e => setEditPrice(e.target.value as any)} className="w-full p-2.5 bg-black border border-white/10 text-xs text-white rounded-xl focus:outline-none" />
                         </div>
                         <div>
-                          <label className="block text-[10px] font-bold text-white/40 uppercase mb-1 font-mono">Item Description</label>
+                          <label className="block text-[10px] font-bold text-white/40 uppercase mb-1 font-mono">{tLocal('item_description')}</label>
                           <textarea rows={4} value={editDesc} onChange={e => setEditDesc(e.target.value)} className="w-full p-2.5 bg-black border border-white/10 text-xs text-white rounded-xl focus:outline-none" />
                         </div>
                         <div className="flex gap-2">
                           <button type="submit" disabled={editSubmitting} className="bg-amber-500 hover:bg-amber-400 text-black font-extrabold py-2 px-5 rounded-xl text-[10px] uppercase tracking-wider transition cursor-pointer">
-                            {editSubmitting ? 'Saving...' : 'Save Changes'}
+                            {editSubmitting ? tLocal('saving') : tLocal('save_changes_btn')}
                           </button>
                           <button type="button" onClick={() => setEditingProperty(null)} className="bg-white/5 hover:bg-white/10 text-white font-bold py-2 px-5 rounded-xl text-[10px] uppercase tracking-wider transition">
-                            Cancel
+                            {tLocal('cancel')}
                           </button>
                         </div>
                       </form>
@@ -1782,32 +2043,32 @@ export default function UserDashboard({
                 <div className="space-y-6">
                   <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-white/5 pb-4">
                     <div>
-                      <h3 className="text-lg font-bold text-white">Wallet & Payment Center</h3>
-                      <p className="text-[11px] text-white/40 mt-0.5">Top up your marketplace wallet, pay for ad boosts, and review payment history.</p>
+                      <h3 className="text-lg font-bold text-white">{tLocal('wallet_payment_center')}</h3>
+                      <p className="text-[11px] text-white/40 mt-0.5">{tLocal('wallet_center_desc')}</p>
                     </div>
                   </div>
 
                   {/* Wallet Balance Card */}
                   <div className="bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-transparent border border-amber-500/20 p-6 rounded-2xl flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                     <div>
-                      <span className="text-[10px] font-black uppercase text-amber-500 tracking-wider block mb-1">AVAILABLE WALLET BALANCE</span>
+                      <span className="text-[10px] font-black uppercase text-amber-500 tracking-wider block mb-1">{tLocal('available_wallet_balance')}</span>
                       <div className="flex items-baseline gap-2">
                         <span className="text-3xl font-black text-white">{currentUser.walletBalance?.toLocaleString() || 0}</span>
                         <span className="text-sm font-extrabold text-amber-500">ETB</span>
                       </div>
-                      <p className="text-[11px] text-white/50 mt-1">Use your wallet credits for instant 1-click ad boost promotions.</p>
+                      <p className="text-[11px] text-white/50 mt-1">{tLocal('wallet_credits_desc')}</p>
                     </div>
                     <div className="flex items-center gap-2">
                       <span className="text-xs bg-amber-500/20 text-amber-400 font-mono px-3 py-1.5 rounded-xl border border-amber-500/30 font-bold">
-                        1 ETB = 1 Credit
+                        {tLocal('wallet_credit_rate')}
                       </span>
                     </div>
                   </div>
 
                   {/* Top Up Wallet Form */}
                   <div className="bg-black/30 p-6 rounded-2xl border border-white/5">
-                    <h4 className="text-xs font-black uppercase text-amber-500 tracking-wider mb-2">Top Up Wallet Credits</h4>
-                    <p className="text-[11px] text-white/40 mb-4">Deposit funds using your preferred payment method and submit the transaction reference.</p>
+                    <h4 className="text-xs font-black uppercase text-amber-500 tracking-wider mb-2">{tLocal('top_up_wallet_credits')}</h4>
+                    <p className="text-[11px] text-white/40 mb-4">{tLocal('top_up_deposit_desc')}</p>
 
                     {topUpSuccess && <p className="p-3 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs rounded-xl mb-4 text-center font-bold">{topUpSuccess}</p>}
                     {topUpError && <p className="p-3 bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs rounded-xl mb-4 text-center">{topUpError}</p>}
@@ -1815,14 +2076,14 @@ export default function UserDashboard({
                     <form onSubmit={handleTopUpSubmit} className="space-y-4">
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
-                          <label className="block text-[10px] font-bold text-white/40 uppercase mb-1.5 font-mono">Payment Channel</label>
+                          <label className="block text-[10px] font-bold text-white/40 uppercase mb-1.5 font-mono">{tLocal('payment_channel')}</label>
                           <select 
                             required
                             value={topUpMethodId} 
                             onChange={e => setTopUpMethodId(e.target.value)} 
                             className="w-full p-3 bg-black border border-white/10 text-xs text-white rounded-xl focus:outline-none focus:border-amber-500/30"
                           >
-                            <option value="">-- Select Payment Method --</option>
+                            <option value="">{tLocal('select_payment_method')}</option>
                             {activeMethods.map(m => (
                               <option key={m.id} value={m.id}>{m.name} ({m.accountNumber})</option>
                             ))}
@@ -1830,7 +2091,7 @@ export default function UserDashboard({
                         </div>
 
                         <div>
-                          <label className="block text-[10px] font-bold text-white/40 uppercase mb-1.5 font-mono font-bold">Top-Up Amount (ETB)</label>
+                          <label className="block text-[10px] font-bold text-white/40 uppercase mb-1.5 font-mono font-bold">{tLocal('top_up_amount_label')}</label>
                           <input 
                             type="text" 
                             inputMode="text"
@@ -1845,7 +2106,7 @@ export default function UserDashboard({
 
                       {/* Quick Amount Buttons */}
                       <div className="flex flex-wrap items-center gap-2">
-                        <span className="text-[10px] text-white/40 font-mono">Quick Amounts:</span>
+                        <span className="text-[10px] text-white/40 font-mono">{tLocal('quick_amounts')}</span>
                         {[250, 500, 1000, 2500, 5000].map(amt => (
                           <button
                             key={amt}
@@ -1859,7 +2120,7 @@ export default function UserDashboard({
                       </div>
 
                       <div>
-                        <label className="block text-[10px] font-bold text-white/40 uppercase mb-1.5 font-mono">Transaction Ref / FT Reference SMS</label>
+                        <label className="block text-[10px] font-bold text-white/40 uppercase mb-1.5 font-mono">{tLocal('tx_ref_label')}</label>
                         <input 
                           type="text" 
                           required 
@@ -1875,16 +2136,16 @@ export default function UserDashboard({
                         disabled={topUpSubmitting} 
                         className="bg-amber-500 hover:bg-amber-400 text-black font-extrabold py-3 px-6 rounded-xl text-xs uppercase tracking-wider transition cursor-pointer"
                       >
-                        {topUpSubmitting ? 'Submitting...' : 'Submit Top-Up Request'}
+                        {topUpSubmitting ? tLocal('saving') : tLocal('submit_top_up')}
                       </button>
                     </form>
                   </div>
 
                   {/* Payment Receipts History */}
                   <div className="border-t border-white/5 pt-6">
-                    <h4 className="text-xs font-black uppercase text-amber-500 tracking-wider mb-4">My Payment Receipts & Boost History</h4>
+                    <h4 className="text-xs font-black uppercase text-amber-500 tracking-wider mb-4">{tLocal('my_receipts_title')}</h4>
                     {myReceipts.length === 0 ? (
-                      <p className="text-xs text-white/30 text-center py-8">No payment receipts or boost history records found.</p>
+                      <p className="text-xs text-white/30 text-center py-8">{tLocal('no_receipts_found')}</p>
                     ) : (
                       <div className="space-y-3">
                         {myReceipts.map(rc => (
@@ -1911,8 +2172,8 @@ export default function UserDashboard({
               {activeTab === 'saveditems' && (
                 <div className="space-y-6">
                   <div className="border-b border-white/5 pb-4">
-                    <h3 className="text-lg font-bold text-white">Saved Items</h3>
-                    <p className="text-[11px] text-white/40 mt-0.5">Quickly view or contact sellers of saved marketplace listings.</p>
+                    <h3 className="text-lg font-bold text-white">{tLocal('saved_items_title')}</h3>
+                    <p className="text-[11px] text-white/40 mt-0.5">{tLocal('saved_items_subtitle')}</p>
                   </div>
 
                   {mySavedItems.length === 0 ? (
@@ -1971,8 +2232,8 @@ export default function UserDashboard({
                 <div className="space-y-6">
                   <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-white/5 pb-4">
                     <div>
-                      <h3 className="text-lg font-bold text-white">Messages</h3>
-                      <p className="text-[11px] text-white/40 mt-0.5">Instant secure inbox communication history with buyers and sellers.</p>
+                      <h3 className="text-lg font-bold text-white">{tLocal('messages_title')}</h3>
+                      <p className="text-[11px] text-white/40 mt-0.5">{tLocal('messages_subtitle')}</p>
                     </div>
                     {myInquiries.length > 0 && (
                       <button 
@@ -1985,7 +2246,7 @@ export default function UserDashboard({
                         className="text-[11px] text-rose-400 hover:text-rose-300 hover:underline font-bold flex items-center gap-1 cursor-pointer"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
-                        <span>Delete All Conversations</span>
+                        <span>{tLocal('delete_all_conversations')}</span>
                       </button>
                     )}
                   </div>
@@ -2000,7 +2261,7 @@ export default function UserDashboard({
                       
                       {/* Conversations list Pane */}
                       <div className="md:col-span-5 bg-black/20 rounded-2xl border border-white/5 p-3 space-y-2 max-h-[350px] overflow-y-auto">
-                        <span className="text-[10px] font-black text-white/40 uppercase tracking-widest block px-2 mb-1">Conversations</span>
+                        <span className="text-[10px] font-black text-white/40 uppercase tracking-widest block px-2 mb-1">{tLocal('conversations_label')}</span>
                         {myInquiries.map(inq => {
                           const isActive = activeInquiryId === inq.id;
                           const lastMsg = inq.messages[inq.messages.length - 1];
@@ -2055,13 +2316,13 @@ export default function UserDashboard({
                                 <h4 className="text-xs font-black text-white uppercase tracking-wider line-clamp-1">
                                   {inquiries.find(i => i.id === activeInquiryId)?.propertyTitle}
                                 </h4>
-                                <p className="text-[9px] text-white/40">Secure End-to-End Chat Mode</p>
+                                <p className="text-[9px] text-white/40">{tLocal('secure_chat_mode')}</p>
                               </div>
                               <button 
                                 onClick={() => setActiveInquiryId(null)} 
                                 className="text-[10px] text-amber-500 hover:underline"
                               >
-                                Close
+                                {tLocal('close')}
                               </button>
                             </div>
 
@@ -2092,12 +2353,12 @@ export default function UserDashboard({
                                 required
                                 value={chatMessageText}
                                 onChange={e => setChatMessageText(e.target.value)}
-                                placeholder="Type your secure chat reply..."
+                                placeholder={tLocal('type_chat_reply')}
                                 className="flex-1 bg-black border border-white/10 text-xs text-white p-2.5 rounded-xl focus:outline-none"
                               />
                               <button 
-                                type="submit"
-                                disabled={chatSubmitting}
+                                type="submit" 
+                                disabled={chatSubmitting} 
                                 className="p-2.5 bg-amber-500 hover:bg-amber-400 text-black rounded-xl transition cursor-pointer flex items-center justify-center"
                               >
                                 <Send className="w-4 h-4" />
@@ -2107,7 +2368,7 @@ export default function UserDashboard({
                         ) : (
                           <div className="flex-1 flex flex-col items-center justify-center text-center opacity-40">
                             <MessageSquare className="w-12 h-12 text-white mb-2" />
-                            <p className="text-xs">Select a conversation thread on the left side to review or send messages.</p>
+                            <p className="text-xs">{tLocal('select_conversation_hint')}</p>
                           </div>
                         )}
                       </div>
@@ -2122,8 +2383,8 @@ export default function UserDashboard({
                 <div className="space-y-6">
                   <div className="flex justify-between items-center border-b border-white/5 pb-4">
                     <div>
-                      <h3 className="text-lg font-bold text-white">Notifications Center</h3>
-                      <p className="text-[11px] text-white/40 mt-0.5">Stay updated with listing status reports and chat notification alerts.</p>
+                      <h3 className="text-lg font-bold text-white">{tLocal('notifications_title')}</h3>
+                      <p className="text-[11px] text-white/40 mt-0.5">{tLocal('notifications_subtitle')}</p>
                     </div>
                     {myNotifications.length > 0 && (
                       <div className="flex items-center gap-3">
@@ -2131,7 +2392,7 @@ export default function UserDashboard({
                           onClick={handleMarkAllNotificationsRead}
                           className="text-[11px] text-amber-500 hover:underline font-bold cursor-pointer"
                         >
-                          Mark All as Read
+                          {tLocal('mark_all_read')}
                         </button>
                         <button 
                           onClick={async () => {
@@ -2142,7 +2403,7 @@ export default function UserDashboard({
                           className="text-[11px] text-rose-400 hover:text-rose-300 hover:underline font-bold flex items-center gap-1 cursor-pointer"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
-                          <span>Clear All</span>
+                          <span>{tLocal('clear_all')}</span>
                         </button>
                       </div>
                     )}

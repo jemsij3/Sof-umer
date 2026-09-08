@@ -597,7 +597,7 @@ const staticTexts = {
 };
 
 export default function HelpCenter() {
-  const { currentLanguage, faqs: contextFaqs, voteFaqHelpful } = useApp();
+  const { currentLanguage, faqs: contextFaqs, voteFaqHelpful, t } = useApp();
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState<string>('all');
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -615,10 +615,20 @@ export default function HelpCenter() {
   const [formSuccess, setFormSuccess] = useState(false);
   const [formError, setFormError] = useState(false);
 
-  // Translate helper
+  // Translate helper for multilingual objects (e.g. { en: '...', om: '...', am: '...' })
   const tr = (obj: Record<string, string> | undefined | null) => {
     if (!obj) return '';
     return obj[currentLanguage] || obj['en'] || Object.values(obj)[0] || '';
+  };
+
+  // Helper for UI keys: tries global t() first, then staticTexts fallback, then key/default
+  const trText = (key: string, staticFallback?: Record<string, string>): string => {
+    const globalVal = t(key);
+    if (globalVal && globalVal !== key) return globalVal;
+    if (staticFallback) {
+      return staticFallback[currentLanguage] || staticFallback['en'] || Object.values(staticFallback)[0] || '';
+    }
+    return key;
   };
 
   const showToast = (msg: string) => {
@@ -699,7 +709,7 @@ export default function HelpCenter() {
     const textToCopy = `${tr(item.question)}\n\n${tr(item.answer)}`;
     navigator.clipboard.writeText(textToCopy).then(() => {
       setCopiedId(item.id);
-      showToast(tr(staticTexts.copySuccess));
+      showToast(trText('help.copy_success', staticTexts.copySuccess));
       setTimeout(() => setCopiedId(null), 2000);
     });
   };
@@ -709,7 +719,7 @@ export default function HelpCenter() {
     e.stopPropagation();
     const shareUrl = `${window.location.origin}/?view=info-page&pageId=help-center&faqId=${item.id}`;
     navigator.clipboard.writeText(shareUrl).then(() => {
-      showToast(tr(staticTexts.shareSuccess));
+      showToast(trText('help.share_success', staticTexts.shareSuccess));
     });
   };
 
@@ -783,9 +793,9 @@ export default function HelpCenter() {
       
       {/* Breadcrumbs Navigation */}
       <div className="flex items-center gap-2 text-xs text-white/40 font-medium">
-        <span className="hover:text-emerald-400 cursor-pointer transition">Home</span>
+        <span className="hover:text-emerald-400 cursor-pointer transition">{t('home') || 'Home'}</span>
         <ChevronRight className="w-3.5 h-3.5 text-white/20" />
-        <span className="text-white/60">Help Center</span>
+        <span className="text-white/60">{trText('help.title', staticTexts.title)}</span>
         {activeTab !== 'all' && (
           <>
             <ChevronRight className="w-3.5 h-3.5 text-white/20" />
@@ -802,10 +812,10 @@ export default function HelpCenter() {
           </div>
           <div>
             <h2 className="text-2xl md:text-3xl font-serif font-bold text-white tracking-tight">
-              {tr(staticTexts.title)}
+              {trText('help.title', staticTexts.title)}
             </h2>
             <p className="text-xs md:text-sm text-white/60 font-light mt-1">
-              {tr(staticTexts.subtitle)}
+              {trText('help.subtitle', staticTexts.subtitle)}
             </p>
           </div>
         </div>
@@ -819,7 +829,7 @@ export default function HelpCenter() {
               type="text"
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
-              placeholder={tr(staticTexts.searchPlaceholder)}
+              placeholder={trText('help.search_placeholder', staticTexts.searchPlaceholder)}
               className="w-full bg-black/80 hover:bg-black focus:bg-black border border-white/15 focus:border-emerald-500 rounded-2xl py-3.5 px-11 text-xs md:text-sm text-white placeholder-white/40 focus:outline-none transition duration-300 font-sans shadow-2xl"
             />
             {searchQuery && (
@@ -827,7 +837,7 @@ export default function HelpCenter() {
                 onClick={() => setSearchQuery('')}
                 className="absolute right-4 top-1/2 -translate-y-1/2 text-xs text-white/40 hover:text-white uppercase font-black tracking-widest cursor-pointer"
               >
-                Clear
+                {t('clear') || 'Clear'}
               </button>
             )}
           </div>
@@ -841,7 +851,7 @@ export default function HelpCenter() {
             >
               <div className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-emerald-400 flex items-center gap-1.5">
                 <Sparkles className="w-3 h-3" />
-                <span>Matching Questions</span>
+                <span>{t('matching_questions') || 'Matching Questions'}</span>
               </div>
               {searchSuggestions.map(sugg => (
                 <button
@@ -866,9 +876,9 @@ export default function HelpCenter() {
         <div className="flex items-center justify-between">
           <span className="text-[10px] font-black uppercase tracking-widest text-white/40 flex items-center gap-1.5">
             <BookOpen className="w-3.5 h-3.5 text-emerald-400" />
-            <span>Browse Categories</span>
+            <span>{t('browse_categories') || 'Browse Categories'}</span>
           </span>
-          <span className="text-xs text-white/40">{filteredFAQs.length} questions available</span>
+          <span className="text-xs text-white/40">{filteredFAQs.length} {t('questions_available') || 'questions available'}</span>
         </div>
 
         <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-none border-b border-white/5" id="help-categories-tabs">
@@ -922,7 +932,7 @@ export default function HelpCenter() {
                           {item.isPopular && (
                             <span className="text-[9px] font-bold text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-md border border-amber-500/20 flex items-center gap-1">
                               <Flame className="w-3 h-3 text-amber-400" />
-                              <span>Popular</span>
+                              <span>{t('popular') || 'Popular'}</span>
                             </span>
                           )}
                         </div>
@@ -957,7 +967,7 @@ export default function HelpCenter() {
                             <div className="flex flex-wrap gap-4 justify-between items-center pt-3 border-t border-white/[0.05]">
                               {/* Was this helpful? */}
                               <div className="flex items-center gap-2 text-xs text-white/50">
-                                <span className="text-[10px] font-bold uppercase tracking-wider text-white/40">Was this helpful?</span>
+                                <span className="text-[10px] font-bold uppercase tracking-wider text-white/40">{t('was_this_helpful') || 'Was this helpful?'}</span>
                                 <button
                                   onClick={(e) => handleVote(e, item.id, 'yes')}
                                   disabled={!!userVote}
@@ -968,7 +978,7 @@ export default function HelpCenter() {
                                   }`}
                                 >
                                   <ThumbsUp className="w-3.5 h-3.5" />
-                                  <span>Yes ({ (item.helpfulYes || 0) + (userVote === 'yes' ? 1 : 0) })</span>
+                                  <span>{t('yes') || 'Yes'} ({ (item.helpfulYes || 0) + (userVote === 'yes' ? 1 : 0) })</span>
                                 </button>
                                 <button
                                   onClick={(e) => handleVote(e, item.id, 'no')}
@@ -980,7 +990,7 @@ export default function HelpCenter() {
                                   }`}
                                 >
                                   <ThumbsDown className="w-3.5 h-3.5" />
-                                  <span>No ({ (item.helpfulNo || 0) + (userVote === 'no' ? 1 : 0) })</span>
+                                  <span>{t('no') || 'No'} ({ (item.helpfulNo || 0) + (userVote === 'no' ? 1 : 0) })</span>
                                 </button>
                               </div>
 
@@ -996,7 +1006,7 @@ export default function HelpCenter() {
                                   ) : (
                                     <Copy className="w-3.5 h-3.5" />
                                   )}
-                                  <span>Copy</span>
+                                  <span>{t('copy') || 'Copy'}</span>
                                 </button>
                                 
                                 <button
@@ -1005,7 +1015,7 @@ export default function HelpCenter() {
                                   title="Share link"
                                 >
                                   <Share2 className="w-3.5 h-3.5" />
-                                  <span>Share</span>
+                                  <span>{t('share') || 'Share'}</span>
                                 </button>
 
                                 <button
@@ -1014,7 +1024,7 @@ export default function HelpCenter() {
                                   title="Print FAQ"
                                 >
                                   <Printer className="w-3.5 h-3.5" />
-                                  <span>Print</span>
+                                  <span>{t('print') || 'Print'}</span>
                                 </button>
                               </div>
                             </div>
@@ -1029,12 +1039,12 @@ export default function HelpCenter() {
           ) : (
             <div className="text-center py-12 bg-white/[0.02] border border-white/5 rounded-3xl space-y-3">
               <HelpCircle className="w-10 h-10 text-white/20 mx-auto" />
-              <p className="text-sm font-medium text-white/60">{tr(staticTexts.noResults)}</p>
+              <p className="text-sm font-medium text-white/60">{trText('help.no_results', staticTexts.noResults)}</p>
               <button
                 onClick={() => { setSearchQuery(''); setActiveTab('all'); }}
                 className="text-xs text-emerald-400 underline hover:text-emerald-300 font-semibold"
               >
-                Reset Search Filters
+                {t('reset_search_filters') || 'Reset Search Filters'}
               </button>
             </div>
           )}
@@ -1047,14 +1057,14 @@ export default function HelpCenter() {
           <div className="bg-[#0d0d12]/60 border border-white/5 rounded-2xl p-5 space-y-4">
             <h4 className="text-xs font-black text-white/40 uppercase tracking-widest border-b border-white/5 pb-2 flex items-center gap-2">
               <MessageSquare className="w-4 h-4 text-emerald-400" />
-              <span>{tr(staticTexts.quickContact)}</span>
+              <span>{trText('help.quick_contact', staticTexts.quickContact)}</span>
             </h4>
             
             <div className="space-y-3.5 text-xs">
               <div className="flex items-start gap-3">
                 <Phone className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
                 <div className="space-y-0.5">
-                  <p className="font-semibold text-white/80">Support Hotline</p>
+                  <p className="font-semibold text-white/80">{t('support_hotline') || 'Support Hotline'}</p>
                   <p className="text-white/50 font-mono">+251 911 000 000</p>
                 </div>
               </div>
@@ -1062,7 +1072,7 @@ export default function HelpCenter() {
               <div className="flex items-start gap-3">
                 <Mail className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
                 <div className="space-y-0.5">
-                  <p className="font-semibold text-white/80">Email Support</p>
+                  <p className="font-semibold text-white/80">{t('email_support') || 'Email Support'}</p>
                   <p className="text-white/50 font-mono">support@sofumer.com</p>
                 </div>
               </div>
@@ -1070,16 +1080,16 @@ export default function HelpCenter() {
               <div className="flex items-start gap-3">
                 <MapPin className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
                 <div className="space-y-0.5">
-                  <p className="font-semibold text-white/80">Headquarters</p>
-                  <p className="text-white/50 leading-relaxed">Bole District, near Edna Mall, Addis Ababa, Ethiopia</p>
+                  <p className="font-semibold text-white/80">{t('headquarters') || 'Headquarters'}</p>
+                  <p className="text-white/50 leading-relaxed">{t('headquarters_address') || 'Bole District, near Edna Mall, Addis Ababa, Ethiopia'}</p>
                 </div>
               </div>
 
               <div className="flex items-start gap-3">
                 <Clock className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
                 <div className="space-y-0.5">
-                  <p className="font-semibold text-white/80">Response Guarantee</p>
-                  <p className="text-white/50">Under 2 hours (8:00 AM - 6:00 PM)</p>
+                  <p className="font-semibold text-white/80">{t('response_guarantee') || 'Response Guarantee'}</p>
+                  <p className="text-white/50">{t('response_guarantee_time') || 'Under 2 hours (8:00 AM - 6:00 PM)'}</p>
                 </div>
               </div>
             </div>
@@ -1090,30 +1100,30 @@ export default function HelpCenter() {
             <div className="space-y-1 border-b border-white/5 pb-3">
               <h4 className="text-xs md:text-sm font-serif font-bold text-white tracking-tight flex items-center gap-2">
                 <Mail className="w-4 h-4 text-emerald-400 shrink-0" />
-                <span>{tr(staticTexts.contactTitle)}</span>
+                <span>{trText('help.contact_title', staticTexts.contactTitle)}</span>
               </h4>
               <p className="text-[10px] text-white/40 leading-relaxed font-light">
-                {tr(staticTexts.contactSubtitle)}
+                {trText('help.contact_subtitle', staticTexts.contactSubtitle)}
               </p>
             </div>
 
             {formSuccess ? (
               <div className="bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs p-4 rounded-xl font-bold text-center flex flex-col items-center gap-2 animate-in fade-in duration-300">
                 <CheckCircle2 className="w-8 h-8 text-emerald-400" />
-                <span>{tr(staticTexts.contactSuccessMsg)}</span>
+                <span>{trText('help.contact_success_msg', staticTexts.contactSuccessMsg)}</span>
               </div>
             ) : (
               <form onSubmit={handleSubmitTicket} className="space-y-4">
                 
                 {formError && (
                   <div className="bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs p-3 rounded-lg text-center font-bold">
-                    {tr(staticTexts.contactErrorMsg)}
+                    {trText('help.contact_error_msg', staticTexts.contactErrorMsg)}
                   </div>
                 )}
 
                 <div>
                   <label className="block text-[9px] font-black text-white/40 uppercase tracking-widest mb-1.5">
-                    {tr(staticTexts.contactName)}
+                    {trText('help.contact_name', staticTexts.contactName)}
                   </label>
                   <input
                     type="text"
@@ -1127,7 +1137,7 @@ export default function HelpCenter() {
 
                 <div>
                   <label className="block text-[9px] font-black text-white/40 uppercase tracking-widest mb-1.5">
-                    {tr(staticTexts.contactEmail)}
+                    {trText('help.contact_email', staticTexts.contactEmail)}
                   </label>
                   <input
                     type="email"
@@ -1141,14 +1151,14 @@ export default function HelpCenter() {
 
                 <div>
                   <label className="block text-[9px] font-black text-white/40 uppercase tracking-widest mb-1.5">
-                    {tr(staticTexts.contactMessage)}
+                    {trText('help.contact_message', staticTexts.contactMessage)}
                   </label>
                   <textarea
                     required
                     rows={4}
                     value={message}
                     onChange={e => setMessage(e.target.value)}
-                    placeholder="Describe your issue or request in detail..."
+                    placeholder={t('describe_issue_placeholder') || 'Describe your issue or request in detail...'}
                     className="w-full p-2.5 bg-black border border-white/10 text-xs text-white rounded-xl focus:outline-none focus:border-emerald-500 transition font-sans"
                   />
                 </div>
@@ -1159,7 +1169,7 @@ export default function HelpCenter() {
                   className="w-full py-2.5 bg-emerald-500 hover:bg-emerald-600 disabled:bg-emerald-500/40 text-black font-bold text-xs uppercase tracking-wider rounded-xl transition flex items-center justify-center gap-1.5 cursor-pointer shadow-lg shadow-emerald-500/10"
                 >
                   <Send className="w-3.5 h-3.5" />
-                  <span>{submitting ? tr(staticTexts.contactSubmitting) : tr(staticTexts.contactSubmit)}</span>
+                  <span>{submitting ? trText('help.contact_submitting', staticTexts.contactSubmitting) : trText('help.contact_submit', staticTexts.contactSubmit)}</span>
                 </button>
               </form>
             )}
