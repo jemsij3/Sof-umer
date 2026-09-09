@@ -7,6 +7,7 @@ import {
   ArrowLeft, LayoutGrid, List, Building2, Phone, Mail, Calendar, FileText, Camera, Upload
 } from 'lucide-react';
 import { User as UserType } from '../types';
+import { useApp } from '../lib/AppContext';
 import { maskName, maskEmail } from '../lib/utils';
 
 interface EmployeeAdminsModuleProps {
@@ -138,6 +139,7 @@ export const EmployeeAdminsModule: React.FC<EmployeeAdminsModuleProps> = ({
   users,
   onRefreshData
 }) => {
+  const { t } = useApp();
   // Navigation Tabs for Employee Admins Module
   const [subTab, setSubTab] = useState<'dashboard' | 'staff_management' | 'roles_permissions' | 'login_history' | 'activity_logs' | 'settings'>('dashboard');
 
@@ -770,7 +772,7 @@ export const EmployeeAdminsModule: React.FC<EmployeeAdminsModuleProps> = ({
           }`}
         >
           <UserPlus className="w-4 h-4" />
-          <span>Staff Management</span>
+          <span>{t("staff_management") || "Staff Management"}</span>
         </button>
 
         <button
@@ -780,7 +782,7 @@ export const EmployeeAdminsModule: React.FC<EmployeeAdminsModuleProps> = ({
           }`}
         >
           <ShieldCheck className="w-4 h-4" />
-          <span>Roles & Permissions</span>
+          <span>{t("roles_permissions") || "Roles & Permissions"}</span>
         </button>
 
         <button
@@ -800,7 +802,7 @@ export const EmployeeAdminsModule: React.FC<EmployeeAdminsModuleProps> = ({
           }`}
         >
           <Activity className="w-4 h-4" />
-          <span>Activity Logs</span>
+          <span>{t("activity_logs") || "Activity Logs"}</span>
         </button>
 
         <button
@@ -920,7 +922,7 @@ export const EmployeeAdminsModule: React.FC<EmployeeAdminsModuleProps> = ({
                     className="px-4 py-2 bg-gradient-to-r from-amber-500 to-amber-600 text-black font-extrabold text-xs rounded-2xl flex items-center gap-1.5 shadow-lg shadow-amber-500/10 cursor-pointer"
                   >
                     <Plus className="w-4 h-4" />
-                    <span>Add Employee</span>
+                    <span>{t("btn_add_employee") || "Add Employee"}</span>
                   </button>
                 </div>
               </div>
@@ -949,7 +951,7 @@ export const EmployeeAdminsModule: React.FC<EmployeeAdminsModuleProps> = ({
                     onChange={e => setRoleFilter(e.target.value)}
                     className="w-full pl-9 pr-4 py-2 bg-[#12121a] border border-white/5 rounded-2xl text-xs text-white focus:outline-none focus:border-amber-500/50 appearance-none"
                   >
-                    <option value="All">All Roles</option>
+                    <option value="All">{t("all_roles") || "All Roles"}</option>
                     {predefinedRoles.map(r => <option key={r.name} value={r.name}>{r.name}</option>)}
                     {customRoles.map(r => <option key={r.name} value={r.name}>{r.name} (Custom)</option>)}
                   </select>
@@ -964,7 +966,7 @@ export const EmployeeAdminsModule: React.FC<EmployeeAdminsModuleProps> = ({
                     onChange={e => setStatusFilter(e.target.value)}
                     className="w-full pl-9 pr-4 py-2 bg-[#12121a] border border-white/5 rounded-2xl text-xs text-white focus:outline-none focus:border-amber-500/50 appearance-none"
                   >
-                    <option value="All">All Statuses</option>
+                    <option value="All">{t("all_statuses") || "All Statuses"}</option>
                     <option value="active">Active</option>
                     <option value="suspended">Suspended</option>
                     <option value="disabled">Disabled</option>
@@ -1243,7 +1245,7 @@ export const EmployeeAdminsModule: React.FC<EmployeeAdminsModuleProps> = ({
                 className="px-4 py-2 bg-gradient-to-r from-amber-500 to-amber-600 text-black font-extrabold text-xs rounded-2xl flex items-center gap-1.5 shadow-lg shadow-amber-500/10 cursor-pointer"
               >
                 <Plus className="w-4 h-4" />
-                <span>Add Employee</span>
+                <span>{t("btn_add_employee") || "Add Employee"}</span>
               </button>
             )}
           </div>

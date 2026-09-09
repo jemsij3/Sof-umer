@@ -1367,11 +1367,11 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
                       onChange={e => setCurrency(e.target.value as any)}
                       className="w-full p-3.5 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white focus:outline-none transition"
                     >
-                      <option value="ETB" className="bg-[#0c0c0c]">ETB (Ethiopian Birr)</option>
+                      <option value="ETB" className="bg-[#0c0c0c]">{t("curr_etb")}</option>
                       <option value="USD" className="bg-[#0c0c0c]">USD (United States Dollar)</option>
-                      <option value="SAR" className="bg-[#0c0c0c]">SAR (Saudi Riyal)</option>
+                      <option value="SAR" className="bg-[#0c0c0c]">{t("curr_sar")}</option>
                       <option value="EUR" className="bg-[#0c0c0c]">EUR (Euro)</option>
-                      <option value="AED" className="bg-[#0c0c0c]">AED (UAE Dirham)</option>
+                      <option value="AED" className="bg-[#0c0c0c]">{t("curr_aed")}</option>
                     </select>
                   </div>
                 </div>
@@ -1682,7 +1682,7 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
                           <div className="flex items-center justify-between">
                             <label className="block text-[11px] font-bold text-[#F5F5F4]/80 uppercase tracking-wider flex items-center gap-2">
                               <Video className="w-4 h-4 text-amber-500" />
-                              <span>Video Tour / Showcase (Optional, Max 30s, 50MB)</span>
+                              <span>{t("upload_video_file")} (Optional, Max 30s, 50MB)</span>
                             </label>
                             <span className="text-[10px] text-amber-400 font-mono bg-amber-500/10 px-2.5 py-0.5 rounded-full border border-amber-500/20">
                               MP4, MOV, WebM
@@ -1708,7 +1708,7 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
                               <div className="flex items-center justify-between">
                                 <span className="text-xs font-bold text-amber-400 flex items-center gap-1.5">
                                   <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                                  <span>Video Uploaded & Ready</span>
+                                  <span>{t("upload_video_file")} Uploaded & Ready</span>
                                 </span>
                                 <div className="flex items-center gap-2">
                                   <label className="px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white rounded-lg text-xs font-bold transition cursor-pointer flex items-center gap-1 border border-white/10">
@@ -1910,11 +1910,11 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
                           onChange={e => setCurrency(e.target.value as any)}
                           className="w-full p-3 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white focus:outline-none transition font-bold text-amber-400"
                         >
-                          <option value="ETB">ETB (Ethiopian Birr)</option>
-                          <option value="USD">USD ($)</option>
-                          <option value="SAR">SAR (Saudi Riyal)</option>
-                          <option value="EUR">EUR (€)</option>
-                          <option value="AED">AED (UAE Dirham)</option>
+                          <option value="ETB">{t("curr_etb")}</option>
+                          <option value="USD">{t("curr_usd")}</option>
+                          <option value="SAR">{t("curr_sar")}</option>
+                          <option value="EUR">{t("curr_eur")}</option>
+                          <option value="AED">{t("curr_aed")}</option>
                         </select>
                       </div>
 
@@ -1927,8 +1927,8 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
                           onChange={e => handleFieldChange('negotiable', e.target.value)}
                           className="w-full p-3 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white focus:outline-none transition"
                         >
-                          <option value="No">No (Fixed Price)</option>
-                          <option value="Yes">Yes (Negotiable)</option>
+                          <option value="No">{t("opt_no_fixed_price")}</option>
+                          <option value="Yes">{t("opt_yes_negotiable")}</option>
                         </select>
                       </div>
                     </div>
@@ -1978,11 +1978,11 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
                         onChange={e => setCurrency(e.target.value as any)}
                         className="w-full p-3 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white focus:outline-none transition font-bold text-amber-400"
                       >
-                        <option value="ETB">ETB (Ethiopian Birr)</option>
-                        <option value="USD">USD ($)</option>
-                        <option value="SAR">SAR (Saudi Riyal)</option>
-                        <option value="EUR">EUR (€)</option>
-                        <option value="AED">AED (UAE Dirham)</option>
+                        <option value="ETB">{t("curr_etb")}</option>
+                        <option value="USD">{t("curr_usd")}</option>
+                        <option value="SAR">{t("curr_sar")}</option>
+                        <option value="EUR">{t("curr_eur")}</option>
+                        <option value="AED">{t("curr_aed")}</option>
                       </select>
                     </div>
                   </div>
@@ -2048,8 +2048,8 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
                             onChange={e => handleFieldChange('negotiable', e.target.value)}
                             className="w-full p-3 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white focus:outline-none transition"
                           >
-                            <option value="No">No (Fixed Price)</option>
-                            <option value="Yes">Yes (Negotiable)</option>
+                            <option value="No">{t("opt_no_fixed_price")}</option>
+                            <option value="Yes">{t("opt_yes_negotiable")}</option>
                           </select>
                         </div>
                       </div>
@@ -2100,8 +2100,8 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
                               onChange={e => handleFieldChange('negotiable', e.target.value)}
                               className="w-full p-3 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white focus:outline-none transition"
                             >
-                              <option value="No">No (Fixed Tier Prices)</option>
-                              <option value="Yes">Yes (Open to Discussion)</option>
+                              <option value="No">{t("opt_no_fixed_tier")}</option>
+                              <option value="Yes">{t("opt_yes_open_discussion")}</option>
                             </select>
                           </div>
                         </div>
@@ -2135,16 +2135,16 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
                             onChange={e => handleFieldChange('businessType', e.target.value)}
                             className="w-full p-3 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white focus:outline-none transition"
                           >
-                            <option value="Wholesaler">Wholesaler</option>
-                            <option value="Manufacturer">Manufacturer</option>
-                            <option value="Distributor">Distributor</option>
-                            <option value="Importer">Importer</option>
-                            <option value="Exporter">Exporter</option>
-                            <option value="Authorized Dealer">Authorized Dealer</option>
-                            <option value="Local Supplier">Local Supplier</option>
-                            <option value="Farmer / Producer">Farmer / Producer</option>
-                            <option value="Cooperative">Cooperative</option>
-                            <option value="Other">Other</option>
+                            <option value="Wholesaler">{t("biz_wholesaler")}</option>
+                            <option value="Manufacturer">{t("biz_manufacturer")}</option>
+                            <option value="Distributor">{t("biz_distributor")}</option>
+                            <option value="Importer">{t("biz_importer")}</option>
+                            <option value="Exporter">{t("biz_exporter")}</option>
+                            <option value="Authorized Dealer">{t("biz_authorized_dealer")}</option>
+                            <option value="Local Supplier">{t("biz_local_supplier")}</option>
+                            <option value="Farmer / Producer">{t("biz_farmer_producer")}</option>
+                            <option value="Cooperative">{t("biz_cooperative")}</option>
+                            <option value="Other">{t("unit_other")}</option>
                           </select>
                         </div>
 

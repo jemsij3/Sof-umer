@@ -596,7 +596,7 @@ export default function PropertyDetails({
               <div className="bg-[#0d0d12]/90 rounded-3xl p-5 border border-white/10 shadow-xl text-[#F5F5F4] space-y-3">
                 <div className="flex items-center gap-2 text-amber-400 font-bold text-xs uppercase tracking-wider">
                   <Video className="w-4 h-4 text-amber-500" />
-                  <span>Video Tour / Showcase</span>
+                  <span>{t("video_tour_showcase")}</span>
                 </div>
                 <div className="rounded-2xl overflow-hidden border border-white/10 bg-black max-h-[380px] flex justify-center">
                   <video
@@ -1072,7 +1072,7 @@ export default function PropertyDetails({
                   className="absolute top-3 right-3 bg-black/85 hover:bg-black text-amber-400 hover:text-amber-300 text-xs font-bold px-3 py-2 rounded-xl border border-amber-500/30 backdrop-blur-md shadow-lg flex items-center gap-1.5 transition z-20 cursor-pointer"
                 >
                   <Globe className="w-3.5 h-3.5 text-amber-400" />
-                  <span>Open Google Maps</span>
+                  <span>{t("open_google_maps")}</span>
                 </a>
               )}
             </div>

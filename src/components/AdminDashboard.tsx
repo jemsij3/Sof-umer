@@ -2318,7 +2318,7 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
               className="px-3.5 py-2 bg-rose-500/10 border border-rose-500/25 hover:bg-rose-500/20 text-rose-400 font-bold text-xs rounded-xl shadow transition cursor-pointer flex items-center gap-1.5"
             >
               <LogOut className="w-3.5 h-3.5 text-rose-400" />
-              <span>Logout</span>
+              <span>{t("nav_logout")}</span>
             </button>
           </div>
         </div>
@@ -2697,8 +2697,8 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
             <div className="space-y-6 animate-fade-in">
               <div className="bg-[#0d0d12]/90 border border-white/5 p-6 rounded-3xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
-                  <h3 className="text-xl font-serif font-bold text-white mb-1">ADMIN OVERVIEW</h3>
-                  <p className="text-xs text-white/50 leading-relaxed font-light">Real-time indicators mapping registration traffic, pending actions, and financial receipts.</p>
+                  <h3 className="text-xl font-serif font-bold text-white mb-1">{t("admin_overview_title")}</h3>
+                  <p className="text-xs text-white/50 leading-relaxed font-light">{t("admin_overview_subtext")}</p>
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="px-3 py-1 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 font-extrabold text-[10px] rounded-full uppercase tracking-wider flex items-center gap-1.5">
@@ -2791,9 +2791,9 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
                 <div className="flex items-center justify-between">
                   <h4 className="text-sm font-bold uppercase tracking-wider text-amber-500 flex items-center gap-2">
                     <AlertTriangle className="w-4 h-4 text-amber-500" />
-                    <span>NEEDS YOUR ATTENTION</span>
+                    <span>{t("needs_your_attention")}</span>
                   </h4>
-                  <span className="text-[10px] font-mono text-white/40">Requires Admin Action</span>
+                  <span className="text-[10px] font-mono text-white/40">{t("requires_admin_action")}</span>
                 </div>
 
                 {(() => {
@@ -2831,8 +2831,8 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
                           className="p-4 bg-[#12121a] hover:bg-white/5 border border-amber-500/30 rounded-2xl transition cursor-pointer flex items-center justify-between"
                         >
                           <div className="space-y-0.5">
-                            <span className="text-[10px] font-bold uppercase text-amber-400 block">Pending Payments</span>
-                            <p className="text-sm font-bold text-white">{pendingReceiptsCount} payment receipts to verify</p>
+                            <span className="text-[10px] font-bold uppercase text-amber-400 block">{t("pending_payments")}</span>
+                            <p className="text-sm font-bold text-white">{pendingReceiptsCount} {t("payment_receipts_to_verify")}</p>
                           </div>
                           <ChevronRight className="w-4 h-4 text-amber-400" />
                         </div>
@@ -2897,11 +2897,11 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
 
                     <div className="grid grid-cols-2 gap-3 pt-1">
                       <div className="bg-[#12121a] p-3.5 rounded-2xl border border-white/5">
-                        <span className="text-[10px] text-white/40 uppercase font-bold block">Active Boosted Listings</span>
+                        <span className="text-[10px] text-white/40 uppercase font-bold block">{t("active_boosted_listings")}</span>
                         <p className="text-2xl font-extrabold text-white mt-1">{promotedListingsCount}</p>
                       </div>
                       <div className="bg-[#12121a] p-3.5 rounded-2xl border border-white/5">
-                        <span className="text-[10px] text-white/40 uppercase font-bold block">Pending Promotion Requests</span>
+                        <span className="text-[10px] text-white/40 uppercase font-bold block">{t("pending_promotion_requests")}</span>
                         <p className="text-2xl font-extrabold text-amber-400 mt-1">{pendingPromotionRequestsCount}</p>
                       </div>
                     </div>
@@ -2914,7 +2914,7 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
                       }}
                       className="text-xs font-bold text-amber-400 hover:text-amber-300 flex items-center gap-1 cursor-pointer transition"
                     >
-                      <span>View Promotions</span>
+                      <span>{t("view_promotions")}</span>
                       <ChevronRight className="w-4 h-4" />
                     </button>
                   </div>
@@ -2934,19 +2934,19 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
                   <div className="space-y-2 text-xs font-medium">
                     <div className="flex items-center justify-between p-2.5 bg-black/40 rounded-xl border border-white/5">
                       <span className="text-white/80">🟢 Database</span>
-                      <span className="text-emerald-400 font-bold text-[10px] uppercase font-mono">Operational</span>
+                      <span className="text-emerald-400 font-bold text-[10px] uppercase font-mono">{t("operational")}</span>
                     </div>
                     <div className="flex items-center justify-between p-2.5 bg-black/40 rounded-xl border border-white/5">
                       <span className="text-white/80">🟢 Storage</span>
-                      <span className="text-emerald-400 font-bold text-[10px] uppercase font-mono">Operational</span>
+                      <span className="text-emerald-400 font-bold text-[10px] uppercase font-mono">{t("operational")}</span>
                     </div>
                     <div className="flex items-center justify-between p-2.5 bg-black/40 rounded-xl border border-white/5">
                       <span className="text-white/80">🟢 Authentication</span>
-                      <span className="text-emerald-400 font-bold text-[10px] uppercase font-mono">Operational</span>
+                      <span className="text-emerald-400 font-bold text-[10px] uppercase font-mono">{t("operational")}</span>
                     </div>
                     <div className="flex items-center justify-between p-2.5 bg-black/40 rounded-xl border border-white/5">
                       <span className="text-white/80">🟢 Payments</span>
-                      <span className="text-emerald-400 font-bold text-[10px] uppercase font-mono">Operational</span>
+                      <span className="text-emerald-400 font-bold text-[10px] uppercase font-mono">{t("operational")}</span>
                     </div>
                   </div>
                 </div>
@@ -3071,7 +3071,7 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
                     className="p-3 bg-white/5 hover:bg-white/10 text-white font-bold text-xs rounded-xl border border-white/10 transition cursor-pointer text-center flex flex-col items-center justify-center gap-1"
                   >
                     <Users className="w-4 h-4 text-amber-400" />
-                    <span>Users</span>
+                    <span>{t("users")}</span>
                   </button>
 
                   <button
@@ -3087,7 +3087,7 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
                     className="p-3 bg-white/5 hover:bg-white/10 text-white font-bold text-xs rounded-xl border border-white/10 transition cursor-pointer text-center flex flex-col items-center justify-center gap-1"
                   >
                     <CreditCard className="w-4 h-4 text-amber-400" />
-                    <span>Payments</span>
+                    <span>{t("payments")}</span>
                   </button>
 
                   <button
@@ -3095,7 +3095,7 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
                     className="p-3 bg-white/5 hover:bg-white/10 text-white font-bold text-xs rounded-xl border border-white/10 transition cursor-pointer text-center flex flex-col items-center justify-center gap-1"
                   >
                     <BarChart3 className="w-4 h-4 text-amber-400" />
-                    <span>Analytics</span>
+                    <span>{t("analytics")}</span>
                   </button>
 
                   <button
@@ -3103,7 +3103,7 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
                     className="p-3 bg-white/5 hover:bg-white/10 text-white font-bold text-xs rounded-xl border border-white/10 transition cursor-pointer text-center flex flex-col items-center justify-center gap-1"
                   >
                     <Settings className="w-4 h-4 text-amber-400" />
-                    <span>Settings</span>
+                    <span>{t("settings")}</span>
                   </button>
                 </div>
               </div>
@@ -4069,7 +4069,7 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
                           onChange={e => setPropForm({ ...propForm, approvalStatus: e.target.value as any })}
                           className="w-full px-3.5 py-2.5 bg-[#0c0c14] border border-white/10 rounded-xl text-xs text-white focus:border-amber-500 focus:outline-none"
                         >
-                          <option value="approved">Approved</option>
+                          <option value="approved">{t("approved")}</option>
                           <option value="pending">Pending Review</option>
                           <option value="rejected">Rejected</option>
                         </select>
@@ -8224,7 +8224,7 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
                 >
                   <option value="all">All Time Range</option>
                   <option value="today">Today Only</option>
-                  <option value="7d">Last 7 Days</option>
+                  <option value="7d">{t("last_7_days")}</option>
                   <option value="30d">Last 30 Days</option>
                 </select>
               </div>

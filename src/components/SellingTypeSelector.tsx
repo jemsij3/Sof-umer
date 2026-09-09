@@ -1,6 +1,7 @@
 import React from 'react';
 import { ShoppingCart, Package, Boxes, Check } from 'lucide-react';
 import { NormalizedSellingType } from '../utils/wholesalePricing';
+import { useApp } from '../lib/AppContext';
 
 interface SellingTypeSelectorProps {
   value: NormalizedSellingType;
@@ -13,6 +14,8 @@ export const SellingTypeSelector: React.FC<SellingTypeSelectorProps> = ({
   onChange,
   disabled = false
 }) => {
+  const { t } = useApp();
+
   const options: {
     type: NormalizedSellingType;
     title: string;
@@ -22,23 +25,23 @@ export const SellingTypeSelector: React.FC<SellingTypeSelectorProps> = ({
   }[] = [
     {
       type: 'Retail',
-      title: 'Retail',
-      subtitle: 'Seller sells individual units to normal customers.',
-      badge: 'Single Units',
+      title: t('selling_type_retail'),
+      subtitle: t('selling_type_retail_desc'),
+      badge: t('selling_type_retail'),
       icon: <ShoppingCart className="w-5 h-5" />
     },
     {
       type: 'Wholesale',
-      title: 'Wholesale',
-      subtitle: 'Seller sells products in bulk.',
-      badge: 'Bulk Only (MOQ)',
+      title: t('selling_type_wholesale'),
+      subtitle: t('selling_type_wholesale_desc'),
+      badge: t('selling_type_wholesale'),
       icon: <Package className="w-5 h-5" />
     },
     {
       type: 'Retail + Wholesale',
-      title: 'Retail + Wholesale',
-      subtitle: 'Seller sells both individual units and bulk quantities.',
-      badge: 'Dual Pricing',
+      title: t('selling_type_dual'),
+      subtitle: t('selling_type_dual_desc'),
+      badge: t('selling_type_dual'),
       icon: <Boxes className="w-5 h-5" />
     }
   ];
@@ -47,9 +50,9 @@ export const SellingTypeSelector: React.FC<SellingTypeSelectorProps> = ({
     <div className="space-y-2">
       <div className="flex items-center justify-between">
         <label className="block text-xs font-bold text-amber-400 uppercase tracking-wider font-mono">
-          1. Selling Type *
+          1. {t('selling_type_prompt')} *
         </label>
-        <span className="text-[10px] text-white/40">Select how you intend to sell this item</span>
+        <span className="text-[10px] text-white/40">{t('selling_type_prompt')}</span>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
