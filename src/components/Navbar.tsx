@@ -371,7 +371,7 @@ export default function Navbar({ onNavigate, activeView, onOpenCreateModal }: Na
                           className="text-[9px] font-black uppercase tracking-wider bg-amber-500 hover:bg-amber-400 text-black px-2.5 py-1 rounded-lg transition flex items-center gap-1 cursor-pointer"
                         >
                           <Plus className="w-3 h-3 stroke-[3]" />
-                          <span>Top Up</span>
+                          <span>{t("nav_top_up")}</span>
                         </button>
                       </div>
 
@@ -381,7 +381,7 @@ export default function Navbar({ onNavigate, activeView, onOpenCreateModal }: Na
                         className="w-full text-left px-4 py-2 text-[11px] uppercase tracking-wider hover:bg-white/5 text-white/60 hover:text-white transition flex items-center gap-2.5 cursor-pointer"
                       >
                         <User className="w-4 h-4 text-white/50" />
-                        <span>My Dashboard</span>
+                        <span>{t("nav_my_dashboard")}</span>
                       </button>
 
                       {/* Admin Links */}
