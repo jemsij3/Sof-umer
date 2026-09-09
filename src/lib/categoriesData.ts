@@ -1389,10 +1389,10 @@ export function getTranslatedFurnished(fur: string, lang: string = 'en'): string
   const key = fur.toLowerCase().trim();
 
   const map: Record<string, { en: string; om: string; am: string }> = {
-    'furnished': { en: 'Fully Furnished', om: 'Mi\'aa Guutuu', am: 'ሙሉ የቤት እቃ ያለው' },
-    'fully furnished': { en: 'Fully Furnished', om: 'Mi\'aa Guutuu', am: 'ሙሉ የቤት እቃ ያለው' },
-    'unfurnished': { en: 'Unfurnished', om: 'Mi\'aa Malee', am: 'የቤት እቃ የሌለው' },
-    'semi-furnished': { en: 'Semi-Furnished', om: 'Gartokkee Mi\'aa', am: 'በከፊል የተሟላ' }
+    'furnished': { en: 'Fully Furnished', om: 'Meeshaa Guutuu', am: 'ሙሉ የቤት እቃ ያለው' },
+    'fully furnished': { en: 'Fully Furnished', om: 'Meeshaa Guutuu', am: 'ሙሉ የቤት እቃ ያለው' },
+    'unfurnished': { en: 'Unfurnished', om: 'Meeshaa Malee', am: 'የቤት እቃ የሌለው' },
+    'semi-furnished': { en: 'Semi-Furnished', om: 'Gartokkee Meeshaa', am: 'በከፊል የተሟላ' }
   };
 
   if (map[key]) return map[key][langKey];
@@ -1475,9 +1475,9 @@ export function getTranslatedOption(opt: string, lang: string = 'en'): string {
     'diesel': { en: 'Diesel', om: 'Diizela', am: 'ዲዚል' },
     'electric': { en: 'Electric', om: 'Elektiriikii', am: 'ኤሌክትሪክ' },
     'hybrid': { en: 'Hybrid', om: 'Haayibriidii', am: 'ሀይብሪድ' },
-    'unfurnished': { en: 'Unfurnished', om: 'Mi\'aa Malee', am: 'የቤት እቃ የሌለው' },
-    'furnished': { en: 'Furnished', om: 'Mi\'aa Guutuu', am: 'ሙሉ የቤት እቃ ያለው' },
-    'semi-furnished': { en: 'Semi-Furnished', om: 'Gartokkee Mi\'aa', am: 'በከፊል የተሟላ' },
+    'unfurnished': { en: 'Unfurnished', om: 'Meeshaa Malee', am: 'የቤት እቃ የሌለው' },
+    'furnished': { en: 'Furnished', om: 'Meeshaa Guutuu', am: 'ሙሉ የቤት እቃ ያለው' },
+    'semi-furnished': { en: 'Semi-Furnished', om: 'Gartokkee Meeshaa', am: 'በከፊል የተሟላ' },
     'full-time': { en: 'Full-time', om: 'Yeroo Guutuu', am: 'ሙሉ ጊዜ' },
     'part-time': { en: 'Part-time', om: 'Yeroo Gabaabaa', am: 'ትርፍ ጊዜ' },
     'freelance': { en: 'Freelance / Contract', om: 'Hojii Dhuunfaa', am: 'ፍሪላንስ' },
@@ -1545,12 +1545,14 @@ export function getTranslatedFieldLabel(label: string, lang: string = 'en'): str
     'toilets': { en: 'Toilets', om: 'Baay\'ina Fincaanii', am: 'የመታጠቢያ ክፍሎች' },
     'parking available': { en: 'Parking Available', om: 'Iddoo Konkolaataa', am: 'የመኪና ማቆሚያ' },
     'floor Level': { en: 'Floor Level', om: 'Sadarkaa Abbaa Gamoo', am: 'ፎቅ' },
-    'bedrooms': { en: 'Bedrooms', om: 'Kutaa Ciisichaa', am: 'የመኝታ ክፍሎች' },
-    'beds': { en: 'Beds', om: 'Kutaalee', am: 'ክፍሎች' },
-    'bathrooms': { en: 'Bathrooms', om: 'Kutaa Fincaanii', am: 'የመታጠቢያ ክፍሎች' },
-    'baths': { en: 'Baths', om: 'Dhiqannaa', am: 'መታጠቢያ' },
+    'bedrooms': { en: 'Bedrooms', om: 'Kutaalee Ciisichaa', am: 'የመኝታ ክፍሎች' },
+    'beds': { en: 'Beds', om: 'Kutaalee Ciisichaa', am: 'የመኝታ ክፍሎች' },
+    'bed': { en: 'Bed', om: 'Kutaa Ciisichaa', am: 'የመኝታ ክፍል' },
+    'bathrooms': { en: 'Bathrooms', om: 'Kutaalee Dhiqannaa', am: 'የመታጠቢያ ክፍሎች' },
+    'baths': { en: 'Baths', om: 'Kutaalee Dhiqannaa', am: 'የመታጠቢያ ክፍሎች' },
+    'bath': { en: 'Bath', om: 'Kutaa Dhiqannaa', am: 'የመታጠቢያ ክፍል' },
     'area': { en: 'Area', om: 'Bal\'ina', am: 'ስፋት' },
-    'furnished status': { en: 'Furnished Status', om: 'Mi\'aan Guutamuu', am: 'የቤት እቃ ያለው' },
+    'furnished status': { en: 'Furnished Status', om: 'Haala Meeshaa Manaa', am: 'የቤት እቃ ሁኔታ' },
     'part / accessory title': { en: 'Part / Accessory Title', om: 'Mata Duree Meeshaa Dabalataa', am: 'የመጋቢ እቃው ርዕስ' },
     'vehicle title': { en: 'Vehicle Title', om: 'Mata Duree Konkolaataa', am: 'የተሽከርካሪው ርዕስ' },
     'vehicle type': { en: 'Vehicle Type', om: 'Gosa Konkolaataa', am: 'የተሽከርካሪ አይነት' },

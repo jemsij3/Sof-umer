@@ -354,7 +354,7 @@ export function ListingCard({
 
             {isVerifiedSupplier && (
               <span className="text-[9px] font-bold uppercase tracking-wider px-2 py-1 rounded-lg bg-emerald-950/80 text-emerald-400 border border-emerald-500/40 backdrop-blur-md flex items-center gap-1 shadow-sm">
-                <CheckCircle2 className="w-3 h-3 text-emerald-400" /> {t('verified_seller') || t('verified') || 'Verified'}
+                <CheckCircle2 className="w-3 h-3 text-emerald-400" /> {t('verified') || t('verified_seller') || 'Verified'}
               </span>
             )}
           </div>
@@ -569,7 +569,7 @@ export function ListingCard({
 
           {isVerifiedSupplier && (
             <span className="text-[9px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-xl bg-emerald-950/80 text-emerald-300 border border-emerald-500/40 backdrop-blur-md flex items-center gap-1 shadow-sm">
-              <CheckCircle2 className="w-3 h-3 text-emerald-400" /> {t('verified_seller') || t('verified') || 'Verified'}
+              <CheckCircle2 className="w-3 h-3 text-emerald-400" /> {t('verified') || t('verified_seller') || 'Verified'}
             </span>
           )}
 
