@@ -1,5 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { Upload, FileText, X, Check, Image as ImageIcon, AlertCircle, Eye } from 'lucide-react';
+import { useApp } from '../lib/AppContext';
 
 interface ReceiptUploadInputProps {
   referenceNumber: string;
@@ -22,6 +23,7 @@ export const ReceiptUploadInput: React.FC<ReceiptUploadInputProps> = ({
   onFileChange,
   required = false
 }) => {
+  const { t } = useApp();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [error, setError] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -35,7 +37,7 @@ export const ReceiptUploadInput: React.FC<ReceiptUploadInputProps> = ({
 
     // Validate size
     if (file.size > MAX_SIZE) {
-      setError(`File size exceeds 10 MB limit (${(file.size / (1024 * 1024)).toFixed(1)} MB). Please select a smaller file.`);
+      setError(t('file_size_exceeds', { size: (file.size / (1024 * 1024)).toFixed(1) }));
       return;
     }
 
@@ -44,7 +46,7 @@ export const ReceiptUploadInput: React.FC<ReceiptUploadInputProps> = ({
     const isPdf = file.type === 'application/pdf' || /\.pdf$/i.test(file.name);
 
     if (!isImage && !isPdf) {
-      setError('Invalid format! Accepted formats: JPG, JPEG, PNG, WebP, PDF.');
+      setError(t('invalid_receipt_format'));
       return;
     }
 
@@ -59,7 +61,7 @@ export const ReceiptUploadInput: React.FC<ReceiptUploadInputProps> = ({
       });
     };
     reader.onerror = () => {
-      setError('Failed to read file. Please try again.');
+      setError(t('failed_read_file'));
     };
     reader.readAsDataURL(file);
   };
@@ -85,26 +87,26 @@ export const ReceiptUploadInput: React.FC<ReceiptUploadInputProps> = ({
       {/* Option 1: TT / Transfer Reference Number */}
       <div>
         <label className="block text-[11px] font-bold text-white/70 uppercase mb-1.5 font-mono flex items-center justify-between">
-          <span>1. TT / Transfer Reference Number</span>
-          <span className="text-[10px] text-amber-400 font-normal">Method 1</span>
+          <span>{t('tt_ref_number')}</span>
+          <span className="text-[10px] text-amber-400 font-normal">{t('method_1')}</span>
         </label>
         <input
           type="text"
           value={referenceNumber}
           onChange={(e) => onReferenceChange(e.target.value)}
-          placeholder="e.g. CBE FT24081900123 / Telebirr TXN9988..."
+          placeholder={t('tt_ref_number_placeholder')}
           className="w-full p-3 bg-black/60 border border-white/10 focus:border-amber-500/50 rounded-xl text-xs text-white font-mono placeholder-white/20 focus:outline-none transition"
         />
         <p className="text-[10px] text-white/40 mt-1">
-          Enter the official transaction/transfer reference code from your bank or mobile banking app.
+          {t('tt_ref_number_desc')}
         </p>
       </div>
 
       {/* Option 2: Upload Payment Receipt File */}
       <div>
         <label className="block text-[11px] font-bold text-white/70 uppercase mb-1.5 font-mono flex items-center justify-between">
-          <span>2. Upload Payment Receipt (Image or PDF)</span>
-          <span className="text-[10px] text-amber-400 font-normal">Method 2 (Recommended)</span>
+          <span>{t('upload_payment_receipt')}</span>
+          <span className="text-[10px] text-amber-400 font-normal">{t('method_2_recommended')}</span>
         </label>
 
         {!receiptFile ? (
@@ -130,9 +132,9 @@ export const ReceiptUploadInput: React.FC<ReceiptUploadInputProps> = ({
               <Upload className="w-5 h-5" />
             </div>
             <div>
-              <p className="text-xs font-bold text-white">Click or Drag & Drop Payment Receipt</p>
+              <p className="text-xs font-bold text-white">{t('drag_drop_receipt')}</p>
               <p className="text-[10px] text-white/40 mt-0.5 font-mono">
-                Supports: JPG, JPEG, PNG, WebP, PDF (Max size: 10 MB)
+                {t('supports_receipt_formats')}
               </p>
             </div>
           </div>
@@ -154,7 +156,7 @@ export const ReceiptUploadInput: React.FC<ReceiptUploadInputProps> = ({
                     {fileName || (detectedFileType === 'pdf' ? 'Payment_Receipt.pdf' : 'Payment_Receipt_Image')}
                   </p>
                   <p className="text-[10px] text-white/40 font-mono">
-                    {detectedFileType === 'pdf' ? 'PDF Document' : 'Image File'} {fileSize ? `• ${formatFileSize(fileSize)}` : ''}
+                    {detectedFileType === 'pdf' ? t('pdf_document') : t('image_file')} {fileSize ? `• ${formatFileSize(fileSize)}` : ''}
                   </p>
                 </div>
               </div>
@@ -165,13 +167,13 @@ export const ReceiptUploadInput: React.FC<ReceiptUploadInputProps> = ({
                   onClick={() => setPreviewOpen(true)}
                   className="px-2.5 py-1.5 bg-white/10 hover:bg-white/20 text-white text-[10px] font-bold rounded-lg flex items-center gap-1 cursor-pointer transition"
                 >
-                  <Eye className="w-3.5 h-3.5" /> Preview
+                  <Eye className="w-3.5 h-3.5" /> {t('preview')}
                 </button>
                 <button
                   type="button"
                   onClick={() => onFileChange(null)}
                   className="p-1.5 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 rounded-lg cursor-pointer transition"
-                  title="Remove file"
+                  title={t('remove_file')}
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -206,7 +208,7 @@ export const ReceiptUploadInput: React.FC<ReceiptUploadInputProps> = ({
             <div className="p-4 border-b border-white/10 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <FileText className="w-5 h-5 text-amber-500" />
-                <span className="text-sm font-bold text-white">Uploaded Receipt Preview</span>
+                <span className="text-sm font-bold text-white">{t('uploaded_receipt_preview')}</span>
               </div>
               <button
                 type="button"
@@ -237,7 +239,7 @@ export const ReceiptUploadInput: React.FC<ReceiptUploadInputProps> = ({
                 onClick={() => setPreviewOpen(false)}
                 className="px-4 py-2 bg-amber-500 text-black font-extrabold text-xs rounded-xl cursor-pointer"
               >
-                Close Preview
+                {t('close_preview')}
               </button>
             </div>
           </div>

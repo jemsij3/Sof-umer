@@ -907,7 +907,7 @@ export default function Marketplace({
         <div className="mb-10 rounded-3xl overflow-hidden relative bg-[#0e0e13] text-[#F5F5F4] min-h-[220px] flex flex-col md:flex-row items-center justify-between p-8 md:p-10 border border-white/5 shadow-2xl relative">
           <div className="z-10 max-w-xl text-left">
             <span className="bg-gradient-to-r from-amber-400 to-amber-600 text-black text-[9px] font-black uppercase px-3 py-1.5 rounded-full mb-4 inline-block tracking-widest shadow-md">
-              Special Promotion
+              {t('special_promotion') || 'Special Promotion'}
             </span>
             <h3 className="text-2xl md:text-3xl font-serif text-white mb-3 leading-tight tracking-wide">
               {heroAds[0].title}
@@ -919,7 +919,7 @@ export default function Marketplace({
               href={heroAds[0].linkUrl}
               className="inline-flex items-center gap-2 bg-[#F5F5F4] hover:bg-zinc-200 text-[#050505] font-bold uppercase tracking-wider px-6 py-3.5 rounded-xl text-xs transition-all duration-300 hover:scale-[1.02] cursor-pointer shadow-lg"
             >
-              Learn More <ArrowRight className="w-4 h-4" />
+              {t('learn_more') || 'Learn More'} <ArrowRight className="w-4 h-4" />
             </a>
           </div>
           <div className="mt-6 md:mt-0 z-10 w-full md:w-1/3 h-44 rounded-2xl overflow-hidden shadow-2xl border border-white/10 group">
@@ -1063,7 +1063,7 @@ export default function Marketplace({
                 </h2>
                 <p className="text-white/70 text-xs mt-1 font-light tracking-wide flex items-center gap-1.5">
                   <span className="w-2 h-2 rounded-full bg-[#10b981] inline-block animate-pulse" />
-                  {filteredProperties.length} {currentLanguage === 'om' ? 'beeksisa soscho\'an argaman' : currentLanguage === 'am' ? 'ንቁ ማስታወቂያዎች ተገኝተዋል' : 'active listings found'}
+                  {filteredProperties.length} {t('catalog.active_listings_found') || (currentLanguage === 'om' ? 'beeksisa soscho\'an argaman' : currentLanguage === 'am' ? 'ንቁ ማስታወቂያዎች ተገኝተዋል' : 'active listings found')}
                 </p>
               </div>
             </div>
@@ -1077,7 +1077,7 @@ export default function Marketplace({
                     ? 'bg-amber-500 text-black border-amber-400'
                     : 'bg-black/40 hover:bg-black/60 text-white border-white/10'
                 }`}
-                title="Save Category"
+                title={t('save') || 'Save Category'}
               >
                 {savedCatIds.includes(selectedRedesignedCategory.id) ? (
                   <>
@@ -1099,7 +1099,7 @@ export default function Marketplace({
                     ? 'bg-rose-500 text-white border-rose-400'
                     : 'bg-black/40 hover:bg-black/60 text-white/90 border-white/10'
                 }`}
-                title="Favorite Category"
+                title={t('favorite') || 'Favorite Category'}
               >
                 <Heart className={`w-4 h-4 ${favCatIds.includes(selectedRedesignedCategory.id) ? 'fill-white' : ''}`} />
                 <span>{favCatIds.includes(selectedRedesignedCategory.id) ? (t('favorited') || 'Favorited') : (t('favorite') || 'Favorite')}</span>
@@ -1108,7 +1108,7 @@ export default function Marketplace({
               <button
                 onClick={(e) => handleShareCategory(selectedRedesignedCategory, e)}
                 className="p-3 rounded-2xl bg-black/40 hover:bg-black/60 text-white border border-white/10 transition-all duration-300 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider cursor-pointer shadow-lg"
-                title="Share Category"
+                title={t('share') || 'Share Category'}
               >
                 <Share2 className="w-4 h-4" />
                 <span>{t('share') || 'Share'}</span>
@@ -1178,7 +1178,7 @@ export default function Marketplace({
                     : 'bg-[#0d0d12]/50 text-white/70 border-white/5 hover:border-white/15 hover:bg-[#12121b]'
                 }`}
               >
-                All {currentLanguage === 'am' ? (selectedRedesignedCategory.translations?.am || selectedRedesignedCategory.name) : currentLanguage === 'om' ? (selectedRedesignedCategory.translations?.om || selectedRedesignedCategory.name) : selectedRedesignedCategory.name}
+                {t('all_items_in_category', { category: currentLanguage === 'am' ? (selectedRedesignedCategory.translations?.am || selectedRedesignedCategory.name) : currentLanguage === 'om' ? (selectedRedesignedCategory.translations?.om || selectedRedesignedCategory.name) : selectedRedesignedCategory.name }) || `All ${selectedRedesignedCategory.name}`}
               </button>
               {selectedRedesignedCategory.subcategories.map(sub => {
                 const subCount = getSubcategoryListingCount(sub, selectedRedesignedCategory);
@@ -1214,7 +1214,7 @@ export default function Marketplace({
                   type="text"
                   value={catSearchQuery}
                   onChange={e => setCatSearchQuery(e.target.value)}
-                  placeholder={`Search inside ${currentLanguage === 'am' ? (selectedRedesignedCategory.translations?.am || selectedRedesignedCategory.name) : currentLanguage === 'om' ? (selectedRedesignedCategory.translations?.om || selectedRedesignedCategory.name) : selectedRedesignedCategory.name}...`}
+                  placeholder={t('search_inside_category', { category: currentLanguage === 'am' ? (selectedRedesignedCategory.translations?.am || selectedRedesignedCategory.name) : currentLanguage === 'om' ? (selectedRedesignedCategory.translations?.om || selectedRedesignedCategory.name) : selectedRedesignedCategory.name }) || `Search inside ${selectedRedesignedCategory.name}...`}
                   className="w-full pl-12 pr-4 py-3.5 bg-[#12121a] border border-white/5 focus:border-amber-500/50 focus:outline-none rounded-2xl text-[#F5F5F4] text-sm transition font-sans"
                 />
               </div>
@@ -1230,7 +1230,7 @@ export default function Marketplace({
                   }`}
                 >
                   <SlidersHorizontal className="w-4 h-4" />
-                  <span>Filters {selectedRedesignedCategory.recommendedFilters && `(${selectedRedesignedCategory.recommendedFilters.length})`}</span>
+                  <span>{t('filters_btn')} {selectedRedesignedCategory.recommendedFilters && `(${selectedRedesignedCategory.recommendedFilters.length})`}</span>
                 </button>
 
                 <button
@@ -1238,7 +1238,7 @@ export default function Marketplace({
                   onClick={clearAllCatFilters}
                   className="px-5 py-3.5 rounded-2xl bg-white/5 text-[#F5F5F4]/70 hover:bg-white/10 font-bold text-xs uppercase tracking-wider transition cursor-pointer border border-white/5"
                 >
-                  Reset
+                  {t('reset_btn')}
                 </button>
               </div>
             </form>
@@ -1257,53 +1257,53 @@ export default function Marketplace({
                     {selectedRedesignedCategory.id === 'properties' && (
                       <>
                         <div>
-                          <label className="block text-[10px] font-bold text-white/40 uppercase tracking-widest mb-2">Buy / Rent</label>
+                          <label className="block text-[10px] font-bold text-white/40 uppercase tracking-widest mb-2">{t('buy_or_rent') || 'Buy / Rent'}</label>
                           <select
                             value={filterBuyRent}
                             onChange={e => setFilterBuyRent(e.target.value)}
                             className="w-full p-3 bg-[#12121a] border border-white/5 rounded-2xl text-xs text-white/80 focus:outline-none focus:border-amber-500/50 transition cursor-pointer"
                           >
-                            <option value="All" className="bg-[#0c0c0c]">All Transactions</option>
-                            <option value="Buy" className="bg-[#0c0c0c]">For Sale</option>
-                            <option value="Rent" className="bg-[#0c0c0c]">For Rent</option>
+                            <option value="All" className="bg-[#0c0c0c]">{t('all_transactions') || 'All Transactions'}</option>
+                            <option value="Buy" className="bg-[#0c0c0c]">{t('for_sale') || 'For Sale'}</option>
+                            <option value="Rent" className="bg-[#0c0c0c]">{t('for_rent') || 'For Rent'}</option>
                           </select>
                         </div>
                         <div>
-                          <label className="block text-[10px] font-bold text-white/40 uppercase tracking-widest mb-2">Min Bedrooms</label>
+                          <label className="block text-[10px] font-bold text-white/40 uppercase tracking-widest mb-2">{t('min_bedrooms') || 'Min Bedrooms'}</label>
                           <select
                             value={filterBedrooms}
                             onChange={e => setFilterBedrooms(e.target.value)}
                             className="w-full p-3 bg-[#12121a] border border-white/5 rounded-2xl text-xs text-white/80 focus:outline-none focus:border-amber-500/50 transition cursor-pointer"
                           >
-                            <option value="All" className="bg-[#0c0c0c]">Any Bedrooms</option>
-                            <option value="1" className="bg-[#0c0c0c]">1+ Bedrooms</option>
-                            <option value="2" className="bg-[#0c0c0c]">2+ Bedrooms</option>
-                            <option value="3" className="bg-[#0c0c0c]">3+ Bedrooms</option>
-                            <option value="4" className="bg-[#0c0c0c]">4+ Bedrooms</option>
+                            <option value="All" className="bg-[#0c0c0c]">{t('any_bedrooms') || 'Any Bedrooms'}</option>
+                            <option value="1" className="bg-[#0c0c0c]">{t('n_plus_bedrooms', { count: 1 }) || '1+ Bedrooms'}</option>
+                            <option value="2" className="bg-[#0c0c0c]">{t('n_plus_bedrooms', { count: 2 }) || '2+ Bedrooms'}</option>
+                            <option value="3" className="bg-[#0c0c0c]">{t('n_plus_bedrooms', { count: 3 }) || '3+ Bedrooms'}</option>
+                            <option value="4" className="bg-[#0c0c0c]">{t('n_plus_bedrooms', { count: 4 }) || '4+ Bedrooms'}</option>
                           </select>
                         </div>
                         <div>
-                          <label className="block text-[10px] font-bold text-white/40 uppercase tracking-widest mb-2">Furnishing Status</label>
+                          <label className="block text-[10px] font-bold text-white/40 uppercase tracking-widest mb-2">{t('furnishing') || 'Furnishing Status'}</label>
                           <select
                             value={filterFurnished === null ? 'All' : filterFurnished ? 'yes' : 'no'}
                             onChange={e => setFilterFurnished(e.target.value === 'All' ? null : e.target.value === 'yes')}
                             className="w-full p-3 bg-[#12121a] border border-white/5 rounded-2xl text-xs text-white/80 focus:outline-none focus:border-amber-500/50 transition cursor-pointer"
                           >
-                            <option value="All" className="bg-[#0c0c0c]">Any Furnishing</option>
-                            <option value="yes" className="bg-[#0c0c0c]">Fully Furnished</option>
-                            <option value="no" className="bg-[#0c0c0c]">Unfurnished</option>
+                            <option value="All" className="bg-[#0c0c0c]">{t('any_furnishing') || 'Any Furnishing'}</option>
+                            <option value="yes" className="bg-[#0c0c0c]">{t('furnished') || 'Fully Furnished'}</option>
+                            <option value="no" className="bg-[#0c0c0c]">{t('unfurnished') || 'Unfurnished'}</option>
                           </select>
                         </div>
                         <div>
-                          <label className="block text-[10px] font-bold text-white/40 uppercase tracking-widest mb-2">Parking Space</label>
+                          <label className="block text-[10px] font-bold text-white/40 uppercase tracking-widest mb-2">{t('parking_space') || 'Parking Space'}</label>
                           <select
                             value={filterParking === null ? 'All' : filterParking ? 'yes' : 'no'}
                             onChange={e => setFilterParking(e.target.value === 'All' ? null : e.target.value === 'yes')}
                             className="w-full p-3 bg-[#12121a] border border-white/5 rounded-2xl text-xs text-white/80 focus:outline-none focus:border-amber-500/50 transition cursor-pointer"
                           >
-                            <option value="All" className="bg-[#0c0c0c]">Any Parking</option>
-                            <option value="yes" className="bg-[#0c0c0c]">Has Parking Space</option>
-                            <option value="no" className="bg-[#0c0c0c]">No Parking</option>
+                            <option value="All" className="bg-[#0c0c0c]">{t('any_parking') || 'Any Parking'}</option>
+                            <option value="yes" className="bg-[#0c0c0c]">{t('has_parking_space') || 'Has Parking Space'}</option>
+                            <option value="no" className="bg-[#0c0c0c]">{t('no_parking') || 'No Parking'}</option>
                           </select>
                         </div>
                       </>
@@ -1313,7 +1313,7 @@ export default function Marketplace({
                     {selectedRedesignedCategory.id === 'vehicles' && (
                       <>
                         <div>
-                          <label className="block text-[10px] font-bold text-white/40 uppercase tracking-widest mb-2">Brand / Make</label>
+                          <label className="block text-[10px] font-bold text-white/40 uppercase tracking-widest mb-2">{t('brand_or_make') || 'Brand / Make'}</label>
                           <input
                             type="text"
                             value={filterVehBrand}
@@ -1323,41 +1323,41 @@ export default function Marketplace({
                           />
                         </div>
                         <div>
-                          <label className="block text-[10px] font-bold text-white/40 uppercase tracking-widest mb-2">Transmission</label>
+                          <label className="block text-[10px] font-bold text-white/40 uppercase tracking-widest mb-2">{t('transmission') || 'Transmission'}</label>
                           <select
                             value={filterVehTransmission}
                             onChange={e => setFilterVehTransmission(e.target.value)}
                             className="w-full p-3 bg-[#12121a] border border-white/5 rounded-2xl text-xs text-white/80 focus:outline-none focus:border-amber-500/50 transition cursor-pointer"
                           >
-                            <option value="All" className="bg-[#0c0c0c]">All Transmissions</option>
-                            <option value="Automatic" className="bg-[#0c0c0c]">Automatic</option>
-                            <option value="Manual" className="bg-[#0c0c0c]">Manual</option>
+                            <option value="All" className="bg-[#0c0c0c]">{t('all_transmissions') || 'All Transmissions'}</option>
+                            <option value="Automatic" className="bg-[#0c0c0c]">{t('automatic') || 'Automatic'}</option>
+                            <option value="Manual" className="bg-[#0c0c0c]">{t('manual') || 'Manual'}</option>
                           </select>
                         </div>
                         <div>
-                          <label className="block text-[10px] font-bold text-white/40 uppercase tracking-widest mb-2">Fuel Type</label>
+                          <label className="block text-[10px] font-bold text-white/40 uppercase tracking-widest mb-2">{t('fuel_type') || 'Fuel Type'}</label>
                           <select
                             value={filterVehFuel}
                             onChange={e => setFilterVehFuel(e.target.value)}
                             className="w-full p-3 bg-[#12121a] border border-white/5 rounded-2xl text-xs text-white/80 focus:outline-none focus:border-amber-500/50 transition cursor-pointer"
                           >
-                            <option value="All" className="bg-[#0c0c0c]">All Fuels</option>
-                            <option value="Petrol" className="bg-[#0c0c0c]">Petrol</option>
-                            <option value="Diesel" className="bg-[#0c0c0c]">Diesel</option>
-                            <option value="Electric" className="bg-[#0c0c0c]">Electric (EV)</option>
-                            <option value="Hybrid" className="bg-[#0c0c0c]">Hybrid</option>
+                            <option value="All" className="bg-[#0c0c0c]">{t('all_fuels') || 'All Fuels'}</option>
+                            <option value="Petrol" className="bg-[#0c0c0c]">{t('petrol') || 'Petrol'}</option>
+                            <option value="Diesel" className="bg-[#0c0c0c]">{t('diesel') || 'Diesel'}</option>
+                            <option value="Electric" className="bg-[#0c0c0c]">{t('electric_ev') || 'Electric (EV)'}</option>
+                            <option value="Hybrid" className="bg-[#0c0c0c]">{t('hybrid') || 'Hybrid'}</option>
                           </select>
                         </div>
                         <div>
-                          <label className="block text-[10px] font-bold text-white/40 uppercase tracking-widest mb-2">Condition</label>
+                          <label className="block text-[10px] font-bold text-white/40 uppercase tracking-widest mb-2">{t('condition') || 'Condition'}</label>
                           <select
                             value={filterVehCondition}
                             onChange={e => setFilterVehCondition(e.target.value)}
                             className="w-full p-3 bg-[#12121a] border border-white/5 rounded-2xl text-xs text-white/80 focus:outline-none focus:border-amber-500/50 transition cursor-pointer"
                           >
-                            <option value="All" className="bg-[#0c0c0c]">Any Condition</option>
-                            <option value="New" className="bg-[#0c0c0c]">Brand New</option>
-                            <option value="Used" className="bg-[#0c0c0c]">Used / Secondhand</option>
+                            <option value="All" className="bg-[#0c0c0c]">{t('any_condition') || 'Any Condition'}</option>
+                            <option value="New" className="bg-[#0c0c0c]">{t('cond_new') || 'Brand New'}</option>
+                            <option value="Used" className="bg-[#0c0c0c]">{t('cond_used') || 'Used / Secondhand'}</option>
                           </select>
                         </div>
                       </>
@@ -1367,7 +1367,7 @@ export default function Marketplace({
                     {(selectedRedesignedCategory.id === 'phones' || selectedRedesignedCategory.id === 'electronics') && (
                       <>
                         <div>
-                          <label className="block text-[10px] font-bold text-white/40 uppercase tracking-widest mb-2">Brand / Model</label>
+                          <label className="block text-[10px] font-bold text-white/40 uppercase tracking-widest mb-2">{t('brand_or_model') || 'Brand / Model'}</label>
                           <input
                             type="text"
                             value={filterElecBrand}
@@ -1377,13 +1377,13 @@ export default function Marketplace({
                           />
                         </div>
                         <div>
-                          <label className="block text-[10px] font-bold text-white/40 uppercase tracking-widest mb-2">Storage Capacity</label>
+                          <label className="block text-[10px] font-bold text-white/40 uppercase tracking-widest mb-2">{t('storage_capacity') || 'Storage Capacity'}</label>
                           <select
                             value={filterElecStorage}
                             onChange={e => setFilterElecStorage(e.target.value)}
                             className="w-full p-3 bg-[#12121a] border border-white/5 rounded-2xl text-xs text-white/80 focus:outline-none focus:border-amber-500/50 transition cursor-pointer"
                           >
-                            <option value="All" className="bg-[#0c0c0c]">Any Storage</option>
+                            <option value="All" className="bg-[#0c0c0c]">{t('any_storage') || 'Any Storage'}</option>
                             <option value="64GB" className="bg-[#0c0c0c]">64GB</option>
                             <option value="128GB" className="bg-[#0c0c0c]">128GB</option>
                             <option value="256GB" className="bg-[#0c0c0c]">256GB</option>
@@ -1391,19 +1391,19 @@ export default function Marketplace({
                           </select>
                         </div>
                         <div>
-                          <label className="block text-[10px] font-bold text-white/40 uppercase tracking-widest mb-2">Condition</label>
+                          <label className="block text-[10px] font-bold text-white/40 uppercase tracking-widest mb-2">{t('condition') || 'Condition'}</label>
                           <select
                             value={filterElecCondition}
                             onChange={e => setFilterElecCondition(e.target.value)}
                             className="w-full p-3 bg-[#12121a] border border-white/5 rounded-2xl text-xs text-white/80 focus:outline-none focus:border-amber-500/50 transition cursor-pointer"
                           >
-                            <option value="All" className="bg-[#0c0c0c]">Any Condition</option>
-                            <option value="New" className="bg-[#0c0c0c]">New / Unopened</option>
-                            <option value="Used" className="bg-[#0c0c0c]">Used / Refurbished</option>
+                            <option value="All" className="bg-[#0c0c0c]">{t('any_condition') || 'Any Condition'}</option>
+                            <option value="New" className="bg-[#0c0c0c]">{t('cond_new') || 'New / Unopened'}</option>
+                            <option value="Used" className="bg-[#0c0c0c]">{t('cond_refurbished') || 'Used / Refurbished'}</option>
                           </select>
                         </div>
                         <div>
-                          <label className="block text-[10px] font-bold text-white/40 uppercase tracking-widest mb-2">Verified Sellers Only</label>
+                          <label className="block text-[10px] font-bold text-white/40 uppercase tracking-widest mb-2">{t('verified_sellers_only') || 'Verified Sellers Only'}</label>
                           <label className="relative flex items-center gap-3.5 p-3.5 bg-[#12121a] border border-white/5 rounded-2xl cursor-pointer hover:border-white/10 transition">
                             <input
                               type="checkbox"
@@ -1411,7 +1411,7 @@ export default function Marketplace({
                               onChange={e => setFilterVerifiedOnly(e.target.checked)}
                               className="w-4 h-4 rounded border-white/10 bg-[#12121a] text-amber-500 focus:ring-0 focus:ring-offset-0 focus:outline-none cursor-pointer"
                             />
-                            <span className="text-xs text-white/80 font-medium select-none">Verified Badge</span>
+                            <span className="text-xs text-white/80 font-medium select-none">{t('verified_badge') || 'Verified Badge'}</span>
                           </label>
                         </div>
                       </>
@@ -1421,37 +1421,37 @@ export default function Marketplace({
                     {(selectedRedesignedCategory.id === 'jobs' || selectedRedesignedCategory.id === 'seeking_work') && (
                       <>
                         <div>
-                          <label className="block text-[10px] font-bold text-white/40 uppercase tracking-widest mb-2">Job Type</label>
+                          <label className="block text-[10px] font-bold text-white/40 uppercase tracking-widest mb-2">{t('job_type') || 'Job Type'}</label>
                           <select
                             value={filterJobType}
                             onChange={e => setFilterJobType(e.target.value)}
                             className="w-full p-3 bg-[#12121a] border border-white/5 rounded-2xl text-xs text-white/80 focus:outline-none focus:border-amber-500/50 transition cursor-pointer"
                           >
-                            <option value="All" className="bg-[#0c0c0c]">All Job Types</option>
-                            <option value="Full-Time" className="bg-[#0c0c0c]">Full-Time</option>
-                            <option value="Part-Time" className="bg-[#0c0c0c]">Part-Time</option>
-                            <option value="Contract" className="bg-[#0c0c0c]">Contract / Project</option>
-                            <option value="Remote" className="bg-[#0c0c0c]">Remote / WFH</option>
+                            <option value="All" className="bg-[#0c0c0c]">{t('all_job_types') || 'All Job Types'}</option>
+                            <option value="Full-Time" className="bg-[#0c0c0c]">{t('job_full_time') || 'Full-Time'}</option>
+                            <option value="Part-Time" className="bg-[#0c0c0c]">{t('job_part_time') || 'Part-Time'}</option>
+                            <option value="Contract" className="bg-[#0c0c0c]">{t('job_contract') || 'Contract / Project'}</option>
+                            <option value="Remote" className="bg-[#0c0c0c]">{t('job_remote') || 'Remote / WFH'}</option>
                           </select>
                         </div>
                         <div>
-                          <label className="block text-[10px] font-bold text-white/40 uppercase tracking-widest mb-2">Industry / Sector</label>
+                          <label className="block text-[10px] font-bold text-white/40 uppercase tracking-widest mb-2">{t('industry_or_sector') || 'Industry / Sector'}</label>
                           <select
                             value={filterJobIndustry}
                             onChange={e => setFilterJobIndustry(e.target.value)}
                             className="w-full p-3 bg-[#12121a] border border-white/5 rounded-2xl text-xs text-white/80 focus:outline-none focus:border-amber-500/50 transition cursor-pointer"
                           >
-                            <option value="All" className="bg-[#0c0c0c]">All Industries</option>
-                            <option value="IT" className="bg-[#0c0c0c]">IT & Software development</option>
-                            <option value="Healthcare" className="bg-[#0c0c0c]">Healthcare & Medicine</option>
-                            <option value="Engineering" className="bg-[#0c0c0c]">Engineering & Tech</option>
-                            <option value="Finance" className="bg-[#0c0c0c]">Finance & Banking</option>
-                            <option value="Sales" className="bg-[#0c0c0c]">Sales & Marketing</option>
-                            <option value="Other" className="bg-[#0c0c0c]">Others / Uncategorized</option>
+                            <option value="All" className="bg-[#0c0c0c]">{t('all_industries') || 'All Industries'}</option>
+                            <option value="IT" className="bg-[#0c0c0c]">{t('ind_it') || 'IT & Software development'}</option>
+                            <option value="Healthcare" className="bg-[#0c0c0c]">{t('ind_health') || 'Healthcare & Medicine'}</option>
+                            <option value="Engineering" className="bg-[#0c0c0c]">{t('ind_eng') || 'Engineering & Tech'}</option>
+                            <option value="Finance" className="bg-[#0c0c0c]">{t('ind_finance') || 'Finance & Banking'}</option>
+                            <option value="Sales" className="bg-[#0c0c0c]">{t('ind_sales') || 'Sales & Marketing'}</option>
+                            <option value="Other" className="bg-[#0c0c0c]">{t('ind_other') || 'Others / Uncategorized'}</option>
                           </select>
                         </div>
                         <div>
-                          <label className="block text-[10px] font-bold text-white/40 uppercase tracking-widest mb-2">Region / City</label>
+                          <label className="block text-[10px] font-bold text-white/40 uppercase tracking-widest mb-2">{t('filter_location') || 'Region / City'}</label>
                           <input
                             type="text"
                             value={filterRegion}
@@ -1461,7 +1461,7 @@ export default function Marketplace({
                           />
                         </div>
                         <div>
-                          <label className="block text-[10px] font-bold text-white/40 uppercase tracking-widest mb-2">Verified Only</label>
+                          <label className="block text-[10px] font-bold text-white/40 uppercase tracking-widest mb-2">{t('verified_only') || 'Verified Only'}</label>
                           <label className="relative flex items-center gap-3.5 p-3.5 bg-[#12121a] border border-white/5 rounded-2xl cursor-pointer hover:border-white/10 transition">
                             <input
                               type="checkbox"
@@ -1469,7 +1469,7 @@ export default function Marketplace({
                               onChange={e => setFilterVerifiedOnly(e.target.checked)}
                               className="w-4 h-4 rounded border-white/10 bg-[#12121a] text-amber-500 focus:ring-0 focus:ring-offset-0 focus:outline-none cursor-pointer"
                             />
-                            <span className="text-xs text-white/80 font-medium select-none">Verified Matches</span>
+                            <span className="text-xs text-white/80 font-medium select-none">{t('verified_matches') || 'Verified Matches'}</span>
                           </label>
                         </div>
                       </>
@@ -1479,29 +1479,29 @@ export default function Marketplace({
                     {selectedRedesignedCategory.id !== 'properties' && selectedRedesignedCategory.id !== 'vehicles' && selectedRedesignedCategory.id !== 'phones' && selectedRedesignedCategory.id !== 'electronics' && selectedRedesignedCategory.id !== 'jobs' && selectedRedesignedCategory.id !== 'seeking_work' && (
                       <>
                         <div>
-                          <label className="block text-[10px] font-bold text-white/40 uppercase tracking-widest mb-2">Min Price</label>
+                          <label className="block text-[10px] font-bold text-white/40 uppercase tracking-widest mb-2">{t('min_price') || 'Min Price'}</label>
                           <input
                             type="text"
                             inputMode="text"
                             value={filterPriceMin}
                             onChange={e => setFilterPriceMin(e.target.value === '' ? '' : (isNaN(Number(e.target.value)) ? e.target.value as any : Number(e.target.value)))}
-                            placeholder="Any price"
+                            placeholder={t('any_value') || 'Any price'}
                             className="w-full p-3 bg-[#12121a] border border-white/5 rounded-2xl text-xs text-[#F5F5F4] placeholder-white/20 focus:outline-none focus:border-amber-500/50 transition"
                           />
                         </div>
                         <div>
-                          <label className="block text-[10px] font-bold text-white/40 uppercase tracking-widest mb-2">Max Price</label>
+                          <label className="block text-[10px] font-bold text-white/40 uppercase tracking-widest mb-2">{t('max_price') || 'Max Price'}</label>
                           <input
                             type="text"
                             inputMode="text"
                             value={filterPriceMax}
                             onChange={e => setFilterPriceMax(e.target.value === '' ? '' : (isNaN(Number(e.target.value)) ? e.target.value as any : Number(e.target.value)))}
-                            placeholder="Any price"
+                            placeholder={t('any_value') || 'Any price'}
                             className="w-full p-3 bg-[#12121a] border border-white/5 rounded-2xl text-xs text-[#F5F5F4] placeholder-white/20 focus:outline-none focus:border-amber-500/50 transition"
                           />
                         </div>
                         <div>
-                          <label className="block text-[10px] font-bold text-white/40 uppercase tracking-widest mb-2">Region / City</label>
+                          <label className="block text-[10px] font-bold text-white/40 uppercase tracking-widest mb-2">{t('filter_location') || 'Region / City'}</label>
                           <input
                             type="text"
                             value={filterRegion}
@@ -1511,7 +1511,7 @@ export default function Marketplace({
                           />
                         </div>
                         <div>
-                          <label className="block text-[10px] font-bold text-white/40 uppercase tracking-widest mb-2">Verified Only</label>
+                          <label className="block text-[10px] font-bold text-white/40 uppercase tracking-widest mb-2">{t('verified_only') || 'Verified Only'}</label>
                           <label className="relative flex items-center gap-3.5 p-3.5 bg-[#12121a] border border-white/5 rounded-2xl cursor-pointer hover:border-white/10 transition">
                             <input
                               type="checkbox"
@@ -1519,7 +1519,7 @@ export default function Marketplace({
                               onChange={e => setFilterVerifiedOnly(e.target.checked)}
                               className="w-4 h-4 rounded border-white/10 bg-[#12121a] text-amber-500 focus:ring-0 focus:ring-offset-0 focus:outline-none cursor-pointer"
                             />
-                            <span className="text-xs text-white/80 font-medium select-none">Verified Listings</span>
+                            <span className="text-xs text-white/80 font-medium select-none">{t('verified_listings') || 'Verified Listings'}</span>
                           </label>
                         </div>
                       </>
@@ -1534,7 +1534,9 @@ export default function Marketplace({
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-8 bg-[#0d0d12]/30 p-4 rounded-2xl border border-white/5">
             <div className="text-left w-full sm:w-auto">
               <p className="text-xs text-white/50">
-                Showing <span className="text-white font-bold">{Math.min(visibleCount, finalFilteredProperties.length)}</span> of <span className="text-amber-400 font-black">{finalFilteredProperties.length}</span> verified results
+                {t('showing_results', { current: Math.min(visibleCount, finalFilteredProperties.length), total: finalFilteredProperties.length }) || (
+                  <>Showing <span className="text-white font-bold">{Math.min(visibleCount, finalFilteredProperties.length)}</span> of <span className="text-amber-400 font-black">{finalFilteredProperties.length}</span> verified results</>
+                )}
               </p>
             </div>
 
@@ -1558,18 +1560,18 @@ export default function Marketplace({
 
               {/* Sort selector */}
               <div className="flex items-center gap-2">
-                <span className="text-[10px] font-bold text-white/30 uppercase tracking-widest hidden md:inline">Sort By</span>
+                <span className="text-[10px] font-bold text-white/30 uppercase tracking-widest hidden md:inline">{t('sort_by') || 'Sort By'}</span>
                 <select
                   value={sortBy}
                   onChange={e => setSortBy(e.target.value)}
                   className="bg-[#12121a] border border-white/5 p-2 px-3 rounded-xl text-xs text-white/80 focus:outline-none focus:border-amber-500/30 cursor-pointer"
                 >
-                  <option value="newest">Latest Uploads</option>
-                  <option value="oldest">Oldest Listings</option>
-                  <option value="lowest">Lowest Price</option>
-                  <option value="highest">Highest Price</option>
-                  <option value="popular">Most Popular</option>
-                  <option value="rated">Highly Rated</option>
+                  <option value="newest">{t('sort_newest') || 'Latest Uploads'}</option>
+                  <option value="oldest">{t('sort_oldest') || 'Oldest Listings'}</option>
+                  <option value="lowest">{t('sort_lowest_price') || 'Lowest Price'}</option>
+                  <option value="highest">{t('sort_highest_price') || 'Highest Price'}</option>
+                  <option value="popular">{t('sort_most_popular') || 'Most Popular'}</option>
+                  <option value="rated">{t('sort_highly_rated') || 'Highly Rated'}</option>
                 </select>
               </div>
 
@@ -1579,14 +1581,14 @@ export default function Marketplace({
                 <button
                   onClick={() => setViewMode('grid')}
                   className={`p-1.5 rounded-lg transition cursor-pointer ${viewMode === 'grid' ? 'bg-white text-black' : 'text-white/50 hover:text-white'}`}
-                  title="Grid View"
+                  title={t('grid_view') || 'Grid View'}
                 >
                   <Grid className="w-4 h-4" />
                 </button>
                 <button
                   onClick={() => setViewMode('list')}
                   className={`p-1.5 rounded-lg transition cursor-pointer ${viewMode === 'list' ? 'bg-white text-black' : 'text-white/50 hover:text-white'}`}
-                  title="List View"
+                  title={t('list_view') || 'List View'}
                 >
                   <List className="w-4 h-4" />
                 </button>
@@ -1600,15 +1602,15 @@ export default function Marketplace({
               <div className="p-4 bg-white/5 rounded-full mb-4 text-white/30 border border-white/5">
                 <AlertCircle className="w-10 h-10" />
               </div>
-              <h4 className="text-lg font-serif text-white font-semibold">No listings fit your filters</h4>
+              <h4 className="text-lg font-serif text-white font-semibold">{t('no_listings_fit_filters') || 'No listings fit your filters'}</h4>
               <p className="text-white/40 text-xs mt-2 max-w-sm leading-relaxed">
-                Try resetting filters or expanding search words to find similar listings within this marketplace.
+                {t('no_listings_fit_filters_desc') || 'Try resetting filters or expanding search words to find similar listings within this marketplace.'}
               </p>
               <button
                 onClick={clearAllCatFilters}
                 className="mt-6 bg-gradient-to-r from-amber-400 to-amber-600 text-black font-bold uppercase tracking-widest text-[10px] px-6 py-3 rounded-full hover:opacity-90 transition-all duration-300 shadow-md cursor-pointer"
               >
-                Clear All Filters
+                {t('clear_all_filters') || 'Clear All Filters'}
               </button>
             </div>
           ) : (
@@ -1636,7 +1638,7 @@ export default function Marketplace({
                     onClick={() => setVisibleCount(prev => prev + 6)}
                     className="inline-flex items-center gap-2.5 bg-gradient-to-r from-amber-400 to-amber-600 hover:from-amber-300 hover:to-amber-500 text-black font-extrabold uppercase tracking-widest px-8 py-4 rounded-2xl text-xs transition duration-300 hover:opacity-95 cursor-pointer shadow-lg shadow-amber-500/10 hover:scale-[1.01]"
                   >
-                    Load More Items <ArrowRight className="w-4 h-4 text-black animate-pulse" />
+                    {t('load_more_items') || 'Load More Items'} <ArrowRight className="w-4 h-4 text-black animate-pulse" />
                   </button>
                 </div>
               )}
@@ -1676,7 +1678,7 @@ export default function Marketplace({
               {recentlySearchedQueries.length > 0 && (
                 <div className="bg-[#0c0c11]/50 border border-white/5 rounded-3xl p-5">
                   <h4 className="text-[10px] font-bold text-white/30 uppercase tracking-widest mb-3 flex items-center gap-1.5">
-                    <Search className="w-3.5 h-3.5 text-amber-500" /> RECENTLY SEARCHED KEYWORDS
+                    <Search className="w-3.5 h-3.5 text-amber-500" /> {t('recently_searched_keywords') || 'RECENTLY SEARCHED KEYWORDS'}
                   </h4>
                   <div className="flex flex-wrap gap-2">
                     {recentlySearchedQueries.map((query, i) => (

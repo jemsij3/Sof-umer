@@ -845,19 +845,19 @@ export default function AuthScreen({ initialMode }: AuthScreenProps) {
                   {requiresCaptcha && (
                     <div className="space-y-2 p-4 bg-white/5 border border-white/10 rounded-2xl">
                       <div className="flex justify-between items-center mb-1">
-                        <label className="block text-xs font-semibold text-amber-500 uppercase tracking-wider">Security CAPTCHA Check</label>
+                        <label className="block text-xs font-semibold text-amber-500 uppercase tracking-wider">{t('security_captcha_check')}</label>
                         <button type="button" onClick={fetchCaptcha} className="text-[10px] text-white/50 hover:text-amber-500 flex items-center gap-1 transition">
-                          <RefreshCw className="w-3 h-3" /> Refresh
+                          <RefreshCw className="w-3 h-3" /> {t('refresh')}
                         </button>
                       </div>
-                      <p className="text-sm font-medium text-white mb-2">{captchaQuestion || 'Loading security challenge...'}</p>
+                      <p className="text-sm font-medium text-white mb-2">{captchaQuestion || t('loading_security_challenge')}</p>
                       <input
                         type="text"
                         required
                         value={captchaAnswer}
                         onChange={e => setCaptchaAnswer(e.target.value)}
                         className="w-full px-4 py-2.5 bg-[#121216] border border-white/5 rounded-xl text-[#F5F5F4] placeholder-white/20 text-sm focus:outline-none transition"
-                        placeholder="Enter the math answer"
+                        placeholder={t('enter_math_answer')}
                       />
                     </div>
                   )}
@@ -1168,10 +1168,10 @@ export default function AuthScreen({ initialMode }: AuthScreenProps) {
                   <div className="space-y-4 p-4 bg-amber-500/10 border border-amber-500/20 rounded-2xl text-left">
                     <div className="flex items-center gap-2 text-amber-500 font-bold text-xs uppercase tracking-wider">
                       <ShieldCheck className="w-4 h-4" />
-                      <span>Admin Mandatory 2FA Setup Required</span>
+                      <span>{t('admin_2fa_required')}</span>
                     </div>
                     <p className="text-xs text-white/70">
-                      All administrator and staff accounts must enable Google Authenticator 2FA before accessing Sof Umer system tools.
+                      {t('admin_2fa_desc')}
                     </p>
 
                     {!showManualSecretKey ? (
@@ -1180,7 +1180,7 @@ export default function AuthScreen({ initialMode }: AuthScreenProps) {
                           <img src={adminSetupData.qrCodeUrl} alt="2FA QR Code" className="w-40 h-40 object-contain" />
                         </div>
                         <p className="text-center text-[11px] text-white/60">
-                          Scan this QR code using the <strong className="text-white">Google Authenticator</strong> app on your smartphone.
+                          {t('scan_qr_code_desc')}
                         </p>
                         <div className="text-center">
                           <button
@@ -1188,20 +1188,20 @@ export default function AuthScreen({ initialMode }: AuthScreenProps) {
                             onClick={() => setShowManualSecretKey(true)}
                             className="text-xs text-amber-500 hover:underline font-semibold cursor-pointer"
                           >
-                            Can't scan QR code? View Manual Setup Key
+                            {t('cant_scan_qr_view_key')}
                           </button>
                         </div>
                       </div>
                     ) : (
                       <div className="space-y-3 p-3 bg-black/60 rounded-xl border border-white/10">
                         <div className="flex justify-between items-center text-xs">
-                          <span className="text-amber-500 font-bold uppercase">Manual Setup Key</span>
+                          <span className="text-amber-500 font-bold uppercase">{t('manual_setup_key')}</span>
                           <button
                             type="button"
                             onClick={() => setShowManualSecretKey(false)}
                             className="text-white/50 hover:text-white"
                           >
-                            Show QR Code
+                            {t('show_qr_code')}
                           </button>
                         </div>
                         <div className="flex items-center gap-2">
@@ -1218,11 +1218,11 @@ export default function AuthScreen({ initialMode }: AuthScreenProps) {
                             className="px-2.5 py-1 bg-amber-500/20 text-amber-400 text-xs font-bold rounded-lg flex items-center gap-1"
                           >
                             {copiedKey ? <Check className="w-3.5 h-3.5 text-green-400" /> : <Copy className="w-3.5 h-3.5" />}
-                            <span>{copiedKey ? 'Copied' : 'Copy'}</span>
+                            <span>{copiedKey ? t('copied') : t('copy')}</span>
                           </button>
                         </div>
                         <p className="text-[10px] text-white/50 leading-relaxed">
-                          Open Google Authenticator → Tap (+) → Enter setup key → Account: Sof Umer ({email}) → Paste key.
+                          {t('open_authenticator_instructions', { email: email || 'user' })}
                         </p>
                       </div>
                     )}
@@ -1392,8 +1392,8 @@ export default function AuthScreen({ initialMode }: AuthScreenProps) {
                   />
                 </svg>
                 <div>
-                  <h3 className="text-lg font-semibold text-white">Choose an account</h3>
-                  <p className="text-xs text-white/50">to continue to <span className="font-semibold text-amber-500">SOF-UMER</span></p>
+                  <h3 className="text-lg font-semibold text-white">{t('choose_an_account')}</h3>
+                  <p className="text-xs text-white/50">{t('to_continue_to')} <span className="font-semibold text-amber-500">{systemSettings?.appName || 'SOF-UMER'}</span></p>
                 </div>
               </div>
 
@@ -1417,7 +1417,7 @@ export default function AuthScreen({ initialMode }: AuthScreenProps) {
                           <p className="text-xs text-white/40">{email}</p>
                         </div>
                       </div>
-                      <span className="text-[10px] bg-amber-500/20 text-amber-400 px-2 py-0.5 rounded-full font-medium">Entered Email</span>
+                      <span className="text-[10px] bg-amber-500/20 text-amber-400 px-2 py-0.5 rounded-full font-medium">{t('entered_email')}</span>
                     </button>
                   )}
 
@@ -1431,15 +1431,15 @@ export default function AuthScreen({ initialMode }: AuthScreenProps) {
                       +
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-white/80">Use another Google account</p>
-                      <p className="text-xs text-white/30">Enter your Google email address</p>
+                      <p className="text-sm font-medium text-white/80">{t('use_another_google_account')}</p>
+                      <p className="text-xs text-white/30">{t('enter_google_email_desc')}</p>
                     </div>
                   </button>
                 </div>
               ) : (
                 <div className="space-y-4 my-4 text-left">
                   <div>
-                    <label className="block text-[10px] font-semibold text-white/60 uppercase tracking-wider mb-1">Google Email</label>
+                    <label className="block text-[10px] font-semibold text-white/60 uppercase tracking-wider mb-1">{t('google_email')}</label>
                     <input
                       type="email"
                       required
@@ -1450,13 +1450,13 @@ export default function AuthScreen({ initialMode }: AuthScreenProps) {
                     />
                   </div>
                   <div>
-                    <label className="block text-[10px] font-semibold text-white/60 uppercase tracking-wider mb-1">Full Name</label>
+                    <label className="block text-[10px] font-semibold text-white/60 uppercase tracking-wider mb-1">{t('full_name')}</label>
                     <input
                       type="text"
                       value={customGoogleName}
                       onChange={e => setCustomGoogleName(e.target.value)}
                       className="w-full px-4 py-2.5 bg-[#0d0d12] border border-white/10 rounded-xl text-white placeholder-white/20 text-sm focus:outline-none focus:border-amber-500 transition"
-                      placeholder="Full Name"
+                      placeholder={t('full_name')}
                     />
                   </div>
 
@@ -1466,7 +1466,7 @@ export default function AuthScreen({ initialMode }: AuthScreenProps) {
                       onClick={() => setIsUsingCustomGoogle(false)}
                       className="flex-1 bg-white/5 hover:bg-white/10 text-white font-medium py-2 rounded-xl text-sm transition cursor-pointer"
                     >
-                      Back
+                      {t('back')}
                     </button>
                     <button
                       type="button"
@@ -1477,7 +1477,7 @@ export default function AuthScreen({ initialMode }: AuthScreenProps) {
                       }}
                       className="flex-1 bg-amber-500 hover:bg-amber-400 text-black font-semibold py-2 rounded-xl text-sm transition cursor-pointer"
                     >
-                      Sign In
+                      {t('sign_in')}
                     </button>
                   </div>
                 </div>
@@ -1485,7 +1485,7 @@ export default function AuthScreen({ initialMode }: AuthScreenProps) {
 
               {/* Footer */}
               <div className="border-t border-white/5 pt-4 flex justify-between items-center text-[11px] text-white/30">
-                <span>Simulated Google Authentication</span>
+                <span>{t('simulated_google_auth')}</span>
                 <button 
                   type="button"
                   onClick={() => {
@@ -1494,7 +1494,7 @@ export default function AuthScreen({ initialMode }: AuthScreenProps) {
                   }}
                   className="text-amber-500 hover:text-amber-400 font-medium cursor-pointer"
                 >
-                  Cancel
+                  {t('cancel')}
                 </button>
               </div>
             </motion.div>

@@ -2333,7 +2333,7 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
             <div className="px-3 pb-2 border-b border-white/5 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <div className="w-2 h-2 bg-amber-500 rounded-full animate-ping" />
-                <span className="text-[9px] uppercase font-extrabold text-white/50 tracking-wider">ADMIN NAVIGATION</span>
+                <span className="text-[9px] uppercase font-extrabold text-white/50 tracking-wider">{t('admin_navigation') || 'ADMIN NAVIGATION'}</span>
               </div>
               <span className="text-[9px] font-extrabold px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20">
                 {systemSettings.siteStatus || 'Online'}
@@ -2348,7 +2348,7 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
               >
                 <div className="flex items-center gap-1.5">
                   <Shield className="w-3.5 h-3.5 text-amber-500" />
-                  <span>SECURITY</span>
+                  <span>{t('admin_nav_security') || 'SECURITY'}</span>
                 </div>
                 {collapsedGroups.security ? <ChevronRight className="w-3.5 h-3.5 text-white/40" /> : <ChevronDown className="w-3.5 h-3.5 text-white/40" />}
               </button>
@@ -2364,7 +2364,7 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
                     >
                       <div className="flex items-center gap-2">
                         <Unlock className="w-3.5 h-3.5 shrink-0" />
-                        <span>Account Lockouts</span>
+                        <span>{t('admin_nav_account_locks') || 'Account Lockouts'}</span>
                       </div>
                       {((users || []).filter(u => Boolean(u.lockoutUntil && new Date(u.lockoutUntil) > new Date()) || Boolean(u.lockout2FAUntil && new Date(u.lockout2FAUntil) > new Date()) || (u.failedLoginAttempts && u.failedLoginAttempts >= 3)).length) > 0 && (
                         <span className="bg-rose-500 text-white font-extrabold text-[9px] px-2 py-0.5 rounded-full">
@@ -2382,7 +2382,7 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
                       }`}
                     >
                       <History className="w-3.5 h-3.5 shrink-0" />
-                      <span>Login History & Logs</span>
+                      <span>{t('admin_nav_login_history') || 'Login History & Logs'}</span>
                     </button>
                   )}
 
@@ -2394,7 +2394,7 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
                       }`}
                     >
                       <Smartphone className="w-3.5 h-3.5 shrink-0" />
-                      <span>Active Device Sessions</span>
+                      <span>{t('admin_nav_active_sessions') || 'Active Device Sessions'}</span>
                     </button>
                   )}
 
@@ -2406,7 +2406,7 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
                       }`}
                     >
                       <ShieldAlert className="w-3.5 h-3.5 shrink-0" />
-                      <span>Emergency Recovery</span>
+                      <span>{t('admin_nav_emergency_recovery') || 'Emergency Recovery'}</span>
                     </button>
                   )}
                 </div>
@@ -2421,7 +2421,7 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
               >
                 <div className="flex items-center gap-1.5">
                   <Users className="w-3.5 h-3.5 text-amber-500" />
-                  <span>PEOPLE</span>
+                  <span>{t('admin_nav_people') || 'PEOPLE'}</span>
                 </div>
                 {collapsedGroups.people ? <ChevronRight className="w-3.5 h-3.5 text-white/40" /> : <ChevronDown className="w-3.5 h-3.5 text-white/40" />}
               </button>
@@ -2436,7 +2436,7 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
                       }`}
                     >
                       <Users className="w-3.5 h-3.5 shrink-0" />
-                      <span>User Accounts</span>
+                      <span>{t('admin_nav_users') || 'User Accounts'}</span>
                     </button>
                   )}
 
@@ -2449,7 +2449,7 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
                     >
                       <div className="flex items-center gap-2">
                         <ShieldCheck className="w-3.5 h-3.5 shrink-0" />
-                        <span>Verification Center</span>
+                        <span>{t('admin_nav_verification') || 'Verification Center'}</span>
                       </div>
                       {pendingUserVerifications > 0 && (
                         <span className="bg-amber-500 text-black font-extrabold text-[9px] px-2 py-0.5 rounded-full">
@@ -2467,7 +2467,7 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
                       }`}
                     >
                       <ShieldCheck className="w-3.5 h-3.5 shrink-0 text-amber-500" />
-                      <span>Employee Admins</span>
+                      <span>{t('admin_nav_employee_admins') || 'Employee Admins'}</span>
                     </button>
                   )}
                 </div>
@@ -2482,7 +2482,7 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
               >
                 <div className="flex items-center gap-1.5">
                   <Store className="w-3.5 h-3.5 text-amber-500" />
-                  <span>MARKETPLACE</span>
+                  <span>{t('admin_nav_marketplace') || 'MARKETPLACE'}</span>
                 </div>
                 {collapsedGroups.marketplace ? <ChevronRight className="w-3.5 h-3.5 text-white/40" /> : <ChevronDown className="w-3.5 h-3.5 text-white/40" />}
               </button>
@@ -2497,7 +2497,7 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
                       }`}
                     >
                       <TrendingUp className="w-3.5 h-3.5 shrink-0" />
-                      <span>Overview & Activity</span>
+                      <span>{t('admin_nav_overview') || 'Overview & Activity'}</span>
                     </button>
                   )}
 
@@ -2510,7 +2510,7 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
                     >
                       <div className="flex items-center gap-2">
                         <Building className="w-3.5 h-3.5 shrink-0" />
-                        <span>Listing Moderation</span>
+                        <span>{t('admin_nav_listings') || 'Listing Moderation'}</span>
                       </div>
                       {pendingListingsCount > 0 && (
                         <span className="bg-rose-500 text-white font-extrabold text-[9px] px-2 py-0.5 rounded-full">
@@ -2528,7 +2528,7 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
                       }`}
                     >
                       <Grid className="w-3.5 h-3.5 shrink-0" />
-                      <span>Category Manager</span>
+                      <span>{t('admin_nav_categories') || 'Category Manager'}</span>
                     </button>
                   )}
 
@@ -2541,7 +2541,7 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
                     >
                       <div className="flex items-center gap-2">
                         <AlertOctagon className="w-3.5 h-3.5 shrink-0" />
-                        <span>Reports & Safety</span>
+                        <span>{t('admin_nav_reports') || 'Reports & Safety'}</span>
                       </div>
                       {reportedCount > 0 && (
                         <span className="bg-rose-500 text-white font-extrabold text-[9px] px-2 py-0.5 rounded-full animate-pulse">
@@ -2560,7 +2560,7 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
                     >
                       <div className="flex items-center gap-2">
                         <HelpCircle className="w-3.5 h-3.5 shrink-0" />
-                        <span>Support & Tickets</span>
+                        <span>{t('admin_nav_support') || 'Support & Tickets'}</span>
                       </div>
                       {supportTickets.filter(t => t.status === 'Open').length > 0 && (
                         <span className="bg-amber-500 text-black font-extrabold text-[9px] px-2 py-0.5 rounded-full">
@@ -2581,7 +2581,7 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
               >
                 <div className="flex items-center gap-1.5">
                   <CreditCard className="w-3.5 h-3.5 text-amber-500" />
-                  <span>FINANCE</span>
+                  <span>{t('admin_nav_finance') || 'FINANCE'}</span>
                 </div>
                 {collapsedGroups.finance ? <ChevronRight className="w-3.5 h-3.5 text-white/40" /> : <ChevronDown className="w-3.5 h-3.5 text-white/40" />}
               </button>
@@ -2597,7 +2597,7 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
                     >
                       <div className="flex items-center gap-2">
                         <CreditCard className="w-3.5 h-3.5 shrink-0" />
-                        <span>Payment & Receipts</span>
+                        <span>{t('admin_nav_payments') || 'Payment & Receipts'}</span>
                       </div>
                       {pendingReceiptsCount > 0 && (
                         <span className="bg-amber-500 text-black font-extrabold text-[9px] px-2 py-0.5 rounded-full">
@@ -2615,7 +2615,7 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
                       }`}
                     >
                       <Volume2 className="w-3.5 h-3.5 shrink-0" />
-                      <span>Ads & Campaigns</span>
+                      <span>{t('admin_nav_ads') || 'Ads & Campaigns'}</span>
                     </button>
                   )}
                 </div>
@@ -2630,7 +2630,7 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
               >
                 <div className="flex items-center gap-1.5">
                   <Settings className="w-3.5 h-3.5 text-amber-500" />
-                  <span>SYSTEM</span>
+                  <span>{t('admin_nav_system') || 'SYSTEM'}</span>
                 </div>
                 {collapsedGroups.system ? <ChevronRight className="w-3.5 h-3.5 text-white/40" /> : <ChevronDown className="w-3.5 h-3.5 text-white/40" />}
               </button>
@@ -2645,7 +2645,7 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
                       }`}
                     >
                       <BarChart3 className="w-3.5 h-3.5 shrink-0" />
-                      <span>Analytics</span>
+                      <span>{t('admin_nav_analytics') || 'Analytics'}</span>
                     </button>
                   )}
 
@@ -2657,7 +2657,7 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
                       }`}
                     >
                       <Languages className="w-3.5 h-3.5 shrink-0" />
-                      <span>Languages & Translations</span>
+                      <span>{t('admin_nav_languages') || 'Languages & Translations'}</span>
                     </button>
                   )}
 
@@ -2669,7 +2669,7 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
                       }`}
                     >
                       <Settings className="w-3.5 h-3.5 shrink-0" />
-                      <span>System Settings</span>
+                      <span>{t('admin_nav_settings') || 'System Settings'}</span>
                     </button>
                   )}
                 </div>

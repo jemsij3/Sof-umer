@@ -45,7 +45,7 @@ export function ListingCard({
   showQuickActions = true
 }: ListingCardProps) {
   const appContext = useApp();
-  const t = (propT && propT !== ((k: string) => k)) ? propT : appContext.t;
+  const t = propT || appContext.t;
   const currentLanguage = propLang || appContext.currentLanguage || 'en';
 
   const isFavorite = favorites.includes(property.id);
@@ -220,7 +220,7 @@ export function ListingCard({
       try {
         await navigator.share({
           title: extractString(property.title, currentLanguage),
-          text: `Check out this listing on Sof Umer Marketplace: ${extractString(property.title, currentLanguage)}`,
+          text: t('check_out_listing_msg', { title: extractString(property.title, currentLanguage) }) || `Check out this listing on Sof Umer Marketplace: ${extractString(property.title, currentLanguage)}`,
           url: shareUrl
         });
         return;
@@ -313,7 +313,8 @@ export function ListingCard({
               onToggleFav(property.id);
             }}
             className="p-2 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] text-white/60 hover:text-rose-500 transition shrink-0"
-            aria-label="Favorite"
+            aria-label={t('save_to_favorites') || 'Favorite'}
+            title={t('save_to_favorites') || 'Favorite'}
           >
             <Heart className={`w-4 h-4 ${isFavorite ? 'text-rose-500 fill-rose-500' : ''}`} />
           </button>
@@ -373,14 +374,16 @@ export function ListingCard({
               <button
                 onClick={handlePrevImage}
                 className="pointer-events-auto p-1.5 rounded-full bg-black/70 hover:bg-black/90 text-white backdrop-blur-md border border-white/10 transition"
-                aria-label="Previous photo"
+                aria-label={t('previous_photo') || 'Previous photo'}
+                title={t('previous_photo') || 'Previous photo'}
               >
                 <ChevronLeft className="w-4 h-4" />
               </button>
               <button
                 onClick={handleNextImage}
                 className="pointer-events-auto p-1.5 rounded-full bg-black/70 hover:bg-black/90 text-white backdrop-blur-md border border-white/10 transition"
-                aria-label="Next photo"
+                aria-label={t('next_photo') || 'Next photo'}
+                title={t('next_photo') || 'Next photo'}
               >
                 <ChevronRight className="w-4 h-4" />
               </button>
@@ -410,7 +413,7 @@ export function ListingCard({
                 <button
                   onClick={handleShare}
                   className="p-2 rounded-xl bg-white/[0.05] hover:bg-white/[0.1] text-white/60 hover:text-white transition relative"
-                  title="Share listing"
+                  title={t('share_listing') || 'Share listing'}
                 >
                   {copiedLink ? <Check className="w-4 h-4 text-emerald-400" /> : <Share2 className="w-4 h-4" />}
                 </button>
@@ -419,7 +422,7 @@ export function ListingCard({
                   <button
                     onClick={() => onToggleFav(property.id)}
                     className="p-2 rounded-xl bg-white/[0.05] hover:bg-white/[0.1] text-white/60 hover:text-rose-500 transition"
-                    title="Save to favorites"
+                    title={t('save_to_favorites') || 'Save to favorites'}
                   >
                     <Heart className={`w-4 h-4 transition ${isFavorite ? 'text-rose-500 fill-rose-500 scale-110' : ''}`} />
                   </button>
@@ -589,7 +592,8 @@ export function ListingCard({
                 onToggleFav(property.id);
               }}
               className="p-2.5 rounded-2xl bg-black/60 hover:bg-black/90 backdrop-blur-md border border-white/10 text-white/70 hover:text-white transition duration-200 shadow-md cursor-pointer"
-              aria-label="Save to favorites"
+              aria-label={t('save_to_favorites') || 'Save to favorites'}
+              title={t('save_to_favorites') || 'Save to favorites'}
             >
               <Heart className={`w-4 h-4 transition duration-300 ${isFavorite ? 'text-rose-500 fill-rose-500 scale-110' : ''}`} />
             </button>
@@ -598,8 +602,8 @@ export function ListingCard({
           <button
             onClick={handleShare}
             className="p-2.5 rounded-2xl bg-black/60 hover:bg-black/90 backdrop-blur-md border border-white/10 text-white/70 hover:text-white transition duration-200 shadow-md cursor-pointer opacity-0 group-hover:opacity-100"
-            aria-label="Share listing"
-            title="Share"
+            aria-label={t('share_listing') || 'Share listing'}
+            title={t('share_listing') || 'Share listing'}
           >
             {copiedLink ? <Check className="w-4 h-4 text-emerald-400" /> : <Share2 className="w-4 h-4" />}
           </button>
@@ -619,14 +623,16 @@ export function ListingCard({
             <button
               onClick={handlePrevImage}
               className="pointer-events-auto p-1.5 rounded-full bg-black/75 hover:bg-black text-white backdrop-blur-md border border-white/10 transition shadow-lg"
-              aria-label="Previous image"
+              aria-label={t('previous_photo') || 'Previous photo'}
+              title={t('previous_photo') || 'Previous photo'}
             >
               <ChevronLeft className="w-4 h-4" />
             </button>
             <button
               onClick={handleNextImage}
               className="pointer-events-auto p-1.5 rounded-full bg-black/75 hover:bg-black text-white backdrop-blur-md border border-white/10 transition shadow-lg"
-              aria-label="Next image"
+              aria-label={t('next_photo') || 'Next photo'}
+              title={t('next_photo') || 'Next photo'}
             >
               <ChevronRight className="w-4 h-4" />
             </button>

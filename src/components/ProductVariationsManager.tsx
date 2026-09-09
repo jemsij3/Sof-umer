@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { ProductVariation } from '../types';
 import { Plus, Trash2, Layers, Check, Sparkles } from 'lucide-react';
+import { useApp } from '../lib/AppContext';
 
 interface ProductVariationsManagerProps {
   variations: ProductVariation[];
@@ -21,12 +22,24 @@ export const ProductVariationsManager: React.FC<ProductVariationsManagerProps> =
   onChange,
   currency
 }) => {
+  const { t } = useApp();
   const [enabled, setEnabled] = useState(variations.length > 0);
   const [selectedAttrType, setSelectedAttrType] = useState<string>('Color');
   const [customAttrName, setCustomAttrName] = useState('');
   const [attrValue, setAttrValue] = useState('');
   const [variationStock, setVariationStock] = useState<number | ''>(10);
   const [variationPrice, setVariationPrice] = useState<number | ''>('');
+
+  const getAttributeLabel = (attr: string) => {
+    switch (attr) {
+      case 'Color': return t('attr_color');
+      case 'Size': return t('attr_size');
+      case 'Model': return t('attr_model');
+      case 'Capacity': return t('attr_capacity');
+      case 'Material': return t('attr_material');
+      default: return attr;
+    }
+  };
 
   const handleToggle = (active: boolean) => {
     setEnabled(active);
@@ -82,9 +95,9 @@ export const ProductVariationsManager: React.FC<ProductVariationsManagerProps> =
             <Layers className="w-4 h-4" />
           </div>
           <div>
-            <span className="text-xs font-bold text-white block">Product Variations / SKU</span>
+            <span className="text-xs font-bold text-white block">{t('product_variations_sku')}</span>
             <span className="text-[10px] text-white/50">
-              Optional: Add attributes like Color, Size, Model, Capacity, or Material.
+              {t('product_variations_desc')}
             </span>
           </div>
         </div>
@@ -105,27 +118,27 @@ export const ProductVariationsManager: React.FC<ProductVariationsManagerProps> =
           {/* Add Variation Form */}
           <div className="bg-black/30 border border-white/5 p-3.5 rounded-xl space-y-3">
             <span className="text-[10px] font-bold uppercase tracking-wider text-amber-400 font-mono block">
-              + Add New Variation
+              + {t('add_new_variation')}
             </span>
 
             <div className="grid grid-cols-1 sm:grid-cols-4 gap-2.5">
               <div>
-                <label className="block text-[10px] text-white/40 mb-1">Attribute Type</label>
+                <label className="block text-[10px] text-white/40 mb-1">{t('attribute_type')}</label>
                 <select
                   value={selectedAttrType}
                   onChange={e => setSelectedAttrType(e.target.value)}
                   className="w-full bg-[#161622] border border-white/10 text-white text-xs rounded-lg px-2.5 py-2 focus:outline-none focus:border-amber-500"
                 >
                   {COMMON_ATTRIBUTES.map(attr => (
-                    <option key={attr} value={attr}>{attr}</option>
+                    <option key={attr} value={attr}>{getAttributeLabel(attr)}</option>
                   ))}
-                  <option value="Custom">Custom Attribute...</option>
+                  <option value="Custom">{t('custom_attribute')}</option>
                 </select>
               </div>
 
               {selectedAttrType === 'Custom' ? (
                 <div>
-                  <label className="block text-[10px] text-white/40 mb-1">Attribute Name</label>
+                  <label className="block text-[10px] text-white/40 mb-1">{t('attribute_name')}</label>
                   <input
                     type="text"
                     placeholder="e.g. Storage"
@@ -138,11 +151,11 @@ export const ProductVariationsManager: React.FC<ProductVariationsManagerProps> =
 
               <div className={selectedAttrType === 'Custom' ? 'sm:col-span-2' : 'sm:col-span-2'}>
                 <label className="block text-[10px] text-white/40 mb-1">
-                  Value (e.g. "Black", "XL", "256GB") *
+                  {t('attribute_value_label')}
                 </label>
                 <input
                   type="text"
-                  placeholder="Enter attribute value..."
+                  placeholder={t('enter_attribute_value')}
                   value={attrValue}
                   onChange={e => setAttrValue(e.target.value)}
                   className="w-full bg-[#161622] border border-white/10 text-white text-xs rounded-lg px-2.5 py-2 focus:outline-none focus:border-amber-500"
@@ -150,7 +163,7 @@ export const ProductVariationsManager: React.FC<ProductVariationsManagerProps> =
               </div>
 
               <div>
-                <label className="block text-[10px] text-white/40 mb-1">Variation Stock</label>
+                <label className="block text-[10px] text-white/40 mb-1">{t('variation_stock')}</label>
                 <input
                   type="number"
                   min="0"
@@ -170,7 +183,7 @@ export const ProductVariationsManager: React.FC<ProductVariationsManagerProps> =
                 className="bg-amber-500/20 hover:bg-amber-500/30 text-amber-400 border border-amber-500/30 text-xs font-bold px-3.5 py-1.5 rounded-lg transition disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1.5 cursor-pointer"
               >
                 <Plus className="w-3.5 h-3.5" />
-                <span>Add Variation</span>
+                <span>{t('add_variation')}</span>
               </button>
             </div>
           </div>
@@ -179,7 +192,7 @@ export const ProductVariationsManager: React.FC<ProductVariationsManagerProps> =
           {variations.length > 0 ? (
             <div className="space-y-2">
               <span className="text-[10px] font-bold text-white/60 uppercase tracking-wider font-mono block">
-                Configured Variations ({variations.length})
+                {t('configured_variations', { count: variations.length })}
               </span>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 {variations.map((v, idx) => {
@@ -192,7 +205,7 @@ export const ProductVariationsManager: React.FC<ProductVariationsManagerProps> =
                       <div className="min-w-0 flex-1">
                         <span className="font-semibold text-white truncate block">{label}</span>
                         <div className="flex items-center gap-2 text-[10px] text-white/50 mt-0.5">
-                          <span>Stock:</span>
+                          <span>{t('stock_label')}</span>
                           <input
                             type="number"
                             min="0"
@@ -211,8 +224,8 @@ export const ProductVariationsManager: React.FC<ProductVariationsManagerProps> =
                       <button
                         type="button"
                         onClick={() => handleRemove(v.id)}
-                        className="text-white/40 hover:text-rose-400 p-1.5 rounded-lg hover:bg-white/5 transition"
-                        title="Remove variation"
+                        className="text-white/40 hover:text-rose-400 p-1.5 rounded-lg hover:bg-white/5 transition cursor-pointer"
+                        title={t('remove_variation')}
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
@@ -223,7 +236,7 @@ export const ProductVariationsManager: React.FC<ProductVariationsManagerProps> =
             </div>
           ) : (
             <p className="text-[11px] text-white/40 italic">
-              No variations added yet. You can add colors, sizes, or models above.
+              {t('no_variations_added')}
             </p>
           )}
         </div>
