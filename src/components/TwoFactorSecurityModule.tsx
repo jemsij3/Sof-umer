@@ -5,6 +5,7 @@ import {
   Lock, AlertTriangle, Smartphone, Eye, EyeOff, Shield, Clock, CheckCircle2, X
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { useApp } from '../lib/AppContext';
 
 interface TwoFactorSecurityModuleProps {
   currentUser: User;
@@ -13,6 +14,7 @@ interface TwoFactorSecurityModuleProps {
 }
 
 export function TwoFactorSecurityModule({ currentUser, onUserUpdated, isAdminContext = false }: TwoFactorSecurityModuleProps) {
+  const { t } = useApp();
   // Setup States
   const [isSetupOpen, setIsSetupOpen] = useState(false);
   const [setupSecret, setSetupSecret] = useState('');
@@ -242,19 +244,19 @@ export function TwoFactorSecurityModule({ currentUser, onUserUpdated, isAdminCon
 
             <div>
               <div className="flex items-center gap-2">
-                <h3 className="text-xl font-serif text-white font-bold">Two-Factor Authentication (2FA)</h3>
+                <h3 className="text-xl font-serif text-white font-bold">{t("two_factor_auth_title")}</h3>
                 {is2FAEnabled ? (
                   <span className="px-3 py-0.5 rounded-full bg-green-500/10 border border-green-500/20 text-green-400 text-xs font-semibold flex items-center gap-1">
-                    <CheckCircle2 className="w-3.5 h-3.5" /> Protected
+                    <CheckCircle2 className="w-3.5 h-3.5" /> {t("protected_badge")}
                   </span>
                 ) : (
                   <span className="px-3 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-500 text-xs font-semibold flex items-center gap-1">
-                    <AlertTriangle className="w-3.5 h-3.5" /> Recommended
+                    <AlertTriangle className="w-3.5 h-3.5" /> {t("recommended_badge")}
                   </span>
                 )}
                 {isUserAdmin && (
                   <span className="px-2.5 py-0.5 rounded-full bg-purple-500/10 border border-purple-500/20 text-purple-400 text-[10px] uppercase font-bold tracking-wider">
-                    Mandatory Admin Protection
+                    {t("mandatory_admin_protection")}
                   </span>
                 )}
               </div>
@@ -280,7 +282,7 @@ export function TwoFactorSecurityModule({ currentUser, onUserUpdated, isAdminCon
                 className="w-full md:w-auto px-6 py-3.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black font-bold text-xs uppercase tracking-wider rounded-xl shadow-lg transition flex items-center justify-center gap-2 cursor-pointer"
               >
                 {setupSubmitting ? <RefreshCw className="w-4 h-4 animate-spin" /> : <QrCode className="w-4 h-4" />}
-                <span>Enable Google Authenticator</span>
+                <span>{t("enable_google_authenticator")}</span>
               </button>
             ) : (
               <>
@@ -289,7 +291,7 @@ export function TwoFactorSecurityModule({ currentUser, onUserUpdated, isAdminCon
                   className="px-4 py-3 bg-white/5 hover:bg-white/10 text-white text-xs font-semibold rounded-xl border border-white/10 transition flex items-center gap-2 cursor-pointer"
                 >
                   <Key className="w-4 h-4 text-amber-500" />
-                  <span>Backup Codes ({currentUser.backupRecoveryCodesCount ?? 0})</span>
+                  <span>{t("backup_codes_count", { count: currentUser.backupRecoveryCodesCount ?? 0 })}</span>
                 </button>
                 
                 {!isUserAdmin && (
@@ -298,7 +300,7 @@ export function TwoFactorSecurityModule({ currentUser, onUserUpdated, isAdminCon
                     className="px-4 py-3 bg-red-500/10 hover:bg-red-500/20 text-red-400 text-xs font-semibold rounded-xl border border-red-500/20 transition flex items-center gap-2 cursor-pointer"
                   >
                     <X className="w-4 h-4" />
-                    <span>Disable 2FA</span>
+                    <span>{t("disable_2fa")}</span>
                   </button>
                 )}
               </>
@@ -670,7 +672,7 @@ export function TwoFactorSecurityModule({ currentUser, onUserUpdated, isAdminCon
               <Shield className="w-5 h-5" />
             </div>
             <div>
-              <h4 className="text-lg font-serif font-bold text-white">Security Audit Log & Activity History</h4>
+              <h4 className="text-lg font-serif font-bold text-white">{t("security_audit_log_title")}</h4>
               <p className="text-xs text-white/50">Real-time log of security activations, sign-in attempts, and sensitive action verifications.</p>
             </div>
           </div>
@@ -681,10 +683,10 @@ export function TwoFactorSecurityModule({ currentUser, onUserUpdated, isAdminCon
             <table className="w-full text-left text-xs text-white/70">
               <thead>
                 <tr className="border-b border-white/10 text-amber-500 font-semibold uppercase tracking-wider text-[10px]">
-                  <th className="py-3 px-3">Date & Time</th>
-                  <th className="py-3 px-3">Security Event</th>
-                  <th className="py-3 px-3">IP Address</th>
-                  <th className="py-3 px-3">Device / Browser</th>
+                  <th className="py-3 px-3">{t("date_and_time_th")}</th>
+                  <th className="py-3 px-3">{t("security_event_th")}</th>
+                  <th className="py-3 px-3">{t("ip_address_th")}</th>
+                  <th className="py-3 px-3">{t("device_browser_th")}</th>
                   <th className="py-3 px-3">Details</th>
                 </tr>
               </thead>
@@ -724,7 +726,7 @@ export function TwoFactorSecurityModule({ currentUser, onUserUpdated, isAdminCon
               <Clock className="w-5 h-5" />
             </div>
             <div>
-              <h4 className="text-lg font-serif font-bold text-white">Recent Account Sign-In History</h4>
+              <h4 className="text-lg font-serif font-bold text-white">{t("recent_account_signin_history")}</h4>
               <p className="text-xs text-white/50">Recent devices and IP addresses used to log in to your Sof Umer account.</p>
             </div>
           </div>
@@ -734,7 +736,7 @@ export function TwoFactorSecurityModule({ currentUser, onUserUpdated, isAdminCon
               <thead>
                 <tr className="border-b border-white/10 text-blue-400 font-semibold uppercase tracking-wider text-[10px]">
                   <th className="py-3 px-3">Device Type</th>
-                  <th className="py-3 px-3">IP Address</th>
+                  <th className="py-3 px-3">{t("ip_address_th")}</th>
                   <th className="py-3 px-3">Timestamp</th>
                   <th className="py-3 px-3">User Agent</th>
                 </tr>
