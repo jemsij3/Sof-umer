@@ -12,10 +12,12 @@ import {
   getTranslatedCategoryName,
   getTranslatedPropertyType,
   getTranslatedOption,
+  getTranslatedCondition,
   getEffectiveMajorCategory,
   isPropertyListing,
   getTranslatedLocation
 } from '../lib/categoriesData';
+import { useApp } from '../lib/AppContext';
 import { getListingCustomerPricingDisplay } from '../utils/wholesalePricing';
 
 export interface ListingCardProps {
@@ -37,11 +39,15 @@ export function ListingCard({
   favorites = [],
   onToggleFav,
   onReport,
-  t = (k: string) => k,
-  currentLanguage = 'en',
+  t: propT,
+  currentLanguage: propLang,
   viewMode = 'grid',
   showQuickActions = true
 }: ListingCardProps) {
+  const appContext = useApp();
+  const t = (propT && propT !== ((k: string) => k)) ? propT : appContext.t;
+  const currentLanguage = propLang || appContext.currentLanguage || 'en';
+
   const isFavorite = favorites.includes(property.id);
   const isVerifiedSupplier = property.verificationStatus === 'verified' || property.isVerifiedListing === true || property.ownerId === 'usr-admin';
   const isFeatured = property.isFeatured || property.isRecommended || property.isTopAd || property.boostPlan === 'vip' || property.boostPlan === 'premium';
@@ -90,23 +96,29 @@ export function ListingCard({
 
     if (isProp) {
       if (property.bedrooms && property.bedrooms > 0) {
+        const bedText = property.bedrooms === 1 
+          ? (t('bed') || t('bed_unit') || 'Bed')
+          : (t('beds') || t('property_beds') || 'Beds');
         list.push({
           icon: <BedDouble className="w-3.5 h-3.5 text-amber-500" />,
-          label: 'Beds',
-          value: `${property.bedrooms} ${property.bedrooms === 1 ? 'Bed' : 'Beds'}`
+          label: t('beds') || t('property_beds') || 'Beds',
+          value: `${property.bedrooms} ${bedText}`
         });
       }
       if (property.bathrooms && property.bathrooms > 0) {
+        const bathText = property.bathrooms === 1 
+          ? (t('bath') || t('bath_unit') || 'Bath')
+          : (t('baths') || t('property_baths') || 'Baths');
         list.push({
           icon: <Bath className="w-3.5 h-3.5 text-amber-500" />,
-          label: 'Baths',
-          value: `${property.bathrooms} ${property.bathrooms === 1 ? 'Bath' : 'Baths'}`
+          label: t('baths') || t('property_baths') || 'Baths',
+          value: `${property.bathrooms} ${bathText}`
         });
       }
       if (property.area && property.area > 0) {
         list.push({
           icon: <Maximize className="w-3.5 h-3.5 text-amber-500" />,
-          label: 'Area',
+          label: t('area') || t('property_area') || 'Area',
           value: `${property.area} m²`
         });
       }
@@ -119,28 +131,28 @@ export function ListingCard({
       if (year) {
         list.push({
           icon: <Calendar className="w-3.5 h-3.5 text-amber-500" />,
-          label: 'Year',
+          label: t('year') || 'Year',
           value: String(year)
         });
       }
       if (mileage) {
         list.push({
           icon: <Gauge className="w-3.5 h-3.5 text-amber-500" />,
-          label: 'Mileage',
+          label: t('mileage') || 'Mileage',
           value: `${Number(mileage).toLocaleString()} km`
         });
       }
       if (trans) {
         list.push({
           icon: <Layers className="w-3.5 h-3.5 text-amber-500" />,
-          label: 'Transmission',
-          value: String(trans)
+          label: t('transmission') || 'Transmission',
+          value: getTranslatedOption(String(trans), currentLanguage) || String(trans)
         });
       } else if (fuel) {
         list.push({
           icon: <Fuel className="w-3.5 h-3.5 text-amber-500" />,
-          label: 'Fuel',
-          value: String(fuel)
+          label: t('fuel_type') || 'Fuel',
+          value: getTranslatedOption(String(fuel), currentLanguage) || String(fuel)
         });
       }
     } else if (majorCategory === 'Jobs') {
@@ -149,14 +161,14 @@ export function ListingCard({
       if (jobType && jobType !== 'All') {
         list.push({
           icon: <Briefcase className="w-3.5 h-3.5 text-amber-500" />,
-          label: 'Type',
-          value: String(jobType)
+          label: t('job_type') || 'Type',
+          value: getTranslatedOption(String(jobType), currentLanguage) || String(jobType)
         });
       }
       if (exp) {
         list.push({
           icon: <Clock className="w-3.5 h-3.5 text-amber-500" />,
-          label: 'Experience',
+          label: t('experience') || 'Experience',
           value: String(exp)
         });
       }
@@ -166,14 +178,14 @@ export function ListingCard({
       if (unit) {
         list.push({
           icon: <Tag className="w-3.5 h-3.5 text-amber-500" />,
-          label: 'Rate',
-          value: String(unit)
+          label: t('rate') || 'Rate',
+          value: getTranslatedOption(String(unit), currentLanguage) || String(unit)
         });
       }
       if (exp) {
         list.push({
           icon: <Wrench className="w-3.5 h-3.5 text-amber-500" />,
-          label: 'Experience',
+          label: t('experience') || 'Experience',
           value: `${exp} yrs`
         });
       }
@@ -181,26 +193,25 @@ export function ListingCard({
       // Products / Electronics / Goods / General
       const condition = property.condition || findAmenity('condition');
       const brand = property.brand || findAmenity('brand');
-      const moq = (property as any).minimumOrderQuantity;
 
       if (condition) {
         list.push({
           icon: <Sparkles className="w-3.5 h-3.5 text-amber-500" />,
-          label: 'Condition',
-          value: String(condition)
+          label: t('condition') || 'Condition',
+          value: getTranslatedCondition(String(condition), currentLanguage) || String(condition)
         });
       }
       if (brand) {
         list.push({
           icon: <Tag className="w-3.5 h-3.5 text-amber-500" />,
-          label: 'Brand',
+          label: t('brand') || 'Brand',
           value: String(brand)
         });
       }
     }
 
     return list.slice(0, 3); // Max 3 clean highlights
-  }, [property, majorCategory, sellingType]);
+  }, [property, majorCategory, sellingType, currentLanguage, t]);
 
   const handleShare = async (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -337,13 +348,13 @@ export function ListingCard({
           <div className="absolute top-3.5 left-3.5 z-10 flex flex-wrap gap-1.5 items-center max-w-[80%]">
             {isFeatured && (
               <span className="text-[9px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-lg bg-gradient-to-r from-amber-400 to-amber-600 text-black shadow-md flex items-center gap-1">
-                <Sparkles className="w-2.5 h-2.5" /> Featured
+                <Sparkles className="w-2.5 h-2.5" /> {t('featured') || 'Featured'}
               </span>
             )}
 
             {isVerifiedSupplier && (
               <span className="text-[9px] font-bold uppercase tracking-wider px-2 py-1 rounded-lg bg-emerald-950/80 text-emerald-400 border border-emerald-500/40 backdrop-blur-md flex items-center gap-1 shadow-sm">
-                <CheckCircle2 className="w-3 h-3 text-emerald-400" /> Verified
+                <CheckCircle2 className="w-3 h-3 text-emerald-400" /> {t('verified_seller') || t('verified') || 'Verified'}
               </span>
             )}
           </div>
@@ -459,7 +470,7 @@ export function ListingCard({
                   ))}
                   {pricingInfo.wholesaleTiers.length > 3 && (
                     <span className="text-[10px] text-amber-400/80 font-sans block">
-                      +{pricingInfo.wholesaleTiers.length - 3} more tiers
+                      {t('more_tiers', { count: pricingInfo.wholesaleTiers.length - 3 }) || `+${pricingInfo.wholesaleTiers.length - 3} more tiers`}
                     </span>
                   )}
                 </div>
@@ -507,7 +518,7 @@ export function ListingCard({
                 <button
                   onClick={() => onReport(property)}
                   className="p-2.5 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] text-white/40 hover:text-red-400 transition"
-                  title="Report listing"
+                  title={t('report_listing') || 'Report listing'}
                 >
                   <ShieldAlert className="w-4 h-4" />
                 </button>
@@ -552,13 +563,13 @@ export function ListingCard({
         <div className="absolute top-3.5 left-3.5 z-10 flex flex-wrap gap-1.5 items-center max-w-[75%]">
           {isFeatured && (
             <span className="text-[9px] font-extrabold uppercase tracking-wider px-2.5 py-1 rounded-xl bg-gradient-to-r from-amber-400 to-amber-600 text-black shadow-md flex items-center gap-1">
-              <Sparkles className="w-2.5 h-2.5" /> Featured
+              <Sparkles className="w-2.5 h-2.5" /> {t('featured') || 'Featured'}
             </span>
           )}
 
           {isVerifiedSupplier && (
             <span className="text-[9px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-xl bg-emerald-950/80 text-emerald-300 border border-emerald-500/40 backdrop-blur-md flex items-center gap-1 shadow-sm">
-              <CheckCircle2 className="w-3 h-3 text-emerald-400" /> Verified
+              <CheckCircle2 className="w-3 h-3 text-emerald-400" /> {t('verified_seller') || t('verified') || 'Verified'}
             </span>
           )}
 
@@ -684,7 +695,7 @@ export function ListingCard({
                 ))}
                 {pricingInfo.wholesaleTiers.length > 3 && (
                   <span className="text-[10px] text-amber-400/80 font-sans block">
-                    +{pricingInfo.wholesaleTiers.length - 3} more tiers
+                    {t('more_tiers', { count: pricingInfo.wholesaleTiers.length - 3 }) || `+${pricingInfo.wholesaleTiers.length - 3} more tiers`}
                   </span>
                 )}
               </div>
@@ -737,7 +748,7 @@ export function ListingCard({
               <button
                 onClick={() => onReport(property)}
                 className="p-2 text-white/40 hover:text-red-400 rounded-xl hover:bg-white/[0.05] transition cursor-pointer shrink-0"
-                title="Report listing"
+                title={t('report_listing') || 'Report listing'}
               >
                 <ShieldAlert className="w-4 h-4" />
               </button>

@@ -935,7 +935,7 @@ export default function PropertyDetails({
                       <BedDouble className="w-5 h-5 text-amber-500/80 mx-auto mb-2" />
                       <span className="text-base font-bold text-[#F5F5F4] block">{property.bedrooms}</span>
                       <span className="text-[10px] font-bold text-white/40 uppercase tracking-wider">
-                        {getTranslatedFieldLabel('Bedrooms', currentLanguage) || t('bedrooms')}
+                        {t('bedrooms') || getTranslatedFieldLabel('Bedrooms', currentLanguage) || 'Bedrooms'}
                       </span>
                     </div>
                   )}
@@ -944,7 +944,7 @@ export default function PropertyDetails({
                       <Bath className="w-5 h-5 text-amber-500/80 mx-auto mb-2" />
                       <span className="text-base font-bold text-[#F5F5F4] block">{property.bathrooms}</span>
                       <span className="text-[10px] font-bold text-white/40 uppercase tracking-wider">
-                        {getTranslatedFieldLabel('Bathrooms', currentLanguage) || t('bathrooms')}
+                        {t('bathrooms') || getTranslatedFieldLabel('Bathrooms', currentLanguage) || 'Bathrooms'}
                       </span>
                     </div>
                   )}
@@ -953,7 +953,7 @@ export default function PropertyDetails({
                       <Maximize className="w-5 h-5 text-amber-500/80 mx-auto mb-2" />
                       <span className="text-base font-bold text-[#F5F5F4] block">{property.area} m²</span>
                       <span className="text-[10px] font-bold text-white/40 uppercase tracking-wider">
-                        {getTranslatedFieldLabel('Area (m²)', currentLanguage) || t('total_area')}
+                        {t('total_area') || t('area') || getTranslatedFieldLabel('Area (m²)', currentLanguage) || 'Area (m²)'}
                       </span>
                     </div>
                   )}
@@ -963,7 +963,7 @@ export default function PropertyDetails({
               {/* Specification Grid */}
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
                 {parsedSpecs.map((spec, idx) => {
-                  const translatedLabel = getTranslatedFieldLabel(spec.label, currentLanguage) || t(spec.label) || spec.label;
+                  const translatedLabel = t(spec.label) || getTranslatedFieldLabel(spec.label, currentLanguage) || spec.label;
 
                   let translatedValue = spec.value;
                   const normKey = spec.label.toLowerCase().trim();
@@ -974,6 +974,8 @@ export default function PropertyDetails({
                     translatedValue = getTranslatedCondition(spec.value, currentLanguage);
                   } else if (normKey === 'negotiable') {
                     translatedValue = getTranslatedOption(spec.value, currentLanguage);
+                  } else if (normKey === 'property type' || normKey === 'type' || normKey === 'property_type') {
+                    translatedValue = getTranslatedPropertyType(spec.value, currentLanguage);
                   } else {
                     const optVal = getTranslatedOption(spec.value, currentLanguage);
                     if (optVal && optVal !== spec.value) {
@@ -1552,16 +1554,16 @@ export default function PropertyDetails({
         <div className="mt-12 pt-10 border-t border-white/5 space-y-6">
           <div className="flex items-center justify-between">
             <div>
-              <span className="text-[10px] font-bold uppercase text-amber-500 tracking-widest block font-mono">Supplier Showcase</span>
+              <span className="text-[10px] font-bold uppercase text-amber-500 tracking-widest block font-mono">{t('supplier_showcase') || 'Supplier Showcase'}</span>
               <h3 className="text-2xl font-serif font-bold text-white mt-1">
-                More Products From {property.ownerName}
+                {t('more_from_seller', { name: property.ownerName }) || `More Products From ${property.ownerName}`}
               </h3>
             </div>
             <button
               onClick={() => setSellerAdsModalOpen(true)}
               className="text-xs font-bold text-amber-400 hover:text-amber-300 flex items-center gap-1 cursor-pointer"
             >
-              View All ({sellerListings.length}) <ChevronRight className="w-4 h-4" />
+              {t('view_all') || 'View All'} ({sellerListings.length}) <ChevronRight className="w-4 h-4" />
             </button>
           </div>
 
@@ -1709,7 +1711,7 @@ export default function PropertyDetails({
       <div className="fixed bottom-0 left-0 right-0 z-40 bg-[#09090e]/95 backdrop-blur-xl border-t border-white/10 px-4 py-3 shadow-2xl">
         <div className="max-w-7xl mx-auto flex items-center justify-between gap-3">
           <div className="hidden sm:flex items-center gap-3 min-w-0">
-            <span className="text-xs text-white/50 uppercase tracking-wider font-bold shrink-0">Price:</span>
+            <span className="text-xs text-white/50 uppercase tracking-wider font-bold shrink-0">{t('price') || 'Price'}:</span>
             <span className="text-lg font-black text-amber-400 font-mono shrink-0">
               {pricingInfo.hasRetailPrice
                 ? pricingInfo.retailPriceFormatted
@@ -1732,7 +1734,7 @@ export default function PropertyDetails({
               className="flex-1 sm:flex-initial bg-[#161622] hover:bg-white/10 text-white font-extrabold px-5 py-3 rounded-2xl border border-white/15 transition flex items-center justify-center gap-2 text-xs uppercase tracking-wider cursor-pointer shadow-lg"
             >
               <MessageSquare className="w-4 h-4 text-amber-400" />
-              <span>Contact Seller</span>
+              <span>{t('contact_seller') || 'Contact Seller'}</span>
             </button>
 
             {!isProperty && (pricingInfo.hasWholesaleTiers || pricingInfo.hasMoq) && (
@@ -1741,7 +1743,7 @@ export default function PropertyDetails({
                 className="flex-1 sm:flex-initial bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black font-extrabold px-6 py-3 rounded-2xl shadow-xl transition flex items-center justify-center gap-2 text-xs uppercase tracking-wider cursor-pointer"
               >
                 <Handshake className="w-4.5 h-4.5" />
-                <span>Request Bulk Quote</span>
+                <span>{t('request_bulk_quote') || 'Request Bulk Quote'}</span>
               </button>
             )}
           </div>

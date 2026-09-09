@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { User, Property, PaymentMethod, PaymentReceipt, Inquiry, Advertisement, Language, TranslationKey, AppNotification, SafetyReport, Category, AppFeature, JobOpening, SupportTicket, PropertyOffer, FAQItem, Review } from '../types';
 import { staticTranslations } from './translations';
-import { setGlobalTranslations, getTranslatedCategoryName, getTranslatedSubcategoryName, getTranslatedFieldLabel, getTranslatedOption } from './categoriesData';
+import { setGlobalTranslations, getTranslatedCategoryName, getTranslatedSubcategoryName, getTranslatedFieldLabel, getTranslatedOption, getTranslatedPropertyType } from './categoriesData';
 
 export interface AdPackage {
   id: string;
@@ -528,6 +528,12 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     if (!result) {
       const optVal = getTranslatedOption(subKey, currentLanguage);
       if (optVal && optVal !== subKey) result = optVal;
+    }
+
+    // 7. Property Type fallback
+    if (!result) {
+      const propType = getTranslatedPropertyType(subKey, currentLanguage);
+      if (propType && propType !== subKey) result = propType;
     }
 
     if (!result) {
