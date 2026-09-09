@@ -220,7 +220,7 @@ function buildCleanAmenities(
 }
 
 // Configuration-driven Dynamic Fields based on Category & Subcategory selection
-function getFieldsForSelection(majorCategory: string, subcategory: string): FieldConfig[] {
+function getFieldsForSelection(majorCategory: string, subcategory: string, t?: (key: string, params?: any) => string): FieldConfig[] {
   // 1. PRODUCTS
   if (majorCategory === 'Products') {
     if (subcategory === 'Clothing & Fashion') {
@@ -252,8 +252,8 @@ function getFieldsForSelection(majorCategory: string, subcategory: string): Fiel
         { id: 'quantity', label: 'Quantity', type: 'number', placeholder: '1', colSpan: 'half' },
         { id: 'price', label: 'Price', type: 'number', placeholder: 'e.g., 85000', required: true, colSpan: 'half' },
         { id: 'negotiable', label: 'Negotiable', type: 'select', options: ['No', 'Yes'], colSpan: 'half' },
-        { id: 'location', label: 'Location', type: 'text', placeholder: 'e.g., Mexico, Addis Ababa', required: true, colSpan: 'full' },
-        { id: 'description', label: 'Description', type: 'textarea', placeholder: 'Describe specifications, battery health, accessories included...', required: true, colSpan: 'full' },
+        { id: 'location', label: 'Location', type: 'text', placeholder: t ? t('address_eg_placeholder') : 'e.g., Mexico, Addis Ababa', required: true, colSpan: 'full' },
+        { id: 'description', label: 'Description', type: 'textarea', placeholder: t ? t('describe_specs_battery_accessories') : 'Describe specifications, battery health, accessories included...', required: true, colSpan: 'full' },
         { id: 'images', label: 'Photos', type: 'images', colSpan: 'full' },
         { id: 'video', label: 'Video URL', type: 'text', placeholder: 'e.g., Video demo URL (optional)', colSpan: 'full' }
       ];
@@ -558,7 +558,7 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
     }
   }, [currentUser]);
 
-  const activeFields = getFieldsForSelection(majorCategory, subcategory);
+  const activeFields = getFieldsForSelection(majorCategory, subcategory, t);
 
   // Pre-fill default option for select fields (such as condition and negotiable) if not explicitly set
   useEffect(() => {
@@ -1433,7 +1433,7 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
                           type="text"
                           required
                           value={fieldsState.contactPhone || ''}
-                          placeholder="e.g. +251911223344"
+                          placeholder={t('phone_eg_placeholder')}
                           onChange={e => handleFieldChange('contactPhone', e.target.value)}
                           className="w-full p-2.5 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white focus:outline-none transition"
                         />
@@ -1543,7 +1543,7 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
                                 <>
                                   <Camera className="w-8 h-8 text-amber-500/60 group-hover:text-amber-500 transition mb-2" />
                                   <span className="text-xs font-bold text-white/90 block mb-1">{d.deviceUpload || 'Upload Photos'}</span>
-                                  <span className="text-[10px] text-white/40 block mb-3">JPG, JPEG, PNG, WebP (Max 10MB each)</span>
+                                  <span className="text-[10px] text-white/40 block mb-3">{t('img_formats_limit')}</span>
                                   
                                   <label className="px-4 py-2 bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/30 hover:border-amber-500/50 rounded-xl text-xs font-bold transition duration-200 cursor-pointer inline-flex items-center gap-2">
                                     <Upload className="w-3.5 h-3.5 text-amber-400" />
@@ -1682,7 +1682,7 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
                           <div className="flex items-center justify-between">
                             <label className="block text-[11px] font-bold text-[#F5F5F4]/80 uppercase tracking-wider flex items-center gap-2">
                               <Video className="w-4 h-4 text-amber-500" />
-                              <span>{t("upload_video_file")} (Optional, Max 30s, 50MB)</span>
+                              <span>{t("upload_video_file")} ({t('video_opt_limit')})</span>
                             </label>
                             <span className="text-[10px] text-amber-400 font-mono bg-amber-500/10 px-2.5 py-0.5 rounded-full border border-amber-500/20">
                               MP4, MOV, WebM
@@ -1744,8 +1744,8 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
                               {/* Direct File Selector */}
                               <div className="border-2 border-dashed border-white/15 hover:border-amber-500/50 bg-zinc-950/60 rounded-2xl p-5 flex flex-col items-center justify-center text-center group transition">
                                 <Film className="w-8 h-8 text-amber-500/60 group-hover:text-amber-500 transition mb-2" />
-                                <span className="text-xs font-bold text-white mb-0.5">Upload Video File</span>
-                                <span className="text-[10px] text-white/40 mb-3">Max 30s duration, 50MB file size</span>
+                                <span className="text-xs font-bold text-white mb-0.5">{t('upload_video_file')}</span>
+                                <span className="text-[10px] text-white/40 mb-3">{t('video_max_duration_size')}</span>
                                 
                                 <label className="px-4 py-2 bg-amber-500 text-black hover:bg-amber-400 font-bold rounded-xl text-xs transition cursor-pointer inline-flex items-center gap-2 shadow-lg">
                                   <Upload className="w-3.5 h-3.5" />
@@ -1762,7 +1762,7 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
                               {/* Video URL Fallback Input */}
                               <div className="space-y-2 flex flex-col justify-center">
                                 <label className="block text-[10px] font-bold text-white/50 uppercase tracking-wider">
-                                  Or Paste Direct Video URL
+                                  {t('or_paste_direct_video_url')}
                                 </label>
                                 <input
                                   type="text"
@@ -1774,7 +1774,7 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
                                   }}
                                   className="w-full p-3 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white focus:outline-none transition placeholder-zinc-600 font-mono"
                                 />
-                                <span className="text-[10px] text-white/30 italic">Supports direct MP4/WebM video links.</span>
+                                <span className="text-[10px] text-white/30 italic">{t('supports_direct_video_links')}</span>
                               </div>
                             </div>
                           )}
@@ -1833,7 +1833,7 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
                               <MapPin className="w-3.5 h-3.5 text-amber-500" />
                               {getTranslatedFieldLabel(field.label, currentLanguage)} {field.required && '*'}
                             </span>
-                            <span className="text-[10px] text-amber-400/80 font-normal normal-case">Full address (multi-line auto-wrap)</span>
+                            <span className="text-[10px] text-amber-400/80 font-normal normal-case">{t('full_address_multi_line')}</span>
                           </label>
                           <textarea
                             rows={2}
@@ -1939,7 +1939,7 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
                     <div className="flex items-center gap-2">
                       <DollarSign className="w-4 h-4 text-amber-500" />
                       <h4 className="text-xs font-bold text-white uppercase tracking-wider">
-                        {sellingType === 'Retail' ? 'Retail Pricing & Inventory' : sellingType === 'Wholesale' ? 'Wholesale Pricing & Bulk Quantities' : 'Retail & Wholesale Combined Pricing'}
+                        {sellingType === 'Retail' ? 'Retail Pricing & Inventory' : sellingType === 'Wholesale' ? t('wholesale_pricing_bulk_quantities') : 'Retail & Wholesale Combined Pricing'}
                       </h4>
                     </div>
                     <span className="text-[10px] text-amber-400 font-bold px-2 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/20">
@@ -2076,7 +2076,7 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                           <div>
                             <label className="block text-[11px] font-bold text-white/80 uppercase tracking-wider mb-1">
-                              Total Available Bulk Stock ({fieldsState.unit || 'Units'}) *
+                              {t('total_available_bulk_stock_unit', { unit: fieldsState.unit || t('wholesale.unit_of_sale') })} *
                             </label>
                             <input
                               type="text"
@@ -2088,12 +2088,12 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
                               className="w-full p-3 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white focus:outline-none transition"
                             />
                             <span className="text-[10px] text-white/40 mt-1 block">
-                              Must be at least equal to your Minimum Order Quantity (MOQ).
+                              {t('moq_stock_requirement_hint')}
                             </span>
                           </div>
                           <div>
                             <label className="block text-[11px] font-bold text-white/80 uppercase tracking-wider mb-1">
-                              Price Negotiable on Large Volumes?
+                              {t('price_negotiable_large')}
                             </label>
                             <select
                               value={fieldsState.negotiable || 'No'}
@@ -2128,7 +2128,7 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-3 border-t border-white/5">
                         <div>
                           <label className="block text-[11px] font-bold text-white/80 uppercase tracking-wider mb-1">
-                            🏢 Supplier Business Type
+                            🏢 {t('supplier_business_type')}
                           </label>
                           <select
                             value={fieldsState.businessType || 'Wholesaler'}
@@ -2150,12 +2150,12 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
 
                         <div>
                           <label className="block text-[11px] font-bold text-white/80 uppercase tracking-wider mb-1">
-                            📞 Supplier Contact Phone Number *
+                            📞 {t('supplier_contact_phone')} *
                           </label>
                           <input
                             type="text"
                             required
-                            placeholder="e.g. +251911223344"
+                            placeholder={t('phone_eg_placeholder')}
                             value={fieldsState.contactPhone || ''}
                             onChange={e => handleFieldChange('contactPhone', e.target.value)}
                             className="w-full p-3 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white focus:outline-none transition"
@@ -2166,7 +2166,7 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
                       {/* Delivery Options */}
                       <div className="space-y-2 pt-2 border-t border-white/5">
                         <label className="block text-[11px] font-bold text-white/80 uppercase tracking-wider">
-                          🚚 Bulk Delivery Options
+                          🚚 {t('bulk_delivery_options')}
                         </label>
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                           {[
@@ -2207,11 +2207,11 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
                       {/* Wholesale Terms (Optional) */}
                       <div className="space-y-1 pt-2 border-t border-white/5">
                         <label className="block text-[11px] font-bold text-white/80 uppercase tracking-wider">
-                          📝 Wholesale Policy & Notes (Optional)
+                          📝 {t('wholesale_policy_notes_optional')}
                         </label>
                         <textarea
                           rows={2}
-                          placeholder="Example: Tier 1 pricing applies from 10 to 49 pieces. Cash on delivery or bank transfer accepted. Lead time 2-3 business days."
+                          placeholder={t('wholesale_policy_example_placeholder')}
                           value={fieldsState.wholesaleNotes || ''}
                           onChange={e => handleFieldChange('wholesaleNotes', e.target.value)}
                           className="w-full p-3 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white focus:outline-none transition resize-none font-light placeholder-zinc-600"

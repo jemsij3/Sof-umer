@@ -223,7 +223,7 @@ export const ReceiptUploadInput: React.FC<ReceiptUploadInputProps> = ({
                 <iframe
                   src={receiptFile}
                   className="w-full h-[500px] rounded-xl border border-white/10"
-                  title="PDF Receipt Preview"
+                  title={t("pdf_receipt_preview")}
                 />
               ) : (
                 <img
