@@ -985,7 +985,7 @@ export default function PropertyDetails({
                       if (catVal && catVal !== spec.value) {
                         translatedValue = catVal;
                       } else {
-                        translatedValue = extractString(t(spec.value) || spec.value, currentLanguage);
+                        translatedValue = extractString(spec.value, currentLanguage);
                       }
                     }
                   }

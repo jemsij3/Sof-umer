@@ -90,7 +90,7 @@ import {
 } from './src/types';
 import { staticTranslations } from './src/lib/translations';
 
-const PORT = 3000;
+const PORT = process.env.RENDER && process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
 
 function resolveDbFilePath(): { dbPath: string; isPersistent: boolean } {
   // Check explicit environment variables first
@@ -301,8 +301,10 @@ const getInitialData = () => {
     { code: 'am', name: 'Amharic (አማርኛ)', isActive: true }
   ];
 
-  // Core translations mapping
-  const translations: TranslationKey[] = staticTranslations;
+  // Core translations mapping - safely filter out any undefined/null/malformed entries
+  const translations: TranslationKey[] = (staticTranslations || []).filter(
+    (t): t is TranslationKey => Boolean(t && typeof t === 'object' && typeof t.key === 'string' && t.key.trim().length > 0)
+  );
 
   const reports: SafetyReport[] = [];
   const notifications: AppNotification[] = [];
@@ -1256,13 +1258,23 @@ const applyDataSanityAndMigrations = () => {
   }
 
   const defaultData = getInitialData();
+  const validDefaultTranslations = (defaultData.translations || []).filter(
+    (t): t is TranslationKey => Boolean(t && typeof t === 'object' && typeof t.key === 'string' && t.key.trim().length > 0)
+  );
+
   if (!localDb.translations || !Array.isArray(localDb.translations) || localDb.translations.length === 0) {
-    localDb.translations = defaultData.translations;
+    localDb.translations = validDefaultTranslations;
   } else {
+    // Defensively sanitize existing localDb.translations: purge any null, undefined, or missing-key entries
+    localDb.translations = localDb.translations.filter(
+      (t): t is TranslationKey => Boolean(t && typeof t === 'object' && typeof t.key === 'string' && t.key.trim().length > 0)
+    );
+
     const existingKeys = new Set(localDb.translations.map(t => t.key));
-    for (const t of defaultData.translations) {
-      if (!existingKeys.has(t.key)) {
+    for (const t of validDefaultTranslations) {
+      if (t && t.key && !existingKeys.has(t.key)) {
         localDb.translations.push(t);
+        existingKeys.add(t.key);
       }
     }
   }
@@ -1308,6 +1320,7 @@ const applyDataSanityAndMigrations = () => {
 
   if (Array.isArray(localDb.translations)) {
     for (const tr of localDb.translations) {
+      if (!tr || typeof tr !== 'object' || !tr.key) continue;
       if (tr.key === 'auth_connecting_markets' || tr.key === 'splash_tagline' || (tr.en && tr.en.includes("Connecting Ethiopia"))) {
         tr.en = 'The Smart Way to Discover, Connect & Grow';
       }
@@ -4949,10 +4962,12 @@ async function startServer() {
     if (!exists) {
       localDb.languages.push({ ...lang, isActive: true });
       // Add the language empty field to all translation keys
-      localDb.translations = localDb.translations.map(t => ({
-        ...t,
-        [lang.code]: t.en // default to English
-      }));
+      localDb.translations = (localDb.translations || [])
+        .filter(t => t && typeof t === 'object' && typeof t.key === 'string')
+        .map(t => ({
+          ...t,
+          [lang.code]: t.en // default to English
+        }));
       await saveDb();
     }
     res.json(localDb.languages);
@@ -4961,7 +4976,9 @@ async function startServer() {
   app.put('/api/languages/translations', async (req, res) => {
     const { translations } = req.body; // Full updated translations list
     if (translations && Array.isArray(translations)) {
-      localDb.translations = translations;
+      localDb.translations = translations.filter(
+        (t: any): t is TranslationKey => Boolean(t && typeof t === 'object' && typeof t.key === 'string' && t.key.trim().length > 0)
+      );
       await saveDb();
     }
     res.json({ success: true, translations: localDb.translations });
