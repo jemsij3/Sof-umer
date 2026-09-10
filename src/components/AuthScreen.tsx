@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../lib/AppContext';
-import { Building2, Eye, EyeOff, Lock, Mail, User as UserIcon, ArrowLeft, ArrowRight, ShieldCheck, Sparkles, Compass, RefreshCw, Key, Copy, Check, QrCode, Smartphone, Download, AlertTriangle, Globe, ChevronDown } from 'lucide-react';
+import { Building2, Eye, EyeOff, Lock, Mail, User as UserIcon, ArrowLeft, ArrowRight, ShieldCheck, Sparkles, Compass, RefreshCw, Key, Copy, Check, QrCode, Smartphone, Download, AlertTriangle, Globe, ChevronDown, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
 interface AuthScreenProps {
   initialMode?: 'login' | 'signup';
+  onClose?: () => void;
 }
 
-export default function AuthScreen({ initialMode }: AuthScreenProps) {
+export default function AuthScreen({ initialMode, onClose }: AuthScreenProps) {
   const { setCurrentUser, setToken, t, sessionExpired, setSessionExpired, currentLanguage, setLanguage, systemSettings } = useApp();
   
   const [showLangDropdown, setShowLangDropdown] = useState(false);
@@ -704,6 +705,17 @@ export default function AuthScreen({ initialMode }: AuthScreenProps) {
                     <span className="text-sm">{t('auth_create_profile_header')}</span>
                     <span className="text-xs text-white/40 uppercase tracking-widest">{t('auth_register_label')}</span>
                   </button>
+
+                  {onClose && (
+                    <button
+                      type="button"
+                      onClick={onClose}
+                      className="w-full py-3.5 px-6 rounded-2xl bg-white/5 hover:bg-white/10 text-amber-400 hover:text-amber-300 font-bold text-xs uppercase tracking-widest transition flex items-center justify-center gap-2 border border-amber-500/20 cursor-pointer"
+                    >
+                      <span>{t('browse_marketplace_guest') || 'Browse Marketplace as Guest'}</span>
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </button>
+                  )}
                 </div>
 
                 <div className="text-center pt-2">
@@ -728,10 +740,22 @@ export default function AuthScreen({ initialMode }: AuthScreenProps) {
             <div className="text-center relative">
               <button 
                 onClick={() => setMode('welcome')}
-                className="absolute left-0 top-1/2 -translate-y-1/2 p-2 rounded-xl hover:bg-white/5 text-white/50 hover:text-white transition"
+                className="absolute left-0 top-1/2 -translate-y-1/2 p-2 rounded-xl hover:bg-white/5 text-white/50 hover:text-white transition cursor-pointer"
+                title="Back"
               >
                 <ArrowLeft className="w-4 h-4" />
               </button>
+
+              {onClose && (
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="absolute right-0 top-1/2 -translate-y-1/2 p-2 rounded-xl hover:bg-white/5 text-white/50 hover:text-white transition cursor-pointer"
+                  title="Close and return to marketplace"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              )}
               
               <div className="mx-auto h-16 w-16 p-1 bg-gradient-to-br from-amber-400 to-amber-600 rounded-2xl shadow-xl shadow-amber-500/20 flex items-center justify-center">
                 <img

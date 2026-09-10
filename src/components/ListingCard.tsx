@@ -250,7 +250,7 @@ export function ListingCard({
   const currencyCode = property.currency || 'ETB';
   const titleText = extractString(property.title, currentLanguage) || 'Untitled Listing';
   const rawLocation = (typeof property.location === 'string' ? property.location : extractString(property.location, currentLanguage))?.trim();
-  const locationText = rawLocation ? getTranslatedLocation(rawLocation, currentLanguage) : (t ? t('location_not_provided') : 'Location not provided');
+  const locationText = rawLocation || (t ? t('location_not_provided') : 'Location not provided');
   const categoryLabel = property.propertyType 
     ? getTranslatedPropertyType(extractString(property.propertyType, currentLanguage), currentLanguage) 
     : getTranslatedCategoryName(extractString(property.majorCategory || 'Properties', currentLanguage), currentLanguage);

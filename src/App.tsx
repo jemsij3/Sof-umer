@@ -15,7 +15,7 @@ import CreateListingModal from './components/CreateListingModal';
 import Footer from './components/Footer';
 import InfoPage from './components/InfoPage';
 import { Property } from './types';
-import { ShieldAlert, X, Send } from 'lucide-react';
+import { ShieldAlert, X, Send, Compass, Heart, Plus, Search, User as UserIcon } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { getThemeCSS } from './lib/themes';
 
@@ -222,17 +222,7 @@ function MainAppLayout() {
     );
   }
 
-  // If not logged in, immediately show the login screen
-  if (!currentUser) {
-    return (
-      <>
-        <style>{getThemeCSS(systemSettings?.themeName || 'cosmic-slate')}</style>
-        <AuthScreen initialMode={authMode || 'login'} />
-      </>
-    );
-  }
-
-  // Fallback if welcome was bypassed but user logged in
+  // Active view fallback
   const activeView = selectedProperty ? 'details' : view;
 
   return (
@@ -244,17 +234,33 @@ function MainAppLayout() {
         activeView={activeView}
         onNavigate={(v) => {
           if (v === 'admin' || v === 'profile' || v === 'messages' || v === 'notifications' || v === 'payments' || v === 'settings') {
-            setView(v as any);
-            setSelectedProperty(null);
+            if (!currentUser) {
+              setAuthMode('login');
+              setAuthScreenOpen(true);
+            } else {
+              setView(v as any);
+              setSelectedProperty(null);
+            }
           } else {
             handleNavigate(v as any);
           }
         }}
-        onOpenCreateModal={() => setCreateModalOpen(true)}
+        onOpenCreateModal={() => {
+          if (!currentUser) {
+            setAuthMode('login');
+            setAuthScreenOpen(true);
+          } else {
+            setCreateModalOpen(true);
+          }
+        }}
+        onOpenAuthModal={(mode) => {
+          setAuthMode(mode);
+          setAuthScreenOpen(true);
+        }}
       />
 
       {/* Main Body Switcher Layout */}
-      <main className="flex-1 pb-16">
+      <main className="flex-1 pb-20 md:pb-16">
         <AnimatePresence mode="wait">
           
           {/* PROPERTY DETAILS VIEWS */}
@@ -320,7 +326,7 @@ function MainAppLayout() {
                 onSelectProperty={(prop) => setSelectedProperty(prop)}
               />
             </motion.div>
-          ) : (
+          ) : currentUser ? (
             /* STANDARD DASHBOARD TABS (Profile, Payments, Messages, Notifications, Settings) */
             <motion.div
               key="dashboard"
@@ -343,6 +349,20 @@ function MainAppLayout() {
                 onSelectProperty={(prop) => setSelectedProperty(prop)}
               />
             </motion.div>
+          ) : (
+            /* Not logged in and accessed protected view: Show Auth Screen with easy return */
+            <motion.div
+              key="auth-view"
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -15 }}
+              className="py-12 px-4 flex justify-center items-center"
+            >
+              <AuthScreen
+                initialMode={authMode || 'login'}
+                onClose={() => setView('marketplace')}
+              />
+            </motion.div>
           )}
 
         </AnimatePresence>
@@ -350,6 +370,101 @@ function MainAppLayout() {
 
       {/* Universal Footer */}
       <Footer onFooterLinkClick={handleFooterLinkClick} />
+
+      {/* Mobile Bottom Navigation Bar (Thumb friendly for visitors & users) */}
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#07070a]/95 backdrop-blur-xl border-t border-white/10 px-3 py-2 flex items-center justify-around">
+        <button
+          onClick={() => {
+            setSelectedProperty(null);
+            setView('marketplace');
+          }}
+          className={`flex flex-col items-center gap-1 py-1 px-3 rounded-xl transition cursor-pointer ${
+            activeView === 'marketplace' && !selectedProperty ? 'text-amber-400 font-bold' : 'text-white/60 hover:text-white'
+          }`}
+        >
+          <Compass className="w-5 h-5" />
+          <span className="text-[10px] tracking-tight">{t('marketplace') || 'Explore'}</span>
+        </button>
+
+        <button
+          onClick={() => {
+            setSelectedProperty(null);
+            setView('marketplace');
+            window.dispatchEvent(new CustomEvent('open-all-categories'));
+          }}
+          className="flex flex-col items-center gap-1 py-1 px-3 rounded-xl text-white/60 hover:text-white transition cursor-pointer"
+        >
+          <Search className="w-5 h-5" />
+          <span className="text-[10px] tracking-tight">{t('categories') || 'Categories'}</span>
+        </button>
+
+        {/* Sell / Post Floating Trigger */}
+        <button
+          onClick={() => {
+            if (currentUser) {
+              setCreateModalOpen(true);
+            } else {
+              setAuthMode('login');
+              setAuthScreenOpen(true);
+            }
+          }}
+          className="flex flex-col items-center -mt-5 bg-gradient-to-tr from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black p-3 rounded-full shadow-lg shadow-amber-500/25 transition-transform active:scale-95 cursor-pointer border-2 border-[#07070a]"
+          title={t('list_property') || 'Sell'}
+        >
+          <Plus className="w-5 h-5 text-black" strokeWidth={3} />
+        </button>
+
+        <button
+          onClick={() => {
+            setSelectedProperty(null);
+            setView('marketplace');
+            window.dispatchEvent(new CustomEvent('filter-favorites'));
+          }}
+          className="flex flex-col items-center gap-1 py-1 px-3 rounded-xl text-white/60 hover:text-white transition cursor-pointer"
+        >
+          <Heart className="w-5 h-5" />
+          <span className="text-[10px] tracking-tight">{t('favorites') || 'Saved'}</span>
+        </button>
+
+        <button
+          onClick={() => {
+            if (currentUser) {
+              setSelectedProperty(null);
+              setView('profile');
+            } else {
+              setAuthMode('login');
+              setAuthScreenOpen(true);
+            }
+          }}
+          className={`flex flex-col items-center gap-1 py-1 px-3 rounded-xl transition cursor-pointer ${
+            activeView === 'profile' || activeView === 'admin' ? 'text-amber-400 font-bold' : 'text-white/60 hover:text-white'
+          }`}
+        >
+          <UserIcon className="w-5 h-5" />
+          <span className="text-[10px] tracking-tight">
+            {currentUser ? (t('account') || 'Account') : (t('login') || 'Sign In')}
+          </span>
+        </button>
+      </nav>
+
+      {/* AUTH SCREEN MODAL OVERLAY (When triggered from guest actions) */}
+      <AnimatePresence>
+        {authScreenOpen && !currentUser && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto"
+          >
+            <div className="w-full max-w-md my-auto">
+              <AuthScreen
+                initialMode={authMode}
+                onClose={() => setAuthScreenOpen(false)}
+              />
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* CREATE PROPERTY LISTINGS MODAL OVERLAY */}
       {createModalOpen && (

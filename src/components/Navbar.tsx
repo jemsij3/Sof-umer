@@ -8,9 +8,10 @@ interface NavbarProps {
   onNavigate: (view: 'marketplace' | 'profile' | 'messages' | 'notifications' | 'payments' | 'settings' | 'admin' | 'mylistings') => void;
   activeView: string;
   onOpenCreateModal: () => void;
+  onOpenAuthModal?: (mode: 'login' | 'signup') => void;
 }
 
-export default function Navbar({ onNavigate, activeView, onOpenCreateModal }: NavbarProps) {
+export default function Navbar({ onNavigate, activeView, onOpenCreateModal, onOpenAuthModal }: NavbarProps) {
   const {
     currentUser,
     currentLanguage,
@@ -91,8 +92,15 @@ export default function Navbar({ onNavigate, activeView, onOpenCreateModal }: Na
     }
   }, [notifDropdownOpen]);
 
-  // Active languages filter
-  const activeLanguages = languages.filter(l => l.isActive);
+  // Active languages filter with guaranteed support for EN, OM, AM
+  const fallbackLanguages = [
+    { code: 'en', name: 'English', nativeName: 'English', isActive: true },
+    { code: 'om', name: 'Afaan Oromoo', nativeName: 'Afaan Oromoo', isActive: true },
+    { code: 'am', name: 'Amharic (አማርኛ)', nativeName: 'አማርኛ', isActive: true }
+  ];
+  const activeLanguages = languages && languages.filter(l => l.isActive).length > 0
+    ? languages.filter(l => l.isActive)
+    : fallbackLanguages;
   const unreadNotifications = notifications.filter(n => n.userId === currentUser?.id && !n.isRead);
 
   const handleMarkNotificationsRead = async () => {
@@ -145,16 +153,23 @@ export default function Navbar({ onNavigate, activeView, onOpenCreateModal }: Na
 
           {/* Navigation Items */}
           <div className="flex items-center gap-2 sm:gap-3">
-            {/* Quick Listing Creator Button (Admin or Verified User) */}
-            {currentUser && (currentUser.role === 'admin' || currentUser.isVerified) && (
-              <button
-                onClick={onOpenCreateModal}
-                className="hidden md:flex items-center gap-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black px-4.5 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider transition duration-300 cursor-pointer shadow-lg shadow-amber-500/10 hover:shadow-amber-500/20 hover:scale-[1.02]"
-              >
-                <Plus className="w-4 h-4 text-black" />
-                <span>{t('list_property') || 'List Property'}</span>
-              </button>
-            )}
+            {/* Quick Listing Creator / Sell Button */}
+            <button
+              onClick={() => {
+                if (currentUser) {
+                  onOpenCreateModal();
+                } else if (onOpenAuthModal) {
+                  onOpenAuthModal('login');
+                } else {
+                  onNavigate('profile');
+                }
+              }}
+              className="hidden sm:flex items-center gap-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black px-4.5 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider transition duration-300 cursor-pointer shadow-lg shadow-amber-500/10 hover:shadow-amber-500/20 hover:scale-[1.02]"
+              title={t('list_property') || 'List Property / Sell'}
+            >
+              <Plus className="w-4 h-4 text-black" />
+              <span>{t('list_property') || 'Post Listing'}</span>
+            </button>
 
             {/* Language Selector */}
             <div className="relative">
@@ -413,10 +428,16 @@ export default function Navbar({ onNavigate, activeView, onOpenCreateModal }: Na
             ) : (
               <div className="flex items-center gap-2">
                 <button
-                  onClick={() => onNavigate('profile')}
-                  className="bg-[#F5F5F4] hover:bg-zinc-200 text-[#050505] px-4.5 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider transition cursor-pointer"
+                  onClick={() => onOpenAuthModal ? onOpenAuthModal('login') : onNavigate('profile')}
+                  className="px-3.5 py-2 rounded-xl text-white/80 hover:text-white hover:bg-white/5 font-bold text-xs uppercase tracking-wider transition cursor-pointer"
                 >
-                  {t('login')}
+                  {t('login') || 'Sign In'}
+                </button>
+                <button
+                  onClick={() => onOpenAuthModal ? onOpenAuthModal('signup') : onNavigate('profile')}
+                  className="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black px-4 py-2 rounded-xl font-bold text-xs uppercase tracking-wider transition cursor-pointer shadow-md shadow-amber-500/10"
+                >
+                  {t('auth_register_label') || 'Register'}
                 </button>
               </div>
             )}
