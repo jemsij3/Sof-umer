@@ -372,18 +372,18 @@ function MainAppLayout() {
       <Footer onFooterLinkClick={handleFooterLinkClick} />
 
       {/* Mobile Bottom Navigation Bar (Thumb friendly for visitors & users) */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#07070a]/95 backdrop-blur-xl border-t border-white/10 px-3 py-2 flex items-center justify-around">
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#07070a]/95 backdrop-blur-xl border-t border-white/10 px-2 py-2 flex items-center justify-around">
         <button
           onClick={() => {
             setSelectedProperty(null);
             setView('marketplace');
           }}
-          className={`flex flex-col items-center gap-1 py-1 px-3 rounded-xl transition cursor-pointer ${
+          className={`flex-1 flex flex-col items-center justify-center gap-1 py-1 px-1 rounded-xl transition cursor-pointer min-w-0 ${
             activeView === 'marketplace' && !selectedProperty ? 'text-amber-400 font-bold' : 'text-white/60 hover:text-white'
           }`}
         >
-          <Compass className="w-5 h-5" />
-          <span className="text-[10px] tracking-tight">{t('marketplace') || 'Explore'}</span>
+          <Compass className="w-5 h-5 shrink-0" />
+          <span className="text-[10px] tracking-tight whitespace-nowrap overflow-hidden text-ellipsis max-w-full">{t('marketplace') || 'Explore'}</span>
         </button>
 
         <button
@@ -392,10 +392,10 @@ function MainAppLayout() {
             setView('marketplace');
             window.dispatchEvent(new CustomEvent('open-all-categories'));
           }}
-          className="flex flex-col items-center gap-1 py-1 px-3 rounded-xl text-white/60 hover:text-white transition cursor-pointer"
+          className="flex-1 flex flex-col items-center justify-center gap-1 py-1 px-1 rounded-xl text-white/60 hover:text-white transition cursor-pointer min-w-0"
         >
-          <Search className="w-5 h-5" />
-          <span className="text-[10px] tracking-tight">{t('categories') || 'Categories'}</span>
+          <Search className="w-5 h-5 shrink-0" />
+          <span className="text-[10px] tracking-tight whitespace-nowrap overflow-hidden text-ellipsis max-w-full">{t('categories') || 'Categories'}</span>
         </button>
 
         {/* Sell / Post Floating Trigger */}
@@ -408,7 +408,7 @@ function MainAppLayout() {
               setAuthScreenOpen(true);
             }
           }}
-          className="flex flex-col items-center -mt-5 bg-gradient-to-tr from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black p-3 rounded-full shadow-lg shadow-amber-500/25 transition-transform active:scale-95 cursor-pointer border-2 border-[#07070a]"
+          className="flex flex-col items-center -mt-5 bg-gradient-to-tr from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black p-3 rounded-full shadow-lg shadow-amber-500/25 transition-transform active:scale-95 cursor-pointer border-2 border-[#07070a] shrink-0 mx-1"
           title={t('list_property') || 'Sell'}
         >
           <Plus className="w-5 h-5 text-black" strokeWidth={3} />
@@ -420,10 +420,10 @@ function MainAppLayout() {
             setView('marketplace');
             window.dispatchEvent(new CustomEvent('filter-favorites'));
           }}
-          className="flex flex-col items-center gap-1 py-1 px-3 rounded-xl text-white/60 hover:text-white transition cursor-pointer"
+          className="flex-1 flex flex-col items-center justify-center gap-1 py-1 px-1 rounded-xl text-white/60 hover:text-white transition cursor-pointer min-w-0"
         >
-          <Heart className="w-5 h-5" />
-          <span className="text-[10px] tracking-tight">{t('favorites') || 'Saved'}</span>
+          <Heart className="w-5 h-5 shrink-0" />
+          <span className="text-[10px] tracking-tight whitespace-nowrap overflow-hidden text-ellipsis max-w-full">{t('favorites') || 'Saved'}</span>
         </button>
 
         <button
@@ -436,12 +436,12 @@ function MainAppLayout() {
               setAuthScreenOpen(true);
             }
           }}
-          className={`flex flex-col items-center gap-1 py-1 px-3 rounded-xl transition cursor-pointer ${
+          className={`flex-1 flex flex-col items-center justify-center gap-1 py-1 px-1 rounded-xl transition cursor-pointer min-w-0 ${
             activeView === 'profile' || activeView === 'admin' ? 'text-amber-400 font-bold' : 'text-white/60 hover:text-white'
           }`}
         >
-          <UserIcon className="w-5 h-5" />
-          <span className="text-[10px] tracking-tight">
+          <UserIcon className="w-5 h-5 shrink-0" />
+          <span className="text-[10px] tracking-tight whitespace-nowrap overflow-hidden text-ellipsis max-w-full">
             {currentUser ? (t('account') || 'Account') : (t('login') || 'Sign In')}
           </span>
         </button>

@@ -1648,51 +1648,25 @@ export default function Marketplace({
       ) : (
         <div className="animate-fade-in text-left">
 
-          {/* Recently Viewed & Searched strip */}
-          {(recentlyViewedIds.length > 0 || recentlySearchedQueries.length > 0) && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-10 text-left">
-              {recentlyViewedIds.length > 0 && (
-                <div className="bg-[#0c0c11]/50 border border-white/5 rounded-3xl p-5">
-                  <h4 className="text-[10px] font-bold text-white/30 uppercase tracking-widest mb-3 flex items-center gap-1.5">
-                    <Clock className="w-3.5 h-3.5 text-amber-500" /> {t('recently_viewed_categories')}
-                  </h4>
-                  <div className="flex flex-wrap gap-2">
-                    {recentlyViewedIds.map(id => {
-                      const matched = REDESIGNED_CATEGORIES.find(c => c.id === id);
-                      if (!matched) return null;
-                      return (
-                        <button
-                          key={id}
-                          onClick={() => handleSelectRedesignedCategory(matched)}
-                          className="px-3 py-1.5 bg-[#12121a] hover:bg-amber-500 hover:text-black border border-white/5 hover:border-transparent text-xs text-white/70 rounded-xl transition-all cursor-pointer flex items-center gap-1.5"
-                        >
-                          {renderCategoryIcon(matched.iconName, "w-3.5 h-3.5")}
-                          <span>{currentLanguage === 'am' ? matched.translations.am : currentLanguage === 'om' ? matched.translations.om : matched.name}</span>
-                        </button>
-                      );
-                    })}
-                  </div>
+          {/* Recently Searched strip */}
+          {recentlySearchedQueries.length > 0 && (
+            <div className="mb-8 text-left">
+              <div className="bg-[#0c0c11]/50 border border-white/5 rounded-3xl p-5">
+                <h4 className="text-[10px] font-bold text-white/30 uppercase tracking-widest mb-3 flex items-center gap-1.5">
+                  <Search className="w-3.5 h-3.5 text-amber-500" /> {t('recently_searched_keywords') || 'RECENTLY SEARCHED KEYWORDS'}
+                </h4>
+                <div className="flex flex-wrap gap-2">
+                  {recentlySearchedQueries.map((query, i) => (
+                    <button
+                      key={i}
+                      onClick={() => { setSearchQuery(query); setCatSearchQuery(query); }}
+                      className="px-3 py-1.5 bg-[#12121a] hover:bg-zinc-800 border border-white/5 text-xs text-white/70 rounded-xl transition-all cursor-pointer"
+                    >
+                      "{query}"
+                    </button>
+                  ))}
                 </div>
-              )}
-
-              {recentlySearchedQueries.length > 0 && (
-                <div className="bg-[#0c0c11]/50 border border-white/5 rounded-3xl p-5">
-                  <h4 className="text-[10px] font-bold text-white/30 uppercase tracking-widest mb-3 flex items-center gap-1.5">
-                    <Search className="w-3.5 h-3.5 text-amber-500" /> {t('recently_searched_keywords') || 'RECENTLY SEARCHED KEYWORDS'}
-                  </h4>
-                  <div className="flex flex-wrap gap-2">
-                    {recentlySearchedQueries.map((query, i) => (
-                      <button
-                        key={i}
-                        onClick={() => { setSearchQuery(query); setCatSearchQuery(query); }}
-                        className="px-3 py-1.5 bg-[#12121a] hover:bg-zinc-800 border border-white/5 text-xs text-white/70 rounded-xl transition-all cursor-pointer"
-                      >
-                        "{query}"
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
+              </div>
             </div>
           )}
 
