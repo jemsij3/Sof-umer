@@ -1661,7 +1661,7 @@ export const staticTranslations: TranslationKey[] = [
   { key: "btn_add_employee", en: "Add Employee", om: "Hojjaataa Dabaladhudhu", am: "ሰራተኛ ጨምር", category: "Admin" },
   { key: "nav_logout", en: "Logout", om: "Ba'i (Logout)", am: "ውጣ", category: "Navigation" },
   { key: "roles_permissions", en: "Roles & Permissions", om: "Gahee & Heyyama", am: "ሚናዎች እና ፈቃዶች", category: "Admin" },
-  { key: "staff_management", en: "Staff Management", om: "Bulchiinsa Hojjettootaa", am: "የሰራተኞች አስተዳደር", category: "Admin" },,
+  { key: "staff_management", en: "Staff Management", om: "Bulchiinsa Hojjettootaa", am: "የሰራተኞች አስተዳደር", category: "Admin" },
   { key: "full_address_multi_line", en: "Full address (multi-line auto-wrap)", om: "Teessoo guutuu (muldhata sarara hedduu)", am: "ሙሉ አድራሻ (በብዙ መስመር የተጠቀለለ)", category: "CreateListing" },
   { key: "address_eg_placeholder", en: "e.g., Mexico, Addis Ababa", om: "fkn., Meeksikoo, Finfinnee", am: "ምሳሌ፡ ሜክሲኮ፣ አዲስ አበባ", category: "CreateListing" },
   { key: "describe_specs_battery_accessories", en: "Describe specifications, battery health, accessories included...", om: "Odeeffannoo meeshaa, fayyaa batarii, mi'a dabalataa dhihaate ibsi...", am: "የእቃውን ዝርዝር፣ የባለተሪ ጤንነት፣ የተካተቱ መለዋወጫዎችን ይግለጹ...", category: "CreateListing" },

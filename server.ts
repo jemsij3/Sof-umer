@@ -90,7 +90,7 @@ import {
 } from './src/types';
 import { staticTranslations } from './src/lib/translations';
 
-const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
+const PORT = 3000;
 
 function resolveDbFilePath(): { dbPath: string; isPersistent: boolean } {
   // Check explicit environment variables first
