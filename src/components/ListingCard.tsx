@@ -274,18 +274,19 @@ export function ListingCard({
             className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
             referrerPolicy="no-referrer"
           />
-          {isVerifiedSupplier && (
-            <div className="absolute bottom-1 right-1 bg-emerald-500/90 text-white p-0.5 rounded-full shadow-sm">
-              <CheckCircle2 className="w-3 h-3" />
-            </div>
-          )}
         </div>
 
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-1.5 mb-1">
+          <div className="flex items-center gap-1.5 mb-1 flex-wrap">
             <span className="text-[9px] font-bold text-amber-400 uppercase tracking-wider bg-amber-500/10 px-2 py-0.5 rounded-md border border-amber-500/20 truncate">
               {categoryLabel}
             </span>
+            {isVerifiedSupplier && (
+              <span className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-md bg-emerald-950/60 text-emerald-300 border border-emerald-500/30 flex items-center gap-0.5">
+                <CheckCircle2 className="w-2.5 h-2.5 text-emerald-400" />
+                <span>{t('verified_account') || t('verified') || 'VERIFIED'}</span>
+              </span>
+            )}
             {isFeatured && (
               <span className="text-[9px] font-black text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded-md border border-emerald-500/20 uppercase tracking-wider">
                 ★
@@ -345,21 +346,6 @@ export function ListingCard({
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent pointer-events-none md:hidden" />
 
-          {/* Top badges */}
-          <div className="absolute top-3.5 left-3.5 z-10 flex flex-wrap gap-1.5 items-center max-w-[80%]">
-            {isFeatured && (
-              <span className="text-[9px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-lg bg-gradient-to-r from-amber-400 to-amber-600 text-black shadow-md flex items-center gap-1">
-                <Sparkles className="w-2.5 h-2.5" /> {t('featured') || 'Featured'}
-              </span>
-            )}
-
-            {isVerifiedSupplier && (
-              <span className="text-[9px] font-bold uppercase tracking-wider px-2 py-1 rounded-lg bg-emerald-950/80 text-emerald-400 border border-emerald-500/40 backdrop-blur-md flex items-center gap-1 shadow-sm">
-                <CheckCircle2 className="w-3 h-3 text-emerald-400" /> {t('verified') || t('verified_seller') || 'Verified'}
-              </span>
-            )}
-          </div>
-
           {/* Image counter pill */}
           {allImages.length > 1 && (
             <div className="absolute bottom-3 left-3 z-10 bg-black/75 backdrop-blur-md px-2 py-1 rounded-lg text-[10px] font-medium text-white/90 border border-white/10 flex items-center gap-1">
@@ -394,16 +380,30 @@ export function ListingCard({
         {/* Center/Right Information */}
         <div className="flex-1 p-5 md:p-6 flex flex-col justify-between">
           <div>
-            {/* Top metadata line: Category, Negotiable, and Quick actions */}
+            {/* Top metadata line: Category, Verified, Negotiable, Featured, and Quick actions */}
             <div className="flex items-center justify-between gap-3 mb-2">
               <div className="flex items-center gap-2 flex-wrap">
                 <span className="text-[10px] font-extrabold uppercase tracking-wider text-amber-400/90 bg-amber-500/10 border border-amber-500/20 px-2.5 py-1 rounded-lg">
                   {categoryLabel}
                 </span>
 
+                {isVerifiedSupplier && (
+                  <span className="text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-lg bg-emerald-950/60 text-emerald-300 border border-emerald-500/30 flex items-center gap-1">
+                    <CheckCircle2 className="w-3 h-3 text-emerald-400 shrink-0" />
+                    <span>{t('verified_account') || t('verified') || 'VERIFIED ACCOUNT'}</span>
+                  </span>
+                )}
+
                 {isNegotiable && (
                   <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-1 rounded-lg">
                     🤝 {getTranslatedOption('Negotiable', currentLanguage) || 'Negotiable'}
+                  </span>
+                )}
+
+                {isFeatured && (
+                  <span className="text-[9px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-lg bg-gradient-to-r from-amber-400 to-amber-600 text-black shadow-sm flex items-center gap-1">
+                    <Sparkles className="w-2.5 h-2.5 shrink-0" />
+                    <span>{t('featured') || 'Featured'}</span>
                   </span>
                 )}
               </div>
@@ -562,27 +562,6 @@ export function ListingCard({
         {/* Subtle optical vignette */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/15 to-black/30 pointer-events-none" />
 
-        {/* Floating Badges (Top-Left) */}
-        <div className="absolute top-3.5 left-3.5 z-10 flex flex-wrap gap-1.5 items-center max-w-[75%]">
-          {isFeatured && (
-            <span className="text-[9px] font-extrabold uppercase tracking-wider px-2.5 py-1 rounded-xl bg-gradient-to-r from-amber-400 to-amber-600 text-black shadow-md flex items-center gap-1">
-              <Sparkles className="w-2.5 h-2.5" /> {t('featured') || 'Featured'}
-            </span>
-          )}
-
-          {isVerifiedSupplier && (
-            <span className="text-[9px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-xl bg-emerald-950/80 text-emerald-300 border border-emerald-500/40 backdrop-blur-md flex items-center gap-1 shadow-sm">
-              <CheckCircle2 className="w-3 h-3 text-emerald-400" /> {t('verified') || t('verified_seller') || 'Verified'}
-            </span>
-          )}
-
-          {isNegotiable && (
-            <span className="text-[9px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-xl bg-black/60 text-amber-300 border border-amber-500/30 backdrop-blur-md shadow-sm">
-              🤝 {getTranslatedOption('Negotiable', currentLanguage) || 'Negotiable'}
-            </span>
-          )}
-        </div>
-
         {/* Floating Actions (Top-Right: Favorite & Share) */}
         <div className="absolute top-3.5 right-3.5 z-10 flex flex-col gap-1.5">
           {onToggleFav && (
@@ -661,6 +640,31 @@ export function ListingCard({
       {/* Card Body */}
       <div className="p-5 flex-1 flex flex-col justify-between">
         <div>
+          {/* Status & Trust Badges (Positioned cleanly BELOW the listing image) */}
+          {(isVerifiedSupplier || isNegotiable || isFeatured) && (
+            <div className="flex flex-wrap items-center gap-1.5 mb-2.5">
+              {isVerifiedSupplier && (
+                <span className="text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-lg bg-emerald-950/60 text-emerald-300 border border-emerald-500/30 flex items-center gap-1 shadow-sm">
+                  <CheckCircle2 className="w-3 h-3 text-emerald-400 shrink-0" />
+                  <span>{t('verified_account') || t('verified') || 'VERIFIED ACCOUNT'}</span>
+                </span>
+              )}
+
+              {isNegotiable && (
+                <span className="text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-lg bg-amber-500/10 text-amber-300 border border-amber-500/30 shadow-sm">
+                  🤝 {getTranslatedOption('Negotiable', currentLanguage) || 'NEGOTIABLE'}
+                </span>
+              )}
+
+              {isFeatured && (
+                <span className="text-[9px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-lg bg-gradient-to-r from-amber-400 to-amber-600 text-black shadow-sm flex items-center gap-1">
+                  <Sparkles className="w-2.5 h-2.5 shrink-0" />
+                  <span>{t('featured') || 'FEATURED'}</span>
+                </span>
+              )}
+            </div>
+          )}
+
           {/* Price & Category Row */}
           <div className="flex items-center justify-between gap-2 mb-2">
             <span className="text-[10px] font-extrabold text-amber-400/90 bg-amber-500/10 border border-amber-500/20 px-2.5 py-1 rounded-xl uppercase tracking-wider">

@@ -15,7 +15,7 @@ import CreateListingModal from './components/CreateListingModal';
 import Footer from './components/Footer';
 import InfoPage from './components/InfoPage';
 import { Property } from './types';
-import { ShieldAlert, X, Send, Compass, Heart, Plus, Search, User as UserIcon } from 'lucide-react';
+import { ShieldAlert, X, Send, Compass, Heart, Plus, Search, User as UserIcon, Home, MessageSquare } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { getThemeCSS } from './lib/themes';
 
@@ -31,6 +31,9 @@ function MainAppLayout() {
   const [view, setView] = useState<'marketplace' | 'profile' | 'messages' | 'notifications' | 'payments' | 'settings' | 'admin' | 'info-page'>('marketplace');
   const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
   
+  // State for guest profile welcome screen (Welcome to SOF-UMER -> Login / Register)
+  const [guestProfileMode, setGuestProfileMode] = useState<'welcome' | 'login' | 'signup'>('welcome');
+
   // State to allow administrator login override when site is in maintenance or offline
   const [showAdminLogin, setShowAdminLogin] = useState(false);
 
@@ -235,8 +238,14 @@ function MainAppLayout() {
         onNavigate={(v) => {
           if (v === 'admin' || v === 'profile' || v === 'messages' || v === 'notifications' || v === 'payments' || v === 'settings') {
             if (!currentUser) {
-              setAuthMode('login');
-              setAuthScreenOpen(true);
+              if (v === 'profile' || v === 'messages') {
+                setGuestProfileMode('welcome');
+                setView('profile');
+                setSelectedProperty(null);
+              } else {
+                setAuthMode('login');
+                setAuthScreenOpen(true);
+              }
             } else {
               setView(v as any);
               setSelectedProperty(null);
@@ -349,8 +358,73 @@ function MainAppLayout() {
                 onSelectProperty={(prop) => setSelectedProperty(prop)}
               />
             </motion.div>
+          ) : guestProfileMode === 'welcome' ? (
+            /* Visitor Profile Welcome Screen: Clean presentation with Login and Register options */
+            <motion.div
+              key="guest-profile-welcome"
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -15 }}
+              className="py-12 sm:py-20 px-4 flex justify-center items-center min-h-[60vh]"
+            >
+              <div className="w-full max-w-md bg-[#0c0c12] border border-white/10 rounded-3xl p-8 sm:p-10 shadow-2xl relative overflow-hidden text-center">
+                {/* Subtle ambient gold glow */}
+                <div className="absolute top-0 right-0 w-48 h-48 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
+
+                {/* Profile icon badge */}
+                <div className="w-20 h-20 rounded-3xl bg-gradient-to-tr from-amber-500/20 to-amber-600/10 border border-amber-500/30 flex items-center justify-center mx-auto mb-6 shadow-xl relative z-10">
+                  <UserIcon className="w-10 h-10 text-amber-400" />
+                </div>
+
+                <h2 className="text-2xl sm:text-3xl font-serif font-bold text-white mb-2 relative z-10">
+                  Welcome to SOF-UMER
+                </h2>
+                <p className="text-sm text-white/60 font-light mb-8 max-w-sm mx-auto leading-relaxed relative z-10">
+                  {t('auth_profile_prompt') || 'Sign in or create an account to manage your listings, chat with buyers, save favorites, and customize your profile.'}
+                </p>
+
+                {/* Login and Register Buttons */}
+                <div className="space-y-3 relative z-10">
+                  <button
+                    onClick={() => {
+                      setAuthMode('login');
+                      setGuestProfileMode('login');
+                    }}
+                    className="w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black font-extrabold py-3.5 px-6 rounded-2xl shadow-lg shadow-amber-500/20 transition-all text-center text-sm uppercase tracking-wider cursor-pointer active:scale-[0.99]"
+                  >
+                    {t('login') || 'Login'}
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      setAuthMode('signup');
+                      setGuestProfileMode('signup');
+                    }}
+                    className="w-full bg-[#14141e] hover:bg-[#1a1a28] text-white font-bold py-3.5 px-6 rounded-2xl border border-white/10 hover:border-amber-500/40 transition-all text-center text-sm uppercase tracking-wider cursor-pointer active:scale-[0.99]"
+                  >
+                    {t('auth_register_label') || 'Register'}
+                  </button>
+                </div>
+
+                {/* Account Features Overview */}
+                <div className="mt-8 pt-6 border-t border-white/5 space-y-2.5 text-left relative z-10">
+                  <div className="flex items-center gap-2.5 text-xs text-white/70">
+                    <div className="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0" />
+                    <span>{t('perk_post_free') || 'Post and manage your property listings'}</span>
+                  </div>
+                  <div className="flex items-center gap-2.5 text-xs text-white/70">
+                    <div className="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0" />
+                    <span>{t('perk_direct_chat') || 'Direct in-app messaging with buyers and sellers'}</span>
+                  </div>
+                  <div className="flex items-center gap-2.5 text-xs text-white/70">
+                    <div className="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0" />
+                    <span>{t('perk_sync_favorites') || 'Keep your saved properties organized'}</span>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
           ) : (
-            /* Not logged in and accessed protected view: Show Auth Screen with easy return */
+            /* Visitor Profile Auth Form (Login or Register) with clean return to Profile overview */
             <motion.div
               key="auth-view"
               initial={{ opacity: 0, y: 15 }}
@@ -358,10 +432,20 @@ function MainAppLayout() {
               exit={{ opacity: 0, y: -15 }}
               className="py-12 px-4 flex justify-center items-center"
             >
-              <AuthScreen
-                initialMode={authMode || 'login'}
-                onClose={() => setView('marketplace')}
-              />
+              <div className="w-full max-w-md">
+                <div className="mb-4">
+                  <button
+                    onClick={() => setGuestProfileMode('welcome')}
+                    className="text-xs text-white/60 hover:text-amber-400 transition flex items-center gap-1.5 cursor-pointer px-2 py-1 rounded-lg hover:bg-white/5"
+                  >
+                    ← {t('back_to_profile') || 'Back to Profile'}
+                  </button>
+                </div>
+                <AuthScreen
+                  initialMode={guestProfileMode}
+                  onClose={() => setGuestProfileMode('welcome')}
+                />
+              </div>
             </motion.div>
           )}
 
@@ -371,34 +455,46 @@ function MainAppLayout() {
       {/* Universal Footer */}
       <Footer onFooterLinkClick={handleFooterLinkClick} />
 
-      {/* Mobile Bottom Navigation Bar (Thumb friendly for visitors & users) */}
+      {/* Mobile Bottom Navigation Bar: Home | Messages | Sell (+) | Favorites | Profile */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#07070a]/95 backdrop-blur-xl border-t border-white/10 px-2 py-2 flex items-center justify-around">
+        {/* 1. Home */}
         <button
           onClick={() => {
             setSelectedProperty(null);
             setView('marketplace');
           }}
           className={`flex-1 flex flex-col items-center justify-center gap-1 py-1 px-1 rounded-xl transition cursor-pointer min-w-0 ${
-            activeView === 'marketplace' && !selectedProperty ? 'text-amber-400 font-bold' : 'text-white/60 hover:text-white'
+            (view === 'marketplace' || view === 'info-page') && !selectedProperty ? 'text-amber-400 font-bold' : 'text-white/60 hover:text-white'
           }`}
         >
-          <Compass className="w-5 h-5 shrink-0" />
-          <span className="text-[10px] tracking-tight whitespace-nowrap overflow-hidden text-ellipsis max-w-full">{t('marketplace') || 'Explore'}</span>
+          <Home className="w-5 h-5 shrink-0" />
+          <span className="text-[10px] tracking-tight whitespace-nowrap overflow-hidden text-ellipsis max-w-full">
+            {t('nav_home') || t('home') || 'Home'}
+          </span>
         </button>
 
+        {/* 2. Messages */}
         <button
           onClick={() => {
             setSelectedProperty(null);
-            setView('marketplace');
-            window.dispatchEvent(new CustomEvent('open-all-categories'));
+            if (currentUser) {
+              setView('messages');
+            } else {
+              setGuestProfileMode('welcome');
+              setView('profile');
+            }
           }}
-          className="flex-1 flex flex-col items-center justify-center gap-1 py-1 px-1 rounded-xl text-white/60 hover:text-white transition cursor-pointer min-w-0"
+          className={`flex-1 flex flex-col items-center justify-center gap-1 py-1 px-1 rounded-xl transition cursor-pointer min-w-0 ${
+            view === 'messages' ? 'text-amber-400 font-bold' : 'text-white/60 hover:text-white'
+          }`}
         >
-          <Search className="w-5 h-5 shrink-0" />
-          <span className="text-[10px] tracking-tight whitespace-nowrap overflow-hidden text-ellipsis max-w-full">{t('categories') || 'Categories'}</span>
+          <MessageSquare className="w-5 h-5 shrink-0" />
+          <span className="text-[10px] tracking-tight whitespace-nowrap overflow-hidden text-ellipsis max-w-full">
+            {t('messages') || 'Messages'}
+          </span>
         </button>
 
-        {/* Sell / Post Floating Trigger */}
+        {/* 3. Sell (+) - Prominent Centered Circular Gold Button */}
         <button
           onClick={() => {
             if (currentUser) {
@@ -408,12 +504,14 @@ function MainAppLayout() {
               setAuthScreenOpen(true);
             }
           }}
-          className="flex flex-col items-center -mt-5 bg-gradient-to-tr from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black p-3 rounded-full shadow-lg shadow-amber-500/25 transition-transform active:scale-95 cursor-pointer border-2 border-[#07070a] shrink-0 mx-1"
-          title={t('list_property') || 'Sell'}
+          className="flex flex-col items-center -mt-5 bg-gradient-to-tr from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black p-3.5 rounded-full shadow-lg shadow-amber-500/25 transition-transform active:scale-95 cursor-pointer border-2 border-[#07070a] shrink-0 mx-1"
+          title={t('sell') || t('list_property') || 'Sell'}
+          aria-label={t('sell') || t('list_property') || 'Sell'}
         >
           <Plus className="w-5 h-5 text-black" strokeWidth={3} />
         </button>
 
+        {/* 4. Favorites */}
         <button
           onClick={() => {
             setSelectedProperty(null);
@@ -423,26 +521,25 @@ function MainAppLayout() {
           className="flex-1 flex flex-col items-center justify-center gap-1 py-1 px-1 rounded-xl text-white/60 hover:text-white transition cursor-pointer min-w-0"
         >
           <Heart className="w-5 h-5 shrink-0" />
-          <span className="text-[10px] tracking-tight whitespace-nowrap overflow-hidden text-ellipsis max-w-full">{t('favorites') || 'Saved'}</span>
+          <span className="text-[10px] tracking-tight whitespace-nowrap overflow-hidden text-ellipsis max-w-full">
+            {t('favorites') || 'Favorites'}
+          </span>
         </button>
 
+        {/* 5. Profile */}
         <button
           onClick={() => {
-            if (currentUser) {
-              setSelectedProperty(null);
-              setView('profile');
-            } else {
-              setAuthMode('login');
-              setAuthScreenOpen(true);
-            }
+            setSelectedProperty(null);
+            setGuestProfileMode('welcome');
+            setView('profile');
           }}
           className={`flex-1 flex flex-col items-center justify-center gap-1 py-1 px-1 rounded-xl transition cursor-pointer min-w-0 ${
-            activeView === 'profile' || activeView === 'admin' ? 'text-amber-400 font-bold' : 'text-white/60 hover:text-white'
+            view === 'profile' || view === 'admin' || (currentUser && (view === 'settings' || view === 'payments' || view === 'notifications')) ? 'text-amber-400 font-bold' : 'text-white/60 hover:text-white'
           }`}
         >
           <UserIcon className="w-5 h-5 shrink-0" />
           <span className="text-[10px] tracking-tight whitespace-nowrap overflow-hidden text-ellipsis max-w-full">
-            {currentUser ? (t('account') || 'Account') : (t('login') || 'Sign In')}
+            {t('profile') || 'Profile'}
           </span>
         </button>
       </nav>
