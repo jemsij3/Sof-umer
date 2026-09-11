@@ -545,7 +545,15 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       if (lowerKey === 'nav_home' || lowerKey === 'nav.home' || lowerKey === 'nav-home' || cleanKey === 'NAV_HOME') {
         result = currentLanguage === 'om' ? 'Fuula Duraa' : currentLanguage === 'am' ? 'መነሻ' : 'Home';
       } else {
-        result = cleanKey;
+        // Strict protection against leaking internal translation keys into UI:
+        // Keys with underscores, dots, or screaming snake case must never be displayed raw.
+        // Returning empty string allows user-facing code fallbacks (e.g. `t('key') || 'Human Label'`) to work cleanly.
+        const isInternalKey = /^[a-z0-9]+([_\.][a-z0-9]+)+$/i.test(cleanKey) || (/^[A-Z0-9_]+$/.test(cleanKey) && cleanKey.includes('_'));
+        if (isInternalKey) {
+          result = '';
+        } else {
+          result = cleanKey;
+        }
       }
     }
 

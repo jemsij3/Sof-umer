@@ -412,47 +412,19 @@ function MainAppLayout() {
               )}
             </motion.div>
           ) : view === 'messages' && !currentUser ? (
-            /* VISITOR MESSAGES VIEW - Clean empty state with Login/Register options */
+            /* Logged-out user clicked Messages -> Immediately show the proper SOF-UMER Login page */
             <motion.div
-              key="guest-messages"
+              key="auth-messages-login"
               initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -15 }}
-              className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 w-full"
+              className="py-12 px-4 flex justify-center items-center min-h-[60vh]"
             >
-              <div className="border-b border-white/5 pb-4 mb-8">
-                <h2 className="text-2xl font-serif font-bold text-white">{t('messages') || 'Messages'}</h2>
-                <p className="text-xs text-white/50 mt-1">{t('messages_subtitle') || 'Chat with buyers and sellers'}</p>
-              </div>
-
-              <div className="text-center py-16 px-4 bg-black/20 rounded-3xl border border-white/5 max-w-md mx-auto my-6">
-                <MessageSquare className="w-12 h-12 text-white/20 mx-auto mb-4" />
-                <h3 className="text-base font-bold text-white mb-1">{t('no_messages') || 'No messages yet.'}</h3>
-                <p className="text-xs text-white/40 mb-6 max-w-xs mx-auto">
-                  {t('sign_in_to_chat_prompt') || 'Sign in or create an account to start direct messaging with property owners and buyers.'}
-                </p>
-                <div className="flex gap-3 justify-center">
-                  <button
-                    onClick={() => {
-                      setAuthMode('login');
-                      setGuestProfileMode('login');
-                      setView('profile');
-                    }}
-                    className="px-6 py-3 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black font-bold text-xs rounded-xl shadow-lg shadow-amber-500/20 transition cursor-pointer"
-                  >
-                    {t('login') || 'Login'}
-                  </button>
-                  <button
-                    onClick={() => {
-                      setAuthMode('signup');
-                      setGuestProfileMode('signup');
-                      setView('profile');
-                    }}
-                    className="px-6 py-3 bg-[#14141e] hover:bg-[#1a1a28] text-white font-bold text-xs rounded-xl border border-white/10 transition cursor-pointer"
-                  >
-                    {t('auth_register_label') || 'Register'}
-                  </button>
-                </div>
+              <div className="w-full max-w-md">
+                <AuthScreen
+                  initialMode="login"
+                  onClose={() => setView('marketplace')}
+                />
               </div>
             </motion.div>
           ) : guestProfileMode === 'welcome' ? (
@@ -474,7 +446,7 @@ function MainAppLayout() {
                 </div>
 
                 <h2 className="text-2xl sm:text-3xl font-serif font-bold text-white mb-2 relative z-10">
-                  Welcome to SOF-UMER
+                  {t('welcome_to_sof_umer') || 'Welcome to SOF-UMER'}
                 </h2>
                 <p className="text-sm text-white/60 font-light mb-8 max-w-sm mx-auto leading-relaxed relative z-10">
                   {t('auth_profile_prompt') || 'Sign in or create an account to manage your listings, chat with buyers, save favorites, and customize your profile.'}
