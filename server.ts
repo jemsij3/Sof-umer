@@ -1242,6 +1242,13 @@ const applyDataSanityAndMigrations = () => {
         if (!(p as any).ownerPhone) (p as any).ownerPhone = p.contactPhone || '';
         if (!p.ownerName) p.ownerName = 'Property Owner';
       }
+
+      if (p.viewsCount === undefined || isNaN(Number(p.viewsCount))) {
+        p.viewsCount = 0;
+      }
+      if (!p.createdAt) {
+        p.createdAt = new Date().toISOString();
+      }
     });
   }
 
@@ -3565,7 +3572,12 @@ async function startServer() {
 
   // Properties & Listings Endpoints
   app.get(['/api/properties', '/api/listings'], async (req, res) => {
-    res.json(localDb.properties || []);
+    const ownerId = req.query.ownerId as string;
+    let list = localDb.properties || [];
+    if (ownerId) {
+      list = list.filter(p => p.ownerId === ownerId || (p as any).createdBy === ownerId);
+    }
+    res.json(list);
   });
 
   app.get(['/api/properties/my-listings', '/api/listings/my-listings'], requireAuth, async (req, res) => {
@@ -3587,6 +3599,44 @@ async function startServer() {
     const prop = (localDb.properties || []).find(p => p.id === req.params.id);
     if (!prop) return res.status(404).json({ error: 'Listing not found' });
     res.json(prop);
+  });
+
+  // Atomic Listing View Counter with realistic deduplication
+  const viewCooldowns = new Map<string, number>();
+
+  app.post(['/api/properties/:id/view', '/api/listings/:id/view'], async (req, res) => {
+    try {
+      const propId = req.params.id;
+      const prop = (localDb.properties || []).find(p => p.id === propId);
+      if (!prop) return res.status(404).json({ error: 'Listing not found' });
+
+      // Deduplicate rapid repeat impressions from the same viewer/IP within 10 minutes
+      const clientIp = (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() || req.ip || 'viewer';
+      const cooldownKey = `${clientIp}:${propId}`;
+      const now = Date.now();
+      const lastViewTime = viewCooldowns.get(cooldownKey) || 0;
+
+      if (now - lastViewTime > 10 * 60 * 1000) {
+        prop.viewsCount = (Number(prop.viewsCount) || 0) + 1;
+        viewCooldowns.set(cooldownKey, now);
+
+        if (viewCooldowns.size > 20000) {
+          const expirationCutoff = now - 30 * 60 * 1000;
+          for (const [key, timestamp] of viewCooldowns.entries()) {
+            if (timestamp < expirationCutoff) {
+              viewCooldowns.delete(key);
+            }
+          }
+        }
+
+        await saveDb();
+      }
+
+      return res.json({ success: true, viewsCount: prop.viewsCount || 0 });
+    } catch (err: any) {
+      console.error('[POST /api/properties/:id/view] Error:', err);
+      return res.status(500).json({ error: 'Failed to record listing view' });
+    }
   });
 
   app.post(['/api/properties', '/api/listings'], async (req, res) => {
@@ -3838,7 +3888,9 @@ async function startServer() {
         approvalStatus: isAdmin ? (propertyData.approvalStatus || 'approved') : 'pending',
         verificationStatus: isAdmin ? (propertyData.verificationStatus || 'verified') : 'pending',
         isVerifiedListing: isAdmin ? (propertyData.isVerifiedListing !== undefined ? propertyData.isVerifiedListing : true) : false,
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
+        publishedAt: new Date().toISOString(),
+        viewsCount: 0
       };
 
       (newProperty as any).ownerEmail = finalOwnerEmail;

@@ -14,6 +14,8 @@ import {
   extractString,
   getTranslatedLocation
 } from '../lib/categoriesData';
+import { formatListingAge } from '../lib/utils';
+import SellerProfileModal from './SellerProfileModal';
 import { getListingCustomerPricingDisplay, calculateDynamicPrice, getPluralizedUnit, normalizeSellingType, getMoq, getLocalizedUnit } from '../utils/wholesalePricing';
 import { 
   ArrowLeft, 
@@ -141,6 +143,38 @@ export default function PropertyDetails({
   const [reviewComment, setReviewComment] = useState<string>('');
   const [reviewSubmitting, setReviewSubmitting] = useState<boolean>(false);
   const [reviewMsg, setReviewMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
+  // Listing Views & Age tracking
+  const [currentViews, setCurrentViews] = useState<number>(Number(property.viewsCount) || 0);
+
+  useEffect(() => {
+    if (!property?.id) return;
+    fetch(`/api/properties/${property.id}/view`, { method: 'POST' })
+      .then(res => res.json())
+      .then(data => {
+        if (data && typeof data.viewsCount === 'number') {
+          setCurrentViews(data.viewsCount);
+        }
+      })
+      .catch(() => {});
+  }, [property?.id]);
+
+  const listingAge = useMemo(() => {
+    return formatListingAge(property.createdAt || (property as any).publishedAt, currentLanguage, t);
+  }, [property, currentLanguage, t]);
+
+  // Dedicated Seller Profile Modal state
+  const [selectedSellerProfile, setSelectedSellerProfile] = useState<{
+    name: string;
+    avatar?: string;
+    businessName?: string;
+    location?: string;
+    id?: string;
+    email?: string;
+    phone?: string;
+    isVerified?: boolean;
+    memberSince?: string;
+  } | null>(null);
 
   // Address copy feedback state
   const [addressCopied, setAddressCopied] = useState(false);
@@ -610,89 +644,85 @@ export default function PropertyDetails({
             )}
           </div>
 
-          {/* ORDER 2: Property Title & Selling Badges */}
+          {/* ORDER 2 to 5: Main Listing Header (Title, Price, Location, Views & Age) */}
           <div className="bg-[#0d0d12]/90 rounded-3xl p-6 md:p-8 border border-white/5 shadow-lg text-[#F5F5F4] space-y-4">
+            {/* Category & Badges */}
             <div className="flex flex-wrap items-center justify-between gap-2">
               <div className="flex flex-wrap items-center gap-2">
-                <span className="text-[10px] font-bold uppercase bg-amber-500/15 text-amber-500 px-3.5 py-1 rounded-full inline-block border border-amber-500/10">
+                <span className="text-[10px] font-bold uppercase bg-amber-500/15 text-amber-500 px-3.5 py-1 rounded-full inline-block border border-amber-500/10 font-mono tracking-wider">
                   {property.majorCategory === 'Properties' ? (
                     getTranslatedPropertyType(property.propertyType, currentLanguage) || t(`cat_${(property.propertyType || '').toLowerCase()}`) || property.propertyType || ''
                   ) : (
                     getTranslatedCategoryName(property.majorCategory, currentLanguage) || t(`cat_${(property.majorCategory || '').toLowerCase().replace(/\s+/g, '')}`) || property.majorCategory || ''
                   )}
                 </span>
+
+                {((property as any).isNegotiable === true || String((property as any).negotiable).toLowerCase() === 'yes' || property.amenities?.some(a => a.toLowerCase() === 'negotiable: yes' || a.toLowerCase() === 'negotiable: true')) && (
+                  <span className="px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[10px] font-bold uppercase tracking-wider flex items-center gap-1">
+                    <Handshake className="w-3.5 h-3.5" />
+                    <span>{getTranslatedOption('Negotiable', currentLanguage) || t('negotiable')}</span>
+                  </span>
+                )}
+
+                {(property.verificationStatus === 'verified' || property.isVerifiedListing || property.ownerId === 'usr-admin') && (
+                  <span className="inline-flex items-center gap-1 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider">
+                    <ShieldCheckIcon className="w-3.5 h-3.5 text-emerald-400" />
+                    <span>{t('verified_supplier') || 'Verified Supplier'}</span>
+                  </span>
+                )}
               </div>
             </div>
 
+            {/* 2. Listing Title */}
             <h1 className="text-2xl sm:text-3xl md:text-4xl font-serif font-bold text-white tracking-wide leading-tight">
               {extractString(property.title, currentLanguage)}
             </h1>
 
-            {/* Dynamic Trust Badges */}
-            <div className="flex flex-wrap gap-2 pt-1">
-              {(property.verificationStatus === 'verified' || property.isVerifiedListing || property.ownerId === 'usr-admin') && (
-                <span className="inline-flex items-center gap-1.5 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-3 py-1 rounded-xl text-xs font-bold uppercase tracking-wider">
-                  <ShieldCheckIcon className="w-3.5 h-3.5 text-emerald-400" />
-                  {t('verified_supplier') || 'Verified Supplier'}
-                </span>
-              )}
-
-              {(Array.isArray((property as any).deliveryOptions) && (property as any).deliveryOptions.length > 0) && (
-                <span className="inline-flex items-center gap-1.5 bg-purple-500/10 text-purple-300 border border-purple-500/20 px-3 py-1 rounded-xl text-xs font-bold uppercase tracking-wider">
-                  <Sparkles className="w-3.5 h-3.5 text-purple-300" />
-                  {t('fast_shipping_available') || 'Fast Shipping Available'}
-                </span>
-              )}
-            </div>
-
-            <p className="text-sm text-[#F5F5F4]/60 flex items-center gap-1.5 pt-1">
-              <MapPin className="w-4 h-4 text-amber-500 shrink-0" />
-              <span>{displayLocation}</span>
-            </p>
-          </div>
-
-          {/* ORDER 3: Price & Volume Pricing */}
-          <div className="bg-gradient-to-r from-[#0d0d12] via-[#12121a] to-[#0d0d12] rounded-3xl p-6 md:p-8 border border-amber-500/20 shadow-xl space-y-4">
-            <div className="flex flex-wrap items-start justify-between gap-4">
-              <div className="space-y-1.5">
-                {/* Retail Price line if present */}
-                {pricingInfo.hasRetailPrice && (
-                  <div>
-                    <span className="text-xs font-bold text-amber-500 uppercase tracking-widest block font-mono">
-                      {getTranslatedFieldLabel('Price', currentLanguage) || t('price')}
-                    </span>
-                    <p className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight mt-1 font-mono">
-                      {pricingInfo.retailPriceFormatted}
-                    </p>
-                  </div>
-                )}
-
-                {/* Available stock line if present */}
-                {pricingInfo.hasAvailableQuantity && (
-                  <p className="text-sm font-semibold text-emerald-400 font-mono">
-                    {pricingInfo.availableQuantityFormatted}
-                  </p>
+            {/* 3. Price (Prominent, high contrast) */}
+            <div className="pt-1 pb-1">
+              <span className="text-[10px] font-bold text-amber-500 uppercase tracking-widest block font-mono mb-1">
+                {getTranslatedFieldLabel('Price', currentLanguage) || t('price')}
+              </span>
+              <div className="flex flex-wrap items-baseline gap-3">
+                <p className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-white tracking-tight font-mono">
+                  {pricingInfo.retailPriceFormatted || `${(property.price || 0).toLocaleString()} ${property.currency || 'ETB'}`}
+                </p>
+                {property.area > 0 && (
+                  <span className="px-3 py-1 rounded-full bg-white/5 text-white/60 border border-white/5 text-xs font-mono">
+                    ~{Math.round(property.price / property.area).toLocaleString()} {property.currency}/m²
+                  </span>
                 )}
               </div>
-
-              {/* Negotiable Badge - Only show if seller selected Yes */}
-              {((property as any).isNegotiable === true || String((property as any).negotiable).toLowerCase() === 'yes' || property.amenities?.some(a => a.toLowerCase() === 'negotiable: yes' || a.toLowerCase() === 'negotiable: true')) && (
-                <div className="flex items-center gap-2">
-                  <span className="px-3.5 py-1.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-xs font-bold uppercase tracking-wider flex items-center gap-1.5">
-                    <Handshake className="w-4 h-4" />
-                    <span>{getTranslatedOption('Negotiable', currentLanguage) || t('negotiable')}</span>
-                  </span>
-                  {property.area > 0 && (
-                    <span className="px-3 py-1.5 rounded-full bg-white/5 text-white/60 border border-white/5 text-xs font-mono">
-                      ~{Math.round(property.price / property.area).toLocaleString()} {property.currency}/m²
-                    </span>
-                  )}
-                </div>
+              {pricingInfo.hasAvailableQuantity && (
+                <p className="text-xs font-semibold text-emerald-400 font-mono mt-1">
+                  {pricingInfo.availableQuantityFormatted}
+                </p>
               )}
             </div>
 
-            {/* Volume / Tier Pricing Grid if present */}
-            {pricingInfo.hasWholesaleTiers && (
+            {/* 4. Location (City, Sub-city, neighborhood) */}
+            <div className="text-sm text-[#F5F5F4]/80 flex items-center gap-2 pt-1 font-medium">
+              <MapPin className="w-4 h-4 text-amber-500 shrink-0" />
+              <span>{displayLocation}</span>
+            </div>
+
+            {/* 5. Listing Views + Listing Age */}
+            <div className="flex items-center gap-3 text-xs text-white/50 pt-3 border-t border-white/5">
+              <span className="flex items-center gap-1.5 font-mono text-white/70">
+                <Eye className="w-3.5 h-3.5 text-amber-500" />
+                <span>{currentViews} {t('views_count') || 'views'}</span>
+              </span>
+              <span className="text-white/20">•</span>
+              <span className="flex items-center gap-1.5 text-white/60">
+                <Clock className="w-3.5 h-3.5 text-white/40" />
+                <span>{listingAge}</span>
+              </span>
+            </div>
+          </div>
+
+          {/* Volume / Tier Pricing if applicable */}
+          {pricingInfo.hasWholesaleTiers && (
+            <div className="bg-gradient-to-r from-[#0d0d12] via-[#12121a] to-[#0d0d12] rounded-3xl p-6 md:p-8 border border-amber-500/20 shadow-xl space-y-4">
               <div className="pt-5 border-t border-white/10 space-y-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2 text-xs font-bold text-white/80 uppercase tracking-wider">

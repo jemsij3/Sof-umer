@@ -19,6 +19,7 @@ import {
 } from '../lib/categoriesData';
 import { useApp } from '../lib/AppContext';
 import { getListingCustomerPricingDisplay } from '../utils/wholesalePricing';
+import { formatListingAge } from '../lib/utils';
 
 export interface ListingCardProps {
   key?: React.Key;
@@ -31,6 +32,7 @@ export interface ListingCardProps {
   currentLanguage?: string;
   viewMode?: 'grid' | 'list' | 'compact';
   showQuickActions?: boolean;
+  onOpenSellerProfile?: (seller: any) => void;
 }
 
 export function ListingCard({
@@ -42,7 +44,8 @@ export function ListingCard({
   t: propT,
   currentLanguage: propLang,
   viewMode = 'grid',
-  showQuickActions = true
+  showQuickActions = true,
+  onOpenSellerProfile
 }: ListingCardProps) {
   const appContext = useApp();
   const t = propT || appContext.t;
@@ -248,14 +251,37 @@ export function ListingCard({
   // Format currency display cleanly
   const formattedPrice = (property.price || 0).toLocaleString();
   const currencyCode = property.currency || 'ETB';
+  const displayPrice = pricingInfo.hasRetailPrice
+    ? pricingInfo.retailPriceFormatted
+    : `${formattedPrice} ${currencyCode}`;
   const titleText = extractString(property.title, currentLanguage) || 'Untitled Listing';
   const rawLocation = (typeof property.location === 'string' ? property.location : extractString(property.location, currentLanguage))?.trim();
-  const locationText = rawLocation || (t ? t('location_not_provided') : 'Location not provided');
+  const locationText = rawLocation ? getTranslatedLocation(rawLocation, currentLanguage) : (t ? t('location_not_provided') : 'Location not provided');
   const categoryLabel = property.propertyType 
     ? getTranslatedPropertyType(extractString(property.propertyType, currentLanguage), currentLanguage) 
     : getTranslatedCategoryName(extractString(property.majorCategory || 'Properties', currentLanguage), currentLanguage);
 
   const sellerName = (property as any).ownerBusinessName || property.ownerName || 'Sof Umer Seller';
+  const viewsCount = Number(property.viewsCount) || 0;
+  const listingAge = formatListingAge(property.createdAt || (property as any).publishedAt, currentLanguage, t);
+
+  const handleSellerClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (onOpenSellerProfile) {
+      onOpenSellerProfile({
+        name: sellerName,
+        avatar: (property as any).ownerAvatar,
+        businessName: (property as any).ownerBusinessName,
+        location: locationText,
+        id: property.ownerId,
+        email: property.contactEmail || (property as any).ownerEmail,
+        phone: property.contactPhone || (property as any).ownerPhone,
+        isVerified: isVerifiedSupplier
+      });
+    } else {
+      onSelect(property);
+    }
+  };
 
   // ----------------------------------------------------
   // COMPACT MODE (Ideal for Similar Listings, Saved drawer, Mobile widgets)
@@ -297,9 +323,7 @@ export function ListingCard({
             {titleText}
           </h4>
           <div className="text-sm font-bold text-amber-400 font-mono mt-0.5 truncate">
-            {pricingInfo.hasRetailPrice
-              ? pricingInfo.retailPriceFormatted
-              : (pricingInfo.wholesaleTiers[0]?.label || (pricingInfo.hasMoq ? pricingInfo.moqFormatted : `${formattedPrice} ${currencyCode}`))}
+            {displayPrice}
           </div>
           <p className="text-[11px] text-white/45 flex items-center gap-1 mt-1 truncate">
             <MapPin className="w-3 h-3 text-amber-500/80 shrink-0" />
@@ -430,6 +454,11 @@ export function ListingCard({
               </div>
             </div>
 
+            {/* Price */}
+            <div className="text-2xl font-black text-white font-mono tracking-tight mb-2">
+              {displayPrice}
+            </div>
+
             {/* Main Title */}
             <h3
               onClick={() => onSelect(property)}
@@ -438,51 +467,15 @@ export function ListingCard({
               {titleText}
             </h3>
 
-            {/* Pure Data-Driven Pricing & Quantity Section */}
-            <div className="space-y-1 mb-3">
-              {/* Retail price line if present */}
-              {pricingInfo.hasRetailPrice && (
-                <div className="flex items-baseline gap-2">
-                  <span className="text-2xl font-extrabold text-white font-mono tracking-tight">
-                    {pricingInfo.retailPriceFormatted}
-                  </span>
-                </div>
-              )}
-
-              {/* Available quantity line if present */}
-              {pricingInfo.hasAvailableQuantity && (
-                <div className="text-xs font-medium text-emerald-400 font-mono">
-                  {pricingInfo.availableQuantityFormatted}
-                </div>
-              )}
-
-              {/* MOQ line if present */}
-              {pricingInfo.hasMoq && (
-                <div className="text-xs font-bold text-amber-400 font-mono pt-0.5">
-                  {pricingInfo.moqFormatted}
-                </div>
-              )}
-
-              {/* Tier lines if present */}
-              {pricingInfo.hasWholesaleTiers && (
-                <div className="space-y-0.5 pt-0.5 font-mono text-xs text-white/90">
-                  {pricingInfo.wholesaleTiers.slice(0, 3).map((tier, idx) => (
-                    <div key={idx} className="text-white/80">
-                      {tier.label}
-                    </div>
-                  ))}
-                  {pricingInfo.wholesaleTiers.length > 3 && (
-                    <span className="text-[10px] text-amber-400/80 font-sans block">
-                      {t('more_tiers', { count: pricingInfo.wholesaleTiers.length - 3 }) || `+${pricingInfo.wholesaleTiers.length - 3} more tiers`}
-                    </span>
-                  )}
-                </div>
-              )}
+            {/* Location */}
+            <div className="flex items-center gap-1.5 text-xs text-white/60 mb-2.5">
+              <MapPin className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+              <span className="truncate">{locationText}</span>
             </div>
 
             {/* Specs row */}
             {specs.length > 0 && (
-              <div className="flex flex-wrap items-center gap-2 mb-4">
+              <div className="flex flex-wrap items-center gap-2 mb-3">
                 {specs.map((s, idx) => (
                   <div 
                     key={idx}
@@ -495,25 +488,30 @@ export function ListingCard({
               </div>
             )}
 
-            {/* Short Description */}
-            <p className="text-white/50 text-xs line-clamp-2 leading-relaxed font-light mb-4">
-              {extractString(property.description, currentLanguage)}
-            </p>
+            {/* Views count & Listing age */}
+            <div className="flex items-center gap-3 text-xs text-white/50 mb-3">
+              <span className="flex items-center gap-1">
+                <Eye className="w-3.5 h-3.5 text-amber-500/80" />
+                <span>{viewsCount} {t('views_count') || 'views'}</span>
+              </span>
+              <span>•</span>
+              <span className="flex items-center gap-1">
+                <Clock className="w-3.5 h-3.5 text-white/40" />
+                <span>{listingAge}</span>
+              </span>
+            </div>
           </div>
 
           {/* Bottom Row: Location, Seller, and Action */}
           <div className="pt-4 border-t border-white/[0.06] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div className="flex items-center gap-4 text-xs text-white/60 flex-wrap">
-              <div className="flex items-center gap-1.5 text-white/80 font-medium">
-                <Building className="w-3.5 h-3.5 text-amber-500 shrink-0" />
-                <span className="truncate max-w-[140px]">{sellerName}</span>
-                {isVerifiedSupplier && <CheckCircle2 className="w-3 h-3 text-emerald-400 shrink-0" />}
-              </div>
-
-              <div className="flex items-center gap-1.5 text-white/50">
-                <MapPin className="w-3.5 h-3.5 text-amber-500 shrink-0" />
-                <span className="truncate max-w-[180px]">{locationText}</span>
-              </div>
+            <div 
+              onClick={handleSellerClick}
+              className="flex items-center gap-1.5 text-xs text-white/80 hover:text-amber-400 cursor-pointer font-medium"
+              title="View Seller Profile"
+            >
+              <Building className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+              <span className="truncate max-w-[160px]">{sellerName}</span>
+              {isVerifiedSupplier && <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />}
             </div>
 
             <div className="flex items-center gap-2 shrink-0">
@@ -638,96 +636,49 @@ export function ListingCard({
       </div>
 
       {/* Card Body */}
-      <div className="p-5 flex-1 flex flex-col justify-between">
+      <div className="p-4 sm:p-5 flex-1 flex flex-col justify-between">
         <div>
-          {/* Status & Trust Badges (Positioned cleanly BELOW the listing image) */}
-          {(isVerifiedSupplier || isNegotiable || isFeatured) && (
-            <div className="flex flex-wrap items-center gap-1.5 mb-2.5">
-              {isVerifiedSupplier && (
-                <span className="text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-lg bg-emerald-950/60 text-emerald-300 border border-emerald-500/30 flex items-center gap-1 shadow-sm">
-                  <CheckCircle2 className="w-3 h-3 text-emerald-400 shrink-0" />
-                  <span>{t('verified_account') || t('verified') || 'VERIFIED ACCOUNT'}</span>
-                </span>
-              )}
-
-              {isNegotiable && (
-                <span className="text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-lg bg-amber-500/10 text-amber-300 border border-amber-500/30 shadow-sm">
-                  🤝 {getTranslatedOption('Negotiable', currentLanguage) || 'NEGOTIABLE'}
-                </span>
-              )}
-
-              {isFeatured && (
-                <span className="text-[9px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-lg bg-gradient-to-r from-amber-400 to-amber-600 text-black shadow-sm flex items-center gap-1">
-                  <Sparkles className="w-2.5 h-2.5 shrink-0" />
-                  <span>{t('featured') || 'FEATURED'}</span>
-                </span>
-              )}
-            </div>
-          )}
-
-          {/* Price & Category Row */}
+          {/* Category & Negotiable tag row */}
           <div className="flex items-center justify-between gap-2 mb-2">
-            <span className="text-[10px] font-extrabold text-amber-400/90 bg-amber-500/10 border border-amber-500/20 px-2.5 py-1 rounded-xl uppercase tracking-wider">
+            <span className="text-[10px] font-bold text-amber-400/90 bg-amber-500/10 border border-amber-500/20 px-2.5 py-0.5 rounded-lg uppercase tracking-wider">
               {categoryLabel}
             </span>
+            {isNegotiable && (
+              <span className="text-[10px] font-medium text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-lg">
+                {getTranslatedOption('Negotiable', currentLanguage) || 'Negotiable'}
+              </span>
+            )}
           </div>
 
-          {/* Pure Data-Driven Pricing & Quantity Block */}
-          <div className="space-y-1 mb-2.5 min-h-[50px]">
-            {/* Retail Price line if present */}
-            {pricingInfo.hasRetailPrice && (
-              <div className="text-xl font-extrabold text-white font-mono tracking-tight leading-tight">
-                {pricingInfo.retailPriceFormatted}
-              </div>
-            )}
-
-            {/* Available quantity line if present */}
-            {pricingInfo.hasAvailableQuantity && (
-              <div className="text-xs font-medium text-emerald-400 font-mono">
-                {pricingInfo.availableQuantityFormatted}
-              </div>
-            )}
-
-            {/* MOQ line if present */}
-            {pricingInfo.hasMoq && (
-              <div className="text-xs font-bold text-amber-400 font-mono">
-                {pricingInfo.moqFormatted}
-              </div>
-            )}
-
-            {/* Tier lines if present */}
-            {pricingInfo.hasWholesaleTiers && (
-              <div className="space-y-0.5 font-mono text-[11px] text-white/85">
-                {pricingInfo.wholesaleTiers.slice(0, 3).map((tier, idx) => (
-                  <div key={idx} className="truncate">
-                    {tier.label}
-                  </div>
-                ))}
-                {pricingInfo.wholesaleTiers.length > 3 && (
-                  <span className="text-[10px] text-amber-400/80 font-sans block">
-                    {t('more_tiers', { count: pricingInfo.wholesaleTiers.length - 3 }) || `+${pricingInfo.wholesaleTiers.length - 3} more tiers`}
-                  </span>
-                )}
-              </div>
-            )}
+          {/* Price (Prominent, bold, high-contrast) */}
+          <div className="mb-2">
+            <div className="text-xl sm:text-2xl font-black text-white font-mono tracking-tight leading-tight">
+              {displayPrice}
+            </div>
           </div>
 
           {/* Title */}
           <h4
             onClick={() => onSelect(property)}
-            className="font-semibold text-base text-[#F5F5F4] hover:text-amber-400 leading-snug mb-3 cursor-pointer line-clamp-2 transition-colors duration-200"
+            className="font-bold text-base text-[#F5F5F4] hover:text-amber-400 leading-snug mb-2 cursor-pointer line-clamp-2 transition-colors duration-200"
             title={titleText}
           >
             {titleText}
           </h4>
 
+          {/* Location */}
+          <div className="flex items-center gap-1.5 text-xs text-white/60 mb-2.5">
+            <MapPin className="w-3.5 h-3.5 text-amber-500/80 shrink-0" />
+            <span className="truncate">{locationText}</span>
+          </div>
+
           {/* Category-Smart Key Specs Highlights */}
           {specs.length > 0 && (
-            <div className="flex flex-wrap items-center gap-1.5 mb-3.5">
+            <div className="flex flex-wrap items-center gap-1.5 mb-3">
               {specs.map((s, idx) => (
                 <div 
                   key={idx}
-                  className="flex items-center gap-1 bg-white/[0.04] border border-white/[0.06] px-2 py-0.5 rounded-lg text-[11px] text-white/75 font-medium"
+                  className="flex items-center gap-1 bg-white/[0.04] border border-white/[0.06] px-2 py-0.5 rounded-md text-[11px] text-white/70 font-medium"
                 >
                   {s.icon}
                   <span>{s.value}</span>
@@ -736,24 +687,34 @@ export function ListingCard({
             </div>
           )}
 
-          {/* Seller & Location Trust Line */}
-          <div className="space-y-1.5 mb-4 text-xs">
-            <div className="flex items-center gap-1.5 text-white/80 font-medium">
-              <Building className="w-3.5 h-3.5 text-amber-500 shrink-0" />
-              <span className="truncate">{sellerName}</span>
-              {isVerifiedSupplier && <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />}
-            </div>
+          {/* Views Activity & Listing Age Row */}
+          <div className="flex items-center gap-3 text-[11px] text-white/50 border-t border-white/[0.06] pt-2.5 mb-2.5">
+            <span className="flex items-center gap-1">
+              <Eye className="w-3.5 h-3.5 text-amber-500/80" />
+              <span>{viewsCount} {t('views_count') || 'views'}</span>
+            </span>
+            <span>•</span>
+            <span className="flex items-center gap-1">
+              <Clock className="w-3.5 h-3.5 text-white/40" />
+              <span>{listingAge}</span>
+            </span>
+          </div>
 
-            <div className="flex items-center gap-1.5 text-white/50 font-light">
-              <MapPin className="w-3.5 h-3.5 text-amber-500/80 shrink-0" />
-              <span className="truncate">{locationText}</span>
-            </div>
+          {/* Seller Line */}
+          <div 
+            onClick={handleSellerClick}
+            className="flex items-center gap-1.5 text-xs text-white/75 hover:text-amber-400 cursor-pointer transition font-medium group/seller"
+            title="View Seller Profile"
+          >
+            <Building className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+            <span className="truncate max-w-[180px] group-hover/seller:underline">{sellerName}</span>
+            {isVerifiedSupplier && <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />}
           </div>
         </div>
 
         {/* Action Row */}
         {showQuickActions && (
-          <div className="border-t border-white/[0.06] pt-3.5 mt-auto flex items-center justify-between gap-2">
+          <div className="border-t border-white/[0.06] pt-3 mt-3 flex items-center justify-between gap-2">
             {onReport && (
               <button
                 onClick={() => onReport(property)}
@@ -764,15 +725,13 @@ export function ListingCard({
               </button>
             )}
 
-            <div className="flex items-center gap-2 flex-1 justify-end min-w-0">
-              <button
-                onClick={() => onSelect(property)}
-                className="w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black font-extrabold py-2.5 px-4 rounded-xl text-xs uppercase tracking-wider transition-all duration-300 hover:scale-[1.02] shadow-md shadow-amber-500/10 flex items-center justify-center gap-1.5 cursor-pointer truncate"
-              >
-                <span>{t('view_listing') || 'View Listing'}</span>
-                <ChevronRight className="w-3.5 h-3.5 shrink-0" />
-              </button>
-            </div>
+            <button
+              onClick={() => onSelect(property)}
+              className="w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black font-extrabold py-2.5 px-4 rounded-xl text-xs uppercase tracking-wider transition-all duration-300 hover:scale-[1.01] shadow-md shadow-amber-500/10 flex items-center justify-center gap-1.5 cursor-pointer truncate"
+            >
+              <span>{t('view_listing') || 'View Details'}</span>
+              <ChevronRight className="w-3.5 h-3.5 shrink-0" />
+            </button>
           </div>
         )}
       </div>

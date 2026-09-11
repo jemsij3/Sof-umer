@@ -426,20 +426,16 @@ export default function Navbar({ onNavigate, activeView, onOpenCreateModal, onOp
                 </AnimatePresence>
               </div>
             ) : (
-              <div className="flex items-center gap-2 shrink-0">
-                <button
-                  onClick={() => onOpenAuthModal ? onOpenAuthModal('login') : onNavigate('profile')}
-                  className="px-3.5 py-2 rounded-xl text-white/80 hover:text-white hover:bg-white/5 font-bold text-xs uppercase tracking-wider transition cursor-pointer whitespace-nowrap shrink-0"
-                >
-                  {t('login') || 'Sign In'}
-                </button>
-                <button
-                  onClick={() => onOpenAuthModal ? onOpenAuthModal('signup') : onNavigate('profile')}
-                  className="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black px-4 py-2 rounded-xl font-bold text-xs uppercase tracking-wider transition cursor-pointer shadow-md shadow-amber-500/10 whitespace-nowrap shrink-0"
-                >
-                  {t('auth_register_label') || 'Register'}
-                </button>
-              </div>
+              <button
+                onClick={() => onNavigate('profile')}
+                className="p-2 sm:px-3 sm:py-2 rounded-xl text-white/70 hover:text-white hover:bg-white/5 font-medium text-xs flex items-center gap-1.5 transition cursor-pointer"
+                title={t('profile') || 'Account'}
+              >
+                <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-white/80">
+                  <User className="w-4 h-4" />
+                </div>
+                <span className="hidden md:inline font-bold uppercase tracking-wider">{t('profile') || 'Account'}</span>
+              </button>
             )}
           </div>
         </div>

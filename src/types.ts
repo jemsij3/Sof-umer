@@ -150,6 +150,8 @@ export interface Property {
   isFeatured: boolean;
   isRecommended: boolean;
   createdAt: string;
+  publishedAt?: string;
+  viewsCount?: number;
   isVerifiedListing?: boolean; // badge
   verificationStatus?: 'unverified' | 'pending' | 'verified' | 'rejected';
   verificationNotes?: string;
