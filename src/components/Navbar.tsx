@@ -5,7 +5,7 @@ import { Bell, Languages, User, LogOut, MessageSquare, Settings, Shield, Plus, B
 import { AnimatePresence, motion } from 'motion/react';
 
 interface NavbarProps {
-  onNavigate: (view: 'marketplace' | 'profile' | 'messages' | 'notifications' | 'payments' | 'settings' | 'admin' | 'mylistings') => void;
+  onNavigate: (view: 'marketplace' | 'profile' | 'messages' | 'favorites' | 'notifications' | 'payments' | 'settings' | 'admin' | 'mylistings') => void;
   activeView: string;
   onOpenCreateModal: () => void;
   onOpenAuthModal?: (mode: 'login' | 'signup') => void;

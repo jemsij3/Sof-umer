@@ -466,6 +466,11 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     const subKey = cleanKey.includes('.') ? cleanKey.split('.').pop() || cleanKey : cleanKey;
     const lowerSubKey = subKey.toLowerCase();
 
+    // Explicit safeguard: Ensure Home / NAV_HOME always returns human-readable label
+    if (lowerKey === 'nav_home' || lowerKey === 'nav.home' || lowerKey === 'nav-home' || cleanKey === 'NAV_HOME') {
+      return currentLanguage === 'om' ? 'Fuula Duraa' : currentLanguage === 'am' ? 'መነሻ' : 'Home';
+    }
+
     let result = '';
 
     // 1. Try to find in backend translations state (Admin Dictionary)
@@ -536,8 +541,12 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       if (propType && propType !== subKey) result = propType;
     }
 
-    if (!result) {
-      result = cleanKey;
+    if (!result || result === 'NAV_HOME' || result === 'nav_home') {
+      if (lowerKey === 'nav_home' || lowerKey === 'nav.home' || lowerKey === 'nav-home' || cleanKey === 'NAV_HOME') {
+        result = currentLanguage === 'om' ? 'Fuula Duraa' : currentLanguage === 'am' ? 'መነሻ' : 'Home';
+      } else {
+        result = cleanKey;
+      }
     }
 
     if (params) {

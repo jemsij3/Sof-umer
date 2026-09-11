@@ -255,7 +255,7 @@ function getFieldsForSelection(majorCategory: string, subcategory: string, t?: (
         { id: 'location', label: 'Location', type: 'text', placeholder: t ? t('address_eg_placeholder') : 'e.g., Mexico, Addis Ababa', required: true, colSpan: 'full' },
         { id: 'description', label: 'Description', type: 'textarea', placeholder: t ? t('describe_specs_battery_accessories') : 'Describe specifications, battery health, accessories included...', required: true, colSpan: 'full' },
         { id: 'images', label: 'Photos', type: 'images', colSpan: 'full' },
-        { id: 'video', label: 'Video URL', type: 'text', placeholder: 'e.g., Video demo URL (optional)', colSpan: 'full' }
+        { id: 'video', label: 'Video URL', type: 'text', placeholder: 'e.g., YouTube or Vimeo video link (optional)', colSpan: 'full' }
       ];
     }
     if (subcategory === 'Furniture') {
@@ -596,19 +596,6 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
 
   const handleRemoveImage = (idx: number) => {
     setImagesList(imagesList.filter((_, i) => i !== idx));
-  };
-
-  const handleQuickAddImagePlaceholder = () => {
-    const urls = [
-      'https://images.unsplash.com/photo-1613490493576-7fde63acd811?auto=format&fit=crop&w=1200&q=80',
-      'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=1200&q=80',
-      'https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=1200&q=80',
-      'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&w=1200&q=80'
-    ];
-    const pick = urls[Math.floor(Math.random() * urls.length)];
-    if (!imagesList.includes(pick)) {
-      setImagesList([...imagesList, pick]);
-    }
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -1580,17 +1567,6 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
                                   className="px-3.5 py-2.5 bg-amber-500 text-black font-bold text-xs rounded-xl hover:bg-amber-400 transition cursor-pointer"
                                 >
                                   {d.addBtn || 'Add'}
-                                </button>
-                              </div>
-
-                              <div className="flex items-center justify-between pt-1 border-t border-white/5">
-                                <span className="text-[10px] text-white/40 italic">{d.needStock || 'Need sample images?'}</span>
-                                <button
-                                  type="button"
-                                  onClick={handleQuickAddImagePlaceholder}
-                                  className="px-3 py-1 bg-white/5 hover:bg-white/10 border border-white/5 rounded-lg text-[10px] font-bold text-amber-400 transition cursor-pointer"
-                                >
-                                  ⚡ {d.quickBtn || 'Quick Add'}
                                 </button>
                               </div>
                             </div>

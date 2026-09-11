@@ -7840,7 +7840,7 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
                       <div className="p-8 text-center bg-black/40 border border-white/5 rounded-2xl">
                         <Briefcase className="w-8 h-8 text-white/20 mx-auto mb-2" />
                         <p className="text-xs text-white/50 font-medium">No job openings available.</p>
-                        <p className="text-[11px] text-white/30 mt-1">Demo job openings have been deleted. Click "Add Job Opening" above to allow and publish careers.</p>
+                        <p className="text-[11px] text-white/30 mt-1">Click "Add Job Opening" above to create and publish career opportunities.</p>
                       </div>
                     ) : (
                       jobOpenings.map(job => (

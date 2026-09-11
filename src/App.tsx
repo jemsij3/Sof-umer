@@ -12,6 +12,7 @@ import PropertyDetails from './components/PropertyDetails';
 import UserDashboard from './components/UserDashboard';
 import AdminDashboard from './components/AdminDashboard';
 import CreateListingModal from './components/CreateListingModal';
+import ListingCard from './components/ListingCard';
 import Footer from './components/Footer';
 import InfoPage from './components/InfoPage';
 import { Property } from './types';
@@ -22,13 +23,16 @@ import { getThemeCSS } from './lib/themes';
 function MainAppLayout() {
   const {
     currentUser,
+    properties,
+    favorites,
+    toggleFavorite,
     refreshData,
     currentLanguage,
     t,
     systemSettings
   } = useApp();
 
-  const [view, setView] = useState<'marketplace' | 'profile' | 'messages' | 'notifications' | 'payments' | 'settings' | 'admin' | 'info-page'>('marketplace');
+  const [view, setView] = useState<'marketplace' | 'profile' | 'messages' | 'favorites' | 'notifications' | 'payments' | 'settings' | 'admin' | 'info-page'>('marketplace');
   const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
   
   // State for guest profile welcome screen (Welcome to SOF-UMER -> Login / Register)
@@ -47,7 +51,7 @@ function MainAppLayout() {
       document.title = `${selectedProperty.title} | SOF-UMER`;
     } else if (view === 'admin') {
       document.title = `Admin Management Dashboard | SOF-UMER`;
-    } else if (view === 'profile' || view === 'settings' || view === 'messages' || view === 'notifications' || view === 'payments') {
+    } else if (view === 'profile' || view === 'settings' || view === 'messages' || view === 'favorites' || view === 'notifications' || view === 'payments') {
       document.title = `User Dashboard | SOF-UMER`;
     } else {
       document.title = `SOF-UMER | Real Estate & Property Marketplace`;
@@ -236,11 +240,11 @@ function MainAppLayout() {
       <Navbar
         activeView={activeView}
         onNavigate={(v) => {
-          if (v === 'admin' || v === 'profile' || v === 'messages' || v === 'notifications' || v === 'payments' || v === 'settings') {
+          if (v === 'admin' || v === 'profile' || v === 'messages' || v === 'favorites' || v === 'notifications' || v === 'payments' || v === 'settings') {
             if (!currentUser) {
-              if (v === 'profile' || v === 'messages') {
-                setGuestProfileMode('welcome');
-                setView('profile');
+              if (v === 'profile' || v === 'messages' || v === 'favorites') {
+                if (v === 'profile') setGuestProfileMode('welcome');
+                setView(v as any);
                 setSelectedProperty(null);
               } else {
                 setAuthMode('login');
@@ -358,6 +362,99 @@ function MainAppLayout() {
                 onSelectProperty={(prop) => setSelectedProperty(prop)}
               />
             </motion.div>
+          ) : view === 'favorites' && !currentUser ? (
+            /* VISITOR FAVORITES VIEW - Real saved properties or clean empty state */
+            <motion.div
+              key="guest-favorites"
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -15 }}
+              className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 w-full"
+            >
+              <div className="flex items-center justify-between border-b border-white/5 pb-4 mb-8">
+                <div>
+                  <h2 className="text-2xl font-serif font-bold text-white">{t('favorites') || 'Favorites'}</h2>
+                  <p className="text-xs text-white/50 mt-1">{t('saved_items_subtitle') || 'Your saved properties and listings'}</p>
+                </div>
+                {favorites && favorites.length > 0 && (
+                  <span className="text-xs font-mono text-amber-400 bg-amber-400/10 px-3 py-1 rounded-full border border-amber-400/20">
+                    {favorites.length} {t('saved_count') || 'Saved'}
+                  </span>
+                )}
+              </div>
+
+              {(!favorites || favorites.length === 0 || properties.filter(p => favorites.includes(p.id)).length === 0) ? (
+                <div className="text-center py-16 px-4 bg-black/20 rounded-3xl border border-white/5 max-w-md mx-auto my-6">
+                  <Heart className="w-12 h-12 text-white/20 mx-auto mb-4" />
+                  <h3 className="text-base font-bold text-white mb-1">{t('no_saved') || 'No favorites yet.'}</h3>
+                  <p className="text-xs text-white/40 mb-6 max-w-xs mx-auto">
+                    {t('no_favorites_desc') || 'Browse listings and tap the heart icon to save your favorite items.'}
+                  </p>
+                  <button
+                    onClick={() => setView('marketplace')}
+                    className="px-6 py-3 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black font-bold text-xs rounded-xl shadow-lg shadow-amber-500/20 transition cursor-pointer"
+                  >
+                    {t('explore_marketplace') || 'Explore Marketplace'}
+                  </button>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                  {properties.filter(p => favorites.includes(p.id)).map(p => (
+                    <ListingCard
+                      key={p.id}
+                      property={p}
+                      onSelect={(prop) => setSelectedProperty(prop)}
+                      favorites={favorites}
+                      onToggleFav={(id) => toggleFavorite(id)}
+                    />
+                  ))}
+                </div>
+              )}
+            </motion.div>
+          ) : view === 'messages' && !currentUser ? (
+            /* VISITOR MESSAGES VIEW - Clean empty state with Login/Register options */
+            <motion.div
+              key="guest-messages"
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -15 }}
+              className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 w-full"
+            >
+              <div className="border-b border-white/5 pb-4 mb-8">
+                <h2 className="text-2xl font-serif font-bold text-white">{t('messages') || 'Messages'}</h2>
+                <p className="text-xs text-white/50 mt-1">{t('messages_subtitle') || 'Chat with buyers and sellers'}</p>
+              </div>
+
+              <div className="text-center py-16 px-4 bg-black/20 rounded-3xl border border-white/5 max-w-md mx-auto my-6">
+                <MessageSquare className="w-12 h-12 text-white/20 mx-auto mb-4" />
+                <h3 className="text-base font-bold text-white mb-1">{t('no_messages') || 'No messages yet.'}</h3>
+                <p className="text-xs text-white/40 mb-6 max-w-xs mx-auto">
+                  {t('sign_in_to_chat_prompt') || 'Sign in or create an account to start direct messaging with property owners and buyers.'}
+                </p>
+                <div className="flex gap-3 justify-center">
+                  <button
+                    onClick={() => {
+                      setAuthMode('login');
+                      setGuestProfileMode('login');
+                      setView('profile');
+                    }}
+                    className="px-6 py-3 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black font-bold text-xs rounded-xl shadow-lg shadow-amber-500/20 transition cursor-pointer"
+                  >
+                    {t('login') || 'Login'}
+                  </button>
+                  <button
+                    onClick={() => {
+                      setAuthMode('signup');
+                      setGuestProfileMode('signup');
+                      setView('profile');
+                    }}
+                    className="px-6 py-3 bg-[#14141e] hover:bg-[#1a1a28] text-white font-bold text-xs rounded-xl border border-white/10 transition cursor-pointer"
+                  >
+                    {t('auth_register_label') || 'Register'}
+                  </button>
+                </div>
+              </div>
+            </motion.div>
           ) : guestProfileMode === 'welcome' ? (
             /* Visitor Profile Welcome Screen: Clean presentation with Login and Register options */
             <motion.div
@@ -469,7 +566,7 @@ function MainAppLayout() {
         >
           <Home className="w-5 h-5 shrink-0" />
           <span className="text-[10px] tracking-tight whitespace-nowrap overflow-hidden text-ellipsis max-w-full">
-            {t('nav_home') || t('home') || 'Home'}
+            {t('home') || 'Home'}
           </span>
         </button>
 
@@ -477,12 +574,7 @@ function MainAppLayout() {
         <button
           onClick={() => {
             setSelectedProperty(null);
-            if (currentUser) {
-              setView('messages');
-            } else {
-              setGuestProfileMode('welcome');
-              setView('profile');
-            }
+            setView('messages');
           }}
           className={`flex-1 flex flex-col items-center justify-center gap-1 py-1 px-1 rounded-xl transition cursor-pointer min-w-0 ${
             view === 'messages' ? 'text-amber-400 font-bold' : 'text-white/60 hover:text-white'
@@ -515,10 +607,11 @@ function MainAppLayout() {
         <button
           onClick={() => {
             setSelectedProperty(null);
-            setView('marketplace');
-            window.dispatchEvent(new CustomEvent('filter-favorites'));
+            setView('favorites');
           }}
-          className="flex-1 flex flex-col items-center justify-center gap-1 py-1 px-1 rounded-xl text-white/60 hover:text-white transition cursor-pointer min-w-0"
+          className={`flex-1 flex flex-col items-center justify-center gap-1 py-1 px-1 rounded-xl transition cursor-pointer min-w-0 ${
+            view === 'favorites' ? 'text-amber-400 font-bold' : 'text-white/60 hover:text-white'
+          }`}
         >
           <Heart className="w-5 h-5 shrink-0" />
           <span className="text-[10px] tracking-tight whitespace-nowrap overflow-hidden text-ellipsis max-w-full">
