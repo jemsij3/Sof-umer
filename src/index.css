@@ -295,9 +295,11 @@ input::placeholder, textarea::placeholder {
 }
 
 /* 5. Translation Layout Safety (Prevents cutoff / clipping for longer translations) */
-button, label, h1, h2, h3, h4, h5, h6 {
-  white-space: normal !important; /* Prevent text clipping in translations */
-  word-break: break-word !important;
+label, h1, h2, h3, h4, h5, h6 {
+  word-break: break-word;
+}
+button {
+  text-wrap: balance;
 }
 
 /* 6. High Contrast Interactive Elements & Click Targets */
