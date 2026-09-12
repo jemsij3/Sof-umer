@@ -310,6 +310,20 @@ export default function PropertyDetails({
     };
   }, [property, t, currentLanguage]);
 
+  const openSellerModal = () => {
+    setSelectedSellerProfile({
+      name: property.ownerName,
+      avatar: (property as any).ownerAvatar,
+      businessName: (property as any).ownerBusinessName,
+      location: displayLocation,
+      id: property.ownerId,
+      email: property.contactEmail || (property as any).ownerEmail,
+      phone: property.contactPhone || (property as any).ownerPhone,
+      isVerified: property.verificationStatus === 'verified' || property.isVerifiedListing || property.ownerId === 'usr-admin',
+      memberSince: sellerMemberSince.monthYear
+    });
+  };
+
   // Compute existing active offer by current user for this property
   const existingOffer = useMemo(() => {
     if (!currentUser) return null;
@@ -887,8 +901,8 @@ export default function PropertyDetails({
                   </div>
                 </div>
               </div>
-            )}
-          </div>
+            </div>
+          )}
 
           {/* Bulk Terms / Order Details if any entered (Only for Physical Products) */}
           {!isProperty && ((property as any).businessType || pricingInfo.unit || (Array.isArray((property as any).deliveryOptions) && (property as any).deliveryOptions.length > 0) || (property as any).wholesaleNotes) && (
@@ -1309,15 +1323,19 @@ export default function PropertyDetails({
             </span>
 
             {/* Seller Avatar */}
-            <div className="relative inline-block mb-3">
+            <div 
+              onClick={openSellerModal}
+              className="relative inline-block mb-3 cursor-pointer group/avatar"
+              title="View Complete Seller Profile"
+            >
               {(property as any).ownerAvatar ? (
                 <img
                   src={(property as any).ownerAvatar}
                   alt={property.ownerName}
-                  className="w-20 h-20 rounded-full object-cover mx-auto shadow-xl border-2 border-amber-500/20"
+                  className="w-20 h-20 rounded-full object-cover mx-auto shadow-xl border-2 border-amber-500/20 group-hover/avatar:border-amber-400 group-hover/avatar:scale-105 transition-all"
                 />
               ) : (
-                <div className="w-20 h-20 rounded-full bg-gradient-to-tr from-amber-400 to-amber-600 text-black font-extrabold text-2xl flex items-center justify-center mx-auto shadow-xl border-2 border-amber-500/20">
+                <div className="w-20 h-20 rounded-full bg-gradient-to-tr from-amber-400 to-amber-600 text-black font-extrabold text-2xl flex items-center justify-center mx-auto shadow-xl border-2 border-amber-500/20 group-hover/avatar:border-amber-400 group-hover/avatar:scale-105 transition-all">
                   {property.ownerName ? property.ownerName.charAt(0).toUpperCase() : 'S'}
                 </div>
               )}
@@ -1325,12 +1343,19 @@ export default function PropertyDetails({
             </div>
 
             {/* Seller Name & Business */}
-            <h4 className="font-extrabold text-white text-xl flex items-center justify-center gap-2">
-              <span>{property.ownerName}</span>
+            <h4 
+              onClick={openSellerModal}
+              className="font-extrabold text-white text-xl flex items-center justify-center gap-2 cursor-pointer hover:text-amber-400 transition"
+              title="View Complete Seller Profile"
+            >
+              <span className="hover:underline">{property.ownerName}</span>
               <CheckCircle2 className="w-5 h-5 text-amber-500 shrink-0" title={t('verified_seller')} />
             </h4>
             {(property as any).ownerBusinessName && (
-              <p className="text-xs text-amber-400/90 font-semibold mt-1 flex items-center justify-center gap-1 font-mono">
+              <p 
+                onClick={openSellerModal}
+                className="text-xs text-amber-400/90 font-semibold mt-1 flex items-center justify-center gap-1 font-mono cursor-pointer hover:underline"
+              >
                 <Building className="w-3.5 h-3.5" />
                 <span>{(property as any).ownerBusinessName}</span>
               </p>
@@ -2001,6 +2026,33 @@ export default function PropertyDetails({
           </div>
         )}
       </AnimatePresence>
+
+      {/* Seller Profile Modal */}
+      {selectedSellerProfile && (
+        <SellerProfileModal
+          isOpen={!!selectedSellerProfile}
+          onClose={() => setSelectedSellerProfile(null)}
+          sellerName={selectedSellerProfile.name}
+          sellerAvatar={selectedSellerProfile.avatar}
+          sellerBusinessName={selectedSellerProfile.businessName}
+          sellerLocation={selectedSellerProfile.location}
+          sellerId={selectedSellerProfile.id}
+          sellerEmail={selectedSellerProfile.email}
+          sellerPhone={selectedSellerProfile.phone}
+          isVerified={selectedSellerProfile.isVerified}
+          memberSince={selectedSellerProfile.memberSince}
+          onSelectProperty={(prop) => {
+            setSelectedSellerProfile(null);
+            if (onSelectProperty) onSelectProperty(prop);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          }}
+          onContactSeller={() => {
+            setSelectedSellerProfile(null);
+            const el = document.getElementById('inquiry-form-section');
+            if (el) el.scrollIntoView({ behavior: 'smooth' });
+          }}
+        />
+      )}
 
     </div>
   );
