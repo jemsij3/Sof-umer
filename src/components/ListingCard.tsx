@@ -261,7 +261,25 @@ export function ListingCard({
     ? getTranslatedPropertyType(extractString(property.propertyType, currentLanguage), currentLanguage) 
     : getTranslatedCategoryName(extractString(property.majorCategory || 'Properties', currentLanguage), currentLanguage);
 
-  const sellerName = (property as any).ownerBusinessName || property.ownerName || 'Sof Umer Seller';
+  const sellerName = useMemo(() => {
+    if ((property as any).ownerBusinessName && (property as any).ownerBusinessName !== 'Admin' && (property as any).ownerBusinessName !== 'Administrator') {
+      return (property as any).ownerBusinessName;
+    }
+    if ((property as any).contactName && (property as any).contactName !== 'Admin') {
+      return (property as any).contactName;
+    }
+    if (property.ownerName && !property.ownerName.toLowerCase().includes('admin') && property.ownerName !== 'usr-admin') {
+      return property.ownerName;
+    }
+    if (property.contactEmail && !property.contactEmail.includes('admin@')) {
+      const emailPrefix = property.contactEmail.split('@')[0];
+      if (emailPrefix) {
+        return emailPrefix.charAt(0).toUpperCase() + emailPrefix.slice(1);
+      }
+    }
+    return 'Sof Umer Seller';
+  }, [property]);
+
   const viewsCount = Number(property.viewsCount) || 0;
   const listingAge = formatListingAge(property.createdAt || (property as any).publishedAt, currentLanguage, t);
 

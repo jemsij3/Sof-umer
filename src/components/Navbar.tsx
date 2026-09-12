@@ -372,24 +372,6 @@ export default function Navbar({ onNavigate, activeView, onOpenCreateModal, onOp
                         </div>
                       </div>
 
-                      {/* Wallet Balance Summary Card inside Dropdown */}
-                      <div className="mx-2 my-2 p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <Wallet className="w-4 h-4 text-amber-500" />
-                          <div>
-                            <span className="text-[8px] uppercase tracking-wider text-white/50 block font-bold">Wallet Balance</span>
-                            <span className="text-xs font-mono font-black text-amber-400">{(currentUser.walletBalance || 0).toLocaleString()} ETB</span>
-                          </div>
-                        </div>
-                        <button
-                          onClick={() => { onNavigate('payments'); setUserDropdownOpen(false); }}
-                          className="text-[9px] font-black uppercase tracking-wider bg-amber-500 hover:bg-amber-400 text-black px-2.5 py-1 rounded-lg transition flex items-center gap-1 cursor-pointer"
-                        >
-                          <Plus className="w-3 h-3 stroke-[3]" />
-                          <span>{t("nav_top_up")}</span>
-                        </button>
-                      </div>
-
                       {/* Common Links */}
                       <button
                         onClick={() => { onNavigate('profile'); setUserDropdownOpen(false); }}

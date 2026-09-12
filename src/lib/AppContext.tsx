@@ -122,8 +122,6 @@ interface AppContextType {
   reorderFaqs: (faqIds: string[]) => Promise<boolean>;
 
   // Wallet and Promotion Methods
-  topUpWallet: (amount: number, paymentMethodId: string, paymentMethodName: string, proofUrl?: string, referenceNumber?: string) => Promise<boolean>;
-  spendWallet: (amount: number, description: string, propertyId: string, promotionType: 'basic' | 'premium' | 'vip' | 'top_ad' | 'featured', durationDays?: number) => Promise<boolean>;
   approveWalletTx: (transactionId: string) => Promise<boolean>;
   rejectWalletTx: (transactionId: string, reason?: string) => Promise<boolean>;
 
@@ -687,50 +685,6 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     return data;
   };
 
-  const topUpWallet = async (amount: number, paymentMethodId: string, paymentMethodName: string, proofUrl?: string, referenceNumber?: string): Promise<boolean> => {
-    const res = await fetch('/api/wallet/topup', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${localStorage.getItem('sof_umer_token') || token}`
-      },
-      body: JSON.stringify({ amount, paymentMethodId, paymentMethodName, proofUrl, referenceNumber })
-    });
-    if (res.ok) {
-      const data = await res.json();
-      if (data.user) {
-        setCurrentUser(data.user);
-      }
-      await refreshData();
-      return true;
-    } else {
-      const err = await res.json();
-      throw new Error(err.error || 'Failed to submit wallet top-up request');
-    }
-  };
-
-  const spendWallet = async (amount: number, description: string, propertyId: string, promotionType: 'basic' | 'premium' | 'vip' | 'top_ad' | 'featured', durationDays?: number): Promise<boolean> => {
-    const res = await fetch('/api/wallet/spend', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${localStorage.getItem('sof_umer_token') || token}`
-      },
-      body: JSON.stringify({ amount, description, propertyId, promotionType, durationDays })
-    });
-    if (res.ok) {
-      const data = await res.json();
-      if (data.user) {
-        setCurrentUser(data.user);
-      }
-      await refreshData();
-      return true;
-    } else {
-      const err = await res.json();
-      throw new Error(err.error || 'Failed to process promotion');
-    }
-  };
-
   const approveWalletTx = async (transactionId: string): Promise<boolean> => {
     const res = await fetch('/api/wallet/approve-tx', {
       method: 'POST',
@@ -1113,8 +1067,6 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       offers,
       submitOffer,
       respondToOffer,
-      topUpWallet,
-      spendWallet,
       approveWalletTx,
       rejectWalletTx,
       faqs,

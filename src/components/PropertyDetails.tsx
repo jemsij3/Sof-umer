@@ -310,9 +310,23 @@ export default function PropertyDetails({
     };
   }, [property, t, currentLanguage]);
 
+  // Robust Seller Display Name to avoid showing "Admin" for user listings
+  const sellerDisplayName = useMemo(() => {
+    if ((property as any).ownerBusinessName) return (property as any).ownerBusinessName;
+    if (property.ownerName && property.ownerName.toLowerCase() !== 'admin' && property.ownerName.toLowerCase() !== 'usr-admin') {
+      return property.ownerName;
+    }
+    if ((property as any).contactPerson) return (property as any).contactPerson;
+    if (property.contactEmail && !property.contactEmail.toLowerCase().includes('admin') && !property.contactEmail.toLowerCase().includes('jemaljima')) {
+      const namePart = property.contactEmail.split('@')[0];
+      return namePart.charAt(0).toUpperCase() + namePart.slice(1);
+    }
+    return property.ownerName || 'Sof Umer Seller';
+  }, [property]);
+
   const openSellerModal = () => {
     setSelectedSellerProfile({
-      name: property.ownerName,
+      name: sellerDisplayName,
       avatar: (property as any).ownerAvatar,
       businessName: (property as any).ownerBusinessName,
       location: displayLocation,
@@ -1331,12 +1345,12 @@ export default function PropertyDetails({
               {(property as any).ownerAvatar ? (
                 <img
                   src={(property as any).ownerAvatar}
-                  alt={property.ownerName}
+                  alt={sellerDisplayName}
                   className="w-20 h-20 rounded-full object-cover mx-auto shadow-xl border-2 border-amber-500/20 group-hover/avatar:border-amber-400 group-hover/avatar:scale-105 transition-all"
                 />
               ) : (
                 <div className="w-20 h-20 rounded-full bg-gradient-to-tr from-amber-400 to-amber-600 text-black font-extrabold text-2xl flex items-center justify-center mx-auto shadow-xl border-2 border-amber-500/20 group-hover/avatar:border-amber-400 group-hover/avatar:scale-105 transition-all">
-                  {property.ownerName ? property.ownerName.charAt(0).toUpperCase() : 'S'}
+                  {sellerDisplayName ? sellerDisplayName.charAt(0).toUpperCase() : 'S'}
                 </div>
               )}
               <span className="absolute bottom-0 right-0 w-5 h-5 bg-emerald-500 border-2 border-[#0d0d12] rounded-full" title={t('verified_seller')} />
@@ -1348,7 +1362,7 @@ export default function PropertyDetails({
               className="font-extrabold text-white text-xl flex items-center justify-center gap-2 cursor-pointer hover:text-amber-400 transition"
               title="View Complete Seller Profile"
             >
-              <span className="hover:underline">{property.ownerName}</span>
+              <span className="hover:underline">{sellerDisplayName}</span>
               <CheckCircle2 className="w-5 h-5 text-amber-500 shrink-0" title={t('verified_seller')} />
             </h4>
             {(property as any).ownerBusinessName && (

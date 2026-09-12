@@ -457,7 +457,7 @@ function getFieldsForSelection(majorCategory: string, subcategory: string, t?: (
 }
 
 export default function CreateListingModal({ onClose }: CreateListingModalProps) {
-  const { currentUser, refreshData, t, currentLanguage, paymentMethods, spendWallet, topUpWallet, systemSettings } = useApp();
+  const { currentUser, refreshData, t, currentLanguage, paymentMethods, systemSettings } = useApp();
 
   // Unified Translation proxy: accesses official translations via t()
   const d = new Proxy({} as Record<string, string>, {
@@ -485,7 +485,6 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
   const [selectedPlan, setSelectedPlan] = useState<'free' | 'basic' | 'premium' | 'vip'>('free');
   const [isTopAdAddon, setIsTopAdAddon] = useState(false);
   const [isFeaturedAddon, setIsFeaturedAddon] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState<'wallet' | 'direct'>('wallet');
   const [selectedDirectMethodId, setSelectedDirectMethodId] = useState('');
   const [receiptRefNumber, setReceiptRefNumber] = useState('');
   const [receiptFileData, setReceiptFileData] = useState<{ url: string; fileType: 'image' | 'pdf'; fileName: string; fileSize: number } | null>(null);
@@ -1143,36 +1142,26 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
 
       // Handle monetization payment if totalCost > 0
       if (totalCost > 0) {
-        if (paymentMethod === 'wallet') {
-          await spendWallet(
-            totalCost,
-            `${selectedPlan.toUpperCase()} Boost & Promotion for "${createdProp.title}"`,
-            createdProp.id,
-            selectedPlan,
-            days || 7
-          );
-        } else if (paymentMethod === 'direct') {
-          const directMethod = paymentMethods.find(m => m.id === selectedDirectMethodId);
-          await fetch('/api/receipts', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              userId: currentUser.id,
-              userEmail: currentUser.email,
-              userName: currentUser.fullName,
-              amount: totalCost,
-              paymentMethodId: selectedDirectMethodId || 'direct-transfer',
-              paymentMethodName: directMethod?.name || 'Direct Bank / Telebirr',
-              relatedPropertyId: createdProp.id,
-              relatedPropertyTitle: createdProp.title,
-              referenceNumber: receiptRefNumber.trim() || undefined,
-              receiptUrlOrFile: receiptFileData?.url || receiptRefNumber || 'Payment Reference Submitted',
-              fileType: receiptFileData?.fileType || 'image',
-              fileName: receiptFileData?.fileName,
-              fileSize: receiptFileData?.fileSize
-            })
-          });
-        }
+        const directMethod = paymentMethods.find(m => m.id === selectedDirectMethodId);
+        await fetch('/api/receipts', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userId: currentUser.id,
+            userEmail: currentUser.email,
+            userName: currentUser.fullName,
+            amount: totalCost,
+            paymentMethodId: selectedDirectMethodId || 'direct-transfer',
+            paymentMethodName: directMethod?.name || 'Direct Bank / Telebirr',
+            relatedPropertyId: createdProp.id,
+            relatedPropertyTitle: createdProp.title,
+            referenceNumber: receiptRefNumber.trim() || undefined,
+            receiptUrlOrFile: receiptFileData?.url || receiptRefNumber || 'Payment Reference Submitted',
+            fileType: receiptFileData?.fileType || 'image',
+            fileName: receiptFileData?.fileName,
+            fileSize: receiptFileData?.fileSize
+          })
+        });
       }
 
       await refreshData();
@@ -2502,102 +2491,41 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
                 {totalCost > 0 && (
                   <div className="space-y-4 pt-2 border-t border-white/5">
                     <label className="block text-xs font-bold text-amber-500 uppercase tracking-widest">
-                      {d.payMethodLabel}
+                      {d.payMethodLabel || 'Payment Method (Bank Transfer / Telebirr)'}
                     </label>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      <button
-                        type="button"
-                        onClick={() => setPaymentMethod('wallet')}
-                        className={`p-4 rounded-2xl border flex items-center gap-3 transition cursor-pointer text-left ${
-                          paymentMethod === 'wallet' 
-                            ? 'bg-amber-500/15 border-amber-500 text-white' 
-                            : 'bg-zinc-900/40 border-white/5 text-white/60 hover:bg-zinc-900'
-                        }`}
-                      >
-                        <CreditCard className="w-6 h-6 text-amber-400 shrink-0" />
-                        <div>
-                          <span className="font-bold text-xs block">{d.accWallet}</span>
-                          <span className="text-[10px] text-white/50 block font-mono">
-                            {d.walletBal} {walletBalance.toLocaleString()} ETB
-                          </span>
-                        </div>
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => setPaymentMethod('direct')}
-                        className={`p-4 rounded-2xl border flex items-center gap-3 transition cursor-pointer text-left ${
-                          paymentMethod === 'direct' 
-                            ? 'bg-amber-500/15 border-amber-500 text-white' 
-                            : 'bg-zinc-900/40 border-white/5 text-white/60 hover:bg-zinc-900'
-                        }`}
-                      >
-                        <Building className="w-6 h-6 text-amber-400 shrink-0" />
-                        <div>
-                          <span className="font-bold text-xs block">{d.directBank}</span>
-                          <span className="text-[10px] text-white/50 block">{d.directSub}</span>
-                        </div>
-                      </button>
-                    </div>
-
-                    {/* Wallet Details View */}
-                    {paymentMethod === 'wallet' && (
-                      <div className="p-4 bg-zinc-900/60 rounded-xl border border-white/5 space-y-2 text-xs">
-                        <div className="flex justify-between items-center">
-                          <span className="text-white/60">{d.yourBal}</span>
-                          <span className="font-mono font-bold text-white">{walletBalance.toLocaleString()} ETB</span>
-                        </div>
-                        <div className="flex justify-between items-center">
-                          <span className="text-white/60">{d.deduction}</span>
-                          <span className="font-mono font-bold text-amber-400">-{totalCost} ETB</span>
-                        </div>
-                        {walletBalance < totalCost ? (
-                          <div className="p-2.5 bg-rose-500/10 border border-rose-500/20 text-rose-400 text-[11px] rounded-lg mt-2 font-medium">
-                            ⚠️ {d.insufficientBal}
-                          </div>
-                        ) : (
-                          <div className="p-2.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[11px] rounded-lg mt-2 font-medium">
-                            ✅ {d.sufficientBal}
-                          </div>
-                        )}
-                      </div>
-                    )}
-
                     {/* Direct Transfer View */}
-                    {paymentMethod === 'direct' && (
-                      <div className="p-4 bg-zinc-900/60 rounded-2xl border border-white/10 space-y-4 text-xs">
-                        <div>
-                          <label className="block text-[11px] font-bold text-white/70 uppercase mb-1.5">
-                            {d.payChannel}
-                          </label>
-                          <select
-                            value={selectedDirectMethodId}
-                            onChange={e => setSelectedDirectMethodId(e.target.value)}
-                            className="w-full p-3 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white focus:outline-none transition"
-                          >
-                            <option value="">{d.payChannelPlaceholder}</option>
-                            {paymentMethods.map(m => (
-                              <option key={m.id} value={m.id} className="bg-[#0c0c0c]">
-                                {m.name} ({m.accountNumber})
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-
-                        <div className="pt-2">
-                          <ReceiptUploadInput
-                            referenceNumber={receiptRefNumber}
-                            onReferenceChange={setReceiptRefNumber}
-                            receiptFile={receiptFileData?.url || ''}
-                            fileName={receiptFileData?.fileName}
-                            fileType={receiptFileData?.fileType}
-                            fileSize={receiptFileData?.fileSize}
-                            onFileChange={(data) => setReceiptFileData(data)}
-                          />
-                        </div>
+                    <div className="p-4 bg-zinc-900/60 rounded-2xl border border-white/10 space-y-4 text-xs">
+                      <div>
+                        <label className="block text-[11px] font-bold text-white/70 uppercase mb-1.5">
+                          {d.payChannel}
+                        </label>
+                        <select
+                          value={selectedDirectMethodId}
+                          onChange={e => setSelectedDirectMethodId(e.target.value)}
+                          className="w-full p-3 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white focus:outline-none transition"
+                        >
+                          <option value="">{d.payChannelPlaceholder}</option>
+                          {paymentMethods.map(m => (
+                            <option key={m.id} value={m.id} className="bg-[#0c0c0c]">
+                              {m.name} ({m.accountNumber})
+                            </option>
+                          ))}
+                        </select>
                       </div>
-                    )}
+
+                      <div className="pt-2">
+                        <ReceiptUploadInput
+                          referenceNumber={receiptRefNumber}
+                          onReferenceChange={setReceiptRefNumber}
+                          receiptFile={receiptFileData?.url || ''}
+                          fileName={receiptFileData?.fileName}
+                          fileType={receiptFileData?.fileType}
+                          fileSize={receiptFileData?.fileSize}
+                          onFileChange={(data) => setReceiptFileData(data)}
+                        />
+                      </div>
+                    </div>
                   </div>
                 )}
               </div>
@@ -2679,7 +2607,7 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
               {currentStep === 5 && (
                 <button
                   type="button"
-                  disabled={submitting || (totalCost > 0 && paymentMethod === 'wallet' && walletBalance < totalCost)}
+                  disabled={submitting || (totalCost > 0 && !selectedDirectMethodId)}
                   onClick={handleFinalPublish}
                   className="px-6 py-2.5 bg-amber-500 text-black font-extrabold text-xs rounded-xl hover:bg-amber-400 disabled:opacity-50 transition duration-200 cursor-pointer shadow-lg inline-flex items-center gap-2"
                 >

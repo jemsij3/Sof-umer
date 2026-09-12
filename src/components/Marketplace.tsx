@@ -8,7 +8,7 @@ import {
   X, AlertCircle, Home, Car, Smartphone, Laptop, Sofa, Shirt, FileText, 
   Hammer, Factory, Wheat, Footprints, GraduationCap, Activity, Utensils, 
   CalendarDays, Gamepad2, Baby, Recycle, TrendingUp, Clock, Flame, Info, CheckCircle2,
-  Folder, ChevronDown, Wallet, Plus
+  Folder, ChevronDown, Plus, ShieldCheck
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
@@ -282,6 +282,19 @@ export default function Marketplace({
     setTimeout(() => setToastMessage(''), 3000);
   };
 
+  const [homeEmailInput, setHomeEmailInput] = useState('');
+  const [homeSubscribed, setHomeSubscribed] = useState(false);
+
+  const handleHomeSubscribe = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!homeEmailInput.trim()) return;
+    setHomeSubscribed(true);
+    setTimeout(() => {
+      setHomeEmailInput('');
+      setHomeSubscribed(false);
+    }, 4000);
+  };
+
   React.useEffect(() => {
     if (initialMajorCategory !== undefined) {
       setSelectedMajorCategory(initialMajorCategory);
@@ -437,6 +450,17 @@ export default function Marketplace({
     return [...filteredProperties]
       .filter(p => !p.isFeatured && !p.isRecommended)
       .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  }, [filteredProperties]);
+
+  const popularProperties = useMemo(() => {
+    // Sort by real viewsCount descending
+    const withViews = [...filteredProperties].filter(p => (Number(p.viewsCount) || 0) > 0 || p.isRecommended);
+    if (withViews.length > 0) {
+      return withViews
+        .sort((a, b) => (Number(b.viewsCount) || 0) - (Number(a.viewsCount) || 0))
+        .slice(0, 6);
+    }
+    return [...filteredProperties].slice(0, 6);
   }, [filteredProperties]);
 
   // Helper to count listings matching our redesigned categories
@@ -869,38 +893,6 @@ export default function Marketplace({
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 font-sans">
-      {/* Wallet Balance & Quick Top Up Banner for Logged-In Users */}
-      {currentUser && (
-        <div className="mb-6 p-4.5 rounded-2xl bg-gradient-to-r from-[#0d0d14] via-[#141522] to-[#0d0d14] border border-amber-500/25 shadow-2xl flex flex-wrap items-center justify-between gap-4">
-          <div className="flex items-center gap-3.5">
-            <div className="w-11 h-11 rounded-xl bg-amber-500/15 border border-amber-500/30 text-amber-400 flex items-center justify-center shadow-inner">
-              <Wallet className="w-5 h-5" />
-            </div>
-            <div className="text-left">
-              <span className="text-[10px] uppercase font-bold tracking-widest text-white/50 block">{t('marketplace_wallet_balance') || 'Marketplace Wallet Balance'}</span>
-              <div className="flex items-center gap-2.5">
-                <span className="text-xl font-black font-mono text-amber-400">
-                  {(currentUser.walletBalance || 0).toLocaleString()} ETB
-                </span>
-                <span className="text-[9px] font-extrabold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20 uppercase tracking-wider">
-                  {t('active_credits') || 'Active Credits'}
-                </span>
-              </div>
-            </div>
-          </div>
-          <div className="flex items-center gap-3">
-            {onNavigateToPayments && (
-              <button
-                onClick={onNavigateToPayments}
-                className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black font-extrabold uppercase tracking-wider text-xs rounded-xl shadow-lg shadow-amber-500/20 transition duration-300 hover:scale-[1.02] active:scale-95 cursor-pointer"
-              >
-                <Plus className="w-4 h-4 stroke-[3]" />
-                <span>{t('top_up_wallet') || 'Top Up Wallet'}</span>
-              </button>
-            )}
-          </div>
-        </div>
-      )}
 
       {/* Dynamic Hero Advertisement / Welcome Banner */}
       {heroAds.length > 0 && (
@@ -931,48 +923,6 @@ export default function Marketplace({
             />
           </div>
           <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/40 to-transparent pointer-events-none" />
-        </div>
-      )}
-      {/* Category Navigation Bar (Always visible at top when browsing) */}
-      {!selectedRedesignedCategory && (
-        <div className="mb-8 flex flex-wrap items-center justify-between gap-4 animate-fade-in bg-[#0d0d14]/70 border border-white/5 p-4 rounded-3xl backdrop-blur-md">
-          {/* ALL CATEGORIES Primary Trigger */}
-          <button
-            id="all-categories-trigger"
-            onClick={() => setIsAllCategoriesOpen(true)}
-            className="inline-flex items-center gap-2.5 px-6 py-3.5 bg-gradient-to-r from-amber-400 to-amber-600 hover:from-amber-350 hover:to-amber-550 text-black font-extrabold uppercase tracking-widest text-xs rounded-2xl transition duration-300 hover:scale-[1.02] active:scale-95 shadow-xl shadow-amber-500/10 hover:shadow-amber-500/25 cursor-pointer border border-amber-300/10"
-          >
-            <Folder className="w-4 h-4 fill-black" />
-            <span>{t('all_categories') || 'ALL CATEGORIES'}</span>
-            <ChevronDown className="w-3.5 h-3.5" />
-          </button>
-
-          {/* RECENTLY VIEWED CATEGORIES (Requirement 8) */}
-          {recentlyViewedIds.length > 0 && (
-            <div className="flex flex-wrap items-center gap-2 text-left">
-              <span className="text-[10px] font-bold text-white/40 uppercase tracking-widest flex items-center gap-1.5 mr-1">
-                <Clock className="w-3.5 h-3.5 text-amber-500" />
-                {t('recently_viewed_categories') || 'RECENTLY VIEWED'}
-              </span>
-              <div className="flex flex-wrap gap-2">
-                {recentlyViewedIds.map(id => {
-                  const matched = REDESIGNED_CATEGORIES.find(c => c.id === id);
-                  if (!matched) return null;
-                  const catName = currentLanguage === 'am' ? (matched.translations?.am || matched.name) : currentLanguage === 'om' ? (matched.translations?.om || matched.name) : matched.name;
-                  return (
-                    <button
-                      key={id}
-                      onClick={() => handleSelectRedesignedCategory(matched)}
-                      className="px-3.5 py-1.5 bg-[#12121a] hover:bg-amber-500 hover:text-black border border-white/5 hover:border-amber-500/30 text-xs text-white/80 rounded-xl transition-all duration-200 cursor-pointer flex items-center gap-1.5 shadow-sm"
-                    >
-                      <span>{matched.emoji}</span>
-                      <span>{catName}</span>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          )}
         </div>
       )}
 
@@ -1879,131 +1829,333 @@ export default function Marketplace({
               )}
             </AnimatePresence>
           </div>
-        </div>
-      )}
 
-      {/* Main Grid Content */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 text-left">
-        {/* Left Side: Listings */}
-        <div className="lg:col-span-9 space-y-16 animate-fade-in">
-          {filteredProperties.length === 0 ? (
-            <div className="bg-[#0d0d12]/60 rounded-3xl border border-white/5 p-16 text-center shadow-lg">
-              <Building className="w-12 h-12 text-white/20 mx-auto mb-4" />
-              <h4 className="text-lg font-serif text-white font-semibold">{t('no_listings_found')}</h4>
-              <p className="text-white/40 text-sm mt-1.5 font-light">{t('no_listings_found_desc')}</p>
+          {/* 2. CATEGORIES VISUAL ENTRY POINTS */}
+          <div className="mb-14 text-left">
+            <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
+              <div>
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="w-2 h-2 rounded-full bg-amber-400" />
+                  <span className="text-[10px] font-black uppercase tracking-widest text-amber-400 font-mono">
+                    {t('explore_marketplace') || 'EXPLORE MARKETPLACE'}
+                  </span>
+                </div>
+                <h3 className="text-xl sm:text-2xl font-serif text-white font-bold tracking-tight">
+                  {t('browse_categories') || 'Browse by Category'}
+                </h3>
+              </div>
+
+              {/* ALL CATEGORIES Overlay Trigger */}
+              <button
+                id="all-categories-trigger"
+                onClick={() => setIsAllCategoriesOpen(true)}
+                className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-amber-400 to-amber-600 hover:from-amber-300 hover:to-amber-500 text-black font-extrabold uppercase tracking-widest text-xs rounded-2xl transition duration-300 hover:scale-[1.02] active:scale-95 shadow-lg shadow-amber-500/10 cursor-pointer"
+              >
+                <Folder className="w-4 h-4 fill-black" />
+                <span>{t('all_categories') || 'All Categories'}</span>
+                <ChevronDown className="w-3.5 h-3.5" />
+              </button>
             </div>
-          ) : (
-            <>
-              {/* FEATURED PROPERTIES ROW */}
-              {featuredProperties.length > 0 && (
-                <div>
-                  <h3 className="text-2xl font-serif text-white mb-8 border-b border-white/5 pb-4 flex items-center justify-between">
-                    <span className="flex items-center gap-2"><Sparkles className="w-5 h-5 text-amber-500" /> {t('featured_properties')}</span>
-                    <span className="text-[9px] uppercase font-bold tracking-[0.25em] text-white/30">{t('verified_select_picks')}</span>
-                  </h3>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
-                    {featuredProperties.map(prop => (
-                      <ListingCard
-                        key={prop.id}
-                        property={prop}
-                        onSelect={onSelectProperty}
-                        favorites={favorites}
-                        onToggleFav={toggleFavorite}
-                        onReport={() => onOpenReportModal('property', prop.id, prop.title)}
-                        t={t} currentLanguage={currentLanguage}
-                        viewMode="grid"
-                      />
-                    ))}
-                  </div>
-                </div>
-              )}
 
-              {/* RECOMMENDED FOR YOU */}
-              {recommendedProperties.length > 0 && (
-                <div>
-                  <h3 className="text-2xl font-serif text-white mb-8 border-b border-white/5 pb-4 flex items-center justify-between">
-                    <span className="flex items-center gap-2">{t('personalized_recommendation')}</span>
-                    <span className="text-[9px] uppercase font-bold tracking-[0.25em] text-white/30">{t('curated_match')}</span>
-                  </h3>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
-                    {recommendedProperties.map(prop => (
-                      <ListingCard
-                        key={prop.id}
-                        property={prop}
-                        onSelect={onSelectProperty}
-                        favorites={favorites}
-                        onToggleFav={toggleFavorite}
-                        onReport={() => onOpenReportModal('property', prop.id, prop.title)}
-                        t={t} currentLanguage={currentLanguage}
-                        viewMode="grid"
-                      />
-                    ))}
-                  </div>
-                </div>
-              )}
+            {/* Visual Category Cards Grid */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3.5 sm:gap-4">
+              {REDESIGNED_CATEGORIES.map(cat => {
+                const count = calcCategoryCount(cat, properties);
+                const catName = currentLanguage === 'am' 
+                  ? (cat.translations?.am || cat.name) 
+                  : currentLanguage === 'om' 
+                  ? (cat.translations?.om || cat.name) 
+                  : cat.name;
 
-              {/* LATEST LISTINGS */}
-              {latestProperties.length > 0 && (
-                <div>
-                  <h3 className="text-2xl font-serif text-white mb-8 border-b border-white/5 pb-4 flex items-center justify-between">
-                    <span>{t('latest_properties') || 'All Listings'}</span>
-                    <span className="text-[9px] uppercase font-bold tracking-[0.25em] text-white/30">{t('recent_offers')}</span>
-                  </h3>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
-                    {latestProperties.map(prop => (
-                      <ListingCard
-                        key={prop.id}
-                        property={prop}
-                        onSelect={onSelectProperty}
-                        favorites={favorites}
-                        onToggleFav={toggleFavorite}
-                        onReport={() => onOpenReportModal('property', prop.id, prop.title)}
-                        t={t} currentLanguage={currentLanguage}
-                        viewMode="grid"
-                      />
-                    ))}
-                  </div>
-                </div>
-              )}
-            </>
-          )}
-        </div>
+                return (
+                  <button
+                    key={cat.id}
+                    id={`category-card-${cat.id}`}
+                    onClick={() => handleSelectRedesignedCategory(cat)}
+                    className="group text-left p-4 rounded-2xl bg-[#0e0e15] hover:bg-[#151522] border border-white/5 hover:border-amber-500/40 transition-all duration-300 cursor-pointer flex flex-col justify-between min-h-[110px] shadow-sm hover:shadow-xl hover:-translate-y-0.5"
+                  >
+                    <div className="flex items-center justify-between w-full mb-3">
+                      <span className="text-2xl group-hover:scale-110 transition-transform duration-300">
+                        {cat.emoji}
+                      </span>
+                      <span className="text-[10px] font-mono font-semibold text-white/40 group-hover:text-amber-400 bg-white/5 px-2 py-0.5 rounded-full transition-colors">
+                        {count}
+                      </span>
+                    </div>
+                    <div>
+                      <h4 className="text-xs sm:text-sm font-bold text-white group-hover:text-amber-400 transition-colors line-clamp-1 leading-snug">
+                        {catName}
+                      </h4>
+                      <span className="text-[10px] text-white/40 block mt-0.5 group-hover:text-white/60 transition-colors">
+                        {count === 1 ? '1 listing' : `${count} listings`}
+                      </span>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
 
-        {/* Right Side: Sidebar Adverts & Safety Info */}
-        <div className="lg:col-span-3 space-y-8">
-          {/* Active Sidebar Advertisements */}
-          {sidebarAds.map(ad => (
-            <div
-              key={ad.id}
-              className="bg-[#0d0d12]/80 rounded-3xl overflow-hidden border border-white/5 shadow-2xl text-white relative group"
-            >
-              <div className="h-48 overflow-hidden relative">
-                <img
-                  src={ad.imageUrl}
-                  alt={ad.title}
-                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                  referrerPolicy="no-referrer"
-                />
-                <span className="absolute top-4 right-4 bg-black/70 backdrop-blur-md text-[#F5F5F4] font-black uppercase tracking-widest text-[8px] px-2.5 py-1.5 rounded-full border border-white/10">
-                  {t('sponsored')}
+            {/* RECENTLY VIEWED CATEGORIES (if any) */}
+            {recentlyViewedIds.length > 0 && (
+              <div className="mt-4 flex flex-wrap items-center gap-2 pt-3 border-t border-white/5">
+                <span className="text-[10px] font-bold text-white/40 uppercase tracking-widest flex items-center gap-1.5 mr-1">
+                  <Clock className="w-3.5 h-3.5 text-amber-500" />
+                  {t('recently_viewed_categories') || 'RECENTLY VIEWED'}
+                </span>
+                <div className="flex flex-wrap gap-2">
+                  {recentlyViewedIds.map(id => {
+                    const matched = REDESIGNED_CATEGORIES.find(c => c.id === id);
+                    if (!matched) return null;
+                    const catName = currentLanguage === 'am' ? (matched.translations?.am || matched.name) : currentLanguage === 'om' ? (matched.translations?.om || matched.name) : matched.name;
+                    return (
+                      <button
+                        key={id}
+                        onClick={() => handleSelectRedesignedCategory(matched)}
+                        className="px-3 py-1 bg-[#12121a] hover:bg-amber-500 hover:text-black border border-white/5 hover:border-amber-500/30 text-xs text-white/80 rounded-xl transition-all duration-200 cursor-pointer flex items-center gap-1.5"
+                      >
+                        <span>{matched.emoji}</span>
+                        <span>{catName}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Main Grid Content: Listings & Sidebar */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 text-left mb-16">
+            {/* Left Side: Listings */}
+            <div className={`${sidebarAds.length > 0 ? 'lg:col-span-9' : 'lg:col-span-12'} space-y-16 animate-fade-in`}>
+              {filteredProperties.length === 0 ? (
+                <div className="bg-[#0d0d12]/60 rounded-3xl border border-white/5 p-16 text-center shadow-lg">
+                  <Building className="w-12 h-12 text-white/20 mx-auto mb-4" />
+                  <h4 className="text-lg font-serif text-white font-semibold">{t('no_listings_found')}</h4>
+                  <p className="text-white/40 text-sm mt-1.5 font-light">{t('no_listings_found_desc')}</p>
+                </div>
+              ) : (
+                <>
+                  {/* 3. FEATURED LISTINGS */}
+                  {featuredProperties.length > 0 && (
+                    <div>
+                      <h3 className="text-2xl font-serif text-white mb-8 border-b border-white/5 pb-4 flex items-center justify-between">
+                        <span className="flex items-center gap-2"><Sparkles className="w-5 h-5 text-amber-500" /> {t('featured_properties')}</span>
+                        <span className="text-[9px] uppercase font-bold tracking-[0.25em] text-white/30">{t('verified_select_picks')}</span>
+                      </h3>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+                        {featuredProperties.map(prop => (
+                          <ListingCard
+                            key={prop.id}
+                            property={prop}
+                            onSelect={onSelectProperty}
+                            favorites={favorites}
+                            onToggleFav={toggleFavorite}
+                            onReport={() => onOpenReportModal('property', prop.id, prop.title)}
+                            t={t} currentLanguage={currentLanguage}
+                            viewMode="grid"
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* 4. LATEST LISTINGS */}
+                  {latestProperties.length > 0 && (
+                    <div>
+                      <h3 className="text-2xl font-serif text-white mb-8 border-b border-white/5 pb-4 flex items-center justify-between">
+                        <span className="flex items-center gap-2"><Clock className="w-5 h-5 text-amber-500" /> {t('latest_properties') || 'Latest Listings'}</span>
+                        <span className="text-[9px] uppercase font-bold tracking-[0.25em] text-white/30">{t('recent_offers')}</span>
+                      </h3>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+                        {latestProperties.map(prop => (
+                          <ListingCard
+                            key={prop.id}
+                            property={prop}
+                            onSelect={onSelectProperty}
+                            favorites={favorites}
+                            onToggleFav={toggleFavorite}
+                            onReport={() => onOpenReportModal('property', prop.id, prop.title)}
+                            t={t} currentLanguage={currentLanguage}
+                            viewMode="grid"
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* 5. POPULAR LISTINGS */}
+                  {popularProperties.length > 0 && (
+                    <div>
+                      <h3 className="text-2xl font-serif text-white mb-8 border-b border-white/5 pb-4 flex items-center justify-between">
+                        <span className="flex items-center gap-2"><TrendingUp className="w-5 h-5 text-amber-500" /> {t('popular_listings') || 'Popular Listings'}</span>
+                        <span className="text-[9px] uppercase font-bold tracking-[0.25em] text-white/30">{t('most_viewed_picks') || 'BASED ON VIEWS & INTEREST'}</span>
+                      </h3>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+                        {popularProperties.map(prop => (
+                          <ListingCard
+                            key={prop.id}
+                            property={prop}
+                            onSelect={onSelectProperty}
+                            favorites={favorites}
+                            onToggleFav={toggleFavorite}
+                            onReport={() => onOpenReportModal('property', prop.id, prop.title)}
+                            t={t} currentLanguage={currentLanguage}
+                            viewMode="grid"
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+
+            {/* Right Side: Sidebar Adverts */}
+            {sidebarAds.length > 0 && (
+              <div className="lg:col-span-3 space-y-8">
+                {sidebarAds.map(ad => (
+                  <div
+                    key={ad.id}
+                    className="bg-[#0d0d12]/80 rounded-3xl overflow-hidden border border-white/5 shadow-2xl text-white relative group"
+                  >
+                    <div className="h-48 overflow-hidden relative">
+                      <img
+                        src={ad.imageUrl}
+                        alt={ad.title}
+                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                        referrerPolicy="no-referrer"
+                      />
+                      <span className="absolute top-4 right-4 bg-black/70 backdrop-blur-md text-[#F5F5F4] font-black uppercase tracking-widest text-[8px] px-2.5 py-1.5 rounded-full border border-white/10">
+                        {t('sponsored')}
+                      </span>
+                    </div>
+                    <div className="p-6 text-left">
+                      <h4 className="font-serif text-base text-white mb-1.5 font-semibold">{ad.title}</h4>
+                      <p className="text-xs text-[#F5F5F4]/60 leading-relaxed mb-5 font-light">{ad.description}</p>
+                      <a
+                        href={ad.linkUrl}
+                        className="block text-center bg-white/5 hover:bg-white/10 text-white border border-white/10 rounded-xl py-3 text-[10px] font-bold uppercase tracking-widest transition duration-300 hover:scale-[1.01]"
+                      >
+                        {t('visit_offer')}
+                      </a>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* 6. ABOUT SOF-UMER */}
+          <div className="mb-12 rounded-3xl bg-[#0e0e15] border border-white/5 p-8 sm:p-12 relative overflow-hidden shadow-2xl text-left">
+            <div className="relative z-10 max-w-3xl">
+              <div className="flex items-center gap-2 mb-3">
+                <span className="w-2 h-2 rounded-full bg-amber-400" />
+                <span className="text-[10px] font-black uppercase tracking-widest text-amber-400 font-mono">
+                  {t('about_sof_umer') || 'ABOUT SOF-UMER'}
                 </span>
               </div>
-              <div className="p-6 text-left">
-                <h4 className="font-serif text-base text-white mb-1.5 font-semibold">{ad.title}</h4>
-                <p className="text-xs text-[#F5F5F4]/60 leading-relaxed mb-5 font-light">{ad.description}</p>
-                <a
-                  href={ad.linkUrl}
-                  className="block text-center bg-white/5 hover:bg-white/10 text-white border border-white/10 rounded-xl py-3 text-[10px] font-bold uppercase tracking-widest transition duration-300 hover:scale-[1.01]"
-                >
-                  {t('visit_offer')}
-                </a>
+              <h3 className="text-2xl sm:text-3xl font-serif text-white font-bold tracking-tight mb-4">
+                {t('ethiopia_premier_marketplace') || "Ethiopia's Premier Multi-Category Marketplace"}
+              </h3>
+              <p className="text-white/70 text-sm sm:text-base leading-relaxed font-light mb-8">
+                {t('about_sof_umer_desc') || 'SOF-UMER is built to empower buyers and sellers across Ethiopia with authentic, direct, and transparent trade. From premium real estate and verified motor vehicles to modern electronics, job openings, and local professional services, we connect communities safely.'}
+              </p>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 pt-6 border-t border-white/10">
+                <div className="flex items-start gap-3.5">
+                  <div className="p-2.5 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-400 shrink-0">
+                    <ShieldCheck className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-bold text-white mb-1">
+                      {t('verified_listings') || 'Verified Listings'}
+                    </h4>
+                    <p className="text-xs text-white/50 leading-relaxed font-light">
+                      {t('verified_listings_desc') || 'Moderated submissions, supplier verification, and community safeguards.'}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-3.5">
+                  <div className="p-2.5 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-400 shrink-0">
+                    <Store className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-bold text-white mb-1">
+                      {t('direct_connection') || 'Direct Connection'}
+                    </h4>
+                    <p className="text-xs text-white/50 leading-relaxed font-light">
+                      {t('direct_connection_desc') || 'Connect directly with local sellers and businesses without middleman fees.'}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-3.5">
+                  <div className="p-2.5 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-400 shrink-0">
+                    <MapPin className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-bold text-white mb-1">
+                      {t('nationwide_reach') || 'Nationwide Reach'}
+                    </h4>
+                    <p className="text-xs text-white/50 leading-relaxed font-light">
+                      {t('nationwide_reach_desc') || 'Discover listings across all regions and major cities in Ethiopia.'}
+                    </p>
+                  </div>
+                </div>
               </div>
             </div>
-          ))}
 
-          {/* Guidelines info card removed to clear static words from screen */}
+            <div className="absolute right-0 top-0 -mr-20 -mt-20 w-80 h-80 bg-amber-500/5 rounded-full blur-3xl pointer-events-none" />
+          </div>
+
+          {/* 7. STAY UPDATED */}
+          <div className="mb-14 rounded-3xl bg-gradient-to-br from-[#12121c] to-[#0c0c12] border border-amber-500/20 p-8 sm:p-10 relative overflow-hidden shadow-2xl text-left">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
+              <div className="max-w-xl">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="w-2 h-2 rounded-full bg-amber-400" />
+                  <span className="text-[10px] font-black uppercase tracking-widest text-amber-400 font-mono">
+                    {t('stay_updated') || 'STAY UPDATED'}
+                  </span>
+                </div>
+                <h3 className="text-xl sm:text-2xl font-serif text-white font-bold tracking-tight mb-2">
+                  {t('never_miss_deal') || 'Never Miss a Verified Deal or New Listing'}
+                </h3>
+                <p className="text-xs sm:text-sm text-white/60 font-light leading-relaxed">
+                  {t('stay_updated_sub') || 'Subscribe to receive weekly highlights, market price drops, and featured opportunities across your favorite categories.'}
+                </p>
+              </div>
+
+              <form onSubmit={handleHomeSubscribe} className="w-full md:w-auto shrink-0">
+                {homeSubscribed ? (
+                  <div className="flex items-center gap-2.5 px-6 py-3.5 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 rounded-2xl text-xs font-bold animate-fade-in">
+                    <CheckCircle2 className="w-4 h-4 shrink-0" />
+                    <span>{t('subscribed_success') || "You're all set! Thank you for staying updated."}</span>
+                  </div>
+                ) : (
+                  <div className="flex flex-col sm:flex-row gap-2.5">
+                    <input
+                      type="email"
+                      required
+                      value={homeEmailInput}
+                      onChange={e => setHomeEmailInput(e.target.value)}
+                      placeholder={t('enter_your_email') || 'Enter your email address...'}
+                      className="px-4 py-3 bg-[#0a0a0f] border border-white/10 focus:border-amber-400/60 rounded-2xl text-xs text-white placeholder-white/30 focus:outline-none w-full sm:w-72 transition"
+                    />
+                    <button
+                      type="submit"
+                      className="px-6 py-3 bg-gradient-to-r from-amber-400 to-amber-600 hover:from-amber-300 hover:to-amber-500 text-black font-extrabold uppercase tracking-wider text-xs rounded-2xl transition duration-300 hover:scale-[1.02] shadow-lg shadow-amber-500/15 cursor-pointer shrink-0"
+                    >
+                      {t('subscribe') || 'Subscribe'}
+                    </button>
+                  </div>
+                )}
+              </form>
+            </div>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* ALL CATEGORIES Overlay Modal */}
       <AllCategoriesModal

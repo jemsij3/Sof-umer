@@ -119,8 +119,6 @@ export default function UserDashboard({
     toggleFavorite,
     setLanguage,
     supportTickets,
-    topUpWallet,
-    spendWallet,
     systemSettings,
     faqs,
     deleteNotification,
@@ -160,16 +158,7 @@ export default function UserDashboard({
   const [promotePlan, setPromotePlan] = useState<string>('pkg-1');
   const [promoteTopAd, setPromoteTopAd] = useState(false);
   const [promoteFeatured, setPromoteFeatured] = useState(false);
-  const [promotePaymentMethod, setPromotePaymentMethod] = useState<'wallet' | 'direct'>('wallet');
   const [promoteError, setPromoteError] = useState('');
-
-  // Top Up Wallet state
-  const [topUpAmount, setTopUpAmount] = useState<number | ''>('');
-  const [topUpMethodId, setTopUpMethodId] = useState('');
-  const [topUpRefNum, setTopUpRefNum] = useState('');
-  const [topUpSubmitting, setTopUpSubmitting] = useState(false);
-  const [topUpSuccess, setTopUpSuccess] = useState('');
-  const [topUpError, setTopUpError] = useState('');
 
   // Read message logs locally tracked for unread state
   const [readInquiries, setReadInquiries] = useState<Record<string, number>>(() => {
@@ -660,87 +649,54 @@ export default function UserDashboard({
     const addonsPrice = (promoteTopAd ? topAdPrice : 0) + (promoteFeatured ? featuredPrice : 0);
     const totalCost = basePrice + addonsPrice;
 
-    if (promotePaymentMethod === 'wallet') {
-      if ((currentUser.walletBalance || 0) < totalCost) {
-        setPromoteError(`Insufficient wallet balance! You have ${currentUser.walletBalance || 0} ETB, but this plan costs ${totalCost} ETB. Please top up your wallet or choose Direct Bank Transfer.`);
-        setReceiptSubmitting(false);
-        return;
+    // Direct Bank Transfer / Mobile Money
+    if (!selectedMethodId) {
+      setPromoteError('Please select a bank or mobile money account.');
+      setReceiptSubmitting(false);
+      return;
+    }
+    if (!receiptImageSim.trim() && !receiptFileData?.url) {
+      setPromoteError('Please enter a transaction reference number or upload a payment receipt file.');
+      setReceiptSubmitting(false);
+      return;
+    }
+    const method = paymentMethods.find(m => m.id === selectedMethodId);
+    try {
+      const res = await fetch('/api/receipts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: currentUser.id,
+          userEmail: currentUser.email,
+          userName: currentUser.fullName,
+          amount: totalCost,
+          paymentMethodId: selectedMethodId,
+          paymentMethodName: method?.name || 'Bank Transfer',
+          relatedPropertyId: promotingProperty.id,
+          relatedPropertyTitle: promotingProperty.title,
+          referenceNumber: receiptImageSim.trim() || undefined,
+          receiptUrlOrFile: receiptFileData?.url || receiptImageSim.trim(),
+          fileType: receiptFileData?.fileType || 'image',
+          fileName: receiptFileData?.fileName,
+          fileSize: receiptFileData?.fileSize
+        })
+      });
+      if (res.ok) {
+        setReceiptSuccess('Payment receipt submitted successfully! Admin will verify and activate your boost.');
+        setReceiptImageSim('');
+        setReceiptFileData(null);
+        refreshData();
+        setTimeout(() => {
+          setReceiptSuccess('');
+          setPromotingProperty(null);
+        }, 3000);
+      } else {
+        setPromoteError('Failed to submit receipt. Please try again.');
       }
-      try {
-        const durationDays = parseInt(selectedPlanObj?.days) || 7;
-        const success = await spendWallet(
-          totalCost,
-          `Boost Plan (${selectedPlanObj?.name || 'Promotion Package'}) for ${promotingProperty.title}`,
-          promotingProperty.id,
-          selectedPlanObj?.id || 'vip',
-          durationDays
-        );
-        if (success) {
-          setReceiptSuccess('Listing successfully boosted with wallet credits! Your ad visibility has been upgraded.');
-          refreshData();
-          setTimeout(() => {
-            setReceiptSuccess('');
-            setPromotingProperty(null);
-          }, 3000);
-        } else {
-          setPromoteError('Failed to process promotion payment with wallet.');
-        }
-      } catch (err: any) {
-        setPromoteError(err.message || 'Error processing wallet payment.');
-      } finally {
-        setReceiptSubmitting(false);
-      }
-    } else {
-      // Direct Bank Transfer
-      if (!selectedMethodId) {
-        setPromoteError('Please select a bank or mobile money account.');
-        setReceiptSubmitting(false);
-        return;
-      }
-      if (!receiptImageSim.trim() && !receiptFileData?.url) {
-        setPromoteError('Please enter a transaction reference number or upload a payment receipt file.');
-        setReceiptSubmitting(false);
-        return;
-      }
-      const method = paymentMethods.find(m => m.id === selectedMethodId);
-      try {
-        const res = await fetch('/api/receipts', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            userId: currentUser.id,
-            userEmail: currentUser.email,
-            userName: currentUser.fullName,
-            amount: totalCost,
-            paymentMethodId: selectedMethodId,
-            paymentMethodName: method?.name || 'Bank Transfer',
-            relatedPropertyId: promotingProperty.id,
-            relatedPropertyTitle: promotingProperty.title,
-            referenceNumber: receiptImageSim.trim() || undefined,
-            receiptUrlOrFile: receiptFileData?.url || receiptImageSim.trim(),
-            fileType: receiptFileData?.fileType || 'image',
-            fileName: receiptFileData?.fileName,
-            fileSize: receiptFileData?.fileSize
-          })
-        });
-        if (res.ok) {
-          setReceiptSuccess('Payment receipt submitted successfully! Admin will verify and activate your boost.');
-          setReceiptImageSim('');
-          setReceiptFileData(null);
-          refreshData();
-          setTimeout(() => {
-            setReceiptSuccess('');
-            setPromotingProperty(null);
-          }, 3000);
-        } else {
-          setPromoteError('Failed to submit receipt.');
-        }
-      } catch (e) {
-        console.error(e);
-        setPromoteError('Error submitting promotion receipt.');
-      } finally {
-        setReceiptSubmitting(false);
-      }
+    } catch (e: any) {
+      setPromoteError('Error submitting receipt: ' + e.message);
+    } finally {
+      setReceiptSubmitting(false);
     }
   };
 
@@ -829,41 +785,6 @@ export default function UserDashboard({
     setTimeout(() => setReportSuccess(''), 4000);
   };
 
-  // Top Up Wallet handler
-  const handleTopUpSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!topUpAmount || Number(topUpAmount) <= 0 || !topUpMethodId) {
-      setTopUpError('Please select a payment method and enter a valid top-up amount.');
-      return;
-    }
-    const method = paymentMethods.find(m => m.id === topUpMethodId);
-    setTopUpSubmitting(true);
-    setTopUpError('');
-    setTopUpSuccess('');
-    try {
-      const success = await topUpWallet(
-        Number(topUpAmount),
-        topUpMethodId,
-        method?.name || 'Bank Transfer',
-        undefined,
-        topUpRefNum
-      );
-      if (success) {
-        setTopUpSuccess('Top-up request submitted successfully! Your balance will be credited after admin confirmation.');
-        setTopUpAmount('');
-        setTopUpRefNum('');
-        refreshData();
-      } else {
-        setTopUpError('Failed to submit top-up request. Please try again.');
-      }
-    } catch (e) {
-      console.error(e);
-      setTopUpError('An error occurred while submitting top-up request.');
-    } finally {
-      setTopUpSubmitting(false);
-    }
-  };
-
   // Mark notifications read
   const handleMarkAllNotificationsRead = () => {
     const ids = myNotifications.map(n => n.id);
@@ -877,7 +798,7 @@ export default function UserDashboard({
   const SECTIONS = [
     { id: 'profile', label_en: 'Profile', label_om: 'Profaayilii', label_am: 'መገለጫ', icon: <User className="w-4 h-4" /> },
     { id: 'mylistings', label_en: 'My Listings', label_om: 'Beeksisa Koo', label_am: 'የእኔ ማስታወቂያዎች', icon: <List className="w-4 h-4" />, badge: myListings.length },
-    { id: 'payments', label_en: 'Wallet & Payments', label_om: 'Kaffaltii & Boorsaa', label_am: 'የእኔ ቦርሳ እና ክፍያዎች', icon: <CreditCard className="w-4 h-4" /> },
+    { id: 'payments', label_en: 'Payment Receipts', label_om: 'Kaffaltii & Ragaa', label_am: 'የክፍያ ደረሰኞች', icon: <CreditCard className="w-4 h-4" /> },
     { id: 'saveditems', label_en: 'Saved Items', label_om: 'Meeshaawwan Qubaman', label_am: 'የተቀመጡ ማስታወቂያዎች', icon: <Heart className="w-4 h-4" />, badge: mySavedItems.length },
     { id: 'messages', label_en: 'Messages', label_om: 'Ergawwan', label_am: 'መልእክቶች', icon: <MessageSquare className="w-4 h-4" />, badge: unreadMessagesCount > 0 ? unreadMessagesCount : undefined, badgeColor: 'bg-red-500 text-white' },
     { id: 'notifications', label_en: 'Notifications', label_om: 'Beeksisa Caffee', label_am: 'ማሳወቂያዎች', icon: <Bell className="w-4 h-4" />, badge: unreadNotifCount > 0 ? unreadNotifCount : undefined, badgeColor: 'bg-amber-500 text-black' },
@@ -1517,117 +1438,53 @@ export default function UserDashboard({
                           </div>
 
                           {/* SECTION 4: PAYMENT METHOD SELECTION */}
+                          {/* Payment Method instructions */}
                           <div className="space-y-4 pt-2 border-t border-white/5">
                             <label className="block text-xs font-bold text-amber-500 uppercase tracking-widest font-mono">
-                              3. Select Payment Method *
+                              3. Payment Method: Bank Transfer / Telebirr
                             </label>
-
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                              <button
-                                type="button"
-                                onClick={() => setPromotePaymentMethod('wallet')}
-                                className={`p-4 rounded-2xl border flex items-center gap-3 transition cursor-pointer text-left ${
-                                  promotePaymentMethod === 'wallet' 
-                                    ? 'bg-amber-500/15 border-amber-500 text-white' 
-                                    : 'bg-black/40 border-white/5 text-white/60 hover:bg-black/60'
-                                }`}
-                              >
-                                <CreditCard className="w-6 h-6 text-amber-400 shrink-0" />
-                                <div>
-                                  <span className="font-bold text-xs block">Marketplace Wallet (Instant)</span>
-                                  <span className="text-[10px] text-white/50 block font-mono">
-                                    Balance: {currentUser.walletBalance?.toLocaleString() || 0} ETB
-                                  </span>
-                                </div>
-                              </button>
-
-                              <button
-                                type="button"
-                                onClick={() => setPromotePaymentMethod('direct')}
-                                className={`p-4 rounded-2xl border flex items-center gap-3 transition cursor-pointer text-left ${
-                                  promotePaymentMethod === 'direct' 
-                                    ? 'bg-amber-500/15 border-amber-500 text-white' 
-                                    : 'bg-black/40 border-white/5 text-white/60 hover:bg-black/60'
-                                }`}
-                              >
-                                <Building className="w-6 h-6 text-amber-400 shrink-0" />
-                                <div>
-                                  <span className="font-bold text-xs block">Bank Transfer / Telebirr</span>
-                                  <span className="text-[10px] text-white/50 block">Upload FT / Reference Code</span>
-                                </div>
-                              </button>
-                            </div>
-
-                            {/* Wallet Payment View */}
-                            {promotePaymentMethod === 'wallet' && (
-                              <div className="p-4 bg-black/40 rounded-2xl border border-white/5 space-y-2 text-xs">
-                                <div className="flex justify-between items-center">
-                                  <span className="text-white/60">Your Wallet Balance:</span>
-                                  <span className="font-mono font-bold text-white">{currentUser.walletBalance?.toLocaleString() || 0} ETB</span>
-                                </div>
-                                <div className="flex justify-between items-center">
-                                  <span className="text-white/60">Required Deduction:</span>
-                                  <span className="font-mono font-bold text-amber-400">-{totalCost} ETB</span>
-                                </div>
-                                {(currentUser.walletBalance || 0) < totalCost ? (
-                                  <div className="p-3 bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs rounded-xl mt-2 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
-                                    <span>⚠️ Insufficient wallet balance!</span>
-                                    <button
-                                      type="button"
-                                      onClick={() => setActiveTab('payments')}
-                                      className="px-3 py-1 bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 rounded-lg text-[10px] font-bold font-mono uppercase"
-                                    >
-                                      Top Up Wallet
-                                    </button>
-                                  </div>
-                                ) : (
-                                  <div className="p-2.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[11px] rounded-xl mt-2 font-medium">
-                                    ✅ Sufficient balance! Clicking submit will instantly apply this boost plan to your listing.
-                                  </div>
-                                )}
-                              </div>
-                            )}
+                            <p className="text-[11px] text-white/60">
+                              Transfer the exact plan cost to one of our official bank/mobile accounts below, then enter your transaction reference number or upload your payment receipt.
+                            </p>
 
                             {/* Direct Transfer View */}
-                            {promotePaymentMethod === 'direct' && (
-                              <div className="p-4 bg-black/40 rounded-2xl border border-white/5 space-y-4 text-xs">
-                                <div>
-                                  <label className="block text-[10px] font-bold text-white/50 uppercase mb-1.5 font-mono">
-                                    Select Official Bank / Telebirr Account *
-                                  </label>
-                                  <select 
-                                    required 
-                                    value={selectedMethodId} 
-                                    onChange={e => setSelectedMethodId(e.target.value)} 
-                                    className="w-full p-3 bg-black border border-white/10 text-xs text-white rounded-xl focus:outline-none focus:border-amber-500/30 font-mono"
-                                  >
-                                    <option value="">-- Choose Account --</option>
-                                    {activeMethods.map(m => (
-                                      <option key={m.id} value={m.id}>{m.name} ({m.accountNumber})</option>
-                                    ))}
-                                  </select>
-                                </div>
-
-                                <div className="col-span-1 sm:col-span-2 pt-2">
-                                  <ReceiptUploadInput
-                                    referenceNumber={receiptImageSim}
-                                    onReferenceChange={setReceiptImageSim}
-                                    receiptFile={receiptFileData?.url || ''}
-                                    fileName={receiptFileData?.fileName}
-                                    fileType={receiptFileData?.fileType}
-                                    fileSize={receiptFileData?.fileSize}
-                                    onFileChange={(data) => setReceiptFileData(data)}
-                                  />
-                                </div>
+                            <div className="p-4 bg-black/40 rounded-2xl border border-white/5 space-y-4 text-xs">
+                              <div>
+                                <label className="block text-[10px] font-bold text-white/50 uppercase mb-1.5 font-mono">
+                                  Select Official Bank / Telebirr Account *
+                                </label>
+                                <select 
+                                  required 
+                                  value={selectedMethodId} 
+                                  onChange={e => setSelectedMethodId(e.target.value)} 
+                                  className="w-full p-3 bg-black border border-white/10 text-xs text-white rounded-xl focus:outline-none focus:border-amber-500/30 font-mono"
+                                >
+                                  <option value="">-- Choose Account --</option>
+                                  {activeMethods.map(m => (
+                                    <option key={m.id} value={m.id}>{m.name} ({m.accountNumber})</option>
+                                  ))}
+                                </select>
                               </div>
-                            )}
+
+                              <div className="col-span-1 sm:col-span-2 pt-2">
+                                <ReceiptUploadInput
+                                  referenceNumber={receiptImageSim}
+                                  onReferenceChange={setReceiptImageSim}
+                                  receiptFile={receiptFileData?.url || ''}
+                                  fileName={receiptFileData?.fileName}
+                                  fileType={receiptFileData?.fileType}
+                                  fileSize={receiptFileData?.fileSize}
+                                  onFileChange={(data) => setReceiptFileData(data)}
+                                />
+                              </div>
+                            </div>
                           </div>
 
                           {/* SUBMIT ACTIONS */}
                           <div className="flex flex-wrap gap-3 pt-2">
                             <button 
                               type="submit" 
-                              disabled={receiptSubmitting || (promotePaymentMethod === 'wallet' && (currentUser.walletBalance || 0) < totalCost)}
+                              disabled={receiptSubmitting}
                               className="bg-amber-500 hover:bg-amber-400 text-black font-extrabold py-3 px-6 rounded-xl text-xs uppercase tracking-wider transition cursor-pointer disabled:opacity-50 inline-flex items-center gap-2 shadow-lg shadow-amber-500/10"
                             >
                               {receiptSubmitting ? (
@@ -1635,7 +1492,7 @@ export default function UserDashboard({
                               ) : (
                                 <>
                                   <Zap className="w-4 h-4 fill-black" />
-                                  <span>{promotePaymentMethod === 'wallet' ? `Pay ${totalCost} ETB & Boost Now` : `Submit Receipt (${totalCost} ETB)`}</span>
+                                  <span>Submit Receipt ({totalCost} ETB)</span>
                                 </>
                               )}
                             </button>
@@ -1713,107 +1570,38 @@ export default function UserDashboard({
                 </div>
               )}
 
-              {/* SECTION: WALLET & PAYMENTS */}
+              {/* SECTION: PAYMENT RECEIPTS & HISTORY */}
               {activeTab === 'payments' && (
                 <div className="space-y-6">
                   <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-white/5 pb-4">
                     <div>
-                      <h3 className="text-lg font-bold text-white">{tLocal('wallet_payment_center')}</h3>
-                      <p className="text-[11px] text-white/40 mt-0.5">{tLocal('wallet_center_desc')}</p>
+                      <h3 className="text-lg font-bold text-white">{t('payment_receipts') || 'Payment Receipts & Verification'}</h3>
+                      <p className="text-[11px] text-white/40 mt-0.5">{t('payment_receipts_desc') || 'View the verification status of your payment receipts for listing boosts and promotions.'}</p>
                     </div>
                   </div>
 
-                  {/* Wallet Balance Card */}
-                  <div className="bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-transparent border border-amber-500/20 p-6 rounded-2xl flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-                    <div>
-                      <span className="text-[10px] font-black uppercase text-amber-500 tracking-wider block mb-1">{tLocal('available_wallet_balance')}</span>
-                      <div className="flex items-baseline gap-2">
-                        <span className="text-3xl font-black text-white">{currentUser.walletBalance?.toLocaleString() || 0}</span>
-                        <span className="text-sm font-extrabold text-amber-500">ETB</span>
-                      </div>
-                      <p className="text-[11px] text-white/50 mt-1">{tLocal('wallet_credits_desc')}</p>
+                  {/* Official Payment Accounts Card */}
+                  <div className="bg-[#0a0d0c] border border-emerald-500/20 p-6 rounded-2xl">
+                    <div className="flex items-center gap-2.5 mb-3">
+                      <Building className="w-5 h-5 text-emerald-400" />
+                      <h4 className="text-sm font-bold text-white uppercase tracking-wider">{t('official_payment_channels') || 'Official Payment Channels'}</h4>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs bg-amber-500/20 text-amber-400 font-mono px-3 py-1.5 rounded-xl border border-amber-500/30 font-bold">
-                        {tLocal('wallet_credit_rate')}
-                      </span>
+                    <p className="text-xs text-white/60 mb-4 leading-relaxed">
+                      {t('official_payment_desc') || 'To promote your listings or verify accounts, make deposits directly to any of our official banking accounts and submit your receipt details.'}
+                    </p>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      {activeMethods.map(m => (
+                        <div key={m.id} className="p-3.5 bg-black/40 border border-white/10 rounded-xl flex items-center justify-between">
+                          <div>
+                            <span className="text-xs font-bold text-white block">{m.name}</span>
+                            <span className="text-[10px] text-white/50 block font-mono mt-0.5">{m.accountHolder}</span>
+                          </div>
+                          <div className="text-right">
+                            <span className="text-xs font-mono font-bold text-amber-400 bg-amber-500/10 px-2 py-1 rounded-lg border border-amber-500/20 select-all">{m.accountNumber}</span>
+                          </div>
+                        </div>
+                      ))}
                     </div>
-                  </div>
-
-                  {/* Top Up Wallet Form */}
-                  <div className="bg-black/30 p-6 rounded-2xl border border-white/5">
-                    <h4 className="text-xs font-black uppercase text-amber-500 tracking-wider mb-2">{tLocal('top_up_wallet_credits')}</h4>
-                    <p className="text-[11px] text-white/40 mb-4">{tLocal('top_up_deposit_desc')}</p>
-
-                    {topUpSuccess && <p className="p-3 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs rounded-xl mb-4 text-center font-bold">{topUpSuccess}</p>}
-                    {topUpError && <p className="p-3 bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs rounded-xl mb-4 text-center">{topUpError}</p>}
-
-                    <form onSubmit={handleTopUpSubmit} className="space-y-4">
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div>
-                          <label className="block text-[10px] font-bold text-white/40 uppercase mb-1.5 font-mono">{tLocal('payment_channel')}</label>
-                          <select 
-                            required
-                            value={topUpMethodId} 
-                            onChange={e => setTopUpMethodId(e.target.value)} 
-                            className="w-full p-3 bg-black border border-white/10 text-xs text-white rounded-xl focus:outline-none focus:border-amber-500/30"
-                          >
-                            <option value="">{tLocal('select_payment_method')}</option>
-                            {activeMethods.map(m => (
-                              <option key={m.id} value={m.id}>{m.name} ({m.accountNumber})</option>
-                            ))}
-                          </select>
-                        </div>
-
-                        <div>
-                          <label className="block text-[10px] font-bold text-white/40 uppercase mb-1.5 font-mono font-bold">{tLocal('top_up_amount_label')}</label>
-                          <input 
-                            type="text" 
-                            inputMode="text"
-                            required 
-                            value={topUpAmount} 
-                            onChange={e => setTopUpAmount(e.target.value as any)} 
-                            placeholder="e.g. 500, 1000, 2500 ETB" 
-                            className="w-full p-3 bg-black border border-white/10 text-xs text-white rounded-xl focus:outline-none focus:border-amber-500/30 font-mono"
-                          />
-                        </div>
-                      </div>
-
-                      {/* Quick Amount Buttons */}
-                      <div className="flex flex-wrap items-center gap-2">
-                        <span className="text-[10px] text-white/40 font-mono">{tLocal('quick_amounts')}</span>
-                        {[250, 500, 1000, 2500, 5000].map(amt => (
-                          <button
-                            key={amt}
-                            type="button"
-                            onClick={() => setTopUpAmount(amt)}
-                            className="px-3 py-1 bg-white/5 hover:bg-amber-500/20 text-white hover:text-amber-400 text-xs font-mono font-bold rounded-lg border border-white/5 transition"
-                          >
-                            +{amt} ETB
-                          </button>
-                        ))}
-                      </div>
-
-                      <div>
-                        <label className="block text-[10px] font-bold text-white/40 uppercase mb-1.5 font-mono">{tLocal('tx_ref_label')}</label>
-                        <input 
-                          type="text" 
-                          required 
-                          value={topUpRefNum} 
-                          onChange={e => setTopUpRefNum(e.target.value)} 
-                          placeholder="e.g. CBE FT230918... / Telebirr Transaction ID" 
-                          className="w-full p-3 bg-black border border-white/10 text-xs text-white rounded-xl focus:outline-none focus:border-amber-500/30 font-mono"
-                        />
-                      </div>
-
-                      <button 
-                        type="submit" 
-                        disabled={topUpSubmitting} 
-                        className="bg-amber-500 hover:bg-amber-400 text-black font-extrabold py-3 px-6 rounded-xl text-xs uppercase tracking-wider transition cursor-pointer"
-                      >
-                        {topUpSubmitting ? tLocal('saving') : tLocal('submit_top_up')}
-                      </button>
-                    </form>
                   </div>
 
                   {/* Payment Receipts History */}
