@@ -460,6 +460,169 @@ export const REDESIGNED_CATEGORIES: CategoryRedesign[] = [
   }
 ];
 
+export const PRIMARY_CATEGORIES: CategoryRedesign[] = [
+  {
+    id: 'properties',
+    name: 'Properties',
+    emoji: '🏠',
+    iconName: 'Home',
+    imageUrl: 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&w=200&q=80',
+    bannerGradient: 'from-amber-600 to-amber-900',
+    translations: {
+      en: 'Properties',
+      om: 'Qabeenya Lafaa',
+      am: 'ቤትና ቦታዎች (ሪል እስቴት)'
+    },
+    subcategories: [
+      { id: 'prop-houses', name: 'Houses', translations: { en: 'Houses', om: 'Manneen', am: 'ቤቶች' } },
+      { id: 'prop-apartments', name: 'Apartments', translations: { en: 'Apartments', om: 'Apaartaamaa', am: 'አፓርታማዎች' } },
+      { id: 'prop-villas', name: 'Villas', translations: { en: 'Villas', om: 'Viilaa', am: 'ቪላዎች' } },
+      { id: 'prop-land', name: 'Land & Plots', translations: { en: 'Land & Plots', om: 'Lafa & Maasii', am: 'መሬት እና ቦታዎች' } },
+      { id: 'prop-offices', name: 'Offices', translations: { en: 'Offices', om: 'Iddoo Barkumee', am: 'የቢሮ ቦታዎች' } },
+      { id: 'prop-shops', name: 'Shops', translations: { en: 'Shops', om: 'Suuqii', am: 'ሱቆች' } },
+      { id: 'prop-warehouse', name: 'Warehouses', translations: { en: 'Warehouses', om: 'Kuusaa', am: 'መጋዘኖች' } },
+      { id: 'prop-hotels', name: 'Hotels', translations: { en: 'Hotels', om: 'Hoteela', am: 'ሆቴሎች' } },
+      { id: 'prop-farms', name: 'Farms', translations: { en: 'Farms', om: 'Qonna', am: 'እርሻዎች' } },
+      { id: 'prop-commercial', name: 'Commercial Buildings', translations: { en: 'Commercial Buildings', om: 'Gamoo Daldalaa', am: 'የንግድ ህንፃዎች' } },
+      { id: 'prop-services', name: 'Property Services', translations: { en: 'Property Services', om: 'Tajaajila Qabeenyaa', am: 'የቤትና ቦታ አገልግሎቶች' } }
+    ],
+    recommendedFilters: ['Buy / Rent', 'Price', 'Region', 'City', 'Bedrooms', 'Bathrooms', 'Property Size', 'Furnished'],
+    dbMapping: { majorCategory: 'Properties' }
+  },
+  {
+    id: 'vehicles',
+    name: 'Vehicles',
+    emoji: '🚗',
+    iconName: 'Car',
+    imageUrl: 'https://images.unsplash.com/photo-1552519507-da3b142c6e3d?auto=format&fit=crop&w=200&q=80',
+    bannerGradient: 'from-blue-600 to-indigo-900',
+    translations: {
+      en: 'Vehicles',
+      om: 'Konkolaattota',
+      am: 'ተሽከርካሪዎች'
+    },
+    subcategories: [
+      { id: 'veh-cars', name: 'Cars', translations: { en: 'Cars', om: 'Mootara', am: 'መኪናዎች' } },
+      { id: 'veh-motorcycles', name: 'Motorcycles', translations: { en: 'Motorcycles', om: 'Doqdoqqee', am: 'ሞተር ብስክሌቶች' } },
+      { id: 'veh-trucks', name: 'Trucks', translations: { en: 'Trucks', om: 'Baajii / Traakii', am: 'የጭነት መኪናዎች' } },
+      { id: 'veh-buses', name: 'Buses', translations: { en: 'Buses', om: 'Baasii', am: 'አውቶቡሶች' } },
+      { id: 'veh-heavy', name: 'Heavy Equipment', translations: { en: 'Heavy Equipment', om: 'Meeshaa Ulfaataa', am: 'ከባድ ማሽነሪዎች' } },
+      { id: 'veh-parts', name: 'Auto Parts', translations: { en: 'Auto Parts', om: 'Kutaalee Mootaraa', am: 'የመኪና መለዋወጫዎች' } },
+      { id: 'veh-accessories', name: 'Car Accessories', translations: { en: 'Car Accessories', om: 'Faaya Konkolaataa', am: 'የመኪና እቃዎች' } },
+      { id: 'veh-services', name: 'Vehicle Services', translations: { en: 'Vehicle Services', om: 'Tajaajila Konkolaataa', am: 'የመኪና አገልግሎት' } }
+    ],
+    recommendedFilters: ['Brand', 'Model', 'Year', 'Fuel Type', 'Transmission', 'Condition', 'Price'],
+    dbMapping: { majorCategory: 'Vehicles', propertyTypeKeywords: ['Car', 'Vehicle', 'Toyota', 'Suzuki', 'Hyundai', 'Motor', 'Truck', 'Bus', 'Parts', 'Accessories'] }
+  },
+  {
+    id: 'products',
+    name: 'Products',
+    emoji: '📦',
+    iconName: 'ShoppingBag',
+    imageUrl: 'https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?auto=format&fit=crop&w=200&q=80',
+    bannerGradient: 'from-purple-600 to-pink-900',
+    translations: {
+      en: 'Products',
+      om: 'Oomishaalee',
+      am: 'ምርቶችና እቃዎች'
+    },
+    subcategories: [
+      { id: 'sub-prod-electronics', name: 'Electronics', translations: { en: 'Electronics', om: 'Ilektirooniksii', am: 'ኤሌክትሮኒክስ' } },
+      { id: 'sub-prod-fashion', name: 'Fashion & Clothes', translations: { en: 'Fashion & Clothes', om: 'Faashinii & Uffata', am: 'ፋሽንና አልባሳት' } },
+      { id: 'sub-prod-furniture', name: 'Home, Furniture & Garden', translations: { en: 'Home, Furniture & Garden', om: 'Mana & Meeshaa', am: 'የቤት ዕቃዎችና ፈርኒቸር' } },
+      { id: 'sub-prod-kids', name: 'Babies & Kids', translations: { en: 'Babies & Kids', om: "Daa'imman & Ijoollee", am: 'የህጻናት እቃዎች' } },
+      { id: 'sub-prod-beauty', name: 'Health & Beauty', translations: { en: 'Health & Beauty', om: 'Fayyaa & Miidhagina', am: 'ጤናና ውበት' } },
+      { id: 'sub-prod-agri', name: 'Agriculture & Food', translations: { en: 'Agriculture & Food', om: 'Qonnaa & Nyata', am: 'እርሻና ምግብ' } },
+      { id: 'sub-prod-pets', name: 'Animals & Pets', translations: { en: 'Animals & Pets', om: 'Beeyladaa & Binensota', am: 'ቤት እንስሳት' } },
+      { id: 'sub-prod-sports', name: 'Sports & Outdoors', translations: { en: 'Sports & Outdoors', om: 'Ispoortii', am: 'ስፖርትና ከቤት ውጭ' } },
+      { id: 'sub-prod-edu', name: 'Education & Books', translations: { en: 'Education & Books', om: 'Barumsaa & Kitaabota', am: 'ትምህርትና መጻሕፍት' } },
+      { id: 'sub-prod-other', name: 'Other Products', translations: { en: 'Other Products', om: 'Oomisha Biroo', am: 'ሌሎች ምርቶች' } }
+    ],
+    recommendedFilters: ['Category', 'Condition', 'Brand', 'Price', 'Location'],
+    dbMapping: { majorCategory: 'Products' }
+  },
+  {
+    id: 'services',
+    name: 'Services',
+    emoji: '🛠️',
+    iconName: 'Wrench',
+    imageUrl: 'https://images.unsplash.com/photo-1581092918056-0c4c3acd3789?auto=format&fit=crop&w=200&q=80',
+    bannerGradient: 'from-amber-500 to-orange-800',
+    translations: {
+      en: 'Services',
+      om: 'Tajaajiloota',
+      am: 'አገልግሎቶች'
+    },
+    subcategories: [
+      { id: 'srv-repair', name: 'Repair & Maintenance', translations: { en: 'Repair & Maintenance', om: 'Suphaa', am: 'ጥገናና ዕድሳት' } },
+      { id: 'srv-cleaning', name: 'Cleaning Services', translations: { en: 'Cleaning Services', om: 'Qulqullina', am: 'ጽዳት አገልግሎት' } },
+      { id: 'srv-construction', name: 'Construction & Renovation', translations: { en: 'Construction & Renovation', om: 'Ijaarsa', am: 'ግንባታና እድሳት' } },
+      { id: 'srv-transport', name: 'Transport & Logistics', translations: { en: 'Transport & Logistics', om: 'Geejjiba', am: 'የትራንስፖርትና ሎጅስቲክስ' } },
+      { id: 'srv-it', name: 'IT & Software', translations: { en: 'IT & Software', om: 'IT & Teeknooloojii', am: 'አይቲና ሶፍትዌር' } },
+      { id: 'srv-design', name: 'Design & Creative', translations: { en: 'Design & Creative', om: 'Dizaayinii', am: 'ዲዛይንና ፈጠራ' } },
+      { id: 'srv-marketing', name: 'Marketing & PR', translations: { en: 'Marketing & PR', om: 'Gabaa & Beeksisu', am: 'ማስታወቂያና ገበያ ማፈላለግ' } },
+      { id: 'srv-photography', name: 'Photography & Video', translations: { en: 'Photography & Video', om: 'Waraabbii Suuraa', am: 'ፎቶና ቪዲዮ' } },
+      { id: 'srv-events', name: 'Event Services', translations: { en: 'Event Services', om: 'Tajaajila Qophii', am: 'የዝግጅት አዘጋጅ አገልግሎት' } }
+    ],
+    recommendedFilters: ['Service Type', 'Pricing Unit', 'Location'],
+    dbMapping: { majorCategory: 'Services', propertyTypeKeywords: ['Service', 'Repair', 'Cleaning', 'IT', 'Design', 'Marketing', 'Consulting', 'Transport'] }
+  },
+  {
+    id: 'jobs',
+    name: 'Jobs',
+    emoji: '💼',
+    iconName: 'Briefcase',
+    imageUrl: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=200&q=80',
+    bannerGradient: 'from-emerald-600 to-teal-900',
+    translations: {
+      en: 'Jobs',
+      om: 'Hojiiwwan',
+      am: 'የሥራ እድሎች'
+    },
+    subcategories: [
+      { id: 'job-fulltime', name: 'Full-time Jobs', translations: { en: 'Full-time Jobs', om: 'Hojii Yeroo Guutuu', am: 'ሙሉ ጊዜ ሥራ' } },
+      { id: 'job-parttime', name: 'Part-time Jobs', translations: { en: 'Part-time Jobs', om: 'Hojii Yeroo Murtaa’aa', am: 'የትርፍ ጊዜ ሥራ' } },
+      { id: 'job-freelance', name: 'Freelance & Contract', translations: { en: 'Freelance & Contract', om: 'Hojii Kontiraataa', am: 'ፍሪላንስና ኮንትራት' } },
+      { id: 'job-remote', name: 'Remote Jobs', translations: { en: 'Remote Jobs', om: 'Hojii Fagoo', am: 'የርቀት ሥራ' } },
+      { id: 'job-construction', name: 'Construction & Labor', translations: { en: 'Construction & Labor', om: 'Hojii Harka', am: 'የግንባታና የጉልበት ሥራ' } },
+      { id: 'job-driver', name: 'Drivers & Delivery', translations: { en: 'Drivers & Delivery', om: 'Konkolaachisaa', am: 'አሽከርካሪና ዴሊቨሪ' } },
+      { id: 'job-office', name: 'Office & Admin', translations: { en: 'Office & Admin', om: 'Waajjira', am: 'የቢሮና አስተዳደር' } },
+      { id: 'job-teaching', name: 'Teaching & Education', translations: { en: 'Teaching & Education', om: 'Barsiisummaa', am: 'ማስተማርና ስልጠና' } },
+      { id: 'job-healthcare', name: 'Healthcare & Medical', translations: { en: 'Healthcare & Medical', om: 'Fayyaa', am: 'ጤናና ህክምና' } }
+    ],
+    recommendedFilters: ['Job Type', 'Experience Level', 'Salary Range', 'Location'],
+    dbMapping: { majorCategory: 'Jobs', propertyTypeKeywords: ['Job', 'Vacancy', 'Work', 'Hiring', 'Employment', 'Developer', 'Driver', 'Teacher', 'Engineer'] }
+  },
+  {
+    id: 'businesses',
+    name: 'Businesses',
+    emoji: '🏢',
+    iconName: 'Building2',
+    imageUrl: 'https://images.unsplash.com/photo-1504384308090-c894fdcc538d?auto=format&fit=crop&w=200&q=80',
+    bannerGradient: 'from-slate-700 to-zinc-950',
+    translations: {
+      en: 'Businesses',
+      om: 'Daldaloota',
+      am: 'የንግድ ድርጅቶችና መሣሪያዎች'
+    },
+    subcategories: [
+      { id: 'comm-restaurant', name: 'Restaurant Equipment', translations: { en: 'Restaurant Equipment', om: 'Meeshaa Hoteelaa', am: 'የሬስቶራንትና ሆቴል ዕቃዎች' } },
+      { id: 'comm-office', name: 'Office Equipment', translations: { en: 'Office Equipment', om: 'Meeshaa Waajjiraa', am: 'የቢሮ እቃዎች' } },
+      { id: 'comm-industrial', name: 'Industrial Equipment & Machinery', translations: { en: 'Industrial Equipment & Machinery', om: 'Meeshaa Indaastrii', am: 'የኢንዱስትሪ ማሽነሪዎች' } },
+      { id: 'comm-shop', name: 'Shop Fixtures & POS', translations: { en: 'Shop Fixtures & POS', om: 'Meeshaa Suuqii', am: 'የሱቅ መደርደሪያዎችና እቃዎች' } },
+      { id: 'comm-local-biz', name: 'Business For Sale / Partnership', translations: { en: 'Business For Sale / Partnership', om: 'Daldala Gurguramu', am: 'የሚሸጥ ንግድ ወይም ሽርክና' } }
+    ],
+    recommendedFilters: ['Industry', 'Condition', 'Price'],
+    dbMapping: { majorCategory: 'Local Businesses', propertyTypeKeywords: ['Restaurant', 'Office Equipment', 'Industrial', 'Shop Equipment', 'Machine', 'Generator', 'Commercial', 'Business'] }
+  }
+];
+
+// Product categories that live inside the Products primary category
+export const PRODUCT_CATEGORIES: CategoryRedesign[] = REDESIGNED_CATEGORIES.filter(c => 
+  ['electronics', 'fashion', 'home-furniture-garden', 'babies-kids', 'health-beauty', 'agriculture-food', 'animals-pets', 'sports-outdoors', 'education', 'other'].includes(c.id)
+);
+
+
 export function isListingActiveAndPublished(p: any): boolean {
   if (!p) return false;
 
@@ -963,6 +1126,36 @@ export function getSubcategoryListingCount(
   return properties.filter(p => {
     if (!isListingActiveAndPublished(p)) return false;
 
+    // Handle product group subcategories under Products
+    if (subId.startsWith('sub-prod-')) {
+      const effMajor = getEffectiveMajorCategory(p);
+      if (effMajor !== 'Products') return false;
+      const matchedSubId = getMatchingSubcategoryId(p);
+      if (subId === 'sub-prod-electronics') return matchedSubId.startsWith('el-');
+      if (subId === 'sub-prod-fashion') return matchedSubId.startsWith('fas-');
+      if (subId === 'sub-prod-furniture') return matchedSubId.startsWith('fur-');
+      if (subId === 'sub-prod-kids') return matchedSubId.startsWith('kid-');
+      if (subId === 'sub-prod-beauty') return matchedSubId.startsWith('hb-');
+      if (subId === 'sub-prod-agri') return matchedSubId.startsWith('agri-');
+      if (subId === 'sub-prod-pets') return matchedSubId.startsWith('pet-');
+      if (subId === 'sub-prod-sports') return matchedSubId.startsWith('spt-');
+      if (subId === 'sub-prod-edu') return matchedSubId.startsWith('edu-');
+      if (subId === 'sub-prod-other') {
+        return matchedSubId.startsWith('oth-') || (
+          !matchedSubId.startsWith('el-') &&
+          !matchedSubId.startsWith('fas-') &&
+          !matchedSubId.startsWith('fur-') &&
+          !matchedSubId.startsWith('kid-') &&
+          !matchedSubId.startsWith('hb-') &&
+          !matchedSubId.startsWith('agri-') &&
+          !matchedSubId.startsWith('pet-') &&
+          !matchedSubId.startsWith('spt-') &&
+          !matchedSubId.startsWith('edu-')
+        );
+      }
+      return false;
+    }
+
     const matchedSubId = getMatchingSubcategoryId(p);
     if (matchedSubId !== subId) return false;
 
@@ -975,6 +1168,14 @@ export function getSubcategoryListingCount(
       if (target === 'jobs' && effMajor !== 'Jobs') return false;
       if (target === 'services' && effMajor !== 'Services') return false;
       if (target === 'community' && effMajor !== 'Community') return false;
+      if (
+        (target === 'businesses' || target === 'commercial-equipment') &&
+        effMajor !== 'Local Businesses' &&
+        effMajor !== 'Products' &&
+        !p.subCategoryId?.startsWith('comm-')
+      ) {
+        return false;
+      }
       if (
         (target === 'products' ||
           target === 'electronics' ||
@@ -1011,7 +1212,7 @@ export function getCategoryListingCount(
     const dbMajor = (category.dbMapping?.majorCategory || '').toLowerCase();
 
     if (catId === 'properties' || dbMajor === 'properties') {
-      return effMajor === 'Properties';
+      return effMajor === 'Properties' || isPropertyListing(p);
     }
     if (catId === 'vehicles' || dbMajor === 'vehicles') {
       return effMajor === 'Vehicles';
@@ -1021,6 +1222,16 @@ export function getCategoryListingCount(
     }
     if (catId === 'services' || dbMajor === 'services') {
       return effMajor === 'Services';
+    }
+    if (catId === 'businesses' || catId === 'commercial-equipment' || dbMajor === 'local businesses') {
+      return (
+        effMajor === 'Local Businesses' ||
+        (p.subCategoryId && p.subCategoryId.startsWith('comm-')) ||
+        ((category.subcategories || []).some(sub => sub.id === getMatchingSubcategoryId(p)))
+      );
+    }
+    if (catId === 'products' || dbMajor === 'products') {
+      return effMajor === 'Products';
     }
     if (catId === 'community' || dbMajor === 'community') {
       return effMajor === 'Community';
@@ -1111,8 +1322,8 @@ export function getTranslatedCategoryName(catOrName: any, lang: string = 'en', d
     if (catOrName.name) return extractString(catOrName.name, langKey);
   }
 
-  // 3. Match REDESIGNED_CATEGORIES strictly by ID, name, or translations.en (NO dbMapping matching)
-  const matched = REDESIGNED_CATEGORIES.find(
+  // 3. Match PRIMARY_CATEGORIES and REDESIGNED_CATEGORIES strictly by ID, name, or translations.en (NO dbMapping matching)
+  const matched = [...PRIMARY_CATEGORIES, ...REDESIGNED_CATEGORIES].find(
     c => c.id.toLowerCase() === strName.toLowerCase() ||
          c.name.toLowerCase() === strName.toLowerCase() ||
          (c.translations?.en && c.translations.en.toLowerCase() === strName.toLowerCase())
@@ -1195,7 +1406,7 @@ export function getTranslatedSubcategoryName(subOrName: any, lang: string = 'en'
     if (subOrName.name) return extractString(subOrName.name, langKey);
   }
 
-  for (const cat of REDESIGNED_CATEGORIES) {
+  for (const cat of [...PRIMARY_CATEGORIES, ...REDESIGNED_CATEGORIES]) {
     const sub = cat.subcategories.find(
       s => s.id.toLowerCase() === strName.toLowerCase() ||
            s.name.toLowerCase() === strName.toLowerCase() ||
@@ -1692,6 +1903,23 @@ export function getSubcategoryVisual(subId: string, fallbackEmoji: string = '�
     'sport-fitness': '🏋️',
     'sport-outdoor': '⛺',
     'sport-apparel': '👟',
+    // Product Groups under Products Primary Category
+    'sub-prod-electronics': '📱',
+    'sub-prod-fashion': '👔',
+    'sub-prod-furniture': '🛋️',
+    'sub-prod-kids': '👶',
+    'sub-prod-beauty': '💄',
+    'sub-prod-agri': '🌾',
+    'sub-prod-pets': '🐕',
+    'sub-prod-sports': '⚽',
+    'sub-prod-edu': '📚',
+    'sub-prod-other': '📦',
+    // Businesses / Commercial
+    'comm-restaurant': '🍽️',
+    'comm-office': '🖥️',
+    'comm-industrial': '🏭',
+    'comm-shop': '🏪',
+    'comm-local-biz': '🏢',
   };
   return map[subId] || fallbackEmoji;
 }
