@@ -8,7 +8,7 @@ import {
   X, AlertCircle, Home, Car, Smartphone, Laptop, Sofa, Shirt, FileText, 
   Hammer, Factory, Wheat, Footprints, GraduationCap, Activity, Utensils, 
   CalendarDays, Gamepad2, Baby, Recycle, TrendingUp, Clock, Flame, Info, CheckCircle2,
-  Folder, ChevronDown, Plus, ShieldCheck
+  Folder, ChevronDown, Plus
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
@@ -282,19 +282,6 @@ export default function Marketplace({
     setTimeout(() => setToastMessage(''), 3000);
   };
 
-  const [homeEmailInput, setHomeEmailInput] = useState('');
-  const [homeSubscribed, setHomeSubscribed] = useState(false);
-
-  const handleHomeSubscribe = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!homeEmailInput.trim()) return;
-    setHomeSubscribed(true);
-    setTimeout(() => {
-      setHomeEmailInput('');
-      setHomeSubscribed(false);
-    }, 4000);
-  };
-
   React.useEffect(() => {
     if (initialMajorCategory !== undefined) {
       setSelectedMajorCategory(initialMajorCategory);
@@ -453,14 +440,11 @@ export default function Marketplace({
   }, [filteredProperties]);
 
   const popularProperties = useMemo(() => {
-    // Sort by real viewsCount descending
-    const withViews = [...filteredProperties].filter(p => (Number(p.viewsCount) || 0) > 0 || p.isRecommended);
-    if (withViews.length > 0) {
-      return withViews
-        .sort((a, b) => (Number(b.viewsCount) || 0) - (Number(a.viewsCount) || 0))
-        .slice(0, 6);
-    }
-    return [...filteredProperties].slice(0, 6);
+    // Popular listings based on real views / interest only
+    return [...filteredProperties]
+      .filter(p => (Number(p.viewsCount) || 0) > 0)
+      .sort((a, b) => (Number(b.viewsCount) || 0) - (Number(a.viewsCount) || 0))
+      .slice(0, 6);
   }, [filteredProperties]);
 
   // Helper to count listings matching our redesigned categories
@@ -1939,7 +1923,11 @@ export default function Marketplace({
                   {featuredProperties.length > 0 && (
                     <div>
                       <h3 className="text-2xl font-serif text-white mb-8 border-b border-white/5 pb-4 flex items-center justify-between">
-                        <span className="flex items-center gap-2"><Sparkles className="w-5 h-5 text-amber-500" /> {t('featured_properties')}</span>
+                        <span className="flex items-center gap-2"><Sparkles className="w-5 h-5 text-amber-500" /> {
+                          (selectedMajorCategory && selectedMajorCategory.toLowerCase().includes('propert')) || (selectedRedesignedCategory?.name && selectedRedesignedCategory.name.toLowerCase().includes('propert'))
+                            ? (t('featured_properties') || 'Featured Properties')
+                            : (t('featured_listings') || 'Featured Listings')
+                        }</span>
                         <span className="text-[9px] uppercase font-bold tracking-[0.25em] text-white/30">{t('verified_select_picks')}</span>
                       </h3>
                       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
@@ -1963,7 +1951,11 @@ export default function Marketplace({
                   {latestProperties.length > 0 && (
                     <div>
                       <h3 className="text-2xl font-serif text-white mb-8 border-b border-white/5 pb-4 flex items-center justify-between">
-                        <span className="flex items-center gap-2"><Clock className="w-5 h-5 text-amber-500" /> {t('latest_properties') || 'Latest Listings'}</span>
+                        <span className="flex items-center gap-2"><Clock className="w-5 h-5 text-amber-500" /> {
+                          (selectedMajorCategory && selectedMajorCategory.toLowerCase().includes('propert')) || (selectedRedesignedCategory?.name && selectedRedesignedCategory.name.toLowerCase().includes('propert'))
+                            ? (t('latest_properties') || 'Latest Properties')
+                            : (t('latest_listings') || 'Latest Listings')
+                        }</span>
                         <span className="text-[9px] uppercase font-bold tracking-[0.25em] text-white/30">{t('recent_offers')}</span>
                       </h3>
                       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
@@ -2043,116 +2035,6 @@ export default function Marketplace({
                 ))}
               </div>
             )}
-          </div>
-
-          {/* 6. ABOUT SOF-UMER */}
-          <div className="mb-12 rounded-3xl bg-[#0e0e15] border border-white/5 p-8 sm:p-12 relative overflow-hidden shadow-2xl text-left">
-            <div className="relative z-10 max-w-3xl">
-              <div className="flex items-center gap-2 mb-3">
-                <span className="w-2 h-2 rounded-full bg-amber-400" />
-                <span className="text-[10px] font-black uppercase tracking-widest text-amber-400 font-mono">
-                  {t('about_sof_umer') || 'ABOUT SOF-UMER'}
-                </span>
-              </div>
-              <h3 className="text-2xl sm:text-3xl font-serif text-white font-bold tracking-tight mb-4">
-                {t('ethiopia_premier_marketplace') || "Ethiopia's Premier Multi-Category Marketplace"}
-              </h3>
-              <p className="text-white/70 text-sm sm:text-base leading-relaxed font-light mb-8">
-                {t('about_sof_umer_desc') || 'SOF-UMER is built to empower buyers and sellers across Ethiopia with authentic, direct, and transparent trade. From premium real estate and verified motor vehicles to modern electronics, job openings, and local professional services, we connect communities safely.'}
-              </p>
-
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 pt-6 border-t border-white/10">
-                <div className="flex items-start gap-3.5">
-                  <div className="p-2.5 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-400 shrink-0">
-                    <ShieldCheck className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <h4 className="text-sm font-bold text-white mb-1">
-                      {t('verified_listings') || 'Verified Listings'}
-                    </h4>
-                    <p className="text-xs text-white/50 leading-relaxed font-light">
-                      {t('verified_listings_desc') || 'Moderated submissions, supplier verification, and community safeguards.'}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-3.5">
-                  <div className="p-2.5 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-400 shrink-0">
-                    <Store className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <h4 className="text-sm font-bold text-white mb-1">
-                      {t('direct_connection') || 'Direct Connection'}
-                    </h4>
-                    <p className="text-xs text-white/50 leading-relaxed font-light">
-                      {t('direct_connection_desc') || 'Connect directly with local sellers and businesses without middleman fees.'}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-3.5">
-                  <div className="p-2.5 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-400 shrink-0">
-                    <MapPin className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <h4 className="text-sm font-bold text-white mb-1">
-                      {t('nationwide_reach') || 'Nationwide Reach'}
-                    </h4>
-                    <p className="text-xs text-white/50 leading-relaxed font-light">
-                      {t('nationwide_reach_desc') || 'Discover listings across all regions and major cities in Ethiopia.'}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="absolute right-0 top-0 -mr-20 -mt-20 w-80 h-80 bg-amber-500/5 rounded-full blur-3xl pointer-events-none" />
-          </div>
-
-          {/* 7. STAY UPDATED */}
-          <div className="mb-14 rounded-3xl bg-gradient-to-br from-[#12121c] to-[#0c0c12] border border-amber-500/20 p-8 sm:p-10 relative overflow-hidden shadow-2xl text-left">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
-              <div className="max-w-xl">
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="w-2 h-2 rounded-full bg-amber-400" />
-                  <span className="text-[10px] font-black uppercase tracking-widest text-amber-400 font-mono">
-                    {t('stay_updated') || 'STAY UPDATED'}
-                  </span>
-                </div>
-                <h3 className="text-xl sm:text-2xl font-serif text-white font-bold tracking-tight mb-2">
-                  {t('never_miss_deal') || 'Never Miss a Verified Deal or New Listing'}
-                </h3>
-                <p className="text-xs sm:text-sm text-white/60 font-light leading-relaxed">
-                  {t('stay_updated_sub') || 'Subscribe to receive weekly highlights, market price drops, and featured opportunities across your favorite categories.'}
-                </p>
-              </div>
-
-              <form onSubmit={handleHomeSubscribe} className="w-full md:w-auto shrink-0">
-                {homeSubscribed ? (
-                  <div className="flex items-center gap-2.5 px-6 py-3.5 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 rounded-2xl text-xs font-bold animate-fade-in">
-                    <CheckCircle2 className="w-4 h-4 shrink-0" />
-                    <span>{t('subscribed_success') || "You're all set! Thank you for staying updated."}</span>
-                  </div>
-                ) : (
-                  <div className="flex flex-col sm:flex-row gap-2.5">
-                    <input
-                      type="email"
-                      required
-                      value={homeEmailInput}
-                      onChange={e => setHomeEmailInput(e.target.value)}
-                      placeholder={t('enter_your_email') || 'Enter your email address...'}
-                      className="px-4 py-3 bg-[#0a0a0f] border border-white/10 focus:border-amber-400/60 rounded-2xl text-xs text-white placeholder-white/30 focus:outline-none w-full sm:w-72 transition"
-                    />
-                    <button
-                      type="submit"
-                      className="px-6 py-3 bg-gradient-to-r from-amber-400 to-amber-600 hover:from-amber-300 hover:to-amber-500 text-black font-extrabold uppercase tracking-wider text-xs rounded-2xl transition duration-300 hover:scale-[1.02] shadow-lg shadow-amber-500/15 cursor-pointer shrink-0"
-                    >
-                      {t('subscribe') || 'Subscribe'}
-                    </button>
-                  </div>
-                )}
-              </form>
-            </div>
           </div>
         </div>
       )}
