@@ -1,26 +1,15 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useApp } from '../lib/AppContext';
 import { formatTimeAgo } from '../lib/utils';
-import { 
-  Bell, Languages, User, LogOut, MessageSquare, Settings, Shield, 
-  Plus, Building, Heart, CheckCircle2, ChevronDown, ChevronUp, Sparkles, 
-  Car, ShoppingBag, Wrench, Briefcase, Store, HelpCircle, FileText, Compass, ExternalLink 
-} from 'lucide-react';
+import { Bell, Languages, User, LogOut, MessageSquare, Settings, Shield, Plus, Building, Heart, CheckCircle2, Wallet, CreditCard, Download } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
 
 interface NavbarProps {
-  onNavigate: (view: 'marketplace' | 'profile' | 'messages' | 'favorites' | 'notifications' | 'payments' | 'settings' | 'admin' | 'mylistings' | 'info-page') => void;
+  onNavigate: (view: 'marketplace' | 'profile' | 'messages' | 'favorites' | 'notifications' | 'payments' | 'settings' | 'admin' | 'mylistings') => void;
   activeView: string;
   onOpenCreateModal: () => void;
   onOpenAuthModal?: (mode: 'login' | 'signup') => void;
-  onSelectCategory?: (categoryName: string) => void;
 }
-
-const LANGUAGE_FLAGS: Record<string, { flag: string; label: string; name: string }> = {
-  en: { flag: '🇺🇸', label: 'EN', name: 'English' },
-  am: { flag: '🇪🇹', label: 'AM', name: 'አማርኛ (Amharic)' },
-  om: { flag: '🇪🇹', label: 'AO', name: 'Afaan Oromoo' },
-};
 
 export default function Navbar({ onNavigate, activeView, onOpenCreateModal, onOpenAuthModal }: NavbarProps) {
   const {
@@ -38,8 +27,6 @@ export default function Navbar({ onNavigate, activeView, onOpenCreateModal, onOp
   const [langDropdownOpen, setLangDropdownOpen] = useState(false);
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
   const [notifDropdownOpen, setNotifDropdownOpen] = useState(false);
-  const [exploreDropdownOpen, setExploreDropdownOpen] = useState(false);
-  const [resourcesDropdownOpen, setResourcesDropdownOpen] = useState(false);
 
   const bellButtonRef = useRef<HTMLButtonElement>(null);
   const notifDropdownRef = useRef<HTMLDivElement>(null);
@@ -105,9 +92,15 @@ export default function Navbar({ onNavigate, activeView, onOpenCreateModal, onOp
     }
   }, [notifDropdownOpen]);
 
-  // Active flag display
-  const activeLangConfig = LANGUAGE_FLAGS[currentLanguage] || { flag: '🇺🇸', label: 'EN', name: 'English' };
-
+  // Active languages filter with guaranteed support for EN, OM, AM
+  const fallbackLanguages = [
+    { code: 'en', name: 'English', nativeName: 'English', isActive: true },
+    { code: 'om', name: 'Afaan Oromoo', nativeName: 'Afaan Oromoo', isActive: true },
+    { code: 'am', name: 'Amharic (አማርኛ)', nativeName: 'አማርኛ', isActive: true }
+  ];
+  const activeLanguages = languages && languages.filter(l => l.isActive).length > 0
+    ? languages.filter(l => l.isActive)
+    : fallbackLanguages;
   const unreadNotifications = notifications.filter(n => n.userId === currentUser?.id && !n.isRead);
 
   const handleMarkNotificationsRead = async () => {
@@ -130,296 +123,100 @@ export default function Navbar({ onNavigate, activeView, onOpenCreateModal, onOp
     onNavigate('marketplace');
   };
 
-  const closeAllDropdowns = () => {
-    setLangDropdownOpen(false);
-    setUserDropdownOpen(false);
-    setNotifDropdownOpen(false);
-    setExploreDropdownOpen(false);
-    setResourcesDropdownOpen(false);
-  };
-
   return (
-    <nav className="sticky top-0 z-40 bg-white/95 text-stone-800 border-b border-stone-200/80 backdrop-blur-md transition-colors">
+    <nav className="sticky top-0 z-40 bg-[#060608]/85 text-[#F5F5F4] border-b border-white/5 backdrop-blur-xl">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-20">
-          
-          {/* Left: Logo & Navigation Links */}
-          <div className="flex items-center gap-8">
-            {/* Logo */}
-            <div 
-              className="flex items-center gap-2.5 cursor-pointer group" 
-              onClick={() => { closeAllDropdowns(); onNavigate('marketplace'); }}
-            >
-              <div className="w-10 h-10 bg-[#C06853] text-white flex items-center justify-center rounded-xl font-black text-xl shadow-sm transition duration-300 group-hover:scale-105 group-hover:bg-[#A85340]">
-                S
+          {/* Logo & Brand */}
+          <div className="flex items-center gap-3.5 cursor-pointer group" onClick={() => onNavigate('marketplace')}>
+            {systemSettings?.logoUrl ? (
+              <img
+                src={systemSettings.logoUrl}
+                alt="App Logo"
+                className="w-10 h-10 object-cover rounded-xl shadow-[0_4px_20px_rgba(255,255,255,0.05)] transition duration-300 group-hover:scale-105"
+                referrerPolicy="no-referrer"
+              />
+            ) : (
+              <div className="w-10 h-10 bg-gradient-to-tr from-amber-400 to-amber-600 text-black flex items-center justify-center rounded-xl font-black text-xl shadow-[0_4px_20px_rgba(245,158,11,0.2)] transition duration-300 group-hover:scale-105">
+                {(systemSettings?.appLogoText || systemSettings?.appName || 'S')[0].toUpperCase()}
               </div>
-              <div className="flex flex-col">
-                <span className="text-2xl font-bold tracking-tight text-stone-900 font-sans leading-none">
-                  Sofumer
-                </span>
-                <span className="text-[10px] tracking-wider text-stone-500 font-medium mt-0.5">
-                  Marketplace
-                </span>
-              </div>
-            </div>
-
-            {/* Desktop Navigation Links: Explore v, Resources v, List a Property */}
-            <div className="hidden md:flex items-center gap-6 text-sm font-medium text-stone-700">
-              
-              {/* Explore ⌄ */}
-              <div className="relative">
-                <button
-                  onClick={() => {
-                    setExploreDropdownOpen(!exploreDropdownOpen);
-                    setResourcesDropdownOpen(false);
-                    setLangDropdownOpen(false);
-                    setUserDropdownOpen(false);
-                  }}
-                  className={`flex items-center gap-1.5 py-2 px-1 hover:text-[#C06853] transition cursor-pointer ${
-                    exploreDropdownOpen ? 'text-[#C06853] font-semibold' : ''
-                  }`}
-                >
-                  <span>Explore</span>
-                  <ChevronDown className={`w-4 h-4 text-stone-400 transition-transform ${exploreDropdownOpen ? 'rotate-180 text-[#C06853]' : ''}`} />
-                </button>
-
-                <AnimatePresence>
-                  {exploreDropdownOpen && (
-                    <motion.div
-                      initial={{ opacity: 0, y: 8, scale: 0.98 }}
-                      animate={{ opacity: 1, y: 0, scale: 1 }}
-                      exit={{ opacity: 0, y: 8, scale: 0.98 }}
-                      className="absolute left-0 mt-2 w-64 bg-white rounded-2xl shadow-xl border border-stone-200 p-2 z-50 text-left"
-                    >
-                      <div className="px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-stone-400 border-b border-stone-100">
-                        Marketplace Categories
-                      </div>
-                      <div className="py-1 space-y-0.5">
-                        <button
-                          onClick={() => {
-                            closeAllDropdowns();
-                            onNavigate('marketplace');
-                          }}
-                          className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-stone-800 hover:bg-stone-50 hover:text-[#C06853] transition cursor-pointer"
-                        >
-                          <span className="text-base">🏠</span>
-                          <span>Real Estate & Properties</span>
-                        </button>
-                        <button
-                          onClick={() => {
-                            closeAllDropdowns();
-                            onNavigate('marketplace');
-                          }}
-                          className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-stone-800 hover:bg-stone-50 hover:text-[#C06853] transition cursor-pointer"
-                        >
-                          <span className="text-base">🚗</span>
-                          <span>Vehicles & Motors</span>
-                        </button>
-                        <button
-                          onClick={() => {
-                            closeAllDropdowns();
-                            onNavigate('marketplace');
-                          }}
-                          className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-stone-800 hover:bg-stone-50 hover:text-[#C06853] transition cursor-pointer"
-                        >
-                          <span className="text-base">📦</span>
-                          <span>Products & Goods</span>
-                        </button>
-                        <button
-                          onClick={() => {
-                            closeAllDropdowns();
-                            onNavigate('marketplace');
-                          }}
-                          className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-stone-800 hover:bg-stone-50 hover:text-[#C06853] transition cursor-pointer"
-                        >
-                          <span className="text-base">🛠️</span>
-                          <span>Professional Services</span>
-                        </button>
-                        <button
-                          onClick={() => {
-                            closeAllDropdowns();
-                            onNavigate('marketplace');
-                          }}
-                          className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-stone-800 hover:bg-stone-50 hover:text-[#C06853] transition cursor-pointer"
-                        >
-                          <span className="text-base">💼</span>
-                          <span>Jobs & Careers</span>
-                        </button>
-                        <button
-                          onClick={() => {
-                            closeAllDropdowns();
-                            onNavigate('marketplace');
-                          }}
-                          className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-stone-800 hover:bg-stone-50 hover:text-[#C06853] transition cursor-pointer"
-                        >
-                          <span className="text-base">🏬</span>
-                          <span>Local Businesses</span>
-                        </button>
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-
-              {/* Resources ⌄ */}
-              <div className="relative">
-                <button
-                  onClick={() => {
-                    setResourcesDropdownOpen(!resourcesDropdownOpen);
-                    setExploreDropdownOpen(false);
-                    setLangDropdownOpen(false);
-                    setUserDropdownOpen(false);
-                  }}
-                  className={`flex items-center gap-1.5 py-2 px-1 hover:text-[#C06853] transition cursor-pointer ${
-                    resourcesDropdownOpen ? 'text-[#C06853] font-semibold' : ''
-                  }`}
-                >
-                  <span>Resources</span>
-                  <ChevronDown className={`w-4 h-4 text-stone-400 transition-transform ${resourcesDropdownOpen ? 'rotate-180 text-[#C06853]' : ''}`} />
-                </button>
-
-                <AnimatePresence>
-                  {resourcesDropdownOpen && (
-                    <motion.div
-                      initial={{ opacity: 0, y: 8, scale: 0.98 }}
-                      animate={{ opacity: 1, y: 0, scale: 1 }}
-                      exit={{ opacity: 0, y: 8, scale: 0.98 }}
-                      className="absolute left-0 mt-2 w-56 bg-white rounded-2xl shadow-xl border border-stone-200 p-2 z-50 text-left"
-                    >
-                      <div className="px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-stone-400 border-b border-stone-100">
-                        Guides & Trust
-                      </div>
-                      <div className="py-1 space-y-0.5">
-                        <button
-                          onClick={() => {
-                            closeAllDropdowns();
-                            onNavigate('info-page');
-                          }}
-                          className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-stone-800 hover:bg-stone-50 hover:text-[#C06853] transition cursor-pointer"
-                        >
-                          <Shield className="w-4 h-4 text-[#C06853]" />
-                          <span>Buyer & Seller Safety</span>
-                        </button>
-                        <button
-                          onClick={() => {
-                            closeAllDropdowns();
-                            onNavigate('info-page');
-                          }}
-                          className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-stone-800 hover:bg-stone-50 hover:text-[#C06853] transition cursor-pointer"
-                        >
-                          <FileText className="w-4 h-4 text-stone-400" />
-                          <span>Listing Rules</span>
-                        </button>
-                        <button
-                          onClick={() => {
-                            closeAllDropdowns();
-                            onNavigate('info-page');
-                          }}
-                          className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-stone-800 hover:bg-stone-50 hover:text-[#C06853] transition cursor-pointer"
-                        >
-                          <HelpCircle className="w-4 h-4 text-stone-400" />
-                          <span>Help Center</span>
-                        </button>
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-
-              {/* List a Property */}
-              <button
-                onClick={() => {
-                  closeAllDropdowns();
-                  onOpenCreateModal();
-                }}
-                className="hover:text-[#C06853] transition cursor-pointer"
-              >
-                List a Property
-              </button>
+            )}
+            <div className="flex flex-col">
+              <span className="text-lg font-serif font-bold tracking-wider text-[#F5F5F4] leading-none">
+                {systemSettings?.appLogoText || systemSettings?.appName || 'SOF-UMER'}
+              </span>
+              <span className="text-[9px] uppercase tracking-[0.25em] text-amber-500/80 font-bold mt-1">
+                Marketplace
+              </span>
             </div>
           </div>
 
-          {/* Right: Header Controls */}
-          <div className="flex items-center gap-3 sm:gap-4">
-            
-            {/* Primary Terracotta CTA: [ Get Started ] */}
+          {/* Navigation Items */}
+          <div className="flex items-center gap-2 sm:gap-3">
+            {/* Quick Listing Creator / Sell Button */}
             <button
               onClick={() => {
-                closeAllDropdowns();
                 if (currentUser) {
                   onOpenCreateModal();
                 } else if (onOpenAuthModal) {
-                  onOpenAuthModal('signup');
+                  onOpenAuthModal('login');
                 } else {
                   onNavigate('profile');
                 }
               }}
-              className="bg-[#C06853] hover:bg-[#A85340] text-white px-4 sm:px-5 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider transition-all duration-200 shadow-sm hover:shadow-md cursor-pointer flex items-center gap-1.5"
+              className="hidden sm:flex items-center gap-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black px-4.5 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider transition duration-300 cursor-pointer shadow-lg shadow-amber-500/10 hover:shadow-amber-500/20 hover:scale-[1.02]"
+              title={t('list_property') || 'List Property / Sell'}
             >
-              <span>Get Started</span>
+              <Plus className="w-4 h-4 text-black" />
+              <span>{t('list_property') || 'Post Listing'}</span>
             </button>
 
-            {/* Language Selector dropdown displaying active selection "🇺🇸 EN ^" */}
+            {/* Language Selector */}
             <div className="relative">
               <button
                 onClick={() => {
                   setLangDropdownOpen(!langDropdownOpen);
                   setUserDropdownOpen(false);
                   setNotifDropdownOpen(false);
-                  setExploreDropdownOpen(false);
-                  setResourcesDropdownOpen(false);
                 }}
-                className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-700 font-bold text-xs transition cursor-pointer border border-stone-200/60"
+                className="flex items-center gap-1.5 px-3 py-2.5 rounded-xl hover:bg-white/5 text-white/60 hover:text-white transition cursor-pointer"
                 aria-label="Select Language"
               >
-                <span className="text-base">{activeLangConfig.flag}</span>
-                <span className="uppercase tracking-wider">{activeLangConfig.label}</span>
-                {langDropdownOpen ? (
-                  <ChevronUp className="w-3.5 h-3.5 text-stone-500" />
-                ) : (
-                  <ChevronDown className="w-3.5 h-3.5 text-stone-500" />
-                )}
+                <Languages className="w-4.5 h-4.5" />
+                <span className="text-[10px] uppercase font-bold tracking-widest hidden lg:inline">
+                  {activeLanguages.find(l => l.code === currentLanguage)?.name || currentLanguage}
+                </span>
               </button>
 
               <AnimatePresence>
                 {langDropdownOpen && (
                   <motion.div
-                    initial={{ opacity: 0, y: 8, scale: 0.95 }}
+                    initial={{ opacity: 0, y: 10, scale: 0.95 }}
                     animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: 8, scale: 0.95 }}
-                    className="absolute right-0 mt-2 w-52 bg-white rounded-2xl shadow-xl border border-stone-200 py-1.5 z-50 overflow-hidden"
+                    exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                    className="absolute right-0 mt-2 w-48 bg-[#0d0d12] rounded-2xl shadow-2xl border border-white/10 py-1.5 z-50 overflow-hidden"
                   >
-                    <div className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-stone-400 border-b border-stone-100">
-                      Select Language
-                    </div>
-                    {Object.entries(LANGUAGE_FLAGS).map(([code, item]) => {
-                      const isActive = currentLanguage === code;
-                      return (
-                        <button
-                          key={code}
-                          onClick={() => {
-                            setLanguage(code);
-                            setLangDropdownOpen(false);
-                          }}
-                          className={`w-full text-left px-3.5 py-2.5 text-xs font-semibold hover:bg-stone-50 transition flex items-center justify-between cursor-pointer ${
-                            isActive ? 'text-[#C06853] bg-[#C06853]/10' : 'text-stone-700'
-                          }`}
-                        >
-                          <div className="flex items-center gap-2">
-                            <span className="text-base">{item.flag}</span>
-                            <span>{item.name}</span>
-                            <span className="text-[10px] font-bold text-stone-400">({item.label})</span>
-                          </div>
-                          {isActive && <div className="w-2 h-2 rounded-full bg-[#C06853]" />}
-                        </button>
-                      );
-                    })}
+                    {activeLanguages.map(lang => (
+                      <button
+                        key={lang.code}
+                        onClick={() => {
+                          setLanguage(lang.code);
+                          setLangDropdownOpen(false);
+                        }}
+                        className={`w-full text-left px-4 py-2.5 text-xs uppercase tracking-wider hover:bg-white/5 transition flex items-center justify-between cursor-pointer ${
+                          currentLanguage === lang.code ? 'text-amber-500 font-bold bg-white/5' : 'text-white/60 hover:text-white'
+                        }`}
+                      >
+                        <span>{lang.name}</span>
+                        {currentLanguage === lang.code && <div className="w-1.5 h-1.5 bg-amber-500 rounded-full" />}
+                      </button>
+                    ))}
                   </motion.div>
                 )}
               </AnimatePresence>
             </div>
 
-            {/* Notifications (if logged in) */}
+            {/* In-App Notifications Drawer Trigger */}
             {currentUser && (
               <div className="relative">
                 <button
@@ -433,15 +230,13 @@ export default function Navbar({ onNavigate, activeView, onOpenCreateModal, onOp
                     setNotifDropdownOpen(nextState);
                     setUserDropdownOpen(false);
                     setLangDropdownOpen(false);
-                    setExploreDropdownOpen(false);
-                    setResourcesDropdownOpen(false);
                   }}
-                  className="p-2.5 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-600 hover:text-stone-900 transition relative cursor-pointer border border-stone-200/60"
+                  className="p-3 rounded-xl hover:bg-white/5 text-white/60 hover:text-white transition relative cursor-pointer"
                   aria-label="Notifications"
                 >
-                  <Bell className="w-4 h-4" />
+                  <Bell className="w-4.5 h-4.5" />
                   {unreadNotifications.length > 0 && (
-                    <span className="absolute top-1.5 right-1.5 bg-[#C06853] text-white text-[8px] font-black w-4 h-4 flex items-center justify-center rounded-full shadow-sm animate-pulse">
+                    <span className="absolute top-1.5 right-1.5 bg-amber-500 text-black text-[8px] font-black w-4 h-4 flex items-center justify-center rounded-full shadow-[0_0_10px_rgba(245,158,11,0.5)] animate-pulse">
                       {unreadNotifications.length}
                     </span>
                   )}
@@ -451,28 +246,28 @@ export default function Navbar({ onNavigate, activeView, onOpenCreateModal, onOp
                   {notifDropdownOpen && (
                     <motion.div
                       ref={notifDropdownRef}
-                      initial={{ opacity: 0, y: 8, scale: 0.95 }}
+                      initial={{ opacity: 0, y: 10, scale: 0.95 }}
                       animate={{ opacity: 1, y: 0, scale: 1 }}
-                      exit={{ opacity: 0, y: 8, scale: 0.95 }}
+                      exit={{ opacity: 0, y: 10, scale: 0.95 }}
                       style={{
                         left: notifStyle.left,
                         width: notifStyle.width,
                       }}
-                      className="absolute mt-2 bg-white rounded-2xl shadow-xl border border-stone-200 py-2 z-50 max-h-[400px] overflow-y-auto"
+                      className="absolute mt-2 bg-[#0d0d12] rounded-2xl shadow-2xl border border-white/10 py-2.5 z-50 max-h-[400px] overflow-y-auto"
                     >
-                      <div className="px-4 py-2.5 border-b border-stone-100 flex justify-between items-center gap-2">
-                        <span className="font-bold text-[10px] uppercase tracking-widest text-stone-500">
+                      <div className="px-4 py-3 border-b border-white/5 flex justify-between items-center gap-2">
+                        <span className="font-bold text-[10px] uppercase tracking-widest text-white/50 truncate">
                           {t('notifications')}
                         </span>
                         {unreadNotifications.length > 0 && (
-                          <span className="text-[9px] text-white bg-[#C06853] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">
-                            {unreadNotifications.length} new
+                          <span className="text-[9px] text-black bg-amber-500 px-2 py-0.5 rounded-full font-black uppercase tracking-wider shrink-0">
+                            {unreadNotifications.length} {t('new_notification_suffix')}
                           </span>
                         )}
                       </div>
-                      <div className="divide-y divide-stone-100">
+                      <div className="divide-y divide-white/5">
                         {notifications.filter(n => n.userId === currentUser.id).length === 0 ? (
-                          <div className="px-4 py-8 text-center text-stone-400 text-xs">
+                          <div className="px-4 py-8 text-center text-white/30 text-xs">
                             {t('no_notifications_yet')}
                           </div>
                         ) : (
@@ -483,16 +278,16 @@ export default function Navbar({ onNavigate, activeView, onOpenCreateModal, onOp
                             .map(notif => (
                               <div
                                 key={notif.id}
-                                className={`px-4 py-3 text-xs hover:bg-stone-50 transition ${
-                                  !notif.isRead ? 'bg-[#C06853]/5 font-medium' : 'text-stone-500'
+                                className={`px-4 py-3.5 text-xs hover:bg-white/5 transition ${
+                                  !notif.isRead ? 'bg-amber-500/5 text-white font-medium' : 'text-white/40'
                                 }`}
                               >
-                                <p className="font-semibold text-stone-900 mb-0.5 flex items-center gap-1.5">
-                                  {!notif.isRead && <span className="w-1.5 h-1.5 bg-[#C06853] rounded-full shrink-0" />}
+                                <p className="font-semibold text-white/95 mb-0.5 flex items-center gap-1.5">
+                                  {!notif.isRead && <span className="w-1.5 h-1.5 bg-amber-500 rounded-full shrink-0" />}
                                   <span className="break-words">{notif.title}</span>
                                 </p>
-                                <p className="leading-relaxed text-stone-600 break-words">{notif.message}</p>
-                                <span className="text-[10px] text-stone-400 block mt-1 font-mono">
+                                <p className="leading-relaxed text-white/60 break-words">{notif.message}</p>
+                                <span className="text-[10px] text-white/30 block mt-1 font-mono">
                                   {formatTimeAgo(notif.createdAt)}
                                 </span>
                               </div>
@@ -505,7 +300,7 @@ export default function Navbar({ onNavigate, activeView, onOpenCreateModal, onOp
               </div>
             )}
 
-            {/* Profile Avatar & Menu */}
+            {/* Profile Dropdown */}
             {currentUser ? (
               <div className="relative">
                 <button
@@ -513,97 +308,99 @@ export default function Navbar({ onNavigate, activeView, onOpenCreateModal, onOp
                     setUserDropdownOpen(!userDropdownOpen);
                     setLangDropdownOpen(false);
                     setNotifDropdownOpen(false);
-                    setExploreDropdownOpen(false);
-                    setResourcesDropdownOpen(false);
                   }}
-                  className="flex items-center gap-2 p-1 rounded-xl hover:bg-stone-100 transition cursor-pointer"
+                  className="flex items-center gap-2 p-1 px-2.5 rounded-xl hover:bg-white/5 transition cursor-pointer text-[#F5F5F4]"
                 >
                   {currentUser.photoUrl ? (
                     <img
                       src={currentUser.photoUrl}
                       alt={currentUser.fullName}
-                      className="w-9 h-9 rounded-full object-cover border border-[#C06853]/50 shadow-sm"
+                      className="w-9 h-9 rounded-full object-cover border border-amber-500 shadow-md shadow-amber-500/10"
+                      referrerPolicy="no-referrer"
+                    />
+                  ) : currentUser.role === 'admin' && systemSettings?.logoUrl ? (
+                    <img
+                      src={systemSettings.logoUrl}
+                      alt="Admin Logo"
+                      className="w-9 h-9 rounded-full object-cover border border-amber-500 shadow-md shadow-amber-500/10"
                       referrerPolicy="no-referrer"
                     />
                   ) : (
-                    <div className="w-9 h-9 rounded-full bg-[#C06853] text-white font-bold flex items-center justify-center text-sm shadow-sm">
+                    <div className="w-9 h-9 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 text-[#050505] font-black flex items-center justify-center text-sm shadow">
                       {currentUser.fullName.charAt(0)}
                     </div>
                   )}
                   {currentUser.isVerified && (
-                    <CheckCircle2 className="w-3.5 h-3.5 text-[#C06853]" />
+                    <CheckCircle2 className="w-3.5 h-3.5 text-amber-500" />
                   )}
                 </button>
 
                 <AnimatePresence>
                   {userDropdownOpen && (
                     <motion.div
-                      initial={{ opacity: 0, y: 8, scale: 0.95 }}
+                      initial={{ opacity: 0, y: 10, scale: 0.95 }}
                       animate={{ opacity: 1, y: 0, scale: 1 }}
-                      exit={{ opacity: 0, y: 8, scale: 0.95 }}
-                      className="absolute right-0 mt-2 w-60 bg-white rounded-2xl shadow-xl border border-stone-200 py-2 z-50 overflow-hidden"
+                      exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                      className="absolute right-0 mt-2 w-60 bg-[#0d0d12] rounded-2xl shadow-2xl border border-white/10 py-2.5 z-50 overflow-hidden"
                     >
-                      <div className="px-4 py-3 border-b border-stone-100 flex items-center gap-3">
+                      <div className="px-4 py-3 border-b border-white/5 flex items-center gap-3">
                         {currentUser.photoUrl ? (
                           <img
                             src={currentUser.photoUrl}
                             alt={currentUser.fullName}
-                            className="w-10 h-10 object-cover rounded-xl border border-stone-200"
+                            className="w-10 h-10 object-cover rounded-xl border border-amber-500/30"
+                            referrerPolicy="no-referrer"
+                          />
+                        ) : currentUser.role === 'admin' && systemSettings?.logoUrl ? (
+                          <img
+                            src={systemSettings.logoUrl}
+                            alt="Brand Logo"
+                            className="w-10 h-10 object-cover rounded-xl border border-amber-500/30"
                             referrerPolicy="no-referrer"
                           />
                         ) : (
-                          <div className="w-10 h-10 rounded-xl bg-[#C06853] text-white font-black flex items-center justify-center text-sm shadow">
+                          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 to-amber-600 text-[#050505] font-black flex items-center justify-center text-sm shadow">
                             {currentUser.fullName.charAt(0)}
                           </div>
                         )}
                         <div className="flex-1 min-w-0">
-                          <p className="font-bold text-xs text-stone-900 truncate uppercase tracking-wider">{currentUser.fullName}</p>
-                          <p className="text-[10px] text-stone-500 truncate font-mono">{currentUser.email}</p>
-                          <span className="inline-block mt-1 text-[8px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full bg-[#C06853]/15 text-[#C06853]">
+                          <p className="font-bold text-xs text-white truncate uppercase tracking-wider">{currentUser.fullName}</p>
+                          <p className="text-[10px] text-white/40 truncate font-mono">{currentUser.email}</p>
+                          <span className="inline-block mt-1 text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-500">
                             {currentUser.role === 'admin' ? t('role_admin_badge') : t('role_agent_badge')}
                           </span>
                         </div>
                       </div>
 
                       {/* Common Links */}
-                      <div className="py-1">
-                        <button
-                          onClick={() => { onNavigate('profile'); setUserDropdownOpen(false); }}
-                          className="w-full text-left px-4 py-2 text-xs font-semibold hover:bg-stone-50 text-stone-700 hover:text-[#C06853] transition flex items-center gap-2.5 cursor-pointer"
-                        >
-                          <User className="w-4 h-4 text-stone-400" />
-                          <span>{t("nav_my_dashboard")}</span>
-                        </button>
-
-                        <button
-                          onClick={() => { onNavigate('favorites'); setUserDropdownOpen(false); }}
-                          className="w-full text-left px-4 py-2 text-xs font-semibold hover:bg-stone-50 text-stone-700 hover:text-[#C06853] transition flex items-center gap-2.5 cursor-pointer"
-                        >
-                          <Heart className="w-4 h-4 text-stone-400" />
-                          <span>{t("favorites") || "Favorites"}</span>
-                        </button>
-                      </div>
+                      <button
+                        onClick={() => { onNavigate('profile'); setUserDropdownOpen(false); }}
+                        className="w-full text-left px-4 py-2 text-[11px] uppercase tracking-wider hover:bg-white/5 text-white/60 hover:text-white transition flex items-center gap-2.5 cursor-pointer"
+                      >
+                        <User className="w-4 h-4 text-white/50" />
+                        <span>{t("nav_my_dashboard")}</span>
+                      </button>
 
                       {/* Admin Links */}
                       {currentUser.role === 'admin' && (
                         <>
-                          <div className="border-t border-stone-100 my-1"></div>
+                          <div className="border-t border-white/5 my-1.5"></div>
                           <button
                             onClick={() => { onNavigate('admin'); setUserDropdownOpen(false); }}
-                            className="w-full text-left px-4 py-2 text-xs font-bold hover:bg-[#C06853]/10 text-[#C06853] transition flex items-center gap-2.5 cursor-pointer"
+                            className="w-full text-left px-4 py-2.5 text-[11px] uppercase tracking-wider hover:bg-amber-500/10 text-amber-500 hover:text-amber-400 font-bold transition flex items-center gap-2.5 cursor-pointer"
                           >
-                            <Shield className="w-4 h-4 text-[#C06853]" />
+                            <Shield className="w-4 h-4 text-amber-500" />
                             <span>{t('admin_dashboard')}</span>
                           </button>
                         </>
                       )}
 
-                      <div className="border-t border-stone-100 my-1"></div>
+                      <div className="border-t border-white/5 my-1.5"></div>
                       <button
                         onClick={handleLogout}
-                        className="w-full text-left px-4 py-2 text-xs font-semibold hover:bg-red-50 text-red-600 transition flex items-center gap-2.5 cursor-pointer"
+                        className="w-full text-left px-4 py-2.5 text-[11px] uppercase tracking-wider hover:bg-red-500/15 text-red-400 hover:text-red-300 transition flex items-center gap-2.5 cursor-pointer"
                       >
-                        <LogOut className="w-4 h-4 text-red-400" />
+                        <LogOut className="w-4 h-4 text-red-400/70" />
                         <span>{t('logout')}</span>
                       </button>
                     </motion.div>
@@ -612,17 +409,14 @@ export default function Navbar({ onNavigate, activeView, onOpenCreateModal, onOp
               </div>
             ) : (
               <button
-                onClick={() => {
-                  if (onOpenAuthModal) onOpenAuthModal('login');
-                  else onNavigate('profile');
-                }}
-                className="p-2 sm:px-3 sm:py-2 rounded-xl text-stone-600 hover:text-stone-900 hover:bg-stone-100 font-medium text-xs flex items-center gap-1.5 transition cursor-pointer"
+                onClick={() => onNavigate('profile')}
+                className="p-2 sm:px-3 sm:py-2 rounded-xl text-white/70 hover:text-white hover:bg-white/5 font-medium text-xs flex items-center gap-1.5 transition cursor-pointer"
                 title={t('profile') || 'Account'}
               >
-                <div className="w-7 h-7 rounded-full bg-stone-200 flex items-center justify-center text-stone-700">
+                <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-white/80">
                   <User className="w-4 h-4" />
                 </div>
-                <span className="hidden sm:inline font-bold uppercase tracking-wider text-xs">Sign In</span>
+                <span className="hidden md:inline font-bold uppercase tracking-wider">{t('profile') || 'Account'}</span>
               </button>
             )}
           </div>

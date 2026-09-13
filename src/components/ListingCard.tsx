@@ -103,7 +103,7 @@ export function ListingCard({
           ? (t('bed') || t('bed_unit') || 'Bed')
           : (t('beds') || t('property_beds') || 'Beds');
         list.push({
-          icon: <BedDouble className="w-3.5 h-3.5 text-[#C06853]" />,
+          icon: <BedDouble className="w-3.5 h-3.5 text-amber-500" />,
           label: t('beds') || t('property_beds') || 'Beds',
           value: `${property.bedrooms} ${bedText}`
         });
@@ -113,14 +113,14 @@ export function ListingCard({
           ? (t('bath') || t('bath_unit') || 'Bath')
           : (t('baths') || t('property_baths') || 'Baths');
         list.push({
-          icon: <Bath className="w-3.5 h-3.5 text-[#C06853]" />,
+          icon: <Bath className="w-3.5 h-3.5 text-amber-500" />,
           label: t('baths') || t('property_baths') || 'Baths',
           value: `${property.bathrooms} ${bathText}`
         });
       }
       if (property.area && property.area > 0) {
         list.push({
-          icon: <Maximize className="w-3.5 h-3.5 text-[#C06853]" />,
+          icon: <Maximize className="w-3.5 h-3.5 text-amber-500" />,
           label: t('area') || t('property_area') || 'Area',
           value: `${property.area} m²`
         });
@@ -133,27 +133,27 @@ export function ListingCard({
 
       if (year) {
         list.push({
-          icon: <Calendar className="w-3.5 h-3.5 text-[#C06853]" />,
+          icon: <Calendar className="w-3.5 h-3.5 text-amber-500" />,
           label: t('year') || 'Year',
           value: String(year)
         });
       }
       if (mileage) {
         list.push({
-          icon: <Gauge className="w-3.5 h-3.5 text-[#C06853]" />,
+          icon: <Gauge className="w-3.5 h-3.5 text-amber-500" />,
           label: t('mileage') || 'Mileage',
           value: `${Number(mileage).toLocaleString()} km`
         });
       }
       if (trans) {
         list.push({
-          icon: <Layers className="w-3.5 h-3.5 text-[#C06853]" />,
+          icon: <Layers className="w-3.5 h-3.5 text-amber-500" />,
           label: t('transmission') || 'Transmission',
           value: getTranslatedOption(String(trans), currentLanguage) || String(trans)
         });
       } else if (fuel) {
         list.push({
-          icon: <Fuel className="w-3.5 h-3.5 text-[#C06853]" />,
+          icon: <Fuel className="w-3.5 h-3.5 text-amber-500" />,
           label: t('fuel_type') || 'Fuel',
           value: getTranslatedOption(String(fuel), currentLanguage) || String(fuel)
         });
@@ -163,14 +163,14 @@ export function ListingCard({
       const exp = findAmenity('experience') || findAmenity('experience required');
       if (jobType && jobType !== 'All') {
         list.push({
-          icon: <Briefcase className="w-3.5 h-3.5 text-[#C06853]" />,
+          icon: <Briefcase className="w-3.5 h-3.5 text-amber-500" />,
           label: t('job_type') || 'Type',
           value: getTranslatedOption(String(jobType), currentLanguage) || String(jobType)
         });
       }
       if (exp) {
         list.push({
-          icon: <Clock className="w-3.5 h-3.5 text-[#C06853]" />,
+          icon: <Clock className="w-3.5 h-3.5 text-amber-500" />,
           label: t('experience') || 'Experience',
           value: String(exp)
         });
@@ -180,14 +180,14 @@ export function ListingCard({
       const exp = findAmenity('years of experience') || findAmenity('experience');
       if (unit) {
         list.push({
-          icon: <Tag className="w-3.5 h-3.5 text-[#C06853]" />,
+          icon: <Tag className="w-3.5 h-3.5 text-amber-500" />,
           label: t('rate') || 'Rate',
           value: getTranslatedOption(String(unit), currentLanguage) || String(unit)
         });
       }
       if (exp) {
         list.push({
-          icon: <Wrench className="w-3.5 h-3.5 text-[#C06853]" />,
+          icon: <Wrench className="w-3.5 h-3.5 text-amber-500" />,
           label: t('experience') || 'Experience',
           value: `${exp} yrs`
         });
@@ -199,14 +199,14 @@ export function ListingCard({
 
       if (condition) {
         list.push({
-          icon: <Sparkles className="w-3.5 h-3.5 text-[#C06853]" />,
+          icon: <Sparkles className="w-3.5 h-3.5 text-amber-500" />,
           label: t('condition') || 'Condition',
           value: getTranslatedCondition(String(condition), currentLanguage) || String(condition)
         });
       }
       if (brand) {
         list.push({
-          icon: <Tag className="w-3.5 h-3.5 text-[#C06853]" />,
+          icon: <Tag className="w-3.5 h-3.5 text-amber-500" />,
           label: t('brand') || 'Brand',
           value: String(brand)
         });
@@ -301,16 +301,6 @@ export function ListingCard({
     }
   };
 
-  // Compute transaction badge (For Sale / For Rent / Retail / Wholesale)
-  const sellingTypeBadge = useMemo(() => {
-    const pType = (property as any).type;
-    if (pType === 'Rent' || (property as any).listingPurpose === 'rent') return 'For Rent';
-    if (pType === 'Sale' || (property as any).listingPurpose === 'sale') return 'For Sale';
-    if (sellingType === 'Wholesale') return 'Wholesale';
-    if (sellingType === 'Retail') return 'Retail';
-    return 'For Sale';
-  }, [property, sellingType]);
-
   // ----------------------------------------------------
   // COMPACT MODE (Ideal for Similar Listings, Saved drawer, Mobile widgets)
   // ----------------------------------------------------
@@ -318,9 +308,9 @@ export function ListingCard({
     return (
       <div 
         onClick={() => onSelect(property)}
-        className="group bg-white hover:bg-stone-50 border border-stone-200/80 hover:border-[#C06853]/40 rounded-2xl p-3 transition-all duration-300 shadow-sm hover:shadow-md cursor-pointer flex gap-3.5 items-center relative overflow-hidden"
+        className="group bg-[#0e0e15] hover:bg-[#14141e] border border-white/[0.07] hover:border-amber-500/40 rounded-2xl p-3 transition-all duration-300 shadow-md hover:shadow-xl cursor-pointer flex gap-3.5 items-center relative overflow-hidden"
       >
-        <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-xl overflow-hidden bg-stone-100 shrink-0 relative">
+        <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-xl overflow-hidden bg-black/40 shrink-0 relative">
           <img
             src={imgError ? 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?auto=format&fit=crop&w=400&q=80' : activeImageUrl}
             alt={titleText}
@@ -332,29 +322,29 @@ export function ListingCard({
 
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1.5 mb-1 flex-wrap">
-            <span className="text-[9px] font-bold text-[#C06853] uppercase tracking-wider bg-[#C06853]/10 px-2 py-0.5 rounded-md border border-[#C06853]/20 truncate">
+            <span className="text-[9px] font-bold text-amber-400 uppercase tracking-wider bg-amber-500/10 px-2 py-0.5 rounded-md border border-amber-500/20 truncate">
               {categoryLabel}
             </span>
             {isVerifiedSupplier && (
-              <span className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center gap-0.5">
-                <CheckCircle2 className="w-2.5 h-2.5 text-emerald-600" />
+              <span className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-md bg-emerald-950/60 text-emerald-300 border border-emerald-500/30 flex items-center gap-0.5">
+                <CheckCircle2 className="w-2.5 h-2.5 text-emerald-400" />
                 <span>{t('verified_account') || t('verified') || 'VERIFIED'}</span>
               </span>
             )}
             {isFeatured && (
-              <span className="text-[9px] font-black text-[#C06853] bg-[#C06853]/10 px-1.5 py-0.5 rounded-md border border-[#C06853]/20 uppercase tracking-wider">
+              <span className="text-[9px] font-black text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded-md border border-emerald-500/20 uppercase tracking-wider">
                 ★
               </span>
             )}
           </div>
-          <h4 className="text-sm font-semibold text-stone-900 group-hover:text-[#C06853] transition-colors truncate">
+          <h4 className="text-sm font-semibold text-white group-hover:text-amber-400 transition-colors truncate">
             {titleText}
           </h4>
-          <div className="text-sm font-bold text-stone-900 font-mono mt-0.5 truncate">
+          <div className="text-sm font-bold text-amber-400 font-mono mt-0.5 truncate">
             {displayPrice}
           </div>
-          <p className="text-[11px] text-stone-500 flex items-center gap-1 mt-1 truncate">
-            <MapPin className="w-3 h-3 text-[#C06853] shrink-0" />
+          <p className="text-[11px] text-white/45 flex items-center gap-1 mt-1 truncate">
+            <MapPin className="w-3 h-3 text-amber-500/80 shrink-0" />
             <span className="truncate">{locationText}</span>
           </p>
         </div>
@@ -365,7 +355,7 @@ export function ListingCard({
               e.stopPropagation();
               onToggleFav(property.id);
             }}
-            className="p-2 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-500 hover:text-rose-500 transition shrink-0"
+            className="p-2 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] text-white/60 hover:text-rose-500 transition shrink-0"
             aria-label={t('save_to_favorites') || 'Favorite'}
             title={t('save_to_favorites') || 'Favorite'}
           >
@@ -382,12 +372,12 @@ export function ListingCard({
   if (viewMode === 'list') {
     return (
       <article 
-        className="group bg-white hover:bg-stone-50/80 border border-stone-200/80 hover:border-[#C06853]/40 rounded-2xl overflow-hidden transition-all duration-300 shadow-sm hover:shadow-md flex flex-col md:flex-row text-left relative"
+        className="group bg-[#0d0d14] hover:bg-[#12121c] border border-white/[0.08] hover:border-amber-500/40 rounded-3xl overflow-hidden transition-all duration-300 shadow-xl hover:shadow-2xl flex flex-col md:flex-row text-left relative"
       >
         {/* Left image column */}
         <div 
           onClick={() => onSelect(property)}
-          className="md:w-72 lg:w-80 h-56 md:h-auto min-h-[220px] relative overflow-hidden bg-stone-100 shrink-0 cursor-pointer"
+          className="md:w-72 lg:w-80 h-56 md:h-auto min-h-[220px] relative overflow-hidden bg-[#08080c] shrink-0 cursor-pointer"
         >
           <img
             src={imgError ? 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?auto=format&fit=crop&w=800&q=80' : activeImageUrl}
@@ -396,18 +386,12 @@ export function ListingCard({
             className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
             referrerPolicy="no-referrer"
           />
-
-          {/* Top badges */}
-          <div className="absolute top-3 left-3 z-10">
-            <span className="bg-[#C06853] text-white text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-lg shadow-sm">
-              {sellingTypeBadge}
-            </span>
-          </div>
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent pointer-events-none md:hidden" />
 
           {/* Image counter pill */}
           {allImages.length > 1 && (
-            <div className="absolute bottom-3 left-3 z-10 bg-black/60 backdrop-blur-md px-2 py-1 rounded-lg text-[10px] font-medium text-white border border-white/10 flex items-center gap-1">
-              <Camera className="w-3 h-3 text-[#C06853]" />
+            <div className="absolute bottom-3 left-3 z-10 bg-black/75 backdrop-blur-md px-2 py-1 rounded-lg text-[10px] font-medium text-white/90 border border-white/10 flex items-center gap-1">
+              <Camera className="w-3 h-3 text-amber-400" />
               <span>{activeImgIndex + 1}/{allImages.length}</span>
             </div>
           )}
@@ -417,7 +401,7 @@ export function ListingCard({
             <div className="absolute inset-x-2 top-1/2 -translate-y-1/2 flex justify-between opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
               <button
                 onClick={handlePrevImage}
-                className="pointer-events-auto p-1.5 rounded-full bg-white/90 hover:bg-white text-stone-800 shadow-md border border-stone-200 transition"
+                className="pointer-events-auto p-1.5 rounded-full bg-black/70 hover:bg-black/90 text-white backdrop-blur-md border border-white/10 transition"
                 aria-label={t('previous_photo') || 'Previous photo'}
                 title={t('previous_photo') || 'Previous photo'}
               >
@@ -425,7 +409,7 @@ export function ListingCard({
               </button>
               <button
                 onClick={handleNextImage}
-                className="pointer-events-auto p-1.5 rounded-full bg-white/90 hover:bg-white text-stone-800 shadow-md border border-stone-200 transition"
+                className="pointer-events-auto p-1.5 rounded-full bg-black/70 hover:bg-black/90 text-white backdrop-blur-md border border-white/10 transition"
                 aria-label={t('next_photo') || 'Next photo'}
                 title={t('next_photo') || 'Next photo'}
               >
@@ -441,25 +425,25 @@ export function ListingCard({
             {/* Top metadata line: Category, Verified, Negotiable, Featured, and Quick actions */}
             <div className="flex items-center justify-between gap-3 mb-2">
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-[#C06853] bg-[#C06853]/10 border border-[#C06853]/20 px-2.5 py-1 rounded-lg">
+                <span className="text-[10px] font-extrabold uppercase tracking-wider text-amber-400/90 bg-amber-500/10 border border-amber-500/20 px-2.5 py-1 rounded-lg">
                   {categoryLabel}
                 </span>
 
                 {isVerifiedSupplier && (
-                  <span className="text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center gap-1">
-                    <CheckCircle2 className="w-3 h-3 text-emerald-600 shrink-0" />
-                    <span>{t('verified_account') || t('verified') || 'VERIFIED'}</span>
+                  <span className="text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-lg bg-emerald-950/60 text-emerald-300 border border-emerald-500/30 flex items-center gap-1">
+                    <CheckCircle2 className="w-3 h-3 text-emerald-400 shrink-0" />
+                    <span>{t('verified_account') || t('verified') || 'VERIFIED ACCOUNT'}</span>
                   </span>
                 )}
 
                 {isNegotiable && (
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-1 rounded-lg">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-1 rounded-lg">
                     🤝 {getTranslatedOption('Negotiable', currentLanguage) || 'Negotiable'}
                   </span>
                 )}
 
                 {isFeatured && (
-                  <span className="text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-lg bg-[#C06853] text-white shadow-sm flex items-center gap-1">
+                  <span className="text-[9px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-lg bg-gradient-to-r from-amber-400 to-amber-600 text-black shadow-sm flex items-center gap-1">
                     <Sparkles className="w-2.5 h-2.5 shrink-0" />
                     <span>{t('featured') || 'Featured'}</span>
                   </span>
@@ -470,16 +454,16 @@ export function ListingCard({
               <div className="flex items-center gap-1.5">
                 <button
                   onClick={handleShare}
-                  className="p-2 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-600 hover:text-stone-900 transition relative"
+                  className="p-2 rounded-xl bg-white/[0.05] hover:bg-white/[0.1] text-white/60 hover:text-white transition relative"
                   title={t('share_listing') || 'Share listing'}
                 >
-                  {copiedLink ? <Check className="w-4 h-4 text-emerald-600" /> : <Share2 className="w-4 h-4" />}
+                  {copiedLink ? <Check className="w-4 h-4 text-emerald-400" /> : <Share2 className="w-4 h-4" />}
                 </button>
 
                 {onToggleFav && (
                   <button
                     onClick={() => onToggleFav(property.id)}
-                    className="p-2 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-600 hover:text-rose-500 transition"
+                    className="p-2 rounded-xl bg-white/[0.05] hover:bg-white/[0.1] text-white/60 hover:text-rose-500 transition"
                     title={t('save_to_favorites') || 'Save to favorites'}
                   >
                     <Heart className={`w-4 h-4 transition ${isFavorite ? 'text-rose-500 fill-rose-500 scale-110' : ''}`} />
@@ -489,21 +473,21 @@ export function ListingCard({
             </div>
 
             {/* Price */}
-            <div className="text-2xl font-black text-stone-900 font-mono tracking-tight mb-2">
+            <div className="text-2xl font-black text-white font-mono tracking-tight mb-2">
               {displayPrice}
             </div>
 
             {/* Main Title */}
             <h3
               onClick={() => onSelect(property)}
-              className="text-lg md:text-xl font-bold text-stone-900 hover:text-[#C06853] leading-snug cursor-pointer transition-colors duration-200 line-clamp-1 mb-2"
+              className="text-lg md:text-xl font-bold text-[#F5F5F4] hover:text-amber-400 leading-snug cursor-pointer transition-colors duration-200 line-clamp-1 mb-2"
             >
               {titleText}
             </h3>
 
             {/* Location */}
-            <div className="flex items-center gap-1.5 text-xs text-stone-500 mb-2.5">
-              <MapPin className="w-3.5 h-3.5 text-[#C06853] shrink-0" />
+            <div className="flex items-center gap-1.5 text-xs text-white/60 mb-2.5">
+              <MapPin className="w-3.5 h-3.5 text-amber-500 shrink-0" />
               <span className="truncate">{locationText}</span>
             </div>
 
@@ -513,7 +497,7 @@ export function ListingCard({
                 {specs.map((s, idx) => (
                   <div 
                     key={idx}
-                    className="flex items-center gap-1.5 bg-stone-100 border border-stone-200/70 px-2.5 py-1 rounded-lg text-xs text-stone-700 font-medium"
+                    className="flex items-center gap-1.5 bg-white/[0.04] border border-white/[0.06] px-2.5 py-1 rounded-lg text-xs text-white/80 font-medium"
                   >
                     {s.icon}
                     <span>{s.value}</span>
@@ -523,36 +507,36 @@ export function ListingCard({
             )}
 
             {/* Views count & Listing age */}
-            <div className="flex items-center gap-3 text-xs text-stone-400 mb-3">
+            <div className="flex items-center gap-3 text-xs text-white/50 mb-3">
               <span className="flex items-center gap-1">
-                <Eye className="w-3.5 h-3.5 text-[#C06853]" />
+                <Eye className="w-3.5 h-3.5 text-amber-500/80" />
                 <span>{viewsCount} {t('views_count') || 'views'}</span>
               </span>
               <span>•</span>
               <span className="flex items-center gap-1">
-                <Clock className="w-3.5 h-3.5 text-stone-400" />
+                <Clock className="w-3.5 h-3.5 text-white/40" />
                 <span>{listingAge}</span>
               </span>
             </div>
           </div>
 
           {/* Bottom Row: Location, Seller, and Action */}
-          <div className="pt-4 border-t border-stone-200/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="pt-4 border-t border-white/[0.06] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div 
               onClick={handleSellerClick}
-              className="flex items-center gap-1.5 text-xs text-stone-700 hover:text-[#C06853] cursor-pointer font-medium"
+              className="flex items-center gap-1.5 text-xs text-white/80 hover:text-amber-400 cursor-pointer font-medium"
               title="View Seller Profile"
             >
-              <Building className="w-3.5 h-3.5 text-[#C06853] shrink-0" />
+              <Building className="w-3.5 h-3.5 text-amber-500 shrink-0" />
               <span className="truncate max-w-[160px]">{sellerName}</span>
-              {isVerifiedSupplier && <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />}
+              {isVerifiedSupplier && <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />}
             </div>
 
             <div className="flex items-center gap-2 shrink-0">
               {onReport && (
                 <button
                   onClick={() => onReport(property)}
-                  className="p-2.5 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-400 hover:text-red-500 transition"
+                  className="p-2.5 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] text-white/40 hover:text-red-400 transition"
                   title={t('report_listing') || 'Report listing'}
                 >
                   <ShieldAlert className="w-4 h-4" />
@@ -561,7 +545,7 @@ export function ListingCard({
 
               <button
                 onClick={() => onSelect(property)}
-                className="px-5 py-2.5 rounded-xl bg-[#C06853] hover:bg-[#A85340] text-white font-bold text-xs uppercase tracking-wider transition-all duration-200 hover:scale-[1.02] shadow-sm flex items-center gap-1.5"
+                className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black font-extrabold text-xs uppercase tracking-wider transition-all duration-300 hover:scale-[1.02] shadow-md shadow-amber-500/10 flex items-center gap-1.5"
               >
                 <span>{t('view_details') || 'View Details'}</span>
                 <ChevronRight className="w-3.5 h-3.5" />
@@ -577,11 +561,11 @@ export function ListingCard({
   // GRID MODE (Default high-craft visual card)
   // ----------------------------------------------------
   return (
-    <article className="group bg-white hover:bg-stone-50/50 rounded-2xl overflow-hidden border border-stone-200/80 hover:border-[#C06853]/40 transition-all duration-300 flex flex-col relative shadow-sm hover:shadow-md hover:-translate-y-0.5">
+    <article className="group bg-[#0d0d14] hover:bg-[#11111a] rounded-3xl overflow-hidden border border-white/[0.08] hover:border-amber-500/40 transition-all duration-300 flex flex-col relative shadow-lg hover:shadow-2xl hover:-translate-y-1">
       {/* Visual Image Header */}
       <div 
         onClick={() => onSelect(property)}
-        className="h-60 sm:h-64 overflow-hidden relative bg-stone-100 cursor-pointer"
+        className="h-60 sm:h-64 overflow-hidden relative bg-[#07070b] cursor-pointer"
       >
         <img
           src={imgError ? 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?auto=format&fit=crop&w=800&q=80' : activeImageUrl}
@@ -591,12 +575,8 @@ export function ListingCard({
           referrerPolicy="no-referrer"
         />
 
-        {/* Top-Left: Transaction Type Badge (For Sale / For Rent / Retail / Wholesale) */}
-        <div className="absolute top-3.5 left-3.5 z-10">
-          <span className="bg-[#C06853] text-white text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-lg shadow-sm">
-            {sellingTypeBadge}
-          </span>
-        </div>
+        {/* Subtle optical vignette */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/15 to-black/30 pointer-events-none" />
 
         {/* Floating Actions (Top-Right: Favorite & Share) */}
         <div className="absolute top-3.5 right-3.5 z-10 flex flex-col gap-1.5">
@@ -606,46 +586,38 @@ export function ListingCard({
                 e.stopPropagation();
                 onToggleFav(property.id);
               }}
-              className="p-2 rounded-full bg-white/90 hover:bg-white text-stone-600 hover:text-[#C06853] shadow-sm backdrop-blur-sm transition duration-200 cursor-pointer"
+              className="p-2.5 rounded-2xl bg-black/60 hover:bg-black/90 backdrop-blur-md border border-white/10 text-white/70 hover:text-white transition duration-200 shadow-md cursor-pointer"
               aria-label={t('save_to_favorites') || 'Save to favorites'}
               title={t('save_to_favorites') || 'Save to favorites'}
             >
-              <Heart className={`w-4 h-4 transition duration-200 ${isFavorite ? 'text-rose-500 fill-rose-500 scale-110' : ''}`} />
+              <Heart className={`w-4 h-4 transition duration-300 ${isFavorite ? 'text-rose-500 fill-rose-500 scale-110' : ''}`} />
             </button>
           )}
 
           <button
             onClick={handleShare}
-            className="p-2 rounded-full bg-white/90 hover:bg-white text-stone-600 hover:text-stone-900 shadow-sm backdrop-blur-sm transition duration-200 cursor-pointer opacity-0 group-hover:opacity-100"
+            className="p-2.5 rounded-2xl bg-black/60 hover:bg-black/90 backdrop-blur-md border border-white/10 text-white/70 hover:text-white transition duration-200 shadow-md cursor-pointer opacity-0 group-hover:opacity-100"
             aria-label={t('share_listing') || 'Share listing'}
             title={t('share_listing') || 'Share listing'}
           >
-            {copiedLink ? <Check className="w-4 h-4 text-emerald-600" /> : <Share2 className="w-4 h-4" />}
+            {copiedLink ? <Check className="w-4 h-4 text-emerald-400" /> : <Share2 className="w-4 h-4" />}
           </button>
         </div>
 
-        {/* Bottom-Left: Verified badge or category badge */}
-        <div className="absolute bottom-3 left-3.5 z-10 flex items-center gap-1.5">
-          {isVerifiedSupplier && (
-            <span className="bg-white/90 backdrop-blur-sm text-emerald-700 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md shadow-sm flex items-center gap-1 border border-emerald-200">
-              <CheckCircle2 className="w-3 h-3 text-emerald-600" />
-              <span>Verified</span>
-            </span>
-          )}
-          {allImages.length > 1 && (
-            <div className="bg-black/60 backdrop-blur-sm px-2 py-0.5 rounded-md text-[10px] font-medium text-white flex items-center gap-1">
-              <Camera className="w-3 h-3 text-[#C06853]" />
-              <span>{activeImgIndex + 1}/{allImages.length}</span>
-            </div>
-          )}
-        </div>
+        {/* Multi-image indicators (Bottom-Left) */}
+        {allImages.length > 1 && (
+          <div className="absolute bottom-3 left-3.5 z-10 bg-black/75 backdrop-blur-md px-2.5 py-1 rounded-xl text-[10px] font-medium text-white/90 border border-white/10 flex items-center gap-1.5 shadow-sm">
+            <Camera className="w-3 h-3 text-amber-400" />
+            <span>{activeImgIndex + 1}/{allImages.length}</span>
+          </div>
+        )}
 
         {/* Arrow Navigation on Desktop Hover */}
         {allImages.length > 1 && (
           <div className="absolute inset-x-2 top-1/2 -translate-y-1/2 flex justify-between opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
             <button
               onClick={handlePrevImage}
-              className="pointer-events-auto p-1.5 rounded-full bg-white/90 hover:bg-white text-stone-800 shadow-md border border-stone-200 transition"
+              className="pointer-events-auto p-1.5 rounded-full bg-black/75 hover:bg-black text-white backdrop-blur-md border border-white/10 transition shadow-lg"
               aria-label={t('previous_photo') || 'Previous photo'}
               title={t('previous_photo') || 'Previous photo'}
             >
@@ -653,7 +625,7 @@ export function ListingCard({
             </button>
             <button
               onClick={handleNextImage}
-              className="pointer-events-auto p-1.5 rounded-full bg-white/90 hover:bg-white text-stone-800 shadow-md border border-stone-200 transition"
+              className="pointer-events-auto p-1.5 rounded-full bg-black/75 hover:bg-black text-white backdrop-blur-md border border-white/10 transition shadow-lg"
               aria-label={t('next_photo') || 'Next photo'}
               title={t('next_photo') || 'Next photo'}
             >
@@ -673,7 +645,7 @@ export function ListingCard({
                   setActiveImgIndex(idx);
                 }}
                 className={`w-1.5 h-1.5 rounded-full transition-all cursor-pointer ${
-                  idx === activeImgIndex ? 'bg-[#C06853] w-3.5' : 'bg-white/70 hover:bg-white'
+                  idx === activeImgIndex ? 'bg-amber-400 w-3.5' : 'bg-white/50 hover:bg-white'
                 }`}
               />
             ))}
@@ -686,19 +658,19 @@ export function ListingCard({
         <div>
           {/* Category & Negotiable tag row */}
           <div className="flex items-center justify-between gap-2 mb-2">
-            <span className="text-[10px] font-bold text-[#C06853] bg-[#C06853]/10 border border-[#C06853]/20 px-2.5 py-0.5 rounded-lg uppercase tracking-wider">
+            <span className="text-[10px] font-bold text-amber-400/90 bg-amber-500/10 border border-amber-500/20 px-2.5 py-0.5 rounded-lg uppercase tracking-wider">
               {categoryLabel}
             </span>
             {isNegotiable && (
-              <span className="text-[10px] font-medium text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-lg">
+              <span className="text-[10px] font-medium text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-lg">
                 {getTranslatedOption('Negotiable', currentLanguage) || 'Negotiable'}
               </span>
             )}
           </div>
 
           {/* Price (Prominent, bold, high-contrast) */}
-          <div className="mb-1.5">
-            <div className="text-xl sm:text-2xl font-black text-stone-900 font-mono tracking-tight leading-tight">
+          <div className="mb-2">
+            <div className="text-xl sm:text-2xl font-black text-white font-mono tracking-tight leading-tight">
               {displayPrice}
             </div>
           </div>
@@ -706,15 +678,15 @@ export function ListingCard({
           {/* Title */}
           <h4
             onClick={() => onSelect(property)}
-            className="font-bold text-base text-stone-900 hover:text-[#C06853] leading-snug mb-2 cursor-pointer line-clamp-2 transition-colors duration-200"
+            className="font-bold text-base text-[#F5F5F4] hover:text-amber-400 leading-snug mb-2 cursor-pointer line-clamp-2 transition-colors duration-200"
             title={titleText}
           >
             {titleText}
           </h4>
 
           {/* Location */}
-          <div className="flex items-center gap-1.5 text-xs text-stone-500 mb-2.5">
-            <MapPin className="w-3.5 h-3.5 text-[#C06853] shrink-0" />
+          <div className="flex items-center gap-1.5 text-xs text-white/60 mb-2.5">
+            <MapPin className="w-3.5 h-3.5 text-amber-500/80 shrink-0" />
             <span className="truncate">{locationText}</span>
           </div>
 
@@ -724,7 +696,7 @@ export function ListingCard({
               {specs.map((s, idx) => (
                 <div 
                   key={idx}
-                  className="flex items-center gap-1 bg-stone-100 border border-stone-200/70 px-2 py-0.5 rounded-md text-[11px] text-stone-700 font-medium"
+                  className="flex items-center gap-1 bg-white/[0.04] border border-white/[0.06] px-2 py-0.5 rounded-md text-[11px] text-white/70 font-medium"
                 >
                   {s.icon}
                   <span>{s.value}</span>
@@ -734,14 +706,14 @@ export function ListingCard({
           )}
 
           {/* Views Activity & Listing Age Row */}
-          <div className="flex items-center gap-3 text-[11px] text-stone-400 border-t border-stone-100 pt-2.5 mb-2.5">
+          <div className="flex items-center gap-3 text-[11px] text-white/50 border-t border-white/[0.06] pt-2.5 mb-2.5">
             <span className="flex items-center gap-1">
-              <Eye className="w-3.5 h-3.5 text-[#C06853]" />
+              <Eye className="w-3.5 h-3.5 text-amber-500/80" />
               <span>{viewsCount} {t('views_count') || 'views'}</span>
             </span>
             <span>•</span>
             <span className="flex items-center gap-1">
-              <Clock className="w-3.5 h-3.5 text-stone-400" />
+              <Clock className="w-3.5 h-3.5 text-white/40" />
               <span>{listingAge}</span>
             </span>
           </div>
@@ -749,22 +721,22 @@ export function ListingCard({
           {/* Seller Line */}
           <div 
             onClick={handleSellerClick}
-            className="flex items-center gap-1.5 text-xs text-stone-600 hover:text-[#C06853] cursor-pointer transition font-medium group/seller"
+            className="flex items-center gap-1.5 text-xs text-white/75 hover:text-amber-400 cursor-pointer transition font-medium group/seller"
             title="View Seller Profile"
           >
-            <Building className="w-3.5 h-3.5 text-[#C06853] shrink-0" />
+            <Building className="w-3.5 h-3.5 text-amber-500 shrink-0" />
             <span className="truncate max-w-[180px] group-hover/seller:underline">{sellerName}</span>
-            {isVerifiedSupplier && <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />}
+            {isVerifiedSupplier && <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />}
           </div>
         </div>
 
         {/* Action Row */}
         {showQuickActions && (
-          <div className="border-t border-stone-100 pt-3 mt-3 flex items-center justify-between gap-2">
+          <div className="border-t border-white/[0.06] pt-3 mt-3 flex items-center justify-between gap-2">
             {onReport && (
               <button
                 onClick={() => onReport(property)}
-                className="p-2 text-stone-400 hover:text-red-500 rounded-xl hover:bg-stone-100 transition cursor-pointer shrink-0"
+                className="p-2 text-white/40 hover:text-red-400 rounded-xl hover:bg-white/[0.05] transition cursor-pointer shrink-0"
                 title={t('report_listing') || 'Report listing'}
               >
                 <ShieldAlert className="w-4 h-4" />
@@ -773,7 +745,7 @@ export function ListingCard({
 
             <button
               onClick={() => onSelect(property)}
-              className="w-full bg-[#C06853] hover:bg-[#A85340] text-white font-bold py-2.5 px-4 rounded-xl text-xs uppercase tracking-wider transition-all duration-200 hover:scale-[1.01] shadow-sm flex items-center justify-center gap-1.5 cursor-pointer truncate"
+              className="w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black font-extrabold py-2.5 px-4 rounded-xl text-xs uppercase tracking-wider transition-all duration-300 hover:scale-[1.01] shadow-md shadow-amber-500/10 flex items-center justify-center gap-1.5 cursor-pointer truncate"
             >
               <span>{t('view_listing') || 'View Details'}</span>
               <ChevronRight className="w-3.5 h-3.5 shrink-0" />

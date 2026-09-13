@@ -221,24 +221,24 @@ export const WholesalePricingTiersEditor: React.FC<WholesalePricingTiersEditorPr
   const isMoqInvalid = isInputEmpty || isNaN(parsedInputMoq) || parsedInputMoq < 1;
 
   return (
-    <div className="bg-[#F8F7F4] border border-stone-200 rounded-2xl p-4 sm:p-5 space-y-4 shadow-xs">
+    <div className="bg-[#10101a] border border-amber-500/25 rounded-2xl p-4 sm:p-5 space-y-4 shadow-lg">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-stone-200 pb-3">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-white/5 pb-3">
         <div className="flex items-center gap-2">
-          <div className="p-1.5 bg-[#C06853]/10 text-[#C06853] rounded-lg">
+          <div className="p-1.5 bg-amber-500/15 text-amber-400 rounded-lg">
             <Layers className="w-4 h-4" />
           </div>
           <div>
-            <span className="text-xs font-bold text-[#C06853] uppercase tracking-wider block">
+            <span className="text-xs font-bold text-amber-400 uppercase tracking-wider block">
               {t('wholesale_pricing_quantity_tiers')}
             </span>
-            <span className="text-[11px] text-stone-500">
+            <span className="text-[11px] text-white/50">
               {t('set_volume_discount_tiers_desc')}
             </span>
           </div>
         </div>
 
-        <span className="text-[10px] font-mono font-bold bg-[#C06853]/10 text-[#C06853] border border-[#C06853]/20 px-2.5 py-1 rounded-lg self-start sm:self-auto">
+        <span className="text-[10px] font-mono font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20 px-2.5 py-1 rounded-lg self-start sm:self-auto">
           {t('unit_of_sale')}: {getLocalizedUnit(unitSingular, currentLanguage, 1)}
         </span>
       </div>
@@ -246,7 +246,7 @@ export const WholesalePricingTiersEditor: React.FC<WholesalePricingTiersEditorPr
       {/* MOQ Input Section */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
-          <label className="block text-xs font-bold text-stone-800 mb-1">
+          <label className="block text-xs font-bold text-white mb-1">
             {t('wholesale.minimum_order_quantity')} *
           </label>
           <div className="relative">
@@ -258,34 +258,34 @@ export const WholesalePricingTiersEditor: React.FC<WholesalePricingTiersEditorPr
               onChange={handleMoqInputChange}
               onBlur={handleMoqBlur}
               placeholder="e.g. 26"
-              className={`w-full bg-white border ${isMoqInvalid ? 'border-rose-500 text-rose-600' : 'border-stone-200 text-stone-900'} font-mono text-sm rounded-xl px-3.5 py-2.5 pr-20 focus:outline-none focus:border-[#C06853] transition shadow-xs`}
+              className={`w-full bg-[#181826] border ${isMoqInvalid ? 'border-rose-500 text-rose-300' : 'border-white/10 text-white'} font-mono text-sm rounded-xl px-3.5 py-2.5 pr-20 focus:outline-none focus:border-amber-500 transition`}
             />
-            <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-medium text-stone-400 pointer-events-none select-none">
+            <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-medium text-white/50 pointer-events-none select-none">
               {getLocalizedUnit(moqUnitLabel, currentLanguage, currentMoqNum)}
             </span>
           </div>
 
           {/* Dynamic buyer purchase message */}
-          <p className="text-[11px] text-stone-600 mt-1.5 font-medium flex items-center gap-1.5">
-            <span className="w-1.5 h-1.5 rounded-full bg-[#C06853] shrink-0 inline-block" />
+          <p className="text-[11px] text-white/70 mt-1.5 font-medium flex items-center gap-1.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0 inline-block" />
             {isRetailAndWholesale
               ? (t('wholesale.qualify_wholesale_pricing', { quantity: currentMoqNum, unit: getLocalizedUnit(unit, currentLanguage, currentMoqNum) }) || `Orders of ${currentMoqNum}+ ${moqUnitLabel} qualify for wholesale pricing. Smaller orders use standard retail price.`)
               : (t('wholesale.buyers_must_purchase', { quantity: currentMoqNum, unit: getLocalizedUnit(unit, currentLanguage, currentMoqNum) }) || `Buyers must purchase at least ${currentMoqNum} ${moqUnitLabel}.`)}
           </p>
 
           {isMoqInvalid && (
-            <p className="text-[10px] text-rose-600 font-semibold mt-1">
+            <p className="text-[10px] text-rose-400 font-semibold mt-1">
               {t('wholesale.moq_invalid')}
             </p>
           )}
         </div>
 
-        <div className="bg-white border border-stone-200 rounded-xl p-3 flex flex-col justify-center text-xs shadow-xs">
-          <span className="text-[10px] uppercase font-bold text-stone-500 tracking-wider mb-1 flex items-center gap-1 font-mono">
-            <TrendingDown className="w-3.5 h-3.5 text-emerald-600" />
+        <div className="bg-black/30 border border-white/5 rounded-xl p-3 flex flex-col justify-center text-xs">
+          <span className="text-[10px] uppercase font-bold text-white/50 tracking-wider mb-1 flex items-center gap-1 font-mono">
+            <TrendingDown className="w-3.5 h-3.5 text-emerald-400" />
             {t('pricing_strategy')}
           </span>
-          <p className="text-stone-600 text-[11px] leading-relaxed">
+          <p className="text-white/70 text-[11px] leading-relaxed">
             {t('set_volume_discount_tiers_desc')}
           </p>
         </div>
@@ -294,9 +294,9 @@ export const WholesalePricingTiersEditor: React.FC<WholesalePricingTiersEditorPr
       {/* Mobile-First Tier Cards (Replaces Squeezed Horizontal Table) */}
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <label className="text-xs font-bold text-stone-800 flex items-center gap-1.5">
+          <label className="text-xs font-bold text-white flex items-center gap-1.5">
             <span>{t('wholesale_pricing_quantity_tiers')}</span>
-            <span className="text-[10px] text-[#C06853] font-normal font-mono">
+            <span className="text-[10px] text-amber-400/80 font-normal font-mono">
               ({normalizedTiers.length} {normalizedTiers.length === 1 ? (t('wholesale.tier') || 'tier') : (t('wholesale.tiers') || 'tiers')})
             </span>
           </label>
@@ -331,38 +331,38 @@ export const WholesalePricingTiersEditor: React.FC<WholesalePricingTiersEditorPr
                 key={idx} 
                 className={`p-3.5 sm:p-4 rounded-xl border transition-all ${
                   hasOrderError
-                    ? 'bg-rose-50 border-rose-300'
-                    : 'bg-white border-stone-200 hover:border-[#C06853]/40 shadow-xs'
+                    ? 'bg-rose-500/10 border-rose-500/50'
+                    : 'bg-[#141422] border-white/10 hover:border-amber-500/30'
                 }`}
               >
                 {/* Top bar: Tier Title and Trash/Delete or Lock */}
-                <div className="flex items-center justify-between pb-2.5 mb-2.5 border-b border-stone-100">
+                <div className="flex items-center justify-between pb-2.5 mb-2.5 border-b border-white/5">
                   <div className="flex items-center gap-2">
-                    <span className="font-mono text-xs font-bold text-[#C06853]">
+                    <span className="font-mono text-xs font-bold text-amber-400">
                       {isFirst ? `Tier 1 (Base MOQ)` : `Tier ${idx + 1}`}
                     </span>
                     {isFirst && (
-                      <span className="text-[9px] bg-[#C06853]/10 text-[#C06853] border border-[#C06853]/20 px-2 py-0.5 rounded font-mono font-bold flex items-center gap-1">
+                      <span className="text-[9px] bg-amber-500/20 text-amber-300 border border-amber-500/30 px-2 py-0.5 rounded font-mono font-bold flex items-center gap-1">
                         <Lock className="w-2.5 h-2.5" /> Base MOQ
                       </span>
                     )}
                   </div>
 
                   <div className="flex items-center gap-2">
-                    <span className="text-[11px] font-mono text-[#C06853] font-medium bg-[#C06853]/10 px-2.5 py-0.5 rounded-lg border border-[#C06853]/20">
+                    <span className="text-[11px] font-mono text-amber-300/90 font-medium bg-amber-500/10 px-2.5 py-0.5 rounded-lg border border-amber-500/20">
                       {rangeLabel}
                     </span>
                     {!isFirst ? (
                       <button
                         type="button"
                         onClick={() => handleRemoveTier(idx)}
-                        className="text-stone-400 hover:text-rose-600 p-1.5 rounded-lg hover:bg-stone-100 transition cursor-pointer"
+                        className="text-white/40 hover:text-rose-400 p-1.5 rounded-lg hover:bg-white/5 transition cursor-pointer"
                         title="Delete Tier"
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
                     ) : (
-                      <span className="text-[10px] text-stone-400 italic select-none">
+                      <span className="text-[10px] text-white/30 italic select-none">
                         {t('required')}
                       </span>
                     )}
@@ -373,12 +373,12 @@ export const WholesalePricingTiersEditor: React.FC<WholesalePricingTiersEditorPr
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 items-center">
                   {/* Quantity Range */}
                   <div>
-                    <label className="block text-[10px] uppercase font-bold text-stone-600 mb-1">
+                    <label className="block text-[10px] uppercase font-bold text-white/60 mb-1">
                       {isFirst ? 'Minimum Order Quantity' : 'Starting Quantity Threshold'}
                     </label>
                     {isFirst ? (
-                      <div className="flex items-center gap-2 bg-stone-50 border border-stone-200 rounded-xl px-3 py-2 text-xs font-mono text-[#C06853] font-bold">
-                        <Lock className="w-3.5 h-3.5 text-[#C06853]/70" />
+                      <div className="flex items-center gap-2 bg-black/40 border border-white/10 rounded-xl px-3 py-2 text-xs font-mono text-amber-400 font-bold">
+                        <Lock className="w-3.5 h-3.5 text-amber-400/60" />
                         <span>{currentMoqNum} {getPluralizedUnit(currentMoqNum, unit)}</span>
                       </div>
                     ) : (
@@ -391,14 +391,14 @@ export const WholesalePricingTiersEditor: React.FC<WholesalePricingTiersEditorPr
                             value={tier.minimumQuantity ?? ''}
                             onChange={e => handleAdditionalTierQtyChange(idx, e.target.value)}
                             placeholder={`e.g. ${prevQty + 20}`}
-                            className={`w-full bg-white border ${hasOrderError ? 'border-rose-400 text-rose-600' : 'border-stone-200 text-stone-900'} rounded-xl px-3 py-2 text-xs font-mono focus:outline-none focus:border-[#C06853] transition shadow-xs`}
+                            className={`w-full bg-black/50 border ${hasOrderError ? 'border-rose-500 text-rose-300' : 'border-white/15 text-white'} rounded-xl px-3 py-2 text-xs font-mono focus:outline-none focus:border-amber-500 transition`}
                           />
-                          <span className="text-xs text-stone-500 font-medium whitespace-nowrap">
+                          <span className="text-xs text-white/50 font-medium whitespace-nowrap">
                             {unitPlural}
                           </span>
                         </div>
                         {hasOrderError && (
-                          <span className="text-[10px] text-rose-600 font-medium block">
+                          <span className="text-[10px] text-rose-400 font-medium block">
                             Must be &gt; {idx === 1 ? `MOQ (${currentMoqNum})` : `Tier #${idx} (${prevQty})`}
                           </span>
                         )}
@@ -408,7 +408,7 @@ export const WholesalePricingTiersEditor: React.FC<WholesalePricingTiersEditorPr
 
                   {/* Unit Price */}
                   <div>
-                    <label className="block text-[10px] uppercase font-bold text-stone-600 mb-1">
+                    <label className="block text-[10px] uppercase font-bold text-white/60 mb-1">
                       Unit Price ({currency}) *
                     </label>
                     <div className="relative">
@@ -419,9 +419,9 @@ export const WholesalePricingTiersEditor: React.FC<WholesalePricingTiersEditorPr
                         value={tier.pricePerUnit ? tier.pricePerUnit : ''}
                         onChange={e => handleTierPriceChange(idx, e.target.value)}
                         placeholder="e.g. 1200"
-                        className="w-full bg-white border border-stone-200 text-stone-900 font-mono font-bold rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-[#C06853] transition pr-24 shadow-xs"
+                        className="w-full bg-black/50 border border-white/15 text-amber-400 font-mono font-bold rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-amber-500 transition pr-24"
                       />
-                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[11px] font-mono text-stone-400 pointer-events-none select-none">
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[11px] font-mono text-white/40 pointer-events-none select-none">
                         {currency} / {unit}
                       </span>
                     </div>
@@ -436,7 +436,7 @@ export const WholesalePricingTiersEditor: React.FC<WholesalePricingTiersEditorPr
         <button
           type="button"
           onClick={handleAddTier}
-          className="w-full py-3 bg-[#C06853]/10 hover:bg-[#C06853]/15 text-[#C06853] border border-dashed border-[#C06853]/40 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer mt-2"
+          className="w-full py-3 bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-dashed border-amber-500/40 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer mt-2"
         >
           <Plus className="w-4 h-4" />
           <span>+ Add Another Price Tier</span>
@@ -444,14 +444,14 @@ export const WholesalePricingTiersEditor: React.FC<WholesalePricingTiersEditorPr
 
         {/* Validation error display */}
         {!validation.isValid && validation.error && (
-          <div className="p-3 bg-rose-50 border border-rose-200 text-rose-700 text-xs rounded-xl flex items-center gap-2 animate-fade-in mt-2">
-            <AlertCircle className="w-4 h-4 shrink-0 text-rose-600" />
+          <div className="p-3 bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs rounded-xl flex items-center gap-2 animate-fade-in mt-2">
+            <AlertCircle className="w-4 h-4 shrink-0 text-rose-400" />
             <span>{validation.error}</span>
           </div>
         )}
 
-        <div className="text-[10px] text-stone-500 flex items-center gap-1.5 pt-1">
-          <HelpCircle className="w-3 h-3 text-[#C06853] shrink-0" />
+        <div className="text-[10px] text-white/40 flex items-center gap-1.5 pt-1">
+          <HelpCircle className="w-3 h-3 text-amber-400 shrink-0" />
           <span>
             Example: 10 to 49 {unitPlural} = 1,200 {currency}, 50 to 99 {unitPlural} = 1,050 {currency}, 100+ {unitPlural} = 950 {currency}.
           </span>
