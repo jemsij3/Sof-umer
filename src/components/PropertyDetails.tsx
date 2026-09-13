@@ -154,6 +154,7 @@ export default function PropertyDetails({
       .then(data => {
         if (data && typeof data.viewsCount === 'number') {
           setCurrentViews(data.viewsCount);
+          property.viewsCount = data.viewsCount;
         }
       })
       .catch(() => {});

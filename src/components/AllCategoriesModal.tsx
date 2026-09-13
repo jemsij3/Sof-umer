@@ -1,7 +1,17 @@
 import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, X, ChevronRight, Folder, Sparkles, Tag, ArrowLeft } from 'lucide-react';
-import { CategoryRedesign, Subcategory, CategoryBrand, REDESIGNED_CATEGORIES, getCategoryListingCount as calcCategoryCount, getSubcategoryListingCount as calcSubCount, getSubcategoryVisual } from '../lib/categoriesData';
+import { 
+  PRIMARY_CATEGORIES,
+  PRODUCT_CATEGORIES,
+  CategoryRedesign, 
+  Subcategory, 
+  CategoryBrand, 
+  REDESIGNED_CATEGORIES, 
+  getCategoryListingCount as calcCategoryCount, 
+  getSubcategoryListingCount as calcSubCount, 
+  getSubcategoryVisual 
+} from '../lib/categoriesData';
 import { Property } from '../types';
 
 interface AllCategoriesModalProps {
@@ -69,7 +79,13 @@ export function AllCategoriesModal({
       path: string;
     }> = [];
 
-    REDESIGNED_CATEGORIES.forEach(cat => {
+    // Search in primary categories and redesigned categories
+    const allCategoriesToSearch = [
+      ...PRIMARY_CATEGORIES,
+      ...REDESIGNED_CATEGORIES.filter(rc => !PRIMARY_CATEGORIES.some(pc => pc.id === rc.id))
+    ];
+
+    allCategoriesToSearch.forEach(cat => {
       const catNameEn = cat.name.toLowerCase();
       const catNameAm = (cat.translations?.am || '').toLowerCase();
       const catNameOm = (cat.translations?.om || '').toLowerCase();
@@ -337,42 +353,90 @@ export function AllCategoriesModal({
                 )}
               </div>
             ) : (
-              /* ALL CATEGORIES: RESPONSIVE CATEGORY-CARD GRID (Desktop: 3-4 cols, Tablet: 2-3 cols, Mobile: 2 cols) */
-              <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2.5 sm:gap-3.5 md:gap-4">
-                {REDESIGNED_CATEGORIES.map((cat) => {
-                  const catCount = getCategoryListingCount(cat);
-                  const translatedCatName = getCategoryDisplayName(cat);
+              <div className="space-y-8">
+                {/* 1. PRIMARY MARKETPLACE CATEGORIES */}
+                <div>
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className="w-2 h-2 rounded-full bg-amber-400" />
+                    <h3 className="text-xs font-mono font-bold uppercase tracking-wider text-amber-400">
+                      {t('primary_categories') || 'PRIMARY MARKETPLACE CATEGORIES'}
+                    </h3>
+                  </div>
+                  <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2.5 sm:gap-3.5">
+                    {PRIMARY_CATEGORIES.map((cat) => {
+                      const catCount = getCategoryListingCount(cat);
+                      const translatedCatName = getCategoryDisplayName(cat);
 
-                  return (
-                    <button
-                      key={cat.id}
-                      type="button"
-                      onClick={() => setSelectedCategoryView(cat)}
-                      aria-label={`Browse ${translatedCatName}`}
-                      className="w-full text-left p-3.5 sm:p-4 rounded-2xl bg-white/[0.03] hover:bg-amber-500/[0.07] border border-white/10 hover:border-amber-500/40 transition-all duration-200 flex flex-col justify-between group cursor-pointer min-h-[110px] sm:min-h-[124px] focus:outline-none focus:ring-2 focus:ring-amber-500/50 shadow-sm hover:shadow-lg hover:shadow-amber-500/5 active:scale-[0.98]"
-                    >
-                      {/* Top row: Icon + Chevron */}
-                      <div className="flex items-center justify-between w-full mb-3">
-                        <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-xl sm:text-2xl group-hover:scale-105 group-hover:bg-amber-500/20 transition-transform shrink-0">
-                          {cat.emoji}
-                        </div>
-                        <div className="p-1.5 rounded-lg bg-white/5 text-white/30 group-hover:text-amber-400 group-hover:translate-x-0.5 transition-all shrink-0">
-                          <ChevronRight className="w-4 h-4" />
-                        </div>
-                      </div>
+                      return (
+                        <button
+                          key={cat.id}
+                          type="button"
+                          onClick={() => setSelectedCategoryView(cat)}
+                          aria-label={`Browse ${translatedCatName}`}
+                          className="w-full text-left p-3.5 rounded-2xl bg-white/[0.04] hover:bg-amber-500/[0.08] border border-white/10 hover:border-amber-500/40 transition-all duration-200 flex flex-col justify-between group cursor-pointer min-h-[110px] focus:outline-none focus:ring-2 focus:ring-amber-500/50 shadow-sm hover:shadow-lg hover:shadow-amber-500/5 active:scale-[0.98]"
+                        >
+                          <div className="flex items-center justify-between w-full mb-2.5">
+                            <span className="text-2xl group-hover:scale-110 transition-transform">
+                              {cat.emoji}
+                            </span>
+                            <div className="p-1 rounded-lg bg-white/5 text-white/30 group-hover:text-amber-400 group-hover:translate-x-0.5 transition-all">
+                              <ChevronRight className="w-3.5 h-3.5" />
+                            </div>
+                          </div>
+                          <div>
+                            <h4 className="text-xs sm:text-sm font-bold text-white group-hover:text-amber-400 transition-colors leading-tight line-clamp-1">
+                              {translatedCatName}
+                            </h4>
+                            <p className="text-[10px] text-white/40 font-mono mt-1">
+                              {catCount} {catCount === 1 ? (t('listing_singular') || 'listing') : (t('listings_plural') || 'listings')}
+                            </p>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
 
-                      {/* Bottom area: Category Name & Count */}
-                      <div className="w-full">
-                        <h3 className="text-xs sm:text-sm font-bold text-white group-hover:text-amber-400 transition-colors leading-tight line-clamp-2">
-                          {translatedCatName}
-                        </h3>
-                        <p className="text-[11px] text-white/40 font-mono mt-1">
-                          {catCount} {catCount === 1 ? (currentLanguage === 'am' ? 'ዕቃ' : currentLanguage === 'om' ? 'meeshaa' : 'item') : (t('items_suffix') || 'items')}
-                        </p>
-                      </div>
-                    </button>
-                  );
-                })}
+                {/* 2. PRODUCT DEPARTMENTS & GOODS */}
+                <div>
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className="w-2 h-2 rounded-full bg-white/30" />
+                    <h3 className="text-xs font-mono font-bold uppercase tracking-wider text-white/60">
+                      {t('browse_product_departments') || 'PRODUCT DEPARTMENTS & GOODS'}
+                    </h3>
+                  </div>
+                  <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2.5 sm:gap-3.5">
+                    {PRODUCT_CATEGORIES.map((cat) => {
+                      const catCount = getCategoryListingCount(cat);
+                      const translatedCatName = getCategoryDisplayName(cat);
+
+                      return (
+                        <button
+                          key={cat.id}
+                          type="button"
+                          onClick={() => setSelectedCategoryView(cat)}
+                          aria-label={`Browse ${translatedCatName}`}
+                          className="w-full text-left p-3.5 rounded-2xl bg-white/[0.02] hover:bg-amber-500/[0.06] border border-white/5 hover:border-amber-500/30 transition-all duration-200 flex flex-col justify-between group cursor-pointer min-h-[96px] focus:outline-none focus:ring-2 focus:ring-amber-500/50 shadow-sm active:scale-[0.98]"
+                        >
+                          <div className="flex items-center justify-between w-full mb-2">
+                            <span className="text-xl group-hover:scale-110 transition-transform">
+                              {cat.emoji}
+                            </span>
+                            <ChevronRight className="w-3.5 h-3.5 text-white/20 group-hover:text-amber-400 group-hover:translate-x-0.5 transition-all" />
+                          </div>
+                          <div>
+                            <h4 className="text-xs sm:text-sm font-semibold text-white/90 group-hover:text-amber-400 transition-colors leading-tight line-clamp-1">
+                              {translatedCatName}
+                            </h4>
+                            <p className="text-[10px] text-white/40 font-mono mt-0.5">
+                              {catCount} {catCount === 1 ? (t('item_singular') || 'item') : (t('items_suffix') || 'items')}
+                            </p>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
               </div>
             )}
           </div>

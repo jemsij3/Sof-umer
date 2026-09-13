@@ -28,16 +28,24 @@ export function formatTimeAgo(dateInput?: string | Date | number): string {
 }
 
 export function formatListingAge(
-  dateInput?: string | Date | number,
+  dateInput?: any,
   lang: string = 'en',
   t?: (key: string) => string
 ): string {
   if (!dateInput) return t ? t('listed_today') : 'Listed today';
   try {
-    const past = new Date(dateInput);
-    if (isNaN(past.getTime())) return t ? t('listed_today') : 'Listed today';
+    let resolvedDate: Date;
+    if (typeof dateInput?.toDate === 'function') {
+      resolvedDate = dateInput.toDate();
+    } else if (typeof dateInput?.seconds === 'number') {
+      resolvedDate = new Date(dateInput.seconds * 1000);
+    } else {
+      resolvedDate = new Date(dateInput);
+    }
+
+    if (isNaN(resolvedDate.getTime())) return t ? t('listed_today') : 'Listed today';
     const now = new Date();
-    const diffMs = now.getTime() - past.getTime();
+    const diffMs = now.getTime() - resolvedDate.getTime();
     if (diffMs < 0) return t ? t('listed_today') : 'Listed today';
 
     const diffHours = Math.floor(diffMs / (1000 * 60 * 60));

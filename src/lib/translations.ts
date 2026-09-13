@@ -1766,5 +1766,17 @@ export const staticTranslations: TranslationKey[] = [
   { key: "key_specifications", en: "Key Specifications", om: "Ibsa Qulqullinaa Ijoo", am: "ቁልፍ ዝርዝሮች", category: "Listing" },
   { key: "similar_listings", en: "Similar Listings", om: "Beeksisa Waffakkaatan", am: "ተመሳሳይ ማስታወቂያዎች", category: "Listing" },
   { key: "call_now", en: "Call", om: "Bilbili", am: "ደውል", category: "Listing" },
-  { key: "whatsapp_chat", en: "WhatsApp", om: "WhatsApp", am: "ዋትስአፕ", category: "Listing" }
+  { key: "whatsapp_chat", en: "WhatsApp", om: "WhatsApp", am: "ዋትስአፕ", category: "Listing" },
+  { key: "primary_categories", en: "Primary Categories", om: "Gareewwan Ijoo", am: "ዋና ምድቦች", category: "Marketplace" },
+  { key: "browse_product_departments", en: "Product Departments & Goods", om: "Kutaalee Meeshaalee & Oomishaalee", am: "የምርት ክፍሎችና ዕቃዎች", category: "Marketplace" },
+  { key: "listing_singular", en: "listing", om: "tarree", am: "ዝርዝር", category: "Marketplace" },
+  { key: "listings_plural", en: "listings", om: "tarreewwan", am: "ዝርዝሮች", category: "Marketplace" },
+  { key: "item_singular", en: "item", om: "meeshaa", am: "ዕቃ", category: "Marketplace" },
+  { key: "view_all_categories", en: "View All Categories", om: "Gareewwan Hunda Ilaali", am: "ሁሉንም ምድቦች ይመልከቱ", category: "Marketplace" },
+  { key: "properties_in_ethiopia", en: "Properties in Ethiopia", om: "Qabeenya Itoophiyaa Keessaa", am: "በኢትዮጵያ ውስጥ ያሉ ይዞታዎች", category: "Marketplace" },
+  { key: "vehicles_in_ethiopia", en: "Vehicles in Ethiopia", om: "Konkolaattota Itoophiyaa Keessaa", am: "በኢትዮጵያ ውስጥ ያሉ ተሽከርካሪዎች", category: "Marketplace" },
+  { key: "products_in_ethiopia", en: "Products & Marketplace", om: "Oomishaalee & Meeshaalee", am: "ምርቶች እና የገበያ ዕቃዎች", category: "Marketplace" },
+  { key: "view_all_in_properties", en: "View all in Properties", om: "Qabeenya hunda ilaali", am: "ሁሉንም በይዞታ ይመልከቱ", category: "Marketplace" },
+  { key: "view_all_in_vehicles", en: "View all in Vehicles", om: "Konkolaattota hunda ilaali", am: "ሁሉንም በተሽከርካሪ ይመልከቱ", category: "Marketplace" },
+  { key: "view_all_in_products", en: "View all in Products", om: "Oomishaalee hunda ilaali", am: "ሁሉንም በምርቶች ይመልከቱ", category: "Marketplace" }
 ];

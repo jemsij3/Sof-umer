@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
+  PRIMARY_CATEGORIES,
   REDESIGNED_CATEGORIES, 
   CategoryRedesign, 
   Subcategory, 
@@ -129,10 +130,41 @@ const matchesSubcategory = (p: Property, sub: Subcategory, cat: CategoryRedesign
     if (effMajor !== 'Jobs') return false;
   } else if (catId === 'services' || dbMajor === 'services') {
     if (effMajor !== 'Services') return false;
+  } else if (catId === 'businesses' || catId === 'commercial-equipment' || dbMajor === 'local businesses') {
+    if (effMajor !== 'Local Businesses' && effMajor !== 'Products' && !p.subCategoryId?.startsWith('comm-')) return false;
   } else if (catId === 'community' || dbMajor === 'community') {
     if (effMajor !== 'Community') return false;
   } else {
     if (effMajor !== 'Products') return false;
+  }
+
+  // Handle product group subcategories under Products
+  if (sub.id.startsWith('sub-prod-')) {
+    const computedSubId = getMatchingSubcategoryId(p);
+    if (sub.id === 'sub-prod-electronics') return computedSubId.startsWith('el-');
+    if (sub.id === 'sub-prod-fashion') return computedSubId.startsWith('fas-');
+    if (sub.id === 'sub-prod-furniture') return computedSubId.startsWith('fur-');
+    if (sub.id === 'sub-prod-kids') return computedSubId.startsWith('kid-');
+    if (sub.id === 'sub-prod-beauty') return computedSubId.startsWith('hb-');
+    if (sub.id === 'sub-prod-agri') return computedSubId.startsWith('agri-');
+    if (sub.id === 'sub-prod-pets') return computedSubId.startsWith('pet-');
+    if (sub.id === 'sub-prod-sports') return computedSubId.startsWith('spt-');
+    if (sub.id === 'sub-prod-edu') return computedSubId.startsWith('edu-');
+    if (sub.id === 'sub-prod-other') {
+      return (
+        computedSubId.startsWith('oth-') ||
+        (!computedSubId.startsWith('el-') &&
+         !computedSubId.startsWith('fas-') &&
+         !computedSubId.startsWith('fur-') &&
+         !computedSubId.startsWith('kid-') &&
+         !computedSubId.startsWith('hb-') &&
+         !computedSubId.startsWith('agri-') &&
+         !computedSubId.startsWith('pet-') &&
+         !computedSubId.startsWith('spt-') &&
+         !computedSubId.startsWith('edu-'))
+      );
+    }
+    return false;
   }
 
   // Computed subcategory ID check
@@ -447,6 +479,19 @@ export default function Marketplace({
       .slice(0, 6);
   }, [filteredProperties]);
 
+  // Category-specific listings for homepage (only shown when enough real listings exist, count >= 2)
+  const propertiesListings = useMemo(() => {
+    return properties.filter(p => isListingActiveAndPublished(p) && getEffectiveMajorCategory(p) === 'Properties').slice(0, 6);
+  }, [properties]);
+
+  const vehiclesListings = useMemo(() => {
+    return properties.filter(p => isListingActiveAndPublished(p) && getEffectiveMajorCategory(p) === 'Vehicles').slice(0, 6);
+  }, [properties]);
+
+  const productsListings = useMemo(() => {
+    return properties.filter(p => isListingActiveAndPublished(p) && getEffectiveMajorCategory(p) === 'Products').slice(0, 6);
+  }, [properties]);
+
   // Helper to count listings matching our redesigned categories
   const getCategoryListingCount = (cat: CategoryRedesign) => {
     return calcCategoryCount(cat, properties);
@@ -460,49 +505,53 @@ export default function Marketplace({
       const isApproved = p.verificationStatus === 'verified' || p.isVerifiedListing === true;
       if (!isApproved) return false;
 
+      const effMajor = getEffectiveMajorCategory(p);
+      const catId = selectedRedesignedCategory.id.toLowerCase();
+      const dbMajor = (selectedRedesignedCategory.dbMapping?.majorCategory || '').toLowerCase();
+
+      if (catId === 'properties' || dbMajor === 'properties') {
+        return effMajor === 'Properties';
+      }
+      if (catId === 'vehicles' || dbMajor === 'vehicles') {
+        return effMajor === 'Vehicles';
+      }
+      if (catId === 'jobs' || dbMajor === 'jobs') {
+        return effMajor === 'Jobs';
+      }
+      if (catId === 'services' || dbMajor === 'services') {
+        return effMajor === 'Services';
+      }
+      if (catId === 'businesses' || catId === 'commercial-equipment' || dbMajor === 'local businesses') {
+        return (
+          effMajor === 'Local Businesses' ||
+          (p.subCategoryId && p.subCategoryId.startsWith('comm-')) ||
+          ((selectedRedesignedCategory.subcategories || []).some(sub => sub.id === getMatchingSubcategoryId(p)))
+        );
+      }
+      if (catId === 'products' || dbMajor === 'products') {
+        return effMajor === 'Products';
+      }
+      if (catId === 'community' || dbMajor === 'community') {
+        return effMajor === 'Community';
+      }
+
       const mapping = selectedRedesignedCategory.dbMapping;
-      
-      // If special category like free, trending, etc.
-      if (mapping.isSpecial) {
+      if (mapping?.isSpecial) {
         if (mapping.isSpecial === 'free') {
-          return p.price === 0 || extractString(p.title, currentLanguage).toLowerCase().includes('free') || extractString(p.description, currentLanguage).toLowerCase().includes('free');
+          return p.price === 0 || extractString(p.title, currentLanguage).toLowerCase().includes('free');
         }
         if (mapping.isSpecial === 'trending') {
           return p.isFeatured || p.isRecommended || p.price > 100000;
         }
-        if (mapping.isSpecial === 'recent') {
-          return true;
-        }
-        if (mapping.isSpecial === 'popular') {
-          return p.isRecommended || p.isVerifiedListing;
-        }
       }
 
-      // Match majorCategory
-      let matchesMajor = true;
-      if (mapping.majorCategory) {
-        matchesMajor = p.majorCategory === mapping.majorCategory;
-        if (mapping.majorCategory === 'Properties') {
-          matchesMajor = p.majorCategory === 'Properties' || !p.majorCategory;
-        }
-      }
+      if (effMajor !== 'Products') return false;
 
-      // Match keywords in propertyType, title or description
-      let matchesKeywords = true;
-      if (mapping.propertyTypeKeywords && mapping.propertyTypeKeywords.length > 0) {
-        const titleLower = extractString(p.title, currentLanguage).toLowerCase();
-        const descLower = extractString(p.description, currentLanguage).toLowerCase();
-        const typeLower = extractString(p.propertyType, currentLanguage).toLowerCase();
-        
-        matchesKeywords = mapping.propertyTypeKeywords.some(keyword => {
-          const kw = (keyword || '').toLowerCase();
-          return titleLower.includes(kw) || descLower.includes(kw) || typeLower.includes(kw);
-        });
-      }
-
-      return matchesMajor && matchesKeywords;
+      const matchedSubId = getMatchingSubcategoryId(p);
+      if (!matchedSubId) return false;
+      return selectedRedesignedCategory.subcategories.some(sub => sub.id === matchedSubId);
     });
-  }, [properties, selectedRedesignedCategory]);
+  }, [properties, selectedRedesignedCategory, currentLanguage]);
 
   // Subcategory filter within redesigned category
   const subcategoryProperties = useMemo(() => {
@@ -735,7 +784,7 @@ export default function Marketplace({
       if (e.state && e.state.sofCatNav) {
         const { catId, subId } = e.state;
         if (catId) {
-          const matched = REDESIGNED_CATEGORIES.find(c => c.id === catId);
+          const matched = [...PRIMARY_CATEGORIES, ...REDESIGNED_CATEGORIES].find(c => c.id === catId);
           if (matched) {
             setSelectedRedesignedCategory(matched);
             setSelectedMajorCategory(matched.name);
@@ -1831,19 +1880,18 @@ export default function Marketplace({
 
               {/* ALL CATEGORIES Overlay Trigger */}
               <button
-                id="all-categories-trigger"
+                id="view-all-categories-link"
                 onClick={() => setIsAllCategoriesOpen(true)}
-                className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-amber-400 to-amber-600 hover:from-amber-300 hover:to-amber-500 text-black font-extrabold uppercase tracking-widest text-xs rounded-2xl transition duration-300 hover:scale-[1.02] active:scale-95 shadow-lg shadow-amber-500/10 cursor-pointer"
+                className="inline-flex items-center gap-2 px-4 py-2 sm:px-5 sm:py-2.5 bg-white/5 hover:bg-amber-500 text-white/90 hover:text-black border border-white/10 hover:border-amber-400 font-bold text-xs sm:text-sm rounded-2xl transition duration-200 cursor-pointer shadow-sm group"
               >
-                <Folder className="w-4 h-4 fill-black" />
-                <span>{t('all_categories') || 'All Categories'}</span>
-                <ChevronDown className="w-3.5 h-3.5" />
+                <span>{t('view_all_categories') || 'View All Categories'}</span>
+                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
               </button>
             </div>
 
-            {/* Visual Category Cards Grid */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3.5 sm:gap-4">
-              {REDESIGNED_CATEGORIES.map(cat => {
+            {/* Visual Category Cards Grid: 6 Primary Categories Only */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
+              {PRIMARY_CATEGORIES.map(cat => {
                 const count = calcCategoryCount(cat, properties);
                 const catName = currentLanguage === 'am' 
                   ? (cat.translations?.am || cat.name) 
@@ -1854,12 +1902,12 @@ export default function Marketplace({
                 return (
                   <button
                     key={cat.id}
-                    id={`category-card-${cat.id}`}
+                    id={`primary-category-card-${cat.id}`}
                     onClick={() => handleSelectRedesignedCategory(cat)}
-                    className="group text-left p-4 rounded-2xl bg-[#0e0e15] hover:bg-[#151522] border border-white/5 hover:border-amber-500/40 transition-all duration-300 cursor-pointer flex flex-col justify-between min-h-[110px] shadow-sm hover:shadow-xl hover:-translate-y-0.5"
+                    className="group text-left p-4 rounded-2xl bg-[#0e0e15] hover:bg-[#151522] border border-white/5 hover:border-amber-500/40 transition-all duration-300 cursor-pointer flex flex-col justify-between min-h-[118px] shadow-sm hover:shadow-xl hover:-translate-y-0.5"
                   >
                     <div className="flex items-center justify-between w-full mb-3">
-                      <span className="text-2xl group-hover:scale-110 transition-transform duration-300">
+                      <span className="text-2xl sm:text-3xl group-hover:scale-110 transition-transform duration-300">
                         {cat.emoji}
                       </span>
                       <span className="text-[10px] font-mono font-semibold text-white/40 group-hover:text-amber-400 bg-white/5 px-2 py-0.5 rounded-full transition-colors">
@@ -1870,8 +1918,8 @@ export default function Marketplace({
                       <h4 className="text-xs sm:text-sm font-bold text-white group-hover:text-amber-400 transition-colors line-clamp-1 leading-snug">
                         {catName}
                       </h4>
-                      <span className="text-[10px] text-white/40 block mt-0.5 group-hover:text-white/60 transition-colors">
-                        {count === 1 ? '1 listing' : `${count} listings`}
+                      <span className="text-[10px] text-white/40 block mt-0.5 group-hover:text-white/60 transition-colors font-mono">
+                        {count} {count === 1 ? (t('listing_singular') || 'listing') : (t('listings_plural') || 'listings')}
                       </span>
                     </div>
                   </button>
@@ -1879,7 +1927,7 @@ export default function Marketplace({
               })}
             </div>
 
-            {/* RECENTLY VIEWED CATEGORIES (if any) */}
+            {/* RECENTLY VIEWED CATEGORIES (only when real browsing history exists) */}
             {recentlyViewedIds.length > 0 && (
               <div className="mt-4 flex flex-wrap items-center gap-2 pt-3 border-t border-white/5">
                 <span className="text-[10px] font-bold text-white/40 uppercase tracking-widest flex items-center gap-1.5 mr-1">
@@ -1888,7 +1936,7 @@ export default function Marketplace({
                 </span>
                 <div className="flex flex-wrap gap-2">
                   {recentlyViewedIds.map(id => {
-                    const matched = REDESIGNED_CATEGORIES.find(c => c.id === id);
+                    const matched = [...PRIMARY_CATEGORIES, ...REDESIGNED_CATEGORIES].find(c => c.id === id);
                     if (!matched) return null;
                     const catName = currentLanguage === 'am' ? (matched.translations?.am || matched.name) : currentLanguage === 'om' ? (matched.translations?.om || matched.name) : matched.name;
                     return (
@@ -1919,7 +1967,7 @@ export default function Marketplace({
                 </div>
               ) : (
                 <>
-                  {/* 3. FEATURED LISTINGS */}
+                  {/* 1. FEATURED LISTINGS */}
                   {featuredProperties.length > 0 && (
                     <div>
                       <h3 className="text-2xl font-serif text-white mb-8 border-b border-white/5 pb-4 flex items-center justify-between">
@@ -1947,7 +1995,31 @@ export default function Marketplace({
                     </div>
                   )}
 
-                  {/* 4. LATEST LISTINGS */}
+                  {/* 2. POPULAR LISTINGS */}
+                  {popularProperties.length > 0 && (
+                    <div>
+                      <h3 className="text-2xl font-serif text-white mb-8 border-b border-white/5 pb-4 flex items-center justify-between">
+                        <span className="flex items-center gap-2"><TrendingUp className="w-5 h-5 text-amber-500" /> {t('popular_listings') || 'Popular Listings'}</span>
+                        <span className="text-[9px] uppercase font-bold tracking-[0.25em] text-white/30">{t('most_viewed_picks') || 'BASED ON VIEWS & INTEREST'}</span>
+                      </h3>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+                        {popularProperties.map(prop => (
+                          <ListingCard
+                            key={prop.id}
+                            property={prop}
+                            onSelect={onSelectProperty}
+                            favorites={favorites}
+                            onToggleFav={toggleFavorite}
+                            onReport={() => onOpenReportModal('property', prop.id, prop.title)}
+                            t={t} currentLanguage={currentLanguage}
+                            viewMode="grid"
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* 3. LATEST LISTINGS */}
                   {latestProperties.length > 0 && (
                     <div>
                       <h3 className="text-2xl font-serif text-white mb-8 border-b border-white/5 pb-4 flex items-center justify-between">
@@ -1975,28 +2047,114 @@ export default function Marketplace({
                     </div>
                   )}
 
-                  {/* 5. POPULAR LISTINGS */}
-                  {popularProperties.length > 0 && (
-                    <div>
-                      <h3 className="text-2xl font-serif text-white mb-8 border-b border-white/5 pb-4 flex items-center justify-between">
-                        <span className="flex items-center gap-2"><TrendingUp className="w-5 h-5 text-amber-500" /> {t('popular_listings') || 'Popular Listings'}</span>
-                        <span className="text-[9px] uppercase font-bold tracking-[0.25em] text-white/30">{t('most_viewed_picks') || 'BASED ON VIEWS & INTEREST'}</span>
-                      </h3>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
-                        {popularProperties.map(prop => (
-                          <ListingCard
-                            key={prop.id}
-                            property={prop}
-                            onSelect={onSelectProperty}
-                            favorites={favorites}
-                            onToggleFav={toggleFavorite}
-                            onReport={() => onOpenReportModal('property', prop.id, prop.title)}
-                            t={t} currentLanguage={currentLanguage}
-                            viewMode="grid"
-                          />
-                        ))}
-                      </div>
-                    </div>
+                  {/* 4. CATEGORY-SPECIFIC SECTIONS (Only when on home view and enough real listings exist >= 2) */}
+                  {!selectedRedesignedCategory && (
+                    <>
+                      {/* Properties Section */}
+                      {propertiesListings.length >= 2 && (
+                        <div>
+                          <div className="flex items-center justify-between mb-8 border-b border-white/5 pb-4">
+                            <h3 className="text-2xl font-serif text-white flex items-center gap-2">
+                              <span>🏠</span> {t('properties_in_ethiopia') || 'Properties in Ethiopia'}
+                            </h3>
+                            <button
+                              onClick={() => {
+                                const propCat = PRIMARY_CATEGORIES.find(c => c.id === 'properties');
+                                if (propCat) handleSelectRedesignedCategory(propCat);
+                              }}
+                              className="text-xs font-bold text-amber-400 hover:text-amber-300 flex items-center gap-1 group cursor-pointer"
+                            >
+                              <span>{t('view_all_in_properties') || 'View all in Properties'}</span>
+                              <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+                            </button>
+                          </div>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+                            {propertiesListings.map(prop => (
+                              <ListingCard
+                                key={prop.id}
+                                property={prop}
+                                onSelect={onSelectProperty}
+                                favorites={favorites}
+                                onToggleFav={toggleFavorite}
+                                onReport={() => onOpenReportModal('property', prop.id, prop.title)}
+                                t={t} currentLanguage={currentLanguage}
+                                viewMode="grid"
+                              />
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Vehicles Section */}
+                      {vehiclesListings.length >= 2 && (
+                        <div>
+                          <div className="flex items-center justify-between mb-8 border-b border-white/5 pb-4">
+                            <h3 className="text-2xl font-serif text-white flex items-center gap-2">
+                              <span>🚗</span> {t('vehicles_in_ethiopia') || 'Vehicles in Ethiopia'}
+                            </h3>
+                            <button
+                              onClick={() => {
+                                const vehCat = PRIMARY_CATEGORIES.find(c => c.id === 'vehicles');
+                                if (vehCat) handleSelectRedesignedCategory(vehCat);
+                              }}
+                              className="text-xs font-bold text-amber-400 hover:text-amber-300 flex items-center gap-1 group cursor-pointer"
+                            >
+                              <span>{t('view_all_in_vehicles') || 'View all in Vehicles'}</span>
+                              <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+                            </button>
+                          </div>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+                            {vehiclesListings.map(prop => (
+                              <ListingCard
+                                key={prop.id}
+                                property={prop}
+                                onSelect={onSelectProperty}
+                                favorites={favorites}
+                                onToggleFav={toggleFavorite}
+                                onReport={() => onOpenReportModal('property', prop.id, prop.title)}
+                                t={t} currentLanguage={currentLanguage}
+                                viewMode="grid"
+                              />
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Products Section */}
+                      {productsListings.length >= 2 && (
+                        <div>
+                          <div className="flex items-center justify-between mb-8 border-b border-white/5 pb-4">
+                            <h3 className="text-2xl font-serif text-white flex items-center gap-2">
+                              <span>📦</span> {t('products_in_ethiopia') || 'Products & Marketplace'}
+                            </h3>
+                            <button
+                              onClick={() => {
+                                const prodCat = PRIMARY_CATEGORIES.find(c => c.id === 'products');
+                                if (prodCat) handleSelectRedesignedCategory(prodCat);
+                              }}
+                              className="text-xs font-bold text-amber-400 hover:text-amber-300 flex items-center gap-1 group cursor-pointer"
+                            >
+                              <span>{t('view_all_in_products') || 'View all in Products'}</span>
+                              <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+                            </button>
+                          </div>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+                            {productsListings.map(prop => (
+                              <ListingCard
+                                key={prop.id}
+                                property={prop}
+                                onSelect={onSelectProperty}
+                                favorites={favorites}
+                                onToggleFav={toggleFavorite}
+                                onReport={() => onOpenReportModal('property', prop.id, prop.title)}
+                                t={t} currentLanguage={currentLanguage}
+                                viewMode="grid"
+                              />
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </>
                   )}
                 </>
               )}
