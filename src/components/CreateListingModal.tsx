@@ -13,8 +13,13 @@ import {
   X, Building, DollarSign, Plus, Trash2, Camera, Upload, Car, ShoppingBag, 
   Briefcase, Wrench, Calendar, Info, Check, ArrowRight, ArrowLeft, Eye, 
   Zap, Crown, ShieldCheck, CreditCard, Sparkles, Star, Tag, MapPin, Phone, User as UserIcon, Store, Package,
-  Video, Film, Play, AlertCircle, Loader2, CheckCircle2, ArrowUp, ArrowDown, Layers
+  Video, Film, Play, AlertCircle, Loader2, CheckCircle2, ArrowUp, ArrowDown, Layers, Truck, CheckSquare, Square
 } from 'lucide-react';
+import { ListingWizard } from './ListingWizard';
+import { WizardStep1Category } from './wizard/WizardStep1Category';
+import { WizardStep2Details } from './wizard/WizardStep2Details';
+import { WizardStep3Pricing } from './wizard/WizardStep3Pricing';
+import { WizardStep4Review } from './wizard/WizardStep4Review';
 import { SellingTypeSelector } from './SellingTypeSelector';
 import { WholesalePricingTiersEditor } from './WholesalePricingTiersEditor';
 import { ProductVariationsManager } from './ProductVariationsManager';
@@ -33,7 +38,7 @@ interface CreateListingModalProps {
 }
 
 // L10n Consolidated into official translations architecture
-const SUBCATEGORIES: Record<string, { id: string; name: string }[]> = {
+export const SUBCATEGORIES: Record<string, { id: string; name: string }[]> = {
   Properties: [
     { id: 'Houses', name: 'Houses' },
     { id: 'Apartments', name: 'Apartments' },
@@ -469,17 +474,22 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
     }
   });
 
-  // 5-Step Flow State: 1 = Category, 2 = Subcategory, 3 = Details, 4 = Preview, 5 = Choose Plan
-  const [currentStep, setCurrentStep] = useState<1 | 2 | 3 | 4 | 5>(1);
+  // 4-Step Flow State: 1 = Type & Selling Mode, 2 = Details & Media, 3 = Pricing & Logistics, 4 = Preview & Review
+  const [currentStep, setCurrentStep] = useState<1 | 2 | 3 | 4>(1);
 
-  const [majorCategory, setMajorCategory] = useState<'Properties' | 'Vehicles' | 'Products' | 'Jobs' | 'Services' | 'Local Businesses' | 'Community'>('Properties');
-  const [subcategory, setSubcategory] = useState('Houses');
+  const [majorCategory, setMajorCategory] = useState<'Properties' | 'Vehicles' | 'Products' | 'Jobs' | 'Services' | 'Local Businesses' | 'Community'>('Products');
+  const [subcategory, setSubcategory] = useState('Electronics');
   
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [imageInput, setImageInput] = useState('');
   const [imagesList, setImagesList] = useState<string[]>([]);
   const [currency, setCurrency] = useState<'ETB' | 'USD' | 'SAR' | 'EUR' | 'AED'>('ETB');
+
+  // Media upload & drag drop states
+  const [isDragging, setIsDragging] = useState(false);
+  const [showUrlInput, setShowUrlInput] = useState(false);
+  const [mediaUrlInput, setMediaUrlInput] = useState('');
 
   // Plan & Monetization State
   const [selectedPlan, setSelectedPlan] = useState<'free' | 'basic' | 'premium' | 'vip'>('free');
@@ -859,78 +869,105 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
   const walletBalance = currentUser?.walletBalance || 0;
 
     const st = sellingType;
-    
-    // Step 3 Validation before previewing
-    const handleValidateStep3 = (e: React.FormEvent) => {
-      e.preventDefault();
-      
-      if (currentUser?.role === 'admin' && st !== 'Wholesale') {
-        if (!fieldsState.ownerName || String(fieldsState.ownerName).trim() === '') {
-          setError(d.ownerNameVal);
-          return;
-        }
-        if (!fieldsState.contactPhone || String(fieldsState.contactPhone).trim() === '') {
-          setError(d.ownerPhoneVal);
-          return;
-        }
-        if (!fieldsState.contactEmail || String(fieldsState.contactEmail).trim() === '') {
-          setError(d.ownerEmailVal);
-          return;
+
+    // Media upload handler for drag-and-drop & file selection
+    const handleMediaUpload = async (files: FileList | null) => {
+      if (!files || files.length === 0) return;
+      const allFiles = Array.from(files);
+      const photoFiles: File[] = [];
+      let videoFile: File | null = null;
+
+      for (const f of allFiles) {
+        if (f.type.startsWith('video/') || ['mp4', 'mov', 'webm'].includes(f.name.split('.').pop()?.toLowerCase() || '')) {
+          if (!videoFile) videoFile = f;
+        } else {
+          photoFiles.push(f);
         }
       }
 
-      // Title validation
+      if (videoFile) {
+        await handleVideoFileChange(videoFile);
+      }
+      if (photoFiles.length > 0) {
+        const dt = new DataTransfer();
+        photoFiles.forEach(pf => dt.items.add(pf));
+        await handlePhotoFilesChange(dt.files);
+      }
+    };
+
+    const handleAddMediaUrl = () => {
+      if (!mediaUrlInput || !mediaUrlInput.trim()) return;
+      const url = mediaUrlInput.trim();
+      if (url.match(/\.(mp4|mov|webm)$/i) || url.includes('youtube.com') || url.includes('youtu.be') || url.includes('vimeo.com')) {
+        handleFieldChange('video', url);
+        setMediaUrlInput('');
+        setShowUrlInput(false);
+      } else {
+        if (imagesList.length >= 10) {
+          setPhotoError('Maximum 10 photos allowed per listing.');
+          return;
+        }
+        setImagesList(prev => [...prev, url]);
+        setMediaUrlInput('');
+        setShowUrlInput(false);
+      }
+    };
+
+    // Step 1 -> Step 2 validation & transition
+    const handleContinueToStep2 = () => {
+      setError('');
+      const subcats = SUBCATEGORIES[majorCategory];
+      if (!subcategory && subcats && subcats.length > 0) {
+        setSubcategory(subcats[0].id);
+      }
+      if (sellingType === 'Wholesale' || sellingType === 'Retail + Wholesale') {
+        const curMoq = Number(fieldsState.minimumOrderQuantity || 1);
+        const safeMoq = curMoq < 10 ? 10 : curMoq;
+        handleFieldChange('minimumOrderQuantity', safeMoq);
+        setWholesaleTiers(prev => {
+          if (!prev || prev.length === 0) return [{ minimumQuantity: safeMoq, pricePerUnit: 0 }];
+          return prev.map((t, idx) => idx === 0 ? { ...t, minimumQuantity: safeMoq } : t);
+        });
+      }
+      setCurrentStep(2);
+    };
+
+    // Step 2 -> Step 3 validation & transition
+    const handleContinueToStep3 = () => {
+      setError('');
       if (!fieldsState.title || String(fieldsState.title).trim() === '') {
-        setError('Please enter a product title.');
+        setError('Please enter a product/listing title.');
         return;
       }
-
-      // Location validation
       if (!fieldsState.location || String(fieldsState.location).trim() === '') {
         setError('Please enter a location.');
         return;
       }
-
-      // Description validation
       if (!fieldsState.description || String(fieldsState.description).trim() === '') {
-        setError('Please provide a product description.');
+        setError('Please provide a description.');
         return;
       }
-
-      for (const field of activeFields) {
-        if (field.type !== 'images') {
-          // Skip fields handled in dedicated sections
-          if (['price', 'retailPrice', 'negotiable', 'quantity', 'availableQuantity', 'unit', 'wholesalePrice', 'minimumOrderQuantity', 'wholesaleUnit', 'title', 'location', 'description'].includes(field.id)) {
-            continue;
-          }
-          if (currentUser?.role === 'admin' && (field.id === 'contactPhone' || field.id === 'contactEmail' || field.id === 'ownerName')) {
-            continue;
-          }
-          if (st === 'Wholesale') {
-            const excludeForWholesale = [
-              'bedrooms', 'bathrooms', 'toilet', 'area', 
-              'floorLevel', 'parking', 'ownershipStatus', 'furnished', 'propertyType',
-              'contactPhone', 'contactEmail', 'ownerName'
-            ];
-            if (excludeForWholesale.includes(field.id)) continue;
-          }
-
-          const val = fieldsState[field.id];
-          if (field.required && (!val || String(val).trim() === '')) {
-            const translatedLabel = getTranslatedFieldLabel(field.label, currentLanguage);
-            setError(`${d.fieldReqVal} ${translatedLabel}`);
-            return;
-          }
+      if (currentUser?.role === 'admin' && st !== 'Wholesale') {
+        if (!fieldsState.ownerName || String(fieldsState.ownerName).trim() === '') {
+          setError(d.ownerNameVal || 'Please enter owner name.');
+          return;
+        }
+        if (!fieldsState.contactPhone || String(fieldsState.contactPhone).trim() === '') {
+          setError(d.ownerPhoneVal || 'Please enter contact phone.');
+          return;
         }
       }
-
-      // Photos validation
       if (!imagesList || imagesList.length === 0) {
         setError('Please upload or add at least one photo for your listing.');
         return;
       }
+      setCurrentStep(3);
+    };
 
-      // Conditional validations based on category and selling type:
+    // Step 3 -> Step 4 validation & transition
+    const handleContinueToStep4 = () => {
+      setError('');
+
       if (majorCategory === 'Properties') {
         const propPrice = Number(fieldsState.price || fieldsState.retailPrice || 0);
         if (!propPrice || propPrice <= 0) {
@@ -949,15 +986,19 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
           return;
         }
       } else if (st === 'Wholesale') {
-        const moq = Number(fieldsState.minimumOrderQuantity || wholesaleTiers[0]?.minimumQuantity || 1);
+        const moq = Number(fieldsState.minimumOrderQuantity || wholesaleTiers[0]?.minimumQuantity || 10);
+        if (!moq || moq < 1) {
+          setError('Minimum Order Quantity (MOQ) must be at least 1 (default is 10+).');
+          return;
+        }
         const wholesaleValidation = validateWholesaleConfig(moq, wholesaleTiers);
         if (!wholesaleValidation.isValid) {
           setError(wholesaleValidation.error || 'Invalid wholesale pricing configuration.');
           return;
         }
-        const availQty = Number(fieldsState.availableQuantity || fieldsState.quantity || 0);
-        if (availQty > 0 && availQty < moq) {
-          setError(`Available stock (${availQty}) cannot be less than Minimum Order Quantity (${moq}).`);
+        const tier1Price = Number(wholesaleTiers[0]?.pricePerUnit || fieldsState.wholesalePrice || 0);
+        if (!tier1Price || tier1Price <= 0) {
+          setError('Please enter a valid Unit Price for Wholesale Tier 1.');
           return;
         }
         if (!fieldsState.contactPhone || String(fieldsState.contactPhone).trim() === '') {
@@ -970,10 +1011,24 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
           setError('Please enter a valid Retail Price greater than 0.');
           return;
         }
-        const moq = Number(fieldsState.minimumOrderQuantity || wholesaleTiers[0]?.minimumQuantity || 1);
+        const moq = Number(fieldsState.minimumOrderQuantity || wholesaleTiers[0]?.minimumQuantity || 10);
+        if (!moq || moq < 1) {
+          setError('Minimum Order Quantity (MOQ) must be at least 1.');
+          return;
+        }
         const wholesaleValidation = validateWholesaleConfig(moq, wholesaleTiers);
         if (!wholesaleValidation.isValid) {
           setError(wholesaleValidation.error || 'Invalid wholesale pricing configuration.');
+          return;
+        }
+        const tier1Price = Number(wholesaleTiers[0]?.pricePerUnit || fieldsState.wholesalePrice || 0);
+        if (!tier1Price || tier1Price <= 0) {
+          setError('Please enter a valid Unit Price for Wholesale Tier 1.');
+          return;
+        }
+        // Validation rule: Wholesale Tier 1 Unit Price must be strictly lower than Retail Price!
+        if (tier1Price >= retPrice) {
+          setError(`Wholesale Tier 1 Unit Price (${tier1Price} ${currency}) must be strictly lower than Retail Price (${retPrice} ${currency}) to offer a wholesale discount.`);
           return;
         }
         if (!fieldsState.contactPhone || String(fieldsState.contactPhone).trim() === '') {
@@ -982,8 +1037,12 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
         }
       }
 
-      setError('');
-      setCurrentStep(4); // Advance to Preview
+      setCurrentStep(4); // Advance to Preview & Publish
+    };
+
+    const handleValidateStep3 = (e: React.FormEvent) => {
+      e.preventDefault();
+      handleContinueToStep4();
     };
 
   // Final submission of listing and promotion purchase
@@ -1173,1458 +1232,224 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
     }
   };
 
+  const getHeaderTitle = () => {
+    if (majorCategory === 'Properties') {
+      return t('create_property_listing') || 'Create Property Listing';
+    }
+    if (majorCategory === 'Products') {
+      return t('create_product_listing') || 'Create Product Listing';
+    }
+    if (majorCategory === 'Vehicles') {
+      return t('create_vehicle_listing') || 'Create Vehicle Listing';
+    }
+    if (majorCategory === 'Services') {
+      return t('create_service_listing') || 'Create Service Listing';
+    }
+    if (majorCategory === 'Jobs') {
+      return t('create_job_listing') || 'Create Job Listing';
+    }
+    if (majorCategory === 'Local Businesses') {
+      return t('create_business_listing') || 'Create Business Listing';
+    }
+    return t('create_listing_title') || 'Create Listing';
+  };
+
+  const HeaderIcon = majorCategory === 'Properties' 
+    ? Building 
+    : majorCategory === 'Vehicles' 
+    ? Car 
+    : majorCategory === 'Products' 
+    ? ShoppingBag 
+    : majorCategory === 'Services' 
+    ? Wrench 
+    : majorCategory === 'Jobs' 
+    ? Briefcase 
+    : majorCategory === 'Local Businesses'
+    ? Store
+    : Tag;
+
+  const handleSelectSellingType = (type: NormalizedSellingType) => {
+    setSellingType(type);
+    handleFieldChange('sellingType', type);
+    if (type === 'Wholesale' || type === 'Retail + Wholesale') {
+      const curMoq = Number(fieldsState.minimumOrderQuantity || 1);
+      const safeMoq = curMoq < 10 ? 10 : curMoq;
+      handleFieldChange('minimumOrderQuantity', safeMoq);
+      setWholesaleTiers(prev => {
+        if (!prev || prev.length === 0) return [{ minimumQuantity: safeMoq, pricePerUnit: 0 }];
+        return prev.map((t, idx) => idx === 0 ? { ...t, minimumQuantity: safeMoq } : t);
+      });
+    }
+  };
+
   return (
-    <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex justify-center items-center p-4">
-      <div className="bg-[#0c0c0c] rounded-2xl w-full max-w-3xl overflow-hidden border border-white/10 shadow-2xl animate-in fade-in zoom-in-95 duration-200 create-modal-view text-[#F5F5F4] flex flex-col max-h-[90vh]">
+    <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex justify-center items-center p-0 sm:p-4">
+      <div className="bg-[#0c0c0c] w-full h-[100dvh] sm:h-auto sm:max-h-[92vh] sm:max-w-3xl sm:rounded-2xl overflow-hidden border-0 sm:border sm:border-white/10 shadow-2xl animate-in fade-in zoom-in-95 duration-200 create-modal-view text-[#F5F5F4] flex flex-col">
         
-        {/* Header */}
-        <div className="p-5 border-b border-white/10 flex justify-between items-center bg-[#08080a] shrink-0">
+        {/* Header with dynamic title */}
+        <div className="p-4 sm:p-5 border-b border-white/10 flex justify-between items-center bg-[#08080a] shrink-0">
           <div className="flex items-center gap-2.5">
-            <Building className="w-5 h-5 text-amber-500 animate-pulse" />
-            <h3 className="font-serif text-lg tracking-wider uppercase font-medium text-white">
-              {t('create_listing_title') || 'Create New Listing'}
+            <HeaderIcon className="w-5 h-5 text-amber-500 animate-pulse" />
+            <h3 className="font-serif text-base sm:text-lg tracking-wider uppercase font-medium text-white">
+              {getHeaderTitle()}
             </h3>
           </div>
-          <button onClick={onClose} className="p-2 rounded-full hover:bg-white/5 text-white/50 hover:text-white transition duration-200 cursor-pointer">
+          <button 
+            onClick={onClose} 
+            className="p-2 rounded-full hover:bg-white/5 text-white/50 hover:text-white transition duration-200 cursor-pointer"
+          >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {error && (
-          <div className="bg-red-500/10 border-b border-red-500/20 text-red-400 text-xs py-3.5 px-5 text-center font-semibold shrink-0">
+          <div className="bg-red-500/10 border-b border-red-500/20 text-red-400 text-xs py-3 px-5 text-center font-semibold shrink-0">
             ⚠️ {error}
           </div>
         )}
 
-        {/* Stepper Navigation Bar */}
-        <div className="bg-zinc-900/80 border-b border-white/5 px-6 py-3 flex items-center justify-between overflow-x-auto text-[11px] shrink-0 scrollbar-none">
-          {[
-            { step: 1, label: `1. ${t('wizard.step_category')}` },
-            { step: 2, label: `2. ${t('wizard.step_subcategory')}` },
-            { step: 3, label: `3. ${t('wizard.step_details_photos')}` },
-            { step: 4, label: `4. ${t('wizard.step_preview_ad')}` },
-            { step: 5, label: `5. ${t('wizard.step_boost_pay')}` }
-          ].map((s) => {
-            const isActive = currentStep === s.step;
-            const isCompleted = currentStep > s.step;
-            return (
-              <button
-                key={s.step}
-                type="button"
-                onClick={() => {
-                  if (s.step < currentStep) setCurrentStep(s.step as any);
-                }}
-                disabled={s.step > currentStep}
-                className={`flex items-center gap-1.5 font-bold uppercase tracking-wider px-2 py-1 rounded-lg transition whitespace-nowrap cursor-pointer ${
-                  isActive
-                    ? 'text-amber-400 bg-amber-500/10 border border-amber-500/30'
-                    : isCompleted
-                    ? 'text-emerald-400 hover:text-white'
-                    : 'text-white/30 cursor-not-allowed'
-                }`}
-              >
-                {isCompleted ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : null}
-                <span>{s.label}</span>
-              </button>
-            );
-          })}
+        {/* 4-Step Progress Bar */}
+        <ListingWizard 
+          currentStep={currentStep} 
+          onStepClick={(s) => {
+            if (s < currentStep) setCurrentStep(s as any);
+          }} 
+        />
+
+        {/* Scrollable Step Content Container */}
+        <div className="p-4 sm:p-6 overflow-y-auto flex-1 create-modal-scroll space-y-6">
+          {currentStep === 1 && (
+            <WizardStep1Category
+              majorCategory={majorCategory}
+              setMajorCategory={setMajorCategory}
+              subcategory={subcategory}
+              setSubcategory={setSubcategory}
+              sellingType={sellingType}
+              onSelectSellingType={handleSelectSellingType}
+              currentLanguage={currentLanguage}
+            />
+          )}
+
+          {currentStep === 2 && (
+            <WizardStep2Details
+              majorCategory={majorCategory}
+              fieldsState={fieldsState}
+              handleFieldChange={handleFieldChange}
+              imagesList={imagesList}
+              setImagesList={setImagesList}
+              handleSetCoverPhoto={handleSetCoverPhoto}
+              handleMovePhoto={handleMovePhoto}
+              handleMediaUpload={handleMediaUpload}
+              handleRemoveVideo={handleRemoveVideo}
+              isCompressingPhotos={isCompressingPhotos}
+              isVideoUploading={isVideoUploading}
+              photoError={photoError}
+              videoError={videoError}
+            />
+          )}
+
+          {currentStep === 3 && (
+            <WizardStep3Pricing
+              majorCategory={majorCategory}
+              sellingType={sellingType}
+              currency={currency}
+              setCurrency={setCurrency}
+              fieldsState={fieldsState}
+              handleFieldChange={handleFieldChange}
+              wholesaleTiers={wholesaleTiers}
+              setWholesaleTiers={setWholesaleTiers}
+            />
+          )}
+
+          {currentStep === 4 && (
+            <WizardStep4Review
+              majorCategory={majorCategory}
+              subcategory={subcategory}
+              sellingType={sellingType}
+              currency={currency}
+              fieldsState={fieldsState}
+              imagesList={imagesList}
+              wholesaleTiers={wholesaleTiers}
+              isFeaturedAddon={isFeaturedAddon}
+              setIsFeaturedAddon={(val) => {
+                setIsFeaturedAddon(val);
+                setIsTopAdAddon(val);
+                setSelectedPlan(val ? 'vip' : 'free');
+              }}
+              submitting={submitting}
+              onPublish={handleFinalPublish}
+              onBackToPricing={() => setCurrentStep(3)}
+              paymentMethods={paymentMethods}
+              selectedDirectMethodId={selectedDirectMethodId}
+              setSelectedDirectMethodId={setSelectedDirectMethodId}
+              receiptRefNumber={receiptRefNumber}
+              setReceiptRefNumber={setReceiptRefNumber}
+              receiptFileData={receiptFileData}
+              setReceiptFileData={setReceiptFileData}
+              currentUser={currentUser}
+              currentLanguage={currentLanguage}
+            />
+          )}
         </div>
 
-        {/* Form Body Wrap */}
-        <div className="flex-1 flex flex-col overflow-hidden text-left">
-          
-          {/* Scrollable Step Content */}
-          <div className="flex-1 p-6 space-y-6 overflow-y-auto scrollbar-thin">
-
-            {/* STEP 1: CATEGORY SELECTION */}
-            {currentStep === 1 && (
-              <div className="space-y-6 animate-in fade-in duration-300">
-                {/* Selling Type Selection right at the beginning of the Create Listing form (for products) */}
-                {majorCategory !== 'Properties' && (
-                  <SellingTypeSelector
-                    value={sellingType}
-                    onChange={(type) => {
-                      setSellingType(type);
-                      handleFieldChange('sellingType', type);
-                    }}
-                  />
-                )}
-
-                <div className="space-y-1 pt-2 border-t border-white/5">
-                  <label className="block text-xs font-bold text-amber-500 uppercase tracking-widest">
-                    {d.catLabel} *
-                  </label>
-                  <p className="text-xs text-[#F5F5F4]/50 font-light">{d.catDesc}</p>
-                </div>
-
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2.5 pt-2">
-                  {CATEGORY_OPTIONS.map(cat => {
-                    const Icon = cat.icon;
-                    const isActive = majorCategory === cat.id;
-                    return (
-                      <button
-                        key={cat.id}
-                        type="button"
-                        onClick={() => {
-                          setMajorCategory(cat.id as any);
-                          // Auto set subcategory default
-                          const subs = SUBCATEGORIES[cat.id as keyof typeof SUBCATEGORIES];
-                          if (subs && subs.length > 0) setSubcategory(subs[0].id);
-                        }}
-                        className={`p-4 rounded-xl border flex flex-col items-center gap-2 transition duration-300 cursor-pointer ${
-                          isActive
-                            ? 'bg-amber-500/15 border-amber-500 text-amber-400 font-bold shadow-lg shadow-amber-500/5'
-                            : 'bg-zinc-900/50 border-white/5 text-white/60 hover:border-white/15 hover:bg-zinc-900'
-                        }`}
-                      >
-                        <Icon className="w-5 h-5 text-amber-400" />
-                        <span className="text-[11px] truncate w-full text-center font-medium">
-                          {getTranslatedCategoryName(cat.name, currentLanguage)}
-                        </span>
-                      </button>
-                    );
-                  })}
-                </div>
-
-                {/* Category Guideline Helper Description */}
-                <div className="mt-4 p-4 bg-amber-500/5 border border-amber-500/15 rounded-xl text-xs text-amber-200/80 leading-relaxed font-light">
-                  <span className="font-bold text-amber-400 mr-2 flex items-center gap-1.5 mb-1 text-[11px] uppercase tracking-wider">
-                    <Info className="w-3.5 h-3.5 text-amber-500" />
-                    {d.guideTitle}: {majorCategory}
-                  </span>
-                  <p className="italic">
-                    {majorCategory === 'Properties' && d.propGuide}
-                    {majorCategory === 'Vehicles' && d.vehGuide}
-                    {majorCategory === 'Products' && d.prodGuide}
-                    {majorCategory === 'Jobs' && d.jobGuide}
-                    {majorCategory === 'Services' && d.srvGuide}
-                    {majorCategory === 'Community' && d.commGuide}
-                  </p>
-                </div>
-              </div>
-            )}
-
-            {/* STEP 2: SUBCATEGORY & CURRENCY */}
-            {currentStep === 2 && (
-              <div className="space-y-6 animate-in fade-in duration-300">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                  <div className="space-y-2">
-                    <label className="block text-xs font-bold text-amber-500 uppercase tracking-widest">
-                      {d.subcatLabel}
-                    </label>
-                    <p className="text-[11px] text-[#F5F5F4]/40 font-light">{d.subcatDesc}</p>
-                    <select
-                      value={subcategory}
-                      onChange={e => setSubcategory(e.target.value)}
-                      className="w-full p-3.5 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white focus:outline-none transition"
-                    >
-                      {SUBCATEGORIES[majorCategory]?.map(sub => (
-                        <option key={sub.id} value={sub.id} className="bg-[#0c0c0c]">
-                          {getTranslatedSubcategoryName(sub.name, currentLanguage)}
-                        </option>
-                      ))}
-                    </select>
-
-                    {subcategory && (
-                      <div className="mt-3 p-3.5 bg-white/5 border border-white/5 rounded-xl text-[11px] text-[#F5F5F4]/70 leading-relaxed font-light">
-                        <span className="font-bold text-white mr-1">📌 {d.subcatTitle}:</span>
-                        {getSubcatDesc(majorCategory, subcategory)}
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="space-y-2">
-                    <label className="block text-xs font-bold text-white/70 uppercase tracking-wider">
-                      {d.currLabel} *
-                    </label>
-                    <p className="text-[11px] text-[#F5F5F4]/40 font-light">{d.currDesc}</p>
-                    <select
-                      value={currency}
-                      onChange={e => setCurrency(e.target.value as any)}
-                      className="w-full p-3.5 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white focus:outline-none transition"
-                    >
-                      <option value="ETB" className="bg-[#0c0c0c]">{t("curr_etb")}</option>
-                      <option value="USD" className="bg-[#0c0c0c]">USD (United States Dollar)</option>
-                      <option value="SAR" className="bg-[#0c0c0c]">{t("curr_sar")}</option>
-                      <option value="EUR" className="bg-[#0c0c0c]">EUR (Euro)</option>
-                      <option value="AED" className="bg-[#0c0c0c]">{t("curr_aed")}</option>
-                    </select>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* STEP 3: SPECIFICATIONS & FIELDS */}
-            {currentStep === 3 && (
-              <form id="listing-details-form" onSubmit={handleValidateStep3} className="space-y-5 animate-in fade-in duration-300">
-                <div className="border-l-2 border-amber-500 pl-3">
-                  <h4 className="text-xs font-bold text-white tracking-wider uppercase">
-                    {d.specHeader} ({getTranslatedCategoryName(majorCategory, currentLanguage)} &rarr; {getTranslatedSubcategoryName(subcategory, currentLanguage)})
-                  </h4>
-                  <p className="text-[10px] text-white/40 font-light">{d.specSubtext}</p>
-                </div>
-
-                {/* Selling Type Selector - Prominently placed at top of Step 3 (for physical goods) */}
-                {majorCategory !== 'Properties' && (
-                  <SellingTypeSelector
-                    value={sellingType}
-                    onChange={(type) => {
-                      setSellingType(type);
-                      handleFieldChange('sellingType', type);
-                    }}
-                  />
-                )}
-
-                {/* Admin-only Property Owner Contact Details (Hidden for Wholesale) */}
-                {currentUser?.role === 'admin' && (fieldsState.sellingType || 'Retail') !== 'Wholesale' && (
-                  <div className="bg-amber-500/10 border border-amber-500/30 p-4 rounded-2xl space-y-3">
-                    <div className="flex items-center gap-2">
-                      <UserIcon className="w-4 h-4 text-amber-500" />
-                      <h4 className="text-xs font-bold text-amber-400 uppercase tracking-wider">
-                        {d.adminOwnerTitle}
-                      </h4>
-                    </div>
-                    <p className="text-[11px] text-white/60">
-                      {d.adminOwnerDesc}
-                    </p>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-1">
-                      <div>
-                        <label className="block text-[10px] font-bold text-white/80 uppercase mb-1">
-                          {d.ownerNameLabel} *
-                        </label>
-                        <input
-                          type="text"
-                          required
-                          value={fieldsState.ownerName || ''}
-                          placeholder="e.g. Abebe Bikila"
-                          onChange={e => handleFieldChange('ownerName', e.target.value)}
-                          className="w-full p-2.5 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white focus:outline-none transition"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-[10px] font-bold text-white/80 uppercase mb-1">
-                          {d.ownerPhoneLabel} *
-                        </label>
-                        <input
-                          type="text"
-                          required
-                          value={fieldsState.contactPhone || ''}
-                          placeholder={t('phone_eg_placeholder')}
-                          onChange={e => handleFieldChange('contactPhone', e.target.value)}
-                          className="w-full p-2.5 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white focus:outline-none transition"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-[10px] font-bold text-white/80 uppercase mb-1">
-                          {d.ownerEmailLabel} *
-                        </label>
-                        <input
-                          type="email"
-                          required
-                          value={fieldsState.contactEmail || ''}
-                          placeholder="e.g. owner@sofumer.com"
-                          onChange={e => handleFieldChange('contactEmail', e.target.value)}
-                          className="w-full p-2.5 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white focus:outline-none transition"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-[10px] font-bold text-white/80 uppercase mb-1">
-                          Owner Business / Company
-                        </label>
-                        <input
-                          type="text"
-                          value={fieldsState.ownerBusinessName || ''}
-                          placeholder="e.g. Bikila Real Estate"
-                          onChange={e => handleFieldChange('ownerBusinessName', e.target.value)}
-                          className="w-full p-2.5 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white focus:outline-none transition"
-                        />
-                      </div>
-                      <div className="md:col-span-2">
-                        <label className="block text-[10px] font-bold text-white/80 uppercase mb-1">
-                          Owner Photo / Logo URL
-                        </label>
-                        <input
-                          type="url"
-                          value={fieldsState.ownerAvatar || ''}
-                          placeholder="https://..."
-                          onChange={e => handleFieldChange('ownerAvatar', e.target.value)}
-                          className="w-full p-2.5 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white focus:outline-none transition"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-5 bg-zinc-900/20 p-5 rounded-2xl border border-white/5">
-                  {activeFields
-                    .filter(field => {
-                      const excludeForPricing = [
-                        'price', 'retailPrice', 'negotiable', 'quantity', 'availableQuantity', 'unit',
-                        'wholesalePrice', 'minimumOrderQuantity', 'wholesaleUnit', 'sellingType', 'businessType'
-                      ];
-                      if (excludeForPricing.includes(field.id)) return false;
-
-                      if (sellingType === 'Wholesale') {
-                        const excludeForWholesale = [
-                          'bedrooms', 'bathrooms', 'toilet', 'area', 
-                          'floorLevel', 'parking', 'ownershipStatus', 'furnished', 'propertyType',
-                          'contactPhone', 'contactEmail', 'ownerName'
-                        ];
-                        if (excludeForWholesale.includes(field.id)) return false;
-                      }
-                      if (currentUser?.role === 'admin' && (field.id === 'contactPhone' || field.id === 'contactEmail' || field.id === 'ownerName')) {
-                        return false;
-                      }
-                      return true;
-                    })
-                    .map(field => {
-                    const val = fieldsState[field.id] !== undefined ? fieldsState[field.id] : '';
-                    const spanClass = field.colSpan === 'full' ? 'col-span-full' : 'col-span-1';
-
-                    // Photo uploader
-                    if (field.type === 'images') {
-                      return (
-                        <div key={field.id} className="col-span-full space-y-4">
-                          <div className="flex flex-wrap items-center justify-between gap-2">
-                            <div>
-                              <label className="block text-[11px] font-bold text-[#F5F5F4]/70 uppercase tracking-wider">
-                                {t('media.photos_limit_title') || 'Photos & Media (Max 10 Photos, 1 Video)'} *
-                              </label>
-                              <p className="text-[10px] text-[#F5F5F4]/40 font-light mt-0.5">
-                                {t('media.reorder_hint') || 'The first photo is your Cover Photo. Reorder or set any photo as cover.'}
-                              </p>
-                            </div>
-                            <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full border ${imagesList.length >= 10 ? 'bg-rose-500/10 text-rose-400 border-rose-500/20' : 'bg-amber-500/10 text-amber-400 border-amber-500/20'}`}>
-                              {imagesList.length} / 10 {t('photos') || 'Photos'}
-                            </span>
-                          </div>
-
-                          {/* Error Banner */}
-                          {photoError && (
-                            <div className="p-3 bg-rose-500/10 border border-rose-500/20 rounded-xl flex items-center gap-2 text-rose-300 text-xs">
-                              <AlertCircle className="w-4 h-4 shrink-0 text-rose-400" />
-                              <span>{photoError}</span>
-                            </div>
-                          )}
-
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {/* Device File Picker Dropzone */}
-                            <div className="bg-zinc-900/80 border border-white/10 rounded-2xl p-5 flex flex-col justify-center items-center text-center group hover:border-amber-500/40 transition duration-300 relative">
-                              {isCompressingPhotos ? (
-                                <div className="flex flex-col items-center py-4">
-                                  <Loader2 className="w-8 h-8 text-amber-500 animate-spin mb-2" />
-                                  <span className="text-xs font-bold text-amber-400">Optimizing & compressing photos...</span>
-                                </div>
-                              ) : (
-                                <>
-                                  <Camera className="w-8 h-8 text-amber-500/60 group-hover:text-amber-500 transition mb-2" />
-                                  <span className="text-xs font-bold text-white/90 block mb-1">{d.deviceUpload || 'Upload Photos'}</span>
-                                  <span className="text-[10px] text-white/40 block mb-3">{t('img_formats_limit')}</span>
-                                  
-                                  <label className="px-4 py-2 bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/30 hover:border-amber-500/50 rounded-xl text-xs font-bold transition duration-200 cursor-pointer inline-flex items-center gap-2">
-                                    <Upload className="w-3.5 h-3.5 text-amber-400" />
-                                    <span>{d.uploadBtn || 'Select Photos'}</span>
-                                    <input
-                                      type="file"
-                                      multiple
-                                      accept="image/jpeg,image/jpg,image/png,image/webp"
-                                      onChange={handleFileChange}
-                                      className="hidden"
-                                    />
-                                  </label>
-                                </>
-                              )}
-                            </div>
-
-                            {/* URL & Stock Photo Input */}
-                            <div className="space-y-3 bg-zinc-900/40 border border-white/5 p-4 rounded-2xl">
-                              <label className="block text-[11px] font-bold text-[#F5F5F4]/70 uppercase tracking-wider">
-                                {d.imgUrlLabel || 'Or Add Photo URL'}
-                              </label>
-                              
-                              <div className="flex gap-2">
-                                <input
-                                  type="text"
-                                  value={imageInput}
-                                  onChange={e => setImageInput(e.target.value)}
-                                  placeholder={d.imgUrlPlaceholder || 'https://...'}
-                                  className="flex-1 p-2.5 bg-zinc-900 border border-white/10 focus:border-amber-500/60 rounded-xl text-xs text-white focus:outline-none transition placeholder-zinc-600 font-mono"
-                                />
-                                <button
-                                  type="button"
-                                  onClick={handleAddImage}
-                                  className="px-3.5 py-2.5 bg-amber-500 text-black font-bold text-xs rounded-xl hover:bg-amber-400 transition cursor-pointer"
-                                >
-                                  {d.addBtn || 'Add'}
-                                </button>
-                              </div>
-                            </div>
-                          </div>
-
-                          {/* Enhanced Thumbnail Previews with Cover Badge & Reordering */}
-                          {imagesList.length > 0 && (
-                            <div className="pt-2 space-y-2">
-                              <div className="flex items-center justify-between">
-                                <label className="block text-[10px] font-bold text-white/60 uppercase tracking-widest">
-                                  {d.addedPhotos || 'Selected Photos'} ({imagesList.length}/10)
-                                </label>
-                                <span className="text-[10px] text-amber-400/80">★ First photo is Cover Photo</span>
-                              </div>
-
-                              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
-                                {imagesList.map((img, i) => (
-                                  <div 
-                                    key={i} 
-                                    className={`relative rounded-2xl overflow-hidden border transition shadow-lg group bg-zinc-950 ${
-                                      i === 0 ? 'border-amber-500 ring-2 ring-amber-500/20' : 'border-white/10 hover:border-white/30'
-                                    }`}
-                                  >
-                                    <div className="h-24 w-full overflow-hidden">
-                                      <img src={img} alt={`Preview ${i + 1}`} className="w-full h-full object-cover group-hover:scale-105 transition duration-300" referrerPolicy="no-referrer" />
-                                    </div>
-
-                                    {/* Cover Badge */}
-                                    {i === 0 ? (
-                                      <div className="absolute top-1.5 left-1.5 bg-amber-500 text-black px-2 py-0.5 rounded-md text-[9px] font-bold flex items-center gap-1 shadow">
-                                        <Star className="w-2.5 h-2.5 fill-black" />
-                                        <span>{t('media.cover_photo') || 'Cover Photo'}</span>
-                                      </div>
-                                    ) : (
-                                      <button
-                                        type="button"
-                                        onClick={() => handleSetCoverPhoto(i)}
-                                        className="absolute top-1.5 left-1.5 bg-black/70 hover:bg-amber-500 hover:text-black text-white px-2 py-0.5 rounded-md text-[9px] font-bold border border-white/20 transition cursor-pointer"
-                                      >
-                                        {t('media.set_as_cover') || 'Set as Cover'}
-                                      </button>
-                                    )}
-
-                                    {/* Control Overlay */}
-                                    <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center gap-1.5 transition duration-200">
-                                      {i > 0 && (
-                                        <button
-                                          type="button"
-                                          onClick={() => handleMovePhoto(i, 'left')}
-                                          title="Move Left"
-                                          className="p-1.5 bg-zinc-800/90 hover:bg-amber-500 hover:text-black text-white rounded-lg transition cursor-pointer"
-                                        >
-                                          <ArrowLeft className="w-3.5 h-3.5" />
-                                        </button>
-                                      )}
-                                      {i < imagesList.length - 1 && (
-                                        <button
-                                          type="button"
-                                          onClick={() => handleMovePhoto(i, 'right')}
-                                          title="Move Right"
-                                          className="p-1.5 bg-zinc-800/90 hover:bg-amber-500 hover:text-black text-white rounded-lg transition cursor-pointer"
-                                        >
-                                          <ArrowRight className="w-3.5 h-3.5" />
-                                        </button>
-                                      )}
-                                      <button
-                                        type="button"
-                                        onClick={() => handleRemoveImage(i)}
-                                        title="Remove"
-                                        className="p-1.5 bg-rose-500/80 hover:bg-rose-600 text-white rounded-lg transition cursor-pointer"
-                                      >
-                                        <Trash2 className="w-3.5 h-3.5" />
-                                      </button>
-                                    </div>
-                                  </div>
-                                ))}
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      );
-                    }
-
-                    // Dedicated Video Showcase Uploader
-                    if (field.id === 'video' || field.id === 'videoUrl') {
-                      const currentVid = fieldsState.video || fieldsState.videoUrl || '';
-                      return (
-                        <div key={field.id} className="col-span-full space-y-3 bg-zinc-900/40 border border-white/10 p-5 rounded-2xl">
-                          <div className="flex items-center justify-between">
-                            <label className="block text-[11px] font-bold text-[#F5F5F4]/80 uppercase tracking-wider flex items-center gap-2">
-                              <Video className="w-4 h-4 text-amber-500" />
-                              <span>{t("upload_video_file")} ({t('video_opt_limit')})</span>
-                            </label>
-                            <span className="text-[10px] text-amber-400 font-mono bg-amber-500/10 px-2.5 py-0.5 rounded-full border border-amber-500/20">
-                              MP4, MOV, WebM
-                            </span>
-                          </div>
-
-                          {/* Video Error Banner */}
-                          {videoError && (
-                            <div className="p-3 bg-rose-500/10 border border-rose-500/20 rounded-xl flex items-center gap-2 text-rose-300 text-xs">
-                              <AlertCircle className="w-4 h-4 shrink-0 text-rose-400" />
-                              <span>{videoError}</span>
-                            </div>
-                          )}
-
-                          {isVideoUploading ? (
-                            <div className="p-6 bg-zinc-950 border border-amber-500/30 rounded-2xl flex flex-col items-center justify-center text-center space-y-2">
-                              <Loader2 className="w-8 h-8 text-amber-500 animate-spin" />
-                              <span className="text-xs font-bold text-white">{t('media.video_uploading') || 'Processing & Uploading Video...'}</span>
-                              <span className="text-[10px] text-white/40">Validating duration (max 30s) & preparing stream...</span>
-                            </div>
-                          ) : currentVid ? (
-                            <div className="bg-zinc-950 rounded-2xl overflow-hidden border border-amber-500/30 p-3 space-y-3">
-                              <div className="flex items-center justify-between">
-                                <span className="text-xs font-bold text-amber-400 flex items-center gap-1.5">
-                                  <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                                  <span>{t("upload_video_file")} Uploaded & Ready</span>
-                                </span>
-                                <div className="flex items-center gap-2">
-                                  <label className="px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white rounded-lg text-xs font-bold transition cursor-pointer flex items-center gap-1 border border-white/10">
-                                    <Upload className="w-3.5 h-3.5 text-amber-400" />
-                                    <span>{t('media.replace_video') || 'Replace'}</span>
-                                    <input
-                                      type="file"
-                                      accept="video/mp4,video/quicktime,video/webm"
-                                      onChange={e => e.target.files?.[0] && handleVideoFileChange(e.target.files[0])}
-                                      className="hidden"
-                                    />
-                                  </label>
-                                  <button
-                                    type="button"
-                                    onClick={handleRemoveVideo}
-                                    className="px-3 py-1.5 bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/30 rounded-lg text-xs font-bold transition cursor-pointer flex items-center gap-1"
-                                  >
-                                    <Trash2 className="w-3.5 h-3.5" />
-                                    <span>{t('media.remove_video') || 'Remove'}</span>
-                                  </button>
-                                </div>
-                              </div>
-                              <div className="rounded-xl overflow-hidden bg-black max-h-64 flex justify-center">
-                                <video
-                                  src={currentVid}
-                                  controls
-                                  className="max-h-64 w-full object-contain"
-                                />
-                              </div>
-                            </div>
-                          ) : (
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                              {/* Direct File Selector */}
-                              <div className="border-2 border-dashed border-white/15 hover:border-amber-500/50 bg-zinc-950/60 rounded-2xl p-5 flex flex-col items-center justify-center text-center group transition">
-                                <Film className="w-8 h-8 text-amber-500/60 group-hover:text-amber-500 transition mb-2" />
-                                <span className="text-xs font-bold text-white mb-0.5">{t('upload_video_file')}</span>
-                                <span className="text-[10px] text-white/40 mb-3">{t('video_max_duration_size')}</span>
-                                
-                                <label className="px-4 py-2 bg-amber-500 text-black hover:bg-amber-400 font-bold rounded-xl text-xs transition cursor-pointer inline-flex items-center gap-2 shadow-lg">
-                                  <Upload className="w-3.5 h-3.5" />
-                                  <span>{t('media.upload_video_btn') || 'Select Video File'}</span>
-                                  <input
-                                    type="file"
-                                    accept="video/mp4,video/quicktime,video/webm"
-                                    onChange={e => e.target.files?.[0] && handleVideoFileChange(e.target.files[0])}
-                                    className="hidden"
-                                  />
-                                </label>
-                              </div>
-
-                              {/* Video URL Fallback Input */}
-                              <div className="space-y-2 flex flex-col justify-center">
-                                <label className="block text-[10px] font-bold text-white/50 uppercase tracking-wider">
-                                  {t('or_paste_direct_video_url')}
-                                </label>
-                                <input
-                                  type="text"
-                                  value={currentVid}
-                                  placeholder="https://example.com/video.mp4"
-                                  onChange={e => {
-                                    setVideoError('');
-                                    handleFieldChange(field.id, e.target.value);
-                                  }}
-                                  className="w-full p-3 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white focus:outline-none transition placeholder-zinc-600 font-mono"
-                                />
-                                <span className="text-[10px] text-white/30 italic">{t('supports_direct_video_links')}</span>
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      );
-                    }
-
-                    // Select input
-                    if (field.type === 'select') {
-                      return (
-                        <div key={field.id} className={spanClass}>
-                          <label className="block text-[11px] font-bold text-[#F5F5F4]/70 uppercase tracking-wider mb-1">
-                            {getTranslatedFieldLabel(field.label, currentLanguage)} {field.required && '*'}
-                          </label>
-                          <select
-                            value={val}
-                            required={field.required}
-                            onChange={e => handleFieldChange(field.id, e.target.value)}
-                            className="w-full p-3 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white focus:outline-none transition"
-                          >
-                            {field.options?.map(opt => (
-                              <option key={opt} value={opt} className="bg-[#0c0c0c]">
-                                {getTranslatedOption(opt, currentLanguage)}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-                      );
-                    }
-
-                    // Textarea input
-                    if (field.type === 'textarea') {
-                      return (
-                        <div key={field.id} className={spanClass}>
-                          <label className="block text-[11px] font-bold text-[#F5F5F4]/70 uppercase tracking-wider mb-1">
-                            {getTranslatedFieldLabel(field.label, currentLanguage)} {field.required && '*'}
-                          </label>
-                          <textarea
-                            rows={3}
-                            value={val}
-                            required={field.required}
-                            placeholder={field.placeholder}
-                            onChange={e => handleFieldChange(field.id, e.target.value)}
-                            className="w-full p-3 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white focus:outline-none transition placeholder-zinc-600 font-light resize-none"
-                          />
-                        </div>
-                      );
-                    }
-
-                    // Location input enhancement for long addresses
-                    if (field.id === 'location') {
-                      return (
-                        <div key={field.id} className={spanClass}>
-                          <label className="block text-[11px] font-bold text-[#F5F5F4]/70 uppercase tracking-wider mb-1 flex items-center justify-between">
-                            <span className="flex items-center gap-1.5">
-                              <MapPin className="w-3.5 h-3.5 text-amber-500" />
-                              {getTranslatedFieldLabel(field.label, currentLanguage)} {field.required && '*'}
-                            </span>
-                            <span className="text-[10px] text-amber-400/80 font-normal normal-case">{t('full_address_multi_line')}</span>
-                          </label>
-                          <textarea
-                            rows={2}
-                            required={field.required}
-                            value={val}
-                            placeholder={field.placeholder || 'e.g., Bole Sub City, Woreda 03, Near Edna Mall, Addis Ababa'}
-                            onChange={e => handleFieldChange(field.id, e.target.value)}
-                            className="w-full p-3 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white focus:outline-none transition placeholder-zinc-600 font-light resize-y min-h-[52px] leading-relaxed break-words whitespace-pre-wrap"
-                          />
-                        </div>
-                      );
-                    }
-
-                    // Standard text / number inputs
-                    return (
-                      <div key={field.id} className={spanClass}>
-                        <label className="block text-[11px] font-bold text-[#F5F5F4]/70 uppercase tracking-wider mb-1">
-                          {getTranslatedFieldLabel(field.label, currentLanguage)} {field.required && '*'}
-                        </label>
-                        <input
-                          type={field.type === 'number' ? 'text' : field.type}
-                          inputMode="text"
-                          required={field.required}
-                          value={val}
-                          placeholder={field.placeholder}
-                          onChange={e => handleFieldChange(field.id, e.target.value)}
-                          className="w-full p-3 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white focus:outline-none transition placeholder-zinc-600 font-light"
-                        />
-                      </div>
-                    );
-                  })}
-                </div>
-
-                {/* Conditional Pricing & Inventory Engine based on Category and Selling Type */}
-                {majorCategory === 'Properties' ? (
-                  <div className="bg-zinc-900/40 border border-white/10 p-5 rounded-2xl space-y-5">
-                    <div className="flex items-center justify-between border-b border-white/5 pb-3">
-                      <div className="flex items-center gap-2">
-                        <DollarSign className="w-4 h-4 text-amber-500" />
-                        <h4 className="text-xs font-bold text-white uppercase tracking-wider">
-                          Property Pricing
-                        </h4>
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                      <div>
-                        <label className="block text-[11px] font-bold text-white/80 uppercase tracking-wider mb-1">
-                          Property Price *
-                        </label>
-                        <div className="relative">
-                          <span className="absolute left-3 top-3 text-xs text-amber-500 font-bold">{currency}</span>
-                          <input
-                            type="text"
-                            inputMode="numeric"
-                            required
-                            placeholder="e.g. 10000000"
-                            value={fieldsState.price !== undefined ? fieldsState.price : (fieldsState.retailPrice || '')}
-                            onChange={e => {
-                              handleFieldChange('price', e.target.value);
-                              handleFieldChange('retailPrice', e.target.value);
-                            }}
-                            className="w-full pl-14 pr-3 py-3 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white font-mono font-medium focus:outline-none transition"
-                          />
-                        </div>
-                      </div>
-
-                      <div>
-                        <label className="block text-[11px] font-bold text-white/80 uppercase tracking-wider mb-1">
-                          💱 Currency *
-                        </label>
-                        <select
-                          value={currency}
-                          onChange={e => setCurrency(e.target.value as any)}
-                          className="w-full p-3 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white focus:outline-none transition font-bold text-amber-400"
-                        >
-                          <option value="ETB">{t("curr_etb")}</option>
-                          <option value="USD">{t("curr_usd")}</option>
-                          <option value="SAR">{t("curr_sar")}</option>
-                          <option value="EUR">{t("curr_eur")}</option>
-                          <option value="AED">{t("curr_aed")}</option>
-                        </select>
-                      </div>
-
-                      <div>
-                        <label className="block text-[11px] font-bold text-white/80 uppercase tracking-wider mb-1">
-                          Price Negotiable?
-                        </label>
-                        <select
-                          value={fieldsState.negotiable || 'No'}
-                          onChange={e => handleFieldChange('negotiable', e.target.value)}
-                          className="w-full p-3 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white focus:outline-none transition"
-                        >
-                          <option value="No">{t("opt_no_fixed_price")}</option>
-                          <option value="Yes">{t("opt_yes_negotiable")}</option>
-                        </select>
-                      </div>
-                    </div>
-                  </div>
-                ) : (
-                <div className="bg-zinc-900/40 border border-white/10 p-5 rounded-2xl space-y-5">
-                  <div className="flex items-center justify-between border-b border-white/5 pb-3">
-                    <div className="flex items-center gap-2">
-                      <DollarSign className="w-4 h-4 text-amber-500" />
-                      <h4 className="text-xs font-bold text-white uppercase tracking-wider">
-                        {sellingType === 'Retail' ? 'Retail Pricing & Inventory' : sellingType === 'Wholesale' ? t('wholesale_pricing_bulk_quantities') : 'Retail & Wholesale Combined Pricing'}
-                      </h4>
-                    </div>
-                    <span className="text-[10px] text-amber-400 font-bold px-2 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/20">
-                      {sellingType}
-                    </span>
-                  </div>
-
-                  {/* Common Unit of Sale & Currency */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-[11px] font-bold text-white/80 uppercase tracking-wider mb-1">
-                        📏 Unit of Sale *
-                      </label>
-                      <select
-                        value={fieldsState.unit || fieldsState.wholesaleUnit || 'Piece'}
-                        onChange={e => {
-                          handleFieldChange('unit', e.target.value);
-                          handleFieldChange('wholesaleUnit', e.target.value);
-                        }}
-                        className="w-full p-3 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white focus:outline-none transition"
-                      >
-                        {STANDARD_UNITS.map(u => (
-                          <option key={u} value={u} className="bg-zinc-900 text-white">
-                            {u}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="block text-[11px] font-bold text-white/80 uppercase tracking-wider mb-1">
-                        💱 Currency *
-                      </label>
-                      <select
-                        value={currency}
-                        onChange={e => setCurrency(e.target.value as any)}
-                        className="w-full p-3 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white focus:outline-none transition font-bold text-amber-400"
-                      >
-                        <option value="ETB">{t("curr_etb")}</option>
-                        <option value="USD">{t("curr_usd")}</option>
-                        <option value="SAR">{t("curr_sar")}</option>
-                        <option value="EUR">{t("curr_eur")}</option>
-                        <option value="AED">{t("curr_aed")}</option>
-                      </select>
-                    </div>
-                  </div>
-
-                  {/* 1. RETAIL FIELDS (Shown for Retail and Retail + Wholesale) */}
-                  {(sellingType === 'Retail' || sellingType === 'Retail + Wholesale' || (sellingType as any) === 'Retail & Wholesale') && (
-                    <div className="bg-zinc-950/60 border border-white/5 p-4 rounded-xl space-y-4">
-                      <div className="flex items-center gap-2">
-                        <ShoppingBag className="w-3.5 h-3.5 text-amber-400" />
-                        <span className="text-xs font-bold text-amber-300 uppercase tracking-wider">
-                          Retail Pricing Details
-                        </span>
-                      </div>
-
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                        <div>
-                          <label className="block text-[11px] font-bold text-white/80 uppercase tracking-wider mb-1">
-                            Retail Price (Per {fieldsState.unit || 'Unit'}) *
-                          </label>
-                          <div className="relative">
-                            <span className="absolute left-3 top-3 text-xs text-amber-500 font-bold">{currency}</span>
-                            <input
-                              type="text"
-                              inputMode="numeric"
-                              required
-                              placeholder="e.g. 250"
-                              value={fieldsState.retailPrice !== undefined ? fieldsState.retailPrice : (fieldsState.price || '')}
-                              onChange={e => {
-                                handleFieldChange('retailPrice', e.target.value);
-                                handleFieldChange('price', e.target.value);
-                              }}
-                              className="w-full pl-14 pr-3 py-3 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white font-mono font-medium focus:outline-none transition"
-                            />
-                          </div>
-                        </div>
-
-                        <div>
-                          <label className="block text-[11px] font-bold text-white/80 uppercase tracking-wider mb-1">
-                            Available Retail Stock (Qty) *
-                          </label>
-                          <input
-                            type="text"
-                            inputMode="numeric"
-                            required
-                            placeholder="e.g. 50"
-                            value={fieldsState.quantity !== undefined ? fieldsState.quantity : (fieldsState.availableQuantity || '')}
-                            onChange={e => {
-                              handleFieldChange('quantity', e.target.value);
-                              if (sellingType === 'Retail') {
-                                handleFieldChange('availableQuantity', e.target.value);
-                              }
-                            }}
-                            className="w-full p-3 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white focus:outline-none transition"
-                          />
-                        </div>
-
-                        <div>
-                          <label className="block text-[11px] font-bold text-white/80 uppercase tracking-wider mb-1">
-                            Price Negotiable?
-                          </label>
-                          <select
-                            value={fieldsState.negotiable || 'No'}
-                            onChange={e => handleFieldChange('negotiable', e.target.value)}
-                            className="w-full p-3 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white focus:outline-none transition"
-                          >
-                            <option value="No">{t("opt_no_fixed_price")}</option>
-                            <option value="Yes">{t("opt_yes_negotiable")}</option>
-                          </select>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* 2. WHOLESALE FIELDS (Shown for Wholesale and Retail + Wholesale) */}
-                  {(sellingType === 'Wholesale' || sellingType === 'Retail + Wholesale' || (sellingType as any) === 'Retail & Wholesale') && (
-                    <div className="bg-zinc-950/60 border border-amber-500/20 p-4 rounded-xl space-y-5">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <Package className="w-4 h-4 text-amber-500" />
-                          <span className="text-xs font-bold text-amber-400 uppercase tracking-wider">
-                            Wholesale Tiered Pricing & Minimum Order Quantity
-                          </span>
-                        </div>
-                        <span className="text-[10px] text-amber-300/80 font-mono">
-                          Bulk Wholesale Rules
-                        </span>
-                      </div>
-
-                      {/* Stock Quantity for Wholesale-only */}
-                      {sellingType === 'Wholesale' && (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                          <div>
-                            <label className="block text-[11px] font-bold text-white/80 uppercase tracking-wider mb-1">
-                              {t('total_available_bulk_stock_unit', { unit: fieldsState.unit || t('wholesale.unit_of_sale') })} *
-                            </label>
-                            <input
-                              type="text"
-                              inputMode="numeric"
-                              required
-                              placeholder="e.g. 500"
-                              value={fieldsState.availableQuantity !== undefined ? fieldsState.availableQuantity : ''}
-                              onChange={e => handleFieldChange('availableQuantity', e.target.value)}
-                              className="w-full p-3 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white focus:outline-none transition"
-                            />
-                            <span className="text-[10px] text-white/40 mt-1 block">
-                              {t('moq_stock_requirement_hint')}
-                            </span>
-                          </div>
-                          <div>
-                            <label className="block text-[11px] font-bold text-white/80 uppercase tracking-wider mb-1">
-                              {t('price_negotiable_large')}
-                            </label>
-                            <select
-                              value={fieldsState.negotiable || 'No'}
-                              onChange={e => handleFieldChange('negotiable', e.target.value)}
-                              className="w-full p-3 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white focus:outline-none transition"
-                            >
-                              <option value="No">{t("opt_no_fixed_tier")}</option>
-                              <option value="Yes">{t("opt_yes_open_discussion")}</option>
-                            </select>
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Wholesale Pricing Tiers Editor */}
-                      <WholesalePricingTiersEditor
-                        currency={currency}
-                        unit={fieldsState.unit || fieldsState.wholesaleUnit || 'Piece'}
-                        moq={fieldsState.minimumOrderQuantity}
-                        initialMoq={Number(fieldsState.minimumOrderQuantity || 1)}
-                        tiers={wholesaleTiers}
-                        isRetailAndWholesale={sellingType === 'Retail + Wholesale' || (sellingType as any) === 'Retail & Wholesale'}
-                        onChange={(moq, newTiers) => {
-                          setWholesaleTiers(newTiers);
-                          handleFieldChange('minimumOrderQuantity', moq);
-                          if (newTiers[0]?.pricePerUnit) {
-                            handleFieldChange('wholesalePrice', newTiers[0].pricePerUnit);
-                          }
-                        }}
-                      />
-
-                      {/* Business Type & Delivery Options */}
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-3 border-t border-white/5">
-                        <div>
-                          <label className="block text-[11px] font-bold text-white/80 uppercase tracking-wider mb-1">
-                            🏢 {t('supplier_business_type')}
-                          </label>
-                          <select
-                            value={fieldsState.businessType || 'Wholesaler'}
-                            onChange={e => handleFieldChange('businessType', e.target.value)}
-                            className="w-full p-3 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white focus:outline-none transition"
-                          >
-                            <option value="Wholesaler">{t("biz_wholesaler")}</option>
-                            <option value="Manufacturer">{t("biz_manufacturer")}</option>
-                            <option value="Distributor">{t("biz_distributor")}</option>
-                            <option value="Importer">{t("biz_importer")}</option>
-                            <option value="Exporter">{t("biz_exporter")}</option>
-                            <option value="Authorized Dealer">{t("biz_authorized_dealer")}</option>
-                            <option value="Local Supplier">{t("biz_local_supplier")}</option>
-                            <option value="Farmer / Producer">{t("biz_farmer_producer")}</option>
-                            <option value="Cooperative">{t("biz_cooperative")}</option>
-                            <option value="Other">{t("unit_other")}</option>
-                          </select>
-                        </div>
-
-                        <div>
-                          <label className="block text-[11px] font-bold text-white/80 uppercase tracking-wider mb-1">
-                            📞 {t('supplier_contact_phone')} *
-                          </label>
-                          <input
-                            type="text"
-                            required
-                            placeholder={t('phone_eg_placeholder')}
-                            value={fieldsState.contactPhone || ''}
-                            onChange={e => handleFieldChange('contactPhone', e.target.value)}
-                            className="w-full p-3 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white focus:outline-none transition"
-                          />
-                        </div>
-                      </div>
-
-                      {/* Delivery Options */}
-                      <div className="space-y-2 pt-2 border-t border-white/5">
-                        <label className="block text-[11px] font-bold text-white/80 uppercase tracking-wider">
-                          🚚 {t('bulk_delivery_options')}
-                        </label>
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                          {[
-                            { id: 'Store Pickup', label: 'Store / Warehouse Pickup' },
-                            { id: 'Local Delivery', label: 'Local City Delivery' },
-                            { id: 'Nationwide Delivery', label: 'Nationwide Freight Delivery' }
-                          ].map(item => {
-                            const currentDel: string[] = Array.isArray(fieldsState.deliveryOptions) ? fieldsState.deliveryOptions : [];
-                            const isChecked = currentDel.includes(item.id);
-                            return (
-                              <label
-                                key={item.id}
-                                className={`p-2.5 rounded-xl border text-[11px] font-medium flex items-center gap-2 cursor-pointer transition ${
-                                  isChecked
-                                    ? 'bg-amber-500/20 border-amber-500 text-amber-300'
-                                    : 'bg-zinc-900/80 border-white/10 text-white/70 hover:border-white/20'
-                                }`}
-                              >
-                                <input
-                                  type="checkbox"
-                                  checked={isChecked}
-                                  onChange={e => {
-                                    if (e.target.checked) {
-                                      handleFieldChange('deliveryOptions', [...currentDel, item.id]);
-                                    } else {
-                                      handleFieldChange('deliveryOptions', currentDel.filter(d => d !== item.id));
-                                    }
-                                  }}
-                                  className="accent-amber-500 rounded"
-                                />
-                                <span>{item.label}</span>
-                              </label>
-                            );
-                          })}
-                        </div>
-                      </div>
-
-                      {/* Wholesale Terms (Optional) */}
-                      <div className="space-y-1 pt-2 border-t border-white/5">
-                        <label className="block text-[11px] font-bold text-white/80 uppercase tracking-wider">
-                          📝 {t('wholesale_policy_notes_optional')}
-                        </label>
-                        <textarea
-                          rows={2}
-                          placeholder={t('wholesale_policy_example_placeholder')}
-                          value={fieldsState.wholesaleNotes || ''}
-                          onChange={e => handleFieldChange('wholesaleNotes', e.target.value)}
-                          className="w-full p-3 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white focus:outline-none transition resize-none font-light placeholder-zinc-600"
-                        />
-                      </div>
-                    </div>
-                  )}
-                </div>
-                )}
-
-                {/* 3. PRODUCT VARIATIONS / SKU MANAGEMENT (For physical products only) */}
-                {majorCategory !== 'Properties' && (
-                  <ProductVariationsManager
-                    variations={variationsList}
-                    onChange={setVariationsList}
-                  />
-                )}
-              </form>
-            )}
-
-            {/* STEP 4: LIVE PREVIEW MODE */}
-            {currentStep === 4 && (
-              <div className="space-y-5 animate-in fade-in duration-300">
-                <div className="bg-amber-500/10 border border-amber-500/20 p-3.5 rounded-xl flex items-center justify-between">
-                  <div className="flex items-center gap-2 text-amber-400 font-bold text-xs">
-                    <Eye className="w-4 h-4" />
-                    <span>{d.previewHeader}</span>
-                  </div>
-                  <span className="text-[10px] text-amber-300/70">{d.previewSubtext}</span>
-                </div>
-
-                <div className="bg-zinc-900/60 rounded-2xl border border-white/10 overflow-hidden shadow-xl max-w-xl mx-auto">
-                  <div className="relative h-52 bg-zinc-800">
-                    <img 
-                      src={imagesList[0] || 'https://images.unsplash.com/photo-1613490493576-7fde63acd811?auto=format&fit=crop&w=1200&q=80'} 
-                      alt="Listing Preview" 
-                      className="w-full h-full object-cover"
-                      referrerPolicy="no-referrer"
-                    />
-                    <div className="absolute top-3 left-3 bg-black/70 backdrop-blur-md px-3 py-1 rounded-full text-[10px] font-bold text-amber-400 uppercase tracking-wider border border-white/10">
-                      {getTranslatedCategoryName(majorCategory, currentLanguage)} &bull; {getTranslatedSubcategoryName(subcategory, currentLanguage)}
-                    </div>
-                    {imagesList.length > 1 && (
-                      <div className="absolute bottom-3 right-3 bg-black/80 px-2.5 py-1 rounded-md text-[10px] font-bold text-white flex items-center gap-1">
-                        <Camera className="w-3 h-3 text-amber-400" />
-                        <span>{imagesList.length} {d.photosCount}</span>
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="p-5 space-y-4">
-                    <div className="flex justify-between items-start gap-4">
-                      <div>
-                        <h3 className="font-serif text-lg font-bold text-white line-clamp-1">
-                          {fieldsState.title || d.untitled}
-                        </h3>
-                        <div className="text-xs text-white/70 flex items-start gap-1.5 mt-1.5 leading-relaxed bg-white/5 p-2 rounded-xl border border-white/5">
-                          <MapPin className="w-3.5 h-3.5 text-amber-500 shrink-0 mt-0.5" />
-                          <span className="whitespace-pre-wrap break-words flex-1 text-white/90 leading-snug">
-                            {fieldsState.location || d.noLocation}
-                          </span>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        {majorCategory === 'Properties' ? (
-                          <span className="text-lg font-extrabold text-amber-400 font-mono block">
-                            {fieldsState.price ? `${Number(fieldsState.price).toLocaleString()} ${currency}` : d.contactPrice}
-                          </span>
-                        ) : (fieldsState.sellingType || 'Retail') === 'Wholesale' ? (
-                          <>
-                            <span className="text-lg font-extrabold text-amber-400 font-mono block">
-                              {fieldsState.wholesalePrice ? `${Number(fieldsState.wholesalePrice).toLocaleString()} ${currency}` : d.contactPrice}
-                              <span className="text-xs font-normal text-amber-300/80 ml-1">/ {fieldsState.wholesaleUnit || 'Piece'}</span>
-                            </span>
-                            <span className="text-[10px] text-amber-300/90 font-bold block mt-0.5">
-                              MOQ: {fieldsState.minimumOrderQuantity || 1} {getPluralizedUnit(Number(fieldsState.minimumOrderQuantity || 1), fieldsState.wholesaleUnit || fieldsState.unit || 'Piece')}
-                            </span>
-                          </>
-                        ) : (
-                          <>
-                            <span className="text-lg font-extrabold text-amber-400 font-mono block">
-                              {fieldsState.price ? `${Number(fieldsState.price).toLocaleString()} ${currency}` : d.contactPrice}
-                            </span>
-                            {(fieldsState.sellingType || 'Retail') === 'Retail & Wholesale' && fieldsState.wholesalePrice && (
-                              <span className="text-[10px] text-amber-300 font-bold block mt-0.5">
-                                Wholesale: {Number(fieldsState.wholesalePrice).toLocaleString()} {currency} / {fieldsState.wholesaleUnit || fieldsState.unit || 'Piece'} (MOQ: {fieldsState.minimumOrderQuantity || 1} {getPluralizedUnit(Number(fieldsState.minimumOrderQuantity || 1), fieldsState.wholesaleUnit || fieldsState.unit || 'Piece')})
-                              </span>
-                            )}
-                          </>
-                        )}
-                      </div>
-                    </div>
-
-                    {majorCategory !== 'Properties' && ((fieldsState.sellingType || 'Retail') === 'Wholesale' || (fieldsState.sellingType || 'Retail') === 'Retail & Wholesale') && (
-                      <div className="bg-amber-500/10 border border-amber-500/20 p-2.5 rounded-xl flex items-center justify-between text-[11px] text-amber-300">
-                        <div className="flex items-center gap-1.5 font-bold">
-                          <Package className="w-3.5 h-3.5 text-amber-400" />
-                          <span>{fieldsState.sellingType} &bull; {fieldsState.businessType || 'Wholesaler'}</span>
-                        </div>
-                        <div className="text-[10px] text-amber-400/80 font-mono text-right">
-                          <span>MOQ: {fieldsState.minimumOrderQuantity || 1} {getPluralizedUnit(Number(fieldsState.minimumOrderQuantity || 1), fieldsState.wholesaleUnit || fieldsState.unit || 'Piece')}</span>
-                          {fieldsState.availableQuantity ? (
-                            <span className="ml-2 font-semibold text-amber-300">
-                              &bull; Stock: {fieldsState.availableQuantity} {getPluralizedUnit(Number(fieldsState.availableQuantity), fieldsState.wholesaleUnit || fieldsState.unit || 'Piece')}
-                            </span>
-                          ) : null}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Wholesale Tiers Preview in Step 4 */}
-                    {majorCategory !== 'Properties' && ((fieldsState.sellingType || 'Retail') === 'Wholesale' || (fieldsState.sellingType || 'Retail') === 'Retail & Wholesale' || (fieldsState.sellingType || 'Retail') === 'Retail + Wholesale') && wholesaleTiers.length > 0 && (
-                      <div className="bg-amber-500/5 border border-amber-500/20 p-3 rounded-xl space-y-2">
-                        <div className="flex items-center justify-between text-[11px] font-bold text-amber-400">
-                          <span>📦 Tiered Bulk Pricing</span>
-                          <span className="text-[10px] text-white/50">{wholesaleTiers.length} Volume Tiers</span>
-                        </div>
-                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                          {wholesaleTiers.map((tier, idx) => (
-                            <div key={idx} className="bg-black/40 border border-white/5 p-2 rounded-lg text-center">
-                              <span className="text-[10px] text-white/60 block">
-                                {tier.minQuantity}{tier.maxQuantity ? ` - ${tier.maxQuantity}` : '+'} {fieldsState.unit || fieldsState.wholesaleUnit || 'units'}
-                              </span>
-                              <span className="text-xs font-mono font-bold text-amber-400">
-                                {Number(tier.pricePerUnit).toLocaleString()} {currency}
-                              </span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Variations Preview in Step 4 */}
-                    {majorCategory !== 'Properties' && variationsList.length > 0 && (
-                      <div className="bg-white/5 border border-white/10 p-3 rounded-xl space-y-1.5">
-                        <span className="text-[11px] font-bold text-white/80 block">
-                          🎨 Available Options ({variationsList.length})
-                        </span>
-                        <div className="flex flex-wrap gap-1.5">
-                          {variationsList.map((v, i) => (
-                            <span key={i} className="px-2 py-0.5 rounded-md bg-white/10 text-[10px] text-white font-medium border border-white/10">
-                              {v.name}: <strong className="text-amber-300">{v.value}</strong>
-                              {v.priceAdjustment ? ` (${v.priceAdjustment > 0 ? '+' : ''}${v.priceAdjustment} ${currency})` : ''}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Specifications Grid */}
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 pt-2 border-t border-white/5">
-                      {buildCleanAmenities(majorCategory, subcategory, fieldsState, activeFields).map((spec, idx) => (
-                        <div key={idx} className="bg-white/5 border border-white/10 px-2.5 py-1.5 rounded-lg text-[10px] text-white/80 font-medium truncate">
-                          ✨ {spec}
-                        </div>
-                      ))}
-                    </div>
-
-                    {/* Description Snippet */}
-                    <div className="text-xs text-white/60 line-clamp-2 pt-1 border-t border-white/5">
-                      {fieldsState.description || d.noDesc}
-                    </div>
-
-                    {/* Seller Contact Info Preview */}
-                    <div className="bg-black/40 p-3 rounded-xl border border-white/5 flex items-center justify-between text-xs">
-                      <div className="flex items-center gap-2.5">
-                        {fieldsState.ownerAvatar ? (
-                          <img src={fieldsState.ownerAvatar} alt={fieldsState.ownerName || 'Owner'} className="w-8 h-8 rounded-full object-cover border border-amber-500/30" />
-                        ) : (
-                          <div className="w-8 h-8 rounded-full bg-amber-500/20 text-amber-400 font-extrabold flex items-center justify-center text-xs border border-amber-500/30">
-                            {(fieldsState.ownerName || currentUser?.fullName || 'O').charAt(0).toUpperCase()}
-                          </div>
-                        )}
-                        <div>
-                          <span className="font-bold text-white block text-[11px]">
-                            {fieldsState.ownerName || (currentUser?.role === 'admin' ? 'Property Owner' : currentUser?.fullName)}
-                          </span>
-                          <span className="text-[10px] text-amber-400/80 block font-mono">
-                            {fieldsState.ownerBusinessName || (currentUser?.role === 'admin' ? 'Public Listing Owner' : d.verifiedPublisher)}
-                          </span>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-1.5 text-amber-400 font-mono font-bold text-xs bg-amber-500/10 px-3 py-1.5 rounded-lg border border-amber-500/20">
-                        <Phone className="w-3.5 h-3.5" />
-                        <span>
-                          {fieldsState.contactPhone || (currentUser?.role === 'admin' ? 'Owner Phone' : (currentUser?.phone || '+251911...'))}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* STEP 5: BOOST PLAN & PAYMENT METHOD */}
-            {currentStep === 5 && (
-              <div className="space-y-6 animate-in fade-in duration-300">
-                <div className="space-y-1">
-                  <h4 className="text-xs font-bold text-amber-500 uppercase tracking-widest flex items-center gap-1.5">
-                    <Zap className="w-4 h-4" />
-                    <span>{d.boostTitle}</span>
-                  </h4>
-                  <p className="text-[11px] text-[#F5F5F4]/50 font-light">{d.boostSubtext}</p>
-                </div>
-
-                {/* Free Listing Campaign Notice Card */}
-                <div className="bg-zinc-900/80 border border-amber-500/30 p-4 rounded-2xl flex flex-col sm:flex-row justify-between sm:items-center gap-3">
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2">
-                      <span className={`px-2 py-0.5 rounded-full text-[9px] font-mono font-bold uppercase border ${campaignInfo.badgeColor}`}>
-                        {campaignInfo.status}
-                      </span>
-                      <span className="text-[10px] text-amber-400 font-bold font-mono bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">
-                        {campaignInfo.displayText}
-                      </span>
-                    </div>
-                    <p className="text-xs text-white/90 font-medium">
-                      <span className="text-amber-400 font-bold">Campaign Period:</span> {campaignInfo.startDateFormatted} → {campaignInfo.endDateFormatted}
-                    </p>
-                  </div>
-                  {campaignInfo.isActive && (
-                    <div className="text-right">
-                      <span className="text-[10px] text-emerald-400 font-bold block">
-                        🎁 Free Listing Eligible ({campaignInfo.maxListings} per user limit)
-                      </span>
-                    </div>
-                  )}
-                </div>
-
-                {/* Plans Grid */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
-                  {allPromotionPlans.map(p => {
-                    const isSel = selectedPlan === p.id;
-                    return (
-                      <div
-                        key={p.id}
-                        onClick={() => setSelectedPlan(p.id)}
-                        className={`p-4 rounded-2xl border flex flex-col justify-between transition cursor-pointer ${
-                          isSel 
-                            ? 'bg-amber-500/15 border-amber-500 shadow-lg text-white' 
-                            : 'bg-zinc-900/40 border-white/5 hover:border-white/10 text-white/70'
-                        }`}
-                      >
-                        <div>
-                          <div className="flex justify-between items-center mb-2">
-                            <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/30 uppercase">
-                              {p.badge}
-                            </span>
-                            <span className="text-[10px] text-white/40">{p.days}</span>
-                          </div>
-                          <h5 className="font-bold text-sm text-white mb-1">{p.name}</h5>
-                          <p className="text-[10px] text-white/50 mb-3">{p.desc}</p>
-                        </div>
-                        <div className="pt-2 border-t border-white/5 font-mono text-base font-extrabold text-amber-400">
-                          {p.cost === 0 ? '0 ETB' : `${p.cost} ETB`}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-
-                {/* Add-ons Selection */}
-                <div className="bg-zinc-900/40 p-4 rounded-2xl border border-white/5 space-y-3">
-                  <span className="text-xs font-bold text-white uppercase tracking-wider block">{d.addonsTitle}</span>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <label className={`p-3 rounded-xl border flex items-center justify-between transition cursor-pointer ${isTopAdAddon ? 'bg-amber-500/10 border-amber-500 text-white' : 'bg-black/20 border-white/5 text-white/60'}`}>
-                      <div className="flex items-center gap-2.5 text-xs">
-                        <input
-                          type="checkbox"
-                          checked={isTopAdAddon}
-                          onChange={e => setIsTopAdAddon(e.target.checked)}
-                          className="accent-amber-500 w-4 h-4 rounded cursor-pointer"
-                        />
-                        <div>
-                          <span className="font-bold block">{d.topAd}</span>
-                          <span className="text-[10px] text-white/40">{d.topAdDesc}</span>
-                        </div>
-                      </div>
-                      <span className="font-mono text-xs font-bold text-amber-400">+{topAdPrice} ETB</span>
-                    </label>
-
-                    <label className={`p-3 rounded-xl border flex items-center justify-between transition cursor-pointer ${isFeaturedAddon ? 'bg-amber-500/10 border-amber-500 text-white' : 'bg-black/20 border-white/5 text-white/60'}`}>
-                      <div className="flex items-center gap-2.5 text-xs">
-                        <input
-                          type="checkbox"
-                          checked={isFeaturedAddon}
-                          onChange={e => setIsFeaturedAddon(e.target.checked)}
-                          className="accent-amber-500 w-4 h-4 rounded cursor-pointer"
-                        />
-                        <div>
-                          <span className="font-bold block">{d.spotlight}</span>
-                          <span className="text-[10px] text-white/40">{d.spotlightDesc}</span>
-                        </div>
-                      </div>
-                      <span className="font-mono text-xs font-bold text-amber-400">+{featuredPrice} ETB</span>
-                    </label>
-                  </div>
-                </div>
-
-                {/* Price Breakdown Summary */}
-                <div className="bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-transparent p-4 rounded-2xl border border-amber-500/20 flex items-center justify-between">
-                  <div>
-                    <span className="text-xs font-bold text-white uppercase block">{d.totalInvestment}</span>
-                    <span className="text-[10px] text-amber-300/70">{d.totalInvestmentSub}</span>
-                  </div>
-                  <div className="text-right">
-                    <span className="text-2xl font-black text-amber-400 font-mono">{totalCost} ETB</span>
-                  </div>
-                </div>
-
-                {/* Payment Options (If totalCost > 0) */}
-                {totalCost > 0 && (
-                  <div className="space-y-4 pt-2 border-t border-white/5">
-                    <label className="block text-xs font-bold text-amber-500 uppercase tracking-widest">
-                      {d.payMethodLabel || 'Payment Method (Bank Transfer / Telebirr)'}
-                    </label>
-
-                    {/* Direct Transfer View */}
-                    <div className="p-4 bg-zinc-900/60 rounded-2xl border border-white/10 space-y-4 text-xs">
-                      <div>
-                        <label className="block text-[11px] font-bold text-white/70 uppercase mb-1.5">
-                          {d.payChannel}
-                        </label>
-                        <select
-                          value={selectedDirectMethodId}
-                          onChange={e => setSelectedDirectMethodId(e.target.value)}
-                          className="w-full p-3 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white focus:outline-none transition"
-                        >
-                          <option value="">{d.payChannelPlaceholder}</option>
-                          {paymentMethods.map(m => (
-                            <option key={m.id} value={m.id} className="bg-[#0c0c0c]">
-                              {m.name} ({m.accountNumber})
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-
-                      <div className="pt-2">
-                        <ReceiptUploadInput
-                          referenceNumber={receiptRefNumber}
-                          onReferenceChange={setReceiptRefNumber}
-                          receiptFile={receiptFileData?.url || ''}
-                          fileName={receiptFileData?.fileName}
-                          fileType={receiptFileData?.fileType}
-                          fileSize={receiptFileData?.fileSize}
-                          onFileChange={(data) => setReceiptFileData(data)}
-                        />
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-
-          </div>
-
-          {/* Dynamic Footer Actions */}
-          <div className="p-5 border-t border-white/10 bg-[#08080a] flex justify-between items-center gap-3 shrink-0">
+        {/* Dynamic Footer Navigation for Steps 1-3 */}
+        {currentStep < 4 && (
+          <div className="p-4 sm:p-5 border-t border-white/10 bg-[#08080a] flex justify-between items-center gap-3 shrink-0">
             <div>
-              {currentStep > 1 && (
+              {currentStep > 1 ? (
                 <button
                   type="button"
                   onClick={() => setCurrentStep((currentStep - 1) as any)}
                   className="px-4 py-2.5 rounded-xl border border-white/10 hover:bg-white/5 text-white/70 hover:text-white text-xs font-bold transition duration-200 cursor-pointer inline-flex items-center gap-1.5"
                 >
                   <ArrowLeft className="w-3.5 h-3.5" />
-                  <span>{d.backBtn}</span>
+                  <span>[🡠 Back]</span>
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="px-4 py-2.5 rounded-xl border border-white/5 hover:bg-white/5 text-white/50 hover:text-white text-xs font-bold transition duration-200 cursor-pointer"
+                >
+                  Cancel
                 </button>
               )}
             </div>
 
             <div className="flex gap-2">
-              <button
-                type="button"
-                disabled={submitting}
-                onClick={onClose}
-                className="px-4 py-2.5 rounded-xl border border-white/5 hover:bg-white/5 text-white/50 hover:text-white text-xs font-bold transition duration-200 cursor-pointer"
-              >
-                {d.cancelBtn}
-              </button>
-
               {currentStep === 1 && (
                 <button
                   type="button"
-                  onClick={() => setCurrentStep(2)}
+                  onClick={handleContinueToStep2}
                   className="px-5 py-2.5 bg-amber-500 text-black font-extrabold text-xs rounded-xl hover:bg-amber-400 transition duration-200 cursor-pointer inline-flex items-center gap-1.5"
                 >
-                  <span>{d.chooseSubBtn}</span>
-                  <ArrowRight className="w-3.5 h-3.5 stroke-[3px]" />
+                  <span>[ Continue to Basic Info ➔ ]</span>
                 </button>
               )}
 
               {currentStep === 2 && (
                 <button
                   type="button"
-                  onClick={() => setCurrentStep(3)}
+                  onClick={handleContinueToStep3}
                   className="px-5 py-2.5 bg-amber-500 text-black font-extrabold text-xs rounded-xl hover:bg-amber-400 transition duration-200 cursor-pointer inline-flex items-center gap-1.5"
                 >
-                  <span>{d.fillSpecsBtn}</span>
-                  <ArrowRight className="w-3.5 h-3.5 stroke-[3px]" />
+                  <span>[ Continue to Pricing ➔ ]</span>
                 </button>
               )}
 
               {currentStep === 3 && (
                 <button
                   type="button"
-                  onClick={(e) => handleValidateStep3(e)}
+                  onClick={handleContinueToStep4}
                   className="px-5 py-2.5 bg-amber-500 text-black font-extrabold text-xs rounded-xl hover:bg-amber-400 transition duration-200 cursor-pointer inline-flex items-center gap-1.5"
                 >
-                  <Eye className="w-3.5 h-3.5" />
-                  <span>{d.previewAdBtn}</span>
-                  <ArrowRight className="w-3.5 h-3.5 stroke-[3px]" />
-                </button>
-              )}
-
-              {currentStep === 4 && (
-                <button
-                  type="button"
-                  onClick={() => setCurrentStep(5)}
-                  className="px-5 py-2.5 bg-amber-500 text-black font-extrabold text-xs rounded-xl hover:bg-amber-400 transition duration-200 cursor-pointer inline-flex items-center gap-1.5"
-                >
-                  <Zap className="w-3.5 h-3.5 fill-black" />
-                  <span>{d.selectPromoBtn}</span>
-                  <ArrowRight className="w-3.5 h-3.5 stroke-[3px]" />
-                </button>
-              )}
-
-              {currentStep === 5 && (
-                <button
-                  type="button"
-                  disabled={submitting || (totalCost > 0 && !selectedDirectMethodId)}
-                  onClick={handleFinalPublish}
-                  className="px-6 py-2.5 bg-amber-500 text-black font-extrabold text-xs rounded-xl hover:bg-amber-400 disabled:opacity-50 transition duration-200 cursor-pointer shadow-lg inline-flex items-center gap-2"
-                >
-                  {submitting ? (
-                    <span>{d.pubProgress}</span>
-                  ) : (
-                    <>
-                      <Sparkles className="w-4 h-4 fill-black" />
-                      <span>{totalCost === 0 ? d.pubFreeBtn : d.payAndPostBtn.replace('{cost}', String(totalCost))}</span>
-                    </>
-                  )}
+                  <span>[ Review Listing ➔ ]</span>
                 </button>
               )}
             </div>
           </div>
+        )}
 
-        </div>
       </div>
     </div>
   );

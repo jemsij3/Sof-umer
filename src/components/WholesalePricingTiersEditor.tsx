@@ -291,8 +291,8 @@ export const WholesalePricingTiersEditor: React.FC<WholesalePricingTiersEditorPr
         </div>
       </div>
 
-      {/* Pricing Tiers Table */}
-      <div className="space-y-2">
+      {/* Mobile-First Tier Cards (Replaces Squeezed Horizontal Table) */}
+      <div className="space-y-3">
         <div className="flex items-center justify-between">
           <label className="text-xs font-bold text-white flex items-center gap-1.5">
             <span>{t('wholesale_pricing_quantity_tiers')}</span>
@@ -300,152 +300,160 @@ export const WholesalePricingTiersEditor: React.FC<WholesalePricingTiersEditorPr
               ({normalizedTiers.length} {normalizedTiers.length === 1 ? (t('wholesale.tier') || 'tier') : (t('wholesale.tiers') || 'tiers')})
             </span>
           </label>
-
-          <button
-            type="button"
-            onClick={handleAddTier}
-            className="bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/30 text-xs font-bold px-3 py-1.5 rounded-lg transition flex items-center gap-1.5 cursor-pointer"
-          >
-            <Plus className="w-3.5 h-3.5" />
-            <span>{t('add_pricing_tier')}</span>
-          </button>
         </div>
 
-        <div className="overflow-x-auto rounded-xl border border-white/10 bg-[#141420]">
-          <table className="w-full text-left text-xs">
-            <thead className="bg-[#1a1a2c] text-white/60 text-[10px] font-mono uppercase tracking-wider border-b border-white/10">
-              <tr>
-                <th className="py-2.5 px-3">{t('wholesale.tier')}</th>
-                <th className="py-2.5 px-3">{t('wholesale.min_quantity')} ({getLocalizedUnit(unitPlural, currentLanguage, 2)})</th>
-                <th className="py-2.5 px-3">{t('effective_range')}</th>
-                <th className="py-2.5 px-3">{t('wholesale.price_per_unit')} ({currency})</th>
-                <th className="py-2.5 px-3 text-right">{t('common.actions')}</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-white/5">
-              {normalizedTiers.map((tier, idx) => {
-                const isFirst = idx === 0;
-                const prevTier = idx > 0 ? normalizedTiers[idx - 1] : null;
-                const nextTier = idx < normalizedTiers.length - 1 ? normalizedTiers[idx + 1] : null;
-                
-                // Determine if quantity sequence has an ordering error
-                const prevQty = isFirst ? 0 : (Number(prevTier?.minimumQuantity) || currentMoqNum);
-                const currentQty = Number(tier.minimumQuantity);
-                const hasOrderError = !isFirst && (isNaN(currentQty) || currentQty <= prevQty);
+        <div className="space-y-2.5">
+          {normalizedTiers.map((tier, idx) => {
+            const isFirst = idx === 0;
+            const prevTier = idx > 0 ? normalizedTiers[idx - 1] : null;
+            const nextTier = idx < normalizedTiers.length - 1 ? normalizedTiers[idx + 1] : null;
+            
+            // Determine if quantity sequence has an ordering error
+            const prevQty = isFirst ? 0 : (Number(prevTier?.minimumQuantity) || currentMoqNum);
+            const currentQty = Number(tier.minimumQuantity);
+            const hasOrderError = !isFirst && (isNaN(currentQty) || currentQty <= prevQty);
 
-                // Automatic Effective Range calculation
-                const minQ = isFirst ? currentMoqNum : currentQty;
-                const nextMinQ = nextTier ? Number(nextTier.minimumQuantity) : null;
-                let rangeLabel = '';
-                if (nextMinQ && nextMinQ > minQ) {
-                  const maxQ = nextMinQ - 1;
-                  rangeLabel = maxQ === minQ
-                    ? `${minQ} ${getPluralizedUnit(minQ, unit)}`
-                    : `${minQ}–${maxQ} ${getPluralizedUnit(maxQ, unit)}`;
-                } else {
-                  rangeLabel = `${minQ}+ ${getPluralizedUnit(minQ, unit)}`;
-                }
+            // Automatic Effective Range calculation
+            const minQ = isFirst ? currentMoqNum : currentQty;
+            const nextMinQ = nextTier ? Number(nextTier.minimumQuantity) : null;
+            let rangeLabel = '';
+            if (nextMinQ && nextMinQ > minQ) {
+              const maxQ = nextMinQ - 1;
+              rangeLabel = maxQ === minQ
+                ? `${minQ} ${getPluralizedUnit(minQ, unit)}`
+                : `${minQ} to ${maxQ} ${getPluralizedUnit(maxQ, unit)}`;
+            } else {
+              rangeLabel = `${minQ}+ ${getPluralizedUnit(minQ, unit)}`;
+            }
 
-                return (
-                  <tr key={idx} className={hasOrderError ? 'bg-rose-500/10 border-l-2 border-rose-500' : 'hover:bg-white/[0.02]'}>
-                    {/* Tier Number & {t('base_moq')} Badge */}
-                    <td className="py-3 px-3 font-mono font-bold text-white/70 whitespace-nowrap">
-                      #{idx + 1}
-                      {isFirst && (
-                        <span className="ml-1.5 text-[9px] bg-amber-500/20 text-amber-400 border border-amber-500/30 px-1.5 py-0.5 rounded font-mono font-bold">
-                          {t('base_moq')}
-                        </span>
-                      )}
-                    </td>
+            return (
+              <div 
+                key={idx} 
+                className={`p-3.5 sm:p-4 rounded-xl border transition-all ${
+                  hasOrderError
+                    ? 'bg-rose-500/10 border-rose-500/50'
+                    : 'bg-[#141422] border-white/10 hover:border-amber-500/30'
+                }`}
+              >
+                {/* Top bar: Tier Title and Trash/Delete or Lock */}
+                <div className="flex items-center justify-between pb-2.5 mb-2.5 border-b border-white/5">
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono text-xs font-bold text-amber-400">
+                      {isFirst ? `Tier 1 (Base MOQ)` : `Tier ${idx + 1}`}
+                    </span>
+                    {isFirst && (
+                      <span className="text-[9px] bg-amber-500/20 text-amber-300 border border-amber-500/30 px-2 py-0.5 rounded font-mono font-bold flex items-center gap-1">
+                        <Lock className="w-2.5 h-2.5" /> Base MOQ
+                      </span>
+                    )}
+                  </div>
 
-                    {/* Min. Quantity */}
-                    <td className="py-3 px-3">
-                      {isFirst ? (
-                        /* Tier #1 is strictly derived from MOQ and NOT independently editable */
-                        <div className="flex items-center gap-1.5" title="Derived directly from Minimum Order Quantity (MOQ)">
-                          <span className="font-mono text-xs font-bold text-amber-400 bg-amber-500/10 border border-amber-500/25 px-2.5 py-1.5 rounded-lg flex items-center gap-1.5">
-                            <Lock className="w-3 h-3 text-amber-400/70" />
-                            {currentMoqNum}+ {getPluralizedUnit(currentMoqNum, unit)}
+                  <div className="flex items-center gap-2">
+                    <span className="text-[11px] font-mono text-amber-300/90 font-medium bg-amber-500/10 px-2.5 py-0.5 rounded-lg border border-amber-500/20">
+                      {rangeLabel}
+                    </span>
+                    {!isFirst ? (
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveTier(idx)}
+                        className="text-white/40 hover:text-rose-400 p-1.5 rounded-lg hover:bg-white/5 transition cursor-pointer"
+                        title="Delete Tier"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    ) : (
+                      <span className="text-[10px] text-white/30 italic select-none">
+                        {t('required')}
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Inputs Grid */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 items-center">
+                  {/* Quantity Range */}
+                  <div>
+                    <label className="block text-[10px] uppercase font-bold text-white/60 mb-1">
+                      {isFirst ? 'Minimum Order Quantity' : 'Starting Quantity Threshold'}
+                    </label>
+                    {isFirst ? (
+                      <div className="flex items-center gap-2 bg-black/40 border border-white/10 rounded-xl px-3 py-2 text-xs font-mono text-amber-400 font-bold">
+                        <Lock className="w-3.5 h-3.5 text-amber-400/60" />
+                        <span>{currentMoqNum} {getPluralizedUnit(currentMoqNum, unit)}</span>
+                      </div>
+                    ) : (
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="number"
+                            min={prevQty + 1}
+                            step="1"
+                            value={tier.minimumQuantity ?? ''}
+                            onChange={e => handleAdditionalTierQtyChange(idx, e.target.value)}
+                            placeholder={`e.g. ${prevQty + 20}`}
+                            className={`w-full bg-black/50 border ${hasOrderError ? 'border-rose-500 text-rose-300' : 'border-white/15 text-white'} rounded-xl px-3 py-2 text-xs font-mono focus:outline-none focus:border-amber-500 transition`}
+                          />
+                          <span className="text-xs text-white/50 font-medium whitespace-nowrap">
+                            {unitPlural}
                           </span>
                         </div>
-                      ) : (
-                        /* Additional tiers remain editable */
-                        <div className="flex flex-col gap-1">
-                          <div className="flex items-center gap-1.5">
-                            <input
-                              type="number"
-                              min={idx === 1 ? currentMoqNum + 1 : prevQty + 1}
-                              step="1"
-                              value={tier.minimumQuantity ?? ''}
-                              onChange={e => handleAdditionalTierQtyChange(idx, e.target.value)}
-                              className={`w-24 bg-black/60 border ${hasOrderError ? 'border-rose-500 text-rose-300' : 'border-white/15 text-white'} rounded-lg px-2.5 py-1.5 text-xs font-mono focus:outline-none focus:border-amber-500`}
-                            />
-                            <span className="text-[11px] text-white/40">+{unitPlural}</span>
-                          </div>
-                          {hasOrderError && (
-                            <span className="text-[10px] text-rose-400 font-medium">
-                              Must be &gt; {idx === 1 ? `MOQ (${currentMoqNum})` : `Tier #${idx} (${prevQty})`}
-                            </span>
-                          )}
-                        </div>
-                      )}
-                    </td>
-
-                    {/* Effective Range (Auto-calculated) */}
-                    <td className="py-3 px-3 font-mono text-[11px] text-amber-400/90 font-medium whitespace-nowrap">
-                      {rangeLabel}
-                    </td>
-
-                    {/* Price Per Unit (Editable for all tiers) */}
-                    <td className="py-3 px-3">
-                      <div className="flex items-center gap-1.5">
-                        <input
-                          type="number"
-                          min="0"
-                          step="any"
-                          value={tier.pricePerUnit ? tier.pricePerUnit : ''}
-                          onChange={e => handleTierPriceChange(idx, e.target.value)}
-                          placeholder="e.g. 1200"
-                          className="w-32 bg-black/60 border border-white/15 text-amber-400 font-mono font-bold rounded-lg px-2.5 py-1.5 text-xs focus:outline-none focus:border-amber-500"
-                        />
-                        <span className="text-[11px] text-white/40">{currency}</span>
+                        {hasOrderError && (
+                          <span className="text-[10px] text-rose-400 font-medium block">
+                            Must be &gt; {idx === 1 ? `MOQ (${currentMoqNum})` : `Tier #${idx} (${prevQty})`}
+                          </span>
+                        )}
                       </div>
-                    </td>
+                    )}
+                  </div>
 
-                    {/* Actions */}
-                    <td className="py-3 px-3 text-right">
-                      {idx > 0 ? (
-                        <button
-                          type="button"
-                          onClick={() => handleRemoveTier(idx)}
-                          className="text-white/40 hover:text-rose-400 p-1.5 rounded-lg hover:bg-white/5 transition cursor-pointer"
-                          title="Remove tier"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
-                      ) : (
-                        <span className="text-[10px] text-white/30 italic select-none">{t('required')}</span>
-                      )}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+                  {/* Unit Price */}
+                  <div>
+                    <label className="block text-[10px] uppercase font-bold text-white/60 mb-1">
+                      Unit Price ({currency}) *
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="number"
+                        min="0"
+                        step="any"
+                        value={tier.pricePerUnit ? tier.pricePerUnit : ''}
+                        onChange={e => handleTierPriceChange(idx, e.target.value)}
+                        placeholder="e.g. 1200"
+                        className="w-full bg-black/50 border border-white/15 text-amber-400 font-mono font-bold rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-amber-500 transition pr-24"
+                      />
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[11px] font-mono text-white/40 pointer-events-none select-none">
+                        {currency} / {unit}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
         </div>
+
+        {/* Full-width Add Tier Button */}
+        <button
+          type="button"
+          onClick={handleAddTier}
+          className="w-full py-3 bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-dashed border-amber-500/40 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer mt-2"
+        >
+          <Plus className="w-4 h-4" />
+          <span>+ Add Another Price Tier</span>
+        </button>
 
         {/* Validation error display */}
         {!validation.isValid && validation.error && (
-          <div className="p-3 bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs rounded-xl flex items-center gap-2 animate-fade-in">
+          <div className="p-3 bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs rounded-xl flex items-center gap-2 animate-fade-in mt-2">
             <AlertCircle className="w-4 h-4 shrink-0 text-rose-400" />
             <span>{validation.error}</span>
           </div>
         )}
 
-        <div className="text-[10px] text-white/40 flex items-center gap-1 pt-1">
+        <div className="text-[10px] text-white/40 flex items-center gap-1.5 pt-1">
           <HelpCircle className="w-3 h-3 text-amber-400 shrink-0" />
           <span>
-            Example: 26+ {unitPlural} = 1,200 {currency} each, 50+ {unitPlural} = 1,050 {currency} each, 100+ {unitPlural} = 950 {currency} each.
+            Example: 10 to 49 {unitPlural} = 1,200 {currency}, 50 to 99 {unitPlural} = 1,050 {currency}, 100+ {unitPlural} = 950 {currency}.
           </span>
         </div>
       </div>
