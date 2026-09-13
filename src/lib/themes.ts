@@ -14,19 +14,6 @@ export interface ThemeConfig {
 
 export const APP_THEMES: ThemeConfig[] = [
   {
-    id: 'terracotta-light',
-    name: 'Terracotta Architectural Light (Default)',
-    description: 'Crisp light background (#F8F7F4) with white card containers (#FFFFFF) and warm terracotta rust (#C06853) accents.',
-    accent: '#C06853',
-    hover: '#A85340',
-    bg: '#F8F7F4',
-    card: '#FFFFFF',
-    nav: '#FFFFFF',
-    badgeText: '#C06853',
-    btnText: '#FFFFFF',
-    gradientTo: '#A85340'
-  },
-  {
     id: 'cosmic-slate',
     name: 'Cosmic Slate (Original)',
     description: 'Sophisticated deep charcoal with premium amber gold accents.',
@@ -162,20 +149,28 @@ export function getThemeCSS(themeId: string): string {
   const theme = APP_THEMES.find(t => t.id === themeId) || APP_THEMES[0];
   const { accent, hover, bg, card, nav, badgeText, btnText, gradientTo } = theme;
   const gradTo = gradientTo || hover;
-  const isLight = theme.id === 'terracotta-light' || bg === '#F8F7F4';
 
   return `
     /* Body & Main backgrounds */
-    body {
+    body, .bg-\\[\\#050505\\], .bg-black {
       background-color: ${bg} !important;
-      ${isLight ? 'color: #1C1917 !important;' : ''}
+    }
+
+    /* Cards & Modals */
+    .bg-\\[\\#0d0d12\\], .bg-\\[\\#0c0c0c\\], .bg-zinc-900, .bg-\\[\\#12121a\\], .bg-neutral-900 {
+      background-color: ${card} !important;
+    }
+
+    /* Navigation & Headers */
+    .bg-\\[\\#060608\\]\\/85, .bg-\\[\\#060608\\], .bg-neutral-950\\/80, .bg-zinc-950\\/90 {
+      background-color: ${nav} !important;
     }
 
     /* Primary Accent Texts */
-    .text-amber-500, .text-amber-400, .text-amber-300, .text-terracotta {
+    .text-amber-500, .text-amber-400, .text-amber-300 {
       color: ${accent} !important;
     }
-    .hover\\:text-amber-400:hover, .hover\\:text-amber-500:hover, .hover\\:text-terracotta:hover {
+    .hover\\:text-amber-400:hover, .hover\\:text-amber-500:hover {
       color: ${hover} !important;
     }
     .text-amber-500\\/80 {
@@ -183,25 +178,25 @@ export function getThemeCSS(themeId: string): string {
     }
 
     /* Primary Accent Backgrounds & Buttons */
-    .bg-amber-500, .bg-amber-600, .bg-terracotta {
+    .bg-amber-500, .bg-amber-600 {
       background-color: ${accent} !important;
       color: ${btnText} !important;
     }
-    .hover\\:bg-amber-400:hover, .hover\\:bg-amber-500:hover, .hover\\:bg-amber-600:hover, .hover\\:bg-terracotta-hover:hover {
+    .hover\\:bg-amber-400:hover, .hover\\:bg-amber-500:hover, .hover\\:bg-amber-600:hover {
       background-color: ${hover} !important;
       color: ${btnText} !important;
     }
 
     /* Badge Backgrounds */
-    .bg-amber-500\\/10, .bg-terracotta\\/10 {
-      background-color: ${accent}1a !important;
+    .bg-amber-500\\/10 {
+      background-color: ${accent}1c !important;
       color: ${badgeText} !important;
     }
-    .bg-amber-500\\/15, .bg-terracotta\\/15 {
+    .bg-amber-500\\/15 {
       background-color: ${accent}26 !important;
       color: ${badgeText} !important;
     }
-    .bg-amber-500\\/20, .bg-terracotta\\/20 {
+    .bg-amber-500\\/20 {
       background-color: ${accent}33 !important;
       color: ${badgeText} !important;
     }
@@ -210,14 +205,14 @@ export function getThemeCSS(themeId: string): string {
     }
 
     /* Borders & Outlines */
-    .border-amber-500, .border-amber-500\\/30, .border-amber-500\\/20, .border-terracotta {
+    .border-amber-500, .border-amber-500\\/30, .border-amber-500\\/20 {
       border-color: ${accent}4d !important;
     }
-    .focus\\:border-amber-500:focus, .focus\\:border-terracotta:focus {
+    .focus\\:border-amber-500:focus {
       border-color: ${accent} !important;
     }
     input:focus, select:focus, textarea:focus {
-      border-color: ${accent} !important;
+      border-color: ${accent}cc !important;
       box-shadow: 0 0 0 4px ${accent}20 !important;
     }
 

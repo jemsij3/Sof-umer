@@ -233,8 +233,8 @@ function MainAppLayout() {
   const activeView = selectedProperty ? 'details' : view;
 
   return (
-    <div className="min-h-screen bg-[#F8F7F4] flex flex-col justify-between relative overflow-hidden font-sans text-stone-900">
-      <style>{getThemeCSS(systemSettings?.themeName || 'terracotta-light')}</style>
+    <div className="min-h-screen bg-[#050505] flex flex-col justify-between relative overflow-hidden font-sans text-[#F5F5F4]">
+      <style>{getThemeCSS(systemSettings?.themeName || 'cosmic-slate')}</style>
       
       {/* Top Universal Header Navbar */}
       <Navbar

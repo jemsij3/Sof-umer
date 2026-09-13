@@ -39,14 +39,12 @@ export const WizardStep1Category: React.FC<WizardStep1CategoryProps> = ({
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
       {/* 1. Category Grid */}
-      <div className="space-y-3 bg-white p-5 sm:p-6 rounded-2xl border border-stone-200 shadow-xs">
+      <div className="space-y-2">
         <div className="flex items-center justify-between">
-          <label className="block text-xs font-bold text-stone-900 uppercase tracking-widest">
+          <label className="block text-xs font-bold text-amber-500 uppercase tracking-widest">
             1. Select Main Category *
           </label>
-          <span className="text-[11px] font-semibold text-[#C06853] bg-[#C06853]/10 px-2.5 py-0.5 rounded-full border border-[#C06853]/20">
-            {majorCategory}
-          </span>
+          <span className="text-[11px] text-white/50">{majorCategory}</span>
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2.5">
@@ -66,11 +64,11 @@ export const WizardStep1Category: React.FC<WizardStep1CategoryProps> = ({
                 }}
                 className={`p-3.5 rounded-xl border flex flex-col items-center gap-2 transition duration-200 cursor-pointer ${
                   isActive
-                    ? 'bg-[#C06853]/10 border-[#C06853] text-[#C06853] font-bold shadow-xs'
-                    : 'bg-stone-50 border-stone-200 text-stone-700 hover:border-stone-300 hover:bg-white'
+                    ? 'bg-amber-500/15 border-amber-500 text-amber-400 font-bold shadow-lg shadow-amber-500/10'
+                    : 'bg-zinc-900/50 border-white/5 text-white/60 hover:border-white/20 hover:bg-zinc-900'
                 }`}
               >
-                <Icon className={`w-5 h-5 ${isActive ? 'text-[#C06853]' : 'text-stone-500'}`} />
+                <Icon className="w-5 h-5 text-amber-400" />
                 <span className="text-[11px] truncate w-full text-center font-medium">
                   {getTranslatedCategoryName(cat.name, currentLanguage)}
                 </span>
@@ -78,36 +76,36 @@ export const WizardStep1Category: React.FC<WizardStep1CategoryProps> = ({
             );
           })}
         </div>
-
-        {/* Subcategory Dropdown */}
-        {currentSubs.length > 0 && (
-          <div className="space-y-2 pt-3 border-t border-stone-100">
-            <label className="block text-xs font-bold text-stone-800 uppercase tracking-wider">
-              Subcategory ({majorCategory}) *
-            </label>
-            <select
-              value={subcategory}
-              onChange={e => setSubcategory(e.target.value)}
-              className="w-full p-3 bg-white border border-stone-200 focus:border-[#C06853] rounded-xl text-xs text-stone-900 focus:outline-none transition shadow-xs"
-            >
-              {currentSubs.map(sub => (
-                <option key={sub.id} value={sub.id} className="bg-white text-stone-900">
-                  {getTranslatedSubcategoryName(sub.name, currentLanguage)}
-                </option>
-              ))}
-            </select>
-          </div>
-        )}
       </div>
+
+      {/* Subcategory Dropdown */}
+      {currentSubs.length > 0 && (
+        <div className="space-y-2 pt-2 border-t border-white/5">
+          <label className="block text-xs font-bold text-white/80 uppercase tracking-wider">
+            Subcategory ({majorCategory}) *
+          </label>
+          <select
+            value={subcategory}
+            onChange={e => setSubcategory(e.target.value)}
+            className="w-full p-3 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white focus:outline-none transition"
+          >
+            {currentSubs.map(sub => (
+              <option key={sub.id} value={sub.id} className="bg-[#0c0c0c]">
+                {getTranslatedSubcategoryName(sub.name, currentLanguage)}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
 
       {/* 2. Selling Intent Radio Group (Hidden for Real Estate/Properties) */}
       {majorCategory !== 'Properties' && (
-        <div className="space-y-3 bg-white p-5 sm:p-6 rounded-2xl border border-stone-200 shadow-xs">
+        <div className="space-y-3 pt-2 border-t border-white/5">
           <div className="flex items-center justify-between">
-            <label className="block text-xs font-bold text-stone-900 uppercase tracking-wider font-mono">
+            <label className="block text-xs font-bold text-amber-400 uppercase tracking-wider font-mono">
               2. Selling Intent / Mode *
             </label>
-            <span className="text-[10px] text-stone-500 font-medium">Select how you want to sell</span>
+            <span className="text-[10px] text-white/40">Select how you want to sell</span>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -144,26 +142,26 @@ export const WizardStep1Category: React.FC<WizardStep1CategoryProps> = ({
                   tabIndex={0}
                   className={`relative p-4 rounded-2xl border transition-all text-left cursor-pointer flex flex-col justify-between ${
                     isSelected
-                      ? 'bg-[#C06853]/5 border-[#C06853] text-stone-900 shadow-sm ring-2 ring-[#C06853]/20'
-                      : 'bg-stone-50 border-stone-200 text-stone-700 hover:border-stone-300 hover:bg-white'
+                      ? 'bg-amber-500/10 border-amber-500 text-white shadow-lg ring-1 ring-amber-500/40'
+                      : 'bg-[#12121e] border-white/10 text-white/70 hover:border-white/25 hover:text-white'
                   }`}
                 >
                   {isSelected && (
-                    <div className="absolute top-3 right-3 w-5 h-5 bg-[#C06853] text-white rounded-full flex items-center justify-center shadow-xs">
+                    <div className="absolute top-3 right-3 w-5 h-5 bg-amber-500 text-black rounded-full flex items-center justify-center">
                       <Check className="w-3.5 h-3.5 stroke-[3]" />
                     </div>
                   )}
                   <div>
                     <div className="flex items-center gap-2 mb-2">
-                      <div className={`p-2 rounded-xl ${isSelected ? 'bg-[#C06853] text-white' : 'bg-stone-200/70 text-stone-700'}`}>
+                      <div className={`p-2 rounded-xl ${isSelected ? 'bg-amber-500 text-black' : 'bg-white/5 text-white/70'}`}>
                         <OptIcon className="w-4 h-4" />
                       </div>
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-[#C06853] bg-[#C06853]/10 px-2 py-0.5 rounded-full border border-[#C06853]/20">
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/20">
                         {opt.badge}
                       </span>
                     </div>
-                    <h4 className="text-xs font-bold text-stone-900 mb-1">{opt.title}</h4>
-                    <p className="text-[11px] text-stone-600 leading-snug">{opt.subtitle}</p>
+                    <h4 className="text-xs font-bold text-white mb-1">{opt.title}</h4>
+                    <p className="text-[11px] text-white/50 leading-snug">{opt.subtitle}</p>
                   </div>
                 </div>
               );
