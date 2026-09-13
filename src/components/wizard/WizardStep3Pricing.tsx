@@ -30,54 +30,56 @@ export const WizardStep3Pricing: React.FC<WizardStep3PricingProps> = ({
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
       {/* Currency & Base Unit */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <div>
-          <label className="block text-xs font-bold text-white/80 uppercase mb-1">
-            Currency *
-          </label>
-          <select
-            value={currency}
-            onChange={e => setCurrency(e.target.value)}
-            className="w-full p-3 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white focus:outline-none transition"
-          >
-            <option value="ETB" className="bg-[#0c0c0c]">ETB (Ethiopian Birr)</option>
-            <option value="USD" className="bg-[#0c0c0c]">USD ($)</option>
-            <option value="SAR" className="bg-[#0c0c0c]">SAR (Saudi Riyal)</option>
-            <option value="EUR" className="bg-[#0c0c0c]">EUR (€)</option>
-            <option value="AED" className="bg-[#0c0c0c]">AED (UAE Dirham)</option>
-          </select>
-        </div>
-
-        {majorCategory !== 'Properties' && (
+      <div className="bg-white p-5 sm:p-6 rounded-2xl border border-stone-200 shadow-xs">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
-            <label className="block text-xs font-bold text-white/80 uppercase mb-1">
-              Pricing Unit *
+            <label className="block text-xs font-bold text-stone-800 uppercase mb-1">
+              Currency *
             </label>
             <select
-              value={fieldsState.unit || fieldsState.wholesaleUnit || 'Piece'}
-              onChange={e => {
-                handleFieldChange('unit', e.target.value);
-                handleFieldChange('wholesaleUnit', e.target.value);
-              }}
-              className="w-full p-3 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white focus:outline-none transition"
+              value={currency}
+              onChange={e => setCurrency(e.target.value)}
+              className="w-full p-3 bg-white border border-stone-200 focus:border-[#C06853] rounded-xl text-xs text-stone-900 focus:outline-none transition shadow-xs"
             >
-              {STANDARD_UNITS.map(u => (
-                <option key={u} value={u} className="bg-[#0c0c0c]">{u}</option>
-              ))}
+              <option value="ETB">ETB (Ethiopian Birr)</option>
+              <option value="USD">USD ($)</option>
+              <option value="SAR">SAR (Saudi Riyal)</option>
+              <option value="EUR">EUR (€)</option>
+              <option value="AED">AED (UAE Dirham)</option>
             </select>
           </div>
-        )}
+
+          {majorCategory !== 'Properties' && (
+            <div>
+              <label className="block text-xs font-bold text-stone-800 uppercase mb-1">
+                Pricing Unit *
+              </label>
+              <select
+                value={fieldsState.unit || fieldsState.wholesaleUnit || 'Piece'}
+                onChange={e => {
+                  handleFieldChange('unit', e.target.value);
+                  handleFieldChange('wholesaleUnit', e.target.value);
+                }}
+                className="w-full p-3 bg-white border border-stone-200 focus:border-[#C06853] rounded-xl text-xs text-stone-900 focus:outline-none transition shadow-xs"
+              >
+                {STANDARD_UNITS.map(u => (
+                  <option key={u} value={u}>{u}</option>
+                ))}
+              </select>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Real Estate Pricing */}
       {majorCategory === 'Properties' && (
-        <div className="p-4 rounded-2xl bg-zinc-900/60 border border-white/10 space-y-3">
-          <h4 className="text-xs font-bold text-amber-400 uppercase tracking-wider">
+        <div className="p-5 sm:p-6 rounded-2xl bg-white border border-stone-200 shadow-xs space-y-3">
+          <h4 className="text-xs font-bold text-[#C06853] uppercase tracking-wider">
             Property Pricing
           </h4>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-bold text-white/80 uppercase mb-1">
+              <label className="block text-xs font-bold text-stone-800 uppercase mb-1">
                 Property Price ({currency}) *
               </label>
               <input
@@ -86,17 +88,17 @@ export const WizardStep3Pricing: React.FC<WizardStep3PricingProps> = ({
                 value={fieldsState.price || ''}
                 placeholder="e.g. 4500000"
                 onChange={e => handleFieldChange('price', e.target.value)}
-                className="w-full p-3 bg-black/50 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white focus:outline-none transition font-mono text-base font-bold text-amber-400"
+                className="w-full p-3 bg-white border border-stone-200 focus:border-[#C06853] rounded-xl text-stone-900 focus:outline-none transition font-mono text-base font-bold shadow-xs"
               />
             </div>
             <div>
-              <label className="block text-xs font-bold text-white/80 uppercase mb-1">
+              <label className="block text-xs font-bold text-stone-800 uppercase mb-1">
                 Negotiable?
               </label>
               <select
                 value={fieldsState.negotiable || 'No'}
                 onChange={e => handleFieldChange('negotiable', e.target.value)}
-                className="w-full p-3 bg-black/50 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white"
+                className="w-full p-3 bg-white border border-stone-200 focus:border-[#C06853] rounded-xl text-xs text-stone-900 shadow-xs"
               >
                 <option value="No">Fixed Price (Non-negotiable)</option>
                 <option value="Yes">Negotiable</option>
@@ -108,16 +110,16 @@ export const WizardStep3Pricing: React.FC<WizardStep3PricingProps> = ({
 
       {/* Single Units (Retail) */}
       {majorCategory !== 'Properties' && sellingType === 'Retail' && (
-        <div className="p-4 rounded-2xl bg-zinc-900/60 border border-white/10 space-y-4">
+        <div className="p-5 sm:p-6 rounded-2xl bg-white border border-stone-200 shadow-xs space-y-4">
           <div className="flex items-center gap-2">
-            <Tag className="w-4 h-4 text-amber-400" />
-            <h4 className="text-xs font-bold text-amber-400 uppercase tracking-wider">
+            <Tag className="w-4 h-4 text-[#C06853]" />
+            <h4 className="text-xs font-bold text-[#C06853] uppercase tracking-wider">
               Retail Pricing (Single Units)
             </h4>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div>
-              <label className="block text-xs font-bold text-white/80 uppercase mb-1">
+              <label className="block text-xs font-bold text-stone-800 uppercase mb-1">
                 Retail Price (per {fieldsState.unit || 'piece'}) *
               </label>
               <input
@@ -129,11 +131,11 @@ export const WizardStep3Pricing: React.FC<WizardStep3PricingProps> = ({
                   handleFieldChange('retailPrice', e.target.value);
                   handleFieldChange('price', e.target.value);
                 }}
-                className="w-full p-3 bg-black/50 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white font-mono font-bold text-amber-400"
+                className="w-full p-3 bg-white border border-stone-200 focus:border-[#C06853] rounded-xl text-stone-900 font-mono font-bold shadow-xs"
               />
             </div>
             <div>
-              <label className="block text-xs font-bold text-white/80 uppercase mb-1">
+              <label className="block text-xs font-bold text-stone-800 uppercase mb-1">
                 Available Stock Qty *
               </label>
               <input
@@ -145,17 +147,17 @@ export const WizardStep3Pricing: React.FC<WizardStep3PricingProps> = ({
                   handleFieldChange('availableQuantity', e.target.value);
                   handleFieldChange('quantity', e.target.value);
                 }}
-                className="w-full p-3 bg-black/50 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white"
+                className="w-full p-3 bg-white border border-stone-200 focus:border-[#C06853] rounded-xl text-xs text-stone-900 shadow-xs"
               />
             </div>
             <div>
-              <label className="block text-xs font-bold text-white/80 uppercase mb-1">
+              <label className="block text-xs font-bold text-stone-800 uppercase mb-1">
                 Price Negotiable?
               </label>
               <select
                 value={fieldsState.negotiable || 'No'}
                 onChange={e => handleFieldChange('negotiable', e.target.value)}
-                className="w-full p-3 bg-black/50 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white"
+                className="w-full p-3 bg-white border border-stone-200 focus:border-[#C06853] rounded-xl text-xs text-stone-900 shadow-xs"
               >
                 <option value="No">Fixed (No)</option>
                 <option value="Yes">Negotiable (Yes)</option>
@@ -168,16 +170,16 @@ export const WizardStep3Pricing: React.FC<WizardStep3PricingProps> = ({
       {/* Bulk Only (Wholesale) */}
       {majorCategory !== 'Properties' && sellingType === 'Wholesale' && (
         <div className="space-y-4">
-          <div className="p-4 rounded-2xl bg-zinc-900/60 border border-white/10 space-y-4">
+          <div className="p-5 sm:p-6 rounded-2xl bg-white border border-stone-200 shadow-xs space-y-4">
             <div className="flex items-center gap-2">
-              <Package className="w-4 h-4 text-amber-400" />
-              <h4 className="text-xs font-bold text-amber-400 uppercase tracking-wider">
+              <Package className="w-4 h-4 text-[#C06853]" />
+              <h4 className="text-xs font-bold text-[#C06853] uppercase tracking-wider">
                 Wholesale Settings & Minimum Order
               </h4>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div>
-                <label className="block text-xs font-bold text-white/80 uppercase mb-1">
+                <label className="block text-xs font-bold text-stone-800 uppercase mb-1">
                   Minimum Order Qty (MOQ &ge; 10) *
                 </label>
                 <input
@@ -190,11 +192,11 @@ export const WizardStep3Pricing: React.FC<WizardStep3PricingProps> = ({
                     handleFieldChange('minimumOrderQuantity', val);
                     setWholesaleTiers(prev => prev.map((t, idx) => idx === 0 ? { ...t, minimumQuantity: val } : t));
                   }}
-                  className="w-full p-3 bg-black/50 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white font-mono font-bold text-amber-400"
+                  className="w-full p-3 bg-white border border-stone-200 focus:border-[#C06853] rounded-xl text-stone-900 font-mono font-bold shadow-xs"
                 />
               </div>
               <div>
-                <label className="block text-xs font-bold text-white/80 uppercase mb-1">
+                <label className="block text-xs font-bold text-stone-800 uppercase mb-1">
                   Available Bulk Stock
                 </label>
                 <input
@@ -202,17 +204,17 @@ export const WizardStep3Pricing: React.FC<WizardStep3PricingProps> = ({
                   value={fieldsState.availableQuantity || ''}
                   placeholder="e.g. 500"
                   onChange={e => handleFieldChange('availableQuantity', e.target.value)}
-                  className="w-full p-3 bg-black/50 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white"
+                  className="w-full p-3 bg-white border border-stone-200 focus:border-[#C06853] rounded-xl text-xs text-stone-900 shadow-xs"
                 />
               </div>
               <div>
-                <label className="block text-xs font-bold text-white/80 uppercase mb-1">
+                <label className="block text-xs font-bold text-stone-800 uppercase mb-1">
                   Supplier Business Type
                 </label>
                 <select
                   value={fieldsState.businessType || 'Wholesaler'}
                   onChange={e => handleFieldChange('businessType', e.target.value)}
-                  className="w-full p-3 bg-black/50 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white"
+                  className="w-full p-3 bg-white border border-stone-200 focus:border-[#C06853] rounded-xl text-xs text-stone-900 shadow-xs"
                 >
                   <option value="Wholesaler">Wholesaler</option>
                   <option value="Manufacturer">Manufacturer</option>
@@ -223,7 +225,7 @@ export const WizardStep3Pricing: React.FC<WizardStep3PricingProps> = ({
             </div>
           </div>
 
-          {/* Wholesale Tier Cards (Vertical Stacked Cards) */}
+          {/* Wholesale Tier Cards */}
           <WholesalePricingTiersEditor
             tiers={wholesaleTiers}
             onChange={setWholesaleTiers}
@@ -239,16 +241,16 @@ export const WizardStep3Pricing: React.FC<WizardStep3PricingProps> = ({
       {majorCategory !== 'Properties' && (sellingType === 'Retail + Wholesale' || (sellingType as string) === 'Retail & Wholesale') && (
         <div className="space-y-5">
           {/* Distinct Header 1: Retail Pricing */}
-          <div className="p-4 rounded-2xl bg-zinc-900/60 border border-white/10 space-y-3">
+          <div className="p-5 sm:p-6 rounded-2xl bg-white border border-stone-200 shadow-xs space-y-3">
             <div className="flex items-center gap-2">
-              <Tag className="w-4 h-4 text-amber-400" />
-              <h4 className="text-xs font-bold text-amber-400 uppercase tracking-wider">
+              <Tag className="w-4 h-4 text-[#C06853]" />
+              <h4 className="text-xs font-bold text-[#C06853] uppercase tracking-wider">
                 🛍️ Retail Pricing (Single Units)
               </h4>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div>
-                <label className="block text-xs font-bold text-white/80 uppercase mb-1">
+                <label className="block text-xs font-bold text-stone-800 uppercase mb-1">
                   Retail Price (per {fieldsState.unit || 'piece'}) *
                 </label>
                 <input
@@ -260,11 +262,11 @@ export const WizardStep3Pricing: React.FC<WizardStep3PricingProps> = ({
                     handleFieldChange('retailPrice', e.target.value);
                     handleFieldChange('price', e.target.value);
                   }}
-                  className="w-full p-3 bg-black/50 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white font-mono font-bold text-amber-400"
+                  className="w-full p-3 bg-white border border-stone-200 focus:border-[#C06853] rounded-xl text-stone-900 font-mono font-bold shadow-xs"
                 />
               </div>
               <div>
-                <label className="block text-xs font-bold text-white/80 uppercase mb-1">
+                <label className="block text-xs font-bold text-stone-800 uppercase mb-1">
                   Available Stock Qty *
                 </label>
                 <input
@@ -276,17 +278,17 @@ export const WizardStep3Pricing: React.FC<WizardStep3PricingProps> = ({
                     handleFieldChange('availableQuantity', e.target.value);
                     handleFieldChange('quantity', e.target.value);
                   }}
-                  className="w-full p-3 bg-black/50 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white"
+                  className="w-full p-3 bg-white border border-stone-200 focus:border-[#C06853] rounded-xl text-xs text-stone-900 shadow-xs"
                 />
               </div>
               <div>
-                <label className="block text-xs font-bold text-white/80 uppercase mb-1">
+                <label className="block text-xs font-bold text-stone-800 uppercase mb-1">
                   Price Negotiable?
                 </label>
                 <select
                   value={fieldsState.negotiable || 'No'}
                   onChange={e => handleFieldChange('negotiable', e.target.value)}
-                  className="w-full p-3 bg-black/50 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white"
+                  className="w-full p-3 bg-white border border-stone-200 focus:border-[#C06853] rounded-xl text-xs text-stone-900 shadow-xs"
                 >
                   <option value="No">Fixed (No)</option>
                   <option value="Yes">Negotiable (Yes)</option>
@@ -296,16 +298,16 @@ export const WizardStep3Pricing: React.FC<WizardStep3PricingProps> = ({
           </div>
 
           {/* Distinct Header 2: Wholesale & Volume Pricing Tiers */}
-          <div className="p-4 rounded-2xl bg-amber-500/5 border border-amber-500/20 space-y-4">
+          <div className="p-5 sm:p-6 rounded-2xl bg-white border border-stone-200 shadow-xs space-y-4">
             <div className="flex items-center gap-2">
-              <Package className="w-4 h-4 text-amber-400" />
-              <h4 className="text-xs font-bold text-amber-400 uppercase tracking-wider">
+              <Package className="w-4 h-4 text-[#C06853]" />
+              <h4 className="text-xs font-bold text-[#C06853] uppercase tracking-wider">
                 📦 Wholesale & Volume Pricing Tiers
               </h4>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs font-bold text-white/80 uppercase mb-1">
+                <label className="block text-xs font-bold text-stone-800 uppercase mb-1">
                   Minimum Order Qty (MOQ &ge; 10) *
                 </label>
                 <input
@@ -318,17 +320,17 @@ export const WizardStep3Pricing: React.FC<WizardStep3PricingProps> = ({
                     handleFieldChange('minimumOrderQuantity', val);
                     setWholesaleTiers(prev => prev.map((t, idx) => idx === 0 ? { ...t, minimumQuantity: val } : t));
                   }}
-                  className="w-full p-3 bg-black/50 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white font-mono font-bold text-amber-400"
+                  className="w-full p-3 bg-white border border-stone-200 focus:border-[#C06853] rounded-xl text-stone-900 font-mono font-bold shadow-xs"
                 />
               </div>
               <div>
-                <label className="block text-xs font-bold text-white/80 uppercase mb-1">
+                <label className="block text-xs font-bold text-stone-800 uppercase mb-1">
                   Supplier Business Type
                 </label>
                 <select
                   value={fieldsState.businessType || 'Wholesaler'}
                   onChange={e => handleFieldChange('businessType', e.target.value)}
-                  className="w-full p-3 bg-black/50 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white"
+                  className="w-full p-3 bg-white border border-stone-200 focus:border-[#C06853] rounded-xl text-xs text-stone-900 shadow-xs"
                 >
                   <option value="Wholesaler">Wholesaler</option>
                   <option value="Manufacturer">Manufacturer</option>
@@ -338,7 +340,7 @@ export const WizardStep3Pricing: React.FC<WizardStep3PricingProps> = ({
               </div>
             </div>
 
-            {/* Wholesale Tier Cards (Vertical Stacked Cards) */}
+            {/* Wholesale Tier Cards */}
             <WholesalePricingTiersEditor
               tiers={wholesaleTiers}
               onChange={setWholesaleTiers}
@@ -352,14 +354,14 @@ export const WizardStep3Pricing: React.FC<WizardStep3PricingProps> = ({
       )}
 
       {/* Delivery & Logistics Checkboxes */}
-      <div className="p-4 rounded-2xl bg-zinc-900/60 border border-white/10 space-y-3">
+      <div className="p-5 sm:p-6 rounded-2xl bg-white border border-stone-200 shadow-xs space-y-3">
         <div className="flex items-center gap-2">
-          <Truck className="w-4 h-4 text-amber-400" />
-          <h4 className="text-xs font-bold text-white uppercase tracking-wider">
+          <Truck className="w-4 h-4 text-[#C06853]" />
+          <h4 className="text-xs font-bold text-stone-900 uppercase tracking-wider">
             Delivery & Logistics Options
           </h4>
         </div>
-        <p className="text-[11px] text-white/50">Select all fulfillment methods you provide to buyers:</p>
+        <p className="text-[11px] text-stone-500">Select all fulfillment methods you provide to buyers:</p>
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-1">
           {[
@@ -371,10 +373,10 @@ export const WizardStep3Pricing: React.FC<WizardStep3PricingProps> = ({
             return (
               <label
                 key={delOpt.id}
-                className={`p-3 rounded-xl border flex items-start gap-2.5 cursor-pointer transition ${
+                className={`p-3.5 rounded-xl border flex items-start gap-2.5 cursor-pointer transition ${
                   isChecked
-                    ? 'bg-amber-500/10 border-amber-500/60 text-white ring-1 ring-amber-500/30'
-                    : 'bg-black/40 border-white/10 text-white/70 hover:border-white/20'
+                    ? 'bg-[#C06853]/5 border-[#C06853] text-stone-900 ring-1 ring-[#C06853]/30'
+                    : 'bg-stone-50 border-stone-200 text-stone-700 hover:border-stone-300 hover:bg-white'
                 }`}
               >
                 <input
@@ -386,11 +388,11 @@ export const WizardStep3Pricing: React.FC<WizardStep3PricingProps> = ({
                       : [...currentDelivery, delOpt.id];
                     handleFieldChange('deliveryOptions', next);
                   }}
-                  className="mt-0.5 w-4 h-4 rounded text-amber-500 focus:ring-amber-400 border-white/20 bg-black"
+                  className="mt-0.5 w-4 h-4 rounded text-[#C06853] focus:ring-[#C06853] border-stone-300"
                 />
                 <div>
-                  <span className="text-xs font-bold text-white block">{delOpt.title}</span>
-                  <span className="text-[10px] text-white/40 block leading-tight">{delOpt.desc}</span>
+                  <span className="text-xs font-bold text-stone-900 block">{delOpt.title}</span>
+                  <span className="text-[10px] text-stone-500 block leading-tight">{delOpt.desc}</span>
                 </div>
               </label>
             );

@@ -9,52 +9,65 @@
 
 body {
   font-family: var(--font-sans);
-  background-color: #050505;
-  color: #F5F5F4;
+  background-color: #F8F7F4;
+  color: #1C1917;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
 }
 
-/* Sophisticated modern scrollbar */
+/* Sophisticated modern light scrollbar */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
 ::-webkit-scrollbar-track {
-  background: #08080a;
+  background: #F1EFEA;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.08);
+  background: #D6D3D1;
   border-radius: 9999px;
-  border: 2px solid #08080a;
+  border: 2px solid #F1EFEA;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.18);
+  background: #A8A29E;
 }
 
-/* Premium Forms & Controls */
+/* Premium Forms & Controls - Clean light theme default */
 input, select, textarea {
-  background-color: rgba(255, 255, 255, 0.02) !important;
-  border: 1px solid rgba(255, 255, 255, 0.08) !important;
-  color: #ffffff !important;
-  border-radius: 14px !important;
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
-  padding: 0.75rem 1rem !important;
+  background-color: #FFFFFF;
+  border: 1px solid #E5E2DC;
+  color: #1C1917;
+  border-radius: 14px;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  padding: 0.75rem 1rem;
 }
 
 input:focus, select:focus, textarea:focus {
-  background-color: rgba(255, 255, 255, 0.04) !important;
-  border-color: rgba(245, 158, 11, 0.5) !important; /* Elegant gold focus */
-  box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.1) !important;
-  outline: none !important;
+  background-color: #FFFFFF;
+  border-color: #C06853;
+  box-shadow: 0 0 0 4px rgba(192, 104, 83, 0.15);
+  outline: none;
 }
 
-/* Glassmorphic premium container styling */
+/* Glassmorphic light container styling */
 .glass-panel {
-  background: rgba(15, 15, 18, 0.6);
+  background: rgba(255, 255, 255, 0.85);
   backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(229, 226, 220, 0.8);
+}
+
+/* Dark Modal & Console overrides for inputs when dark modal is active */
+.create-modal-view input, .create-modal-view select, .create-modal-view textarea,
+.admin-console input, .admin-console select, .admin-console textarea {
+  background-color: rgba(18, 18, 24, 0.9) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  color: #FFFFFF !important;
+}
+.create-modal-view input:focus, .create-modal-view select:focus, .create-modal-view textarea:focus,
+.admin-console input:focus, .admin-console select:focus, .admin-console textarea:focus {
+  border-color: #C06853 !important;
+  box-shadow: 0 0 0 4px rgba(192, 104, 83, 0.25) !important;
 }
 
 /* Custom rounded card overrides - making them look premium and curved */
@@ -286,12 +299,18 @@ label, [class*="uppercase"] {
   letter-spacing: 0.05em !important;
 }
 label {
-  color: rgba(255, 255, 255, 0.92) !important; /* Bring up input labels to high contrast white */
-  margin-bottom: 0.5rem !important;
+  color: #292524;
+  margin-bottom: 0.35rem !important;
   display: block;
 }
+.create-modal-view label, .admin-console label, .user-dashboard label {
+  color: rgba(255, 255, 255, 0.92) !important;
+}
 input::placeholder, textarea::placeholder {
-  color: rgba(255, 255, 255, 0.55) !important; /* Make placeholders highly legible */
+  color: #A8A29E;
+}
+.create-modal-view input::placeholder, .admin-console input::placeholder {
+  color: rgba(255, 255, 255, 0.5) !important;
 }
 
 /* 5. Translation Layout Safety (Prevents cutoff / clipping for longer translations) */

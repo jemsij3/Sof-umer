@@ -57,16 +57,16 @@ export const WizardStep2Details: React.FC<WizardStep2DetailsProps> = ({
     <div className="space-y-6 animate-in fade-in duration-300">
       {/* Dynamic Inputs */}
       {majorCategory === 'Products' ? (
-        <div className="space-y-4">
-          <div className="border-l-2 border-amber-500 pl-3">
-            <h4 className="text-xs font-bold text-white tracking-wider uppercase">
+        <div className="space-y-4 bg-white p-5 sm:p-6 rounded-2xl border border-stone-200 shadow-xs">
+          <div className="border-l-2 border-[#C06853] pl-3">
+            <h4 className="text-xs font-bold text-stone-900 tracking-wider uppercase">
               Product Specifications
             </h4>
-            <p className="text-[10px] text-white/40">Enter accurate specifications for your product</p>
+            <p className="text-[10px] text-stone-500">Enter accurate specifications for your product</p>
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-white/80 uppercase mb-1">
+            <label className="block text-xs font-bold text-stone-800 uppercase mb-1">
               Product Title *
             </label>
             <input
@@ -75,13 +75,13 @@ export const WizardStep2Details: React.FC<WizardStep2DetailsProps> = ({
               value={fieldsState.title || ''}
               placeholder="e.g., iPhone 15 Pro Max 256GB Natural Titanium"
               onChange={e => handleFieldChange('title', e.target.value)}
-              className="w-full p-3 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white focus:outline-none transition"
+              className="w-full p-3 bg-white border border-stone-200 focus:border-[#C06853] rounded-xl text-xs text-stone-900 focus:outline-none transition shadow-xs"
             />
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div>
-              <label className="block text-xs font-bold text-white/80 uppercase mb-1">
+              <label className="block text-xs font-bold text-stone-800 uppercase mb-1">
                 Brand
               </label>
               <input
@@ -89,11 +89,11 @@ export const WizardStep2Details: React.FC<WizardStep2DetailsProps> = ({
                 value={fieldsState.brand || ''}
                 placeholder="e.g. Apple, Samsung, Nike"
                 onChange={e => handleFieldChange('brand', e.target.value)}
-                className="w-full p-3 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white focus:outline-none transition"
+                className="w-full p-3 bg-white border border-stone-200 focus:border-[#C06853] rounded-xl text-xs text-stone-900 focus:outline-none transition shadow-xs"
               />
             </div>
             <div>
-              <label className="block text-xs font-bold text-white/80 uppercase mb-1">
+              <label className="block text-xs font-bold text-stone-800 uppercase mb-1">
                 Model
               </label>
               <input
@@ -101,11 +101,11 @@ export const WizardStep2Details: React.FC<WizardStep2DetailsProps> = ({
                 value={fieldsState.model || ''}
                 placeholder="e.g. A2849, Galaxy S24"
                 onChange={e => handleFieldChange('model', e.target.value)}
-                className="w-full p-3 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white focus:outline-none transition"
+                className="w-full p-3 bg-white border border-stone-200 focus:border-[#C06853] rounded-xl text-xs text-stone-900 focus:outline-none transition shadow-xs"
               />
             </div>
             <div>
-              <label className="block text-xs font-bold text-white/80 uppercase mb-1">
+              <label className="block text-xs font-bold text-stone-800 uppercase mb-1">
                 Specs / Storage
               </label>
               <input
@@ -113,31 +113,31 @@ export const WizardStep2Details: React.FC<WizardStep2DetailsProps> = ({
                 value={fieldsState.storageSpec || ''}
                 placeholder="e.g. 256GB SSD, 16GB RAM, 100% Cotton"
                 onChange={e => handleFieldChange('storageSpec', e.target.value)}
-                className="w-full p-3 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white focus:outline-none transition"
+                className="w-full p-3 bg-white border border-stone-200 focus:border-[#C06853] rounded-xl text-xs text-stone-900 focus:outline-none transition shadow-xs"
               />
             </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-bold text-white/80 uppercase mb-1">
+              <label className="block text-xs font-bold text-stone-800 uppercase mb-1">
                 Condition *
               </label>
               <select
                 value={fieldsState.condition || 'New'}
                 onChange={e => handleFieldChange('condition', e.target.value)}
-                className="w-full p-3 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white focus:outline-none transition"
+                className="w-full p-3 bg-white border border-stone-200 focus:border-[#C06853] rounded-xl text-xs text-stone-900 focus:outline-none transition shadow-xs"
               >
-                <option value="New" className="bg-[#0c0c0c]">New (Brand new sealed in box)</option>
-                <option value="Refurbished" className="bg-[#0c0c0c]">Refurbished (Tested & certified)</option>
-                <option value="Used - Like New" className="bg-[#0c0c0c]">Used - Like New (Mint condition)</option>
-                <option value="Used - Good" className="bg-[#0c0c0c]">Used - Good (Normal signs of wear)</option>
-                <option value="For Parts / Not Working" className="bg-[#0c0c0c]">For Parts / Not Working</option>
+                <option value="New">New (Brand new sealed in box)</option>
+                <option value="Refurbished">Refurbished (Tested & certified)</option>
+                <option value="Used - Like New">Used - Like New (Mint condition)</option>
+                <option value="Used - Good">Used - Good (Normal signs of wear)</option>
+                <option value="For Parts / Not Working">For Parts / Not Working</option>
               </select>
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-white/80 uppercase mb-1">
+              <label className="block text-xs font-bold text-stone-800 uppercase mb-1">
                 Location *
               </label>
               <input
@@ -146,13 +146,13 @@ export const WizardStep2Details: React.FC<WizardStep2DetailsProps> = ({
                 value={fieldsState.location || ''}
                 placeholder="e.g. Bole Medhanialem, Addis Ababa"
                 onChange={e => handleFieldChange('location', e.target.value)}
-                className="w-full p-3 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white focus:outline-none transition"
+                className="w-full p-3 bg-white border border-stone-200 focus:border-[#C06853] rounded-xl text-xs text-stone-900 focus:outline-none transition shadow-xs"
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-white/80 uppercase mb-1">
+            <label className="block text-xs font-bold text-stone-800 uppercase mb-1">
               Product Description *
             </label>
             <textarea
@@ -161,12 +161,12 @@ export const WizardStep2Details: React.FC<WizardStep2DetailsProps> = ({
               value={fieldsState.description || ''}
               placeholder="Describe your item, key features, warranty terms, and packaging..."
               onChange={e => handleFieldChange('description', e.target.value)}
-              className="w-full p-3 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white focus:outline-none transition"
+              className="w-full p-3 bg-white border border-stone-200 focus:border-[#C06853] rounded-xl text-xs text-stone-900 focus:outline-none transition shadow-xs font-sans"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-white/80 uppercase mb-1">
+            <label className="block text-xs font-bold text-stone-800 uppercase mb-1">
               Contact Phone Number *
             </label>
             <input
@@ -175,21 +175,21 @@ export const WizardStep2Details: React.FC<WizardStep2DetailsProps> = ({
               value={fieldsState.contactPhone || ''}
               placeholder="+251 91 123 4567"
               onChange={e => handleFieldChange('contactPhone', e.target.value)}
-              className="w-full p-3 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white focus:outline-none transition"
+              className="w-full p-3 bg-white border border-stone-200 focus:border-[#C06853] rounded-xl text-xs text-stone-900 focus:outline-none transition shadow-xs"
             />
           </div>
         </div>
       ) : (
-        <div className="space-y-4">
-          <div className="border-l-2 border-amber-500 pl-3">
-            <h4 className="text-xs font-bold text-white tracking-wider uppercase">
+        <div className="space-y-4 bg-white p-5 sm:p-6 rounded-2xl border border-stone-200 shadow-xs">
+          <div className="border-l-2 border-[#C06853] pl-3">
+            <h4 className="text-xs font-bold text-stone-900 tracking-wider uppercase">
               {majorCategory} Details
             </h4>
-            <p className="text-[10px] text-white/40">Provide accurate information for {majorCategory}</p>
+            <p className="text-[10px] text-stone-500">Provide accurate information for {majorCategory}</p>
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-white/80 uppercase mb-1">
+            <label className="block text-xs font-bold text-stone-800 uppercase mb-1">
               Listing Title *
             </label>
             <input
@@ -198,51 +198,51 @@ export const WizardStep2Details: React.FC<WizardStep2DetailsProps> = ({
               value={fieldsState.title || ''}
               placeholder={`e.g. ${majorCategory === 'Properties' ? 'Modern 3 Bedroom Apartment in Bole' : majorCategory === 'Vehicles' ? 'Toyota RAV4 2022 Hybrid' : 'Professional Listing'}`}
               onChange={e => handleFieldChange('title', e.target.value)}
-              className="w-full p-3 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white focus:outline-none transition"
+              className="w-full p-3 bg-white border border-stone-200 focus:border-[#C06853] rounded-xl text-xs text-stone-900 focus:outline-none transition shadow-xs"
             />
           </div>
 
           {majorCategory === 'Properties' && (
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               <div>
-                <label className="block text-xs font-bold text-white/80 uppercase mb-1">Purpose *</label>
+                <label className="block text-xs font-bold text-stone-800 uppercase mb-1">Purpose *</label>
                 <select
                   value={fieldsState.purpose || 'Sale'}
                   onChange={e => handleFieldChange('purpose', e.target.value)}
-                  className="w-full p-2.5 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white"
+                  className="w-full p-2.5 bg-white border border-stone-200 focus:border-[#C06853] rounded-xl text-xs text-stone-900 shadow-xs"
                 >
                   <option value="Sale">For Sale</option>
                   <option value="Rent">For Rent</option>
                 </select>
               </div>
               <div>
-                <label className="block text-xs font-bold text-white/80 uppercase mb-1">Bedrooms</label>
+                <label className="block text-xs font-bold text-stone-800 uppercase mb-1">Bedrooms</label>
                 <input
                   type="number"
                   value={fieldsState.bedrooms || ''}
                   placeholder="3"
                   onChange={e => handleFieldChange('bedrooms', e.target.value)}
-                  className="w-full p-2.5 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white"
+                  className="w-full p-2.5 bg-white border border-stone-200 focus:border-[#C06853] rounded-xl text-xs text-stone-900 shadow-xs"
                 />
               </div>
               <div>
-                <label className="block text-xs font-bold text-white/80 uppercase mb-1">Bathrooms</label>
+                <label className="block text-xs font-bold text-stone-800 uppercase mb-1">Bathrooms</label>
                 <input
                   type="number"
                   value={fieldsState.bathrooms || ''}
                   placeholder="2"
                   onChange={e => handleFieldChange('bathrooms', e.target.value)}
-                  className="w-full p-2.5 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white"
+                  className="w-full p-2.5 bg-white border border-stone-200 focus:border-[#C06853] rounded-xl text-xs text-stone-900 shadow-xs"
                 />
               </div>
               <div>
-                <label className="block text-xs font-bold text-white/80 uppercase mb-1">Area (m²)</label>
+                <label className="block text-xs font-bold text-stone-800 uppercase mb-1">Area (m²)</label>
                 <input
                   type="number"
                   value={fieldsState.area || ''}
                   placeholder="150"
                   onChange={e => handleFieldChange('area', e.target.value)}
-                  className="w-full p-2.5 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white"
+                  className="w-full p-2.5 bg-white border border-stone-200 focus:border-[#C06853] rounded-xl text-xs text-stone-900 shadow-xs"
                 />
               </div>
             </div>
@@ -251,41 +251,41 @@ export const WizardStep2Details: React.FC<WizardStep2DetailsProps> = ({
           {majorCategory === 'Vehicles' && (
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               <div>
-                <label className="block text-xs font-bold text-white/80 uppercase mb-1">Make / Brand</label>
+                <label className="block text-xs font-bold text-stone-800 uppercase mb-1">Make / Brand</label>
                 <input
                   type="text"
                   value={fieldsState.brand || ''}
                   placeholder="Toyota"
                   onChange={e => handleFieldChange('brand', e.target.value)}
-                  className="w-full p-2.5 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white"
+                  className="w-full p-2.5 bg-white border border-stone-200 focus:border-[#C06853] rounded-xl text-xs text-stone-900 shadow-xs"
                 />
               </div>
               <div>
-                <label className="block text-xs font-bold text-white/80 uppercase mb-1">Model</label>
+                <label className="block text-xs font-bold text-stone-800 uppercase mb-1">Model</label>
                 <input
                   type="text"
                   value={fieldsState.model || ''}
                   placeholder="RAV4"
                   onChange={e => handleFieldChange('model', e.target.value)}
-                  className="w-full p-2.5 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white"
+                  className="w-full p-2.5 bg-white border border-stone-200 focus:border-[#C06853] rounded-xl text-xs text-stone-900 shadow-xs"
                 />
               </div>
               <div>
-                <label className="block text-xs font-bold text-white/80 uppercase mb-1">Year</label>
+                <label className="block text-xs font-bold text-stone-800 uppercase mb-1">Year</label>
                 <input
                   type="number"
                   value={fieldsState.year || ''}
                   placeholder="2022"
                   onChange={e => handleFieldChange('year', e.target.value)}
-                  className="w-full p-2.5 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white"
+                  className="w-full p-2.5 bg-white border border-stone-200 focus:border-[#C06853] rounded-xl text-xs text-stone-900 shadow-xs"
                 />
               </div>
               <div>
-                <label className="block text-xs font-bold text-white/80 uppercase mb-1">Condition</label>
+                <label className="block text-xs font-bold text-stone-800 uppercase mb-1">Condition</label>
                 <select
                   value={fieldsState.condition || 'Used'}
                   onChange={e => handleFieldChange('condition', e.target.value)}
-                  className="w-full p-2.5 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white"
+                  className="w-full p-2.5 bg-white border border-stone-200 focus:border-[#C06853] rounded-xl text-xs text-stone-900 shadow-xs"
                 >
                   <option value="New">Brand New</option>
                   <option value="Used">Used</option>
@@ -297,50 +297,50 @@ export const WizardStep2Details: React.FC<WizardStep2DetailsProps> = ({
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-bold text-white/80 uppercase mb-1">Location *</label>
+              <label className="block text-xs font-bold text-stone-800 uppercase mb-1">Location *</label>
               <input
                 type="text"
                 required
                 value={fieldsState.location || ''}
                 placeholder="e.g. Bole, Addis Ababa"
                 onChange={e => handleFieldChange('location', e.target.value)}
-                className="w-full p-3 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white focus:outline-none transition"
+                className="w-full p-3 bg-white border border-stone-200 focus:border-[#C06853] rounded-xl text-xs text-stone-900 focus:outline-none transition shadow-xs"
               />
             </div>
             <div>
-              <label className="block text-xs font-bold text-white/80 uppercase mb-1">Contact Phone *</label>
+              <label className="block text-xs font-bold text-stone-800 uppercase mb-1">Contact Phone *</label>
               <input
                 type="text"
                 required
                 value={fieldsState.contactPhone || ''}
                 placeholder="+251 91 123 4567"
                 onChange={e => handleFieldChange('contactPhone', e.target.value)}
-                className="w-full p-3 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white focus:outline-none transition"
+                className="w-full p-3 bg-white border border-stone-200 focus:border-[#C06853] rounded-xl text-xs text-stone-900 focus:outline-none transition shadow-xs"
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-white/80 uppercase mb-1">Description *</label>
+            <label className="block text-xs font-bold text-stone-800 uppercase mb-1">Description *</label>
             <textarea
               required
               rows={3}
               value={fieldsState.description || ''}
               placeholder="Detailed description of your listing..."
               onChange={e => handleFieldChange('description', e.target.value)}
-              className="w-full p-3 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white focus:outline-none transition"
+              className="w-full p-3 bg-white border border-stone-200 focus:border-[#C06853] rounded-xl text-xs text-stone-900 focus:outline-none transition shadow-xs font-sans"
             />
           </div>
         </div>
       )}
 
       {/* Combined Media Upload Drop Zone */}
-      <div className="space-y-3 pt-3 border-t border-white/5">
+      <div className="space-y-3 bg-white p-5 sm:p-6 rounded-2xl border border-stone-200 shadow-xs">
         <div className="flex items-center justify-between">
-          <label className="block text-xs font-bold text-amber-500 uppercase tracking-widest">
+          <label className="block text-xs font-bold text-stone-900 uppercase tracking-widest">
             Media Upload (Photos & Video) *
           </label>
-          <span className="text-[11px] font-mono text-white/50">
+          <span className="text-[11px] font-mono text-stone-500 font-medium">
             {imagesList.length} / 10 photos
           </span>
         </div>
@@ -357,8 +357,8 @@ export const WizardStep2Details: React.FC<WizardStep2DetailsProps> = ({
           }}
           className={`border-2 border-dashed rounded-2xl p-6 text-center transition-all ${
             isDragging
-              ? 'border-amber-500 bg-amber-500/10'
-              : 'border-white/15 bg-zinc-900/40 hover:border-amber-500/40 hover:bg-zinc-900/60'
+              ? 'border-[#C06853] bg-[#C06853]/5'
+              : 'border-stone-300 bg-stone-50/70 hover:border-[#C06853]/50 hover:bg-stone-50'
           }`}
         >
           <input
@@ -375,7 +375,7 @@ export const WizardStep2Details: React.FC<WizardStep2DetailsProps> = ({
           />
 
           <div className="flex flex-col items-center justify-center gap-2">
-            <div className="w-12 h-12 rounded-full bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400">
+            <div className="w-12 h-12 rounded-full bg-[#C06853]/10 border border-[#C06853]/20 flex items-center justify-center text-[#C06853]">
               <Camera className="w-6 h-6" />
             </div>
 
@@ -383,7 +383,7 @@ export const WizardStep2Details: React.FC<WizardStep2DetailsProps> = ({
               type="button"
               onClick={() => document.getElementById('media-file-input')?.click()}
               disabled={isCompressingPhotos || isVideoUploading}
-              className="px-5 py-2.5 bg-amber-500 hover:bg-amber-400 text-black font-extrabold text-xs rounded-xl transition cursor-pointer shadow-lg inline-flex items-center gap-2"
+              className="px-5 py-2.5 bg-[#C06853] hover:bg-[#A85340] text-white font-extrabold text-xs rounded-xl transition cursor-pointer shadow-xs inline-flex items-center gap-2"
             >
               {isCompressingPhotos ? (
                 <>
@@ -398,37 +398,37 @@ export const WizardStep2Details: React.FC<WizardStep2DetailsProps> = ({
               ) : (
                 <>
                   <Camera className="w-4 h-4 stroke-[2.5]" />
-                  <span>[📷 Upload Photos/Video]</span>
+                  <span>Upload Photos / Video</span>
                 </>
               )}
             </button>
 
-            <p className="text-[11px] text-white/40 mt-1">
+            <p className="text-[11px] text-stone-500 mt-1">
               Drag & drop photos or short video (JPG, PNG, WebP up to 10MB; MP4/MOV up to 50MB)
             </p>
 
             <button
               type="button"
               onClick={() => setShowUrlInput(!showUrlInput)}
-              className="text-[11px] text-amber-400 hover:text-amber-300 underline underline-offset-4 font-medium transition cursor-pointer mt-1"
+              className="text-[11px] text-[#C06853] hover:text-[#A85340] underline underline-offset-4 font-medium transition cursor-pointer mt-1"
             >
               {showUrlInput ? 'Hide URL paste input' : 'or paste image/video URL'}
             </button>
           </div>
 
           {showUrlInput && (
-            <div className="mt-4 pt-4 border-t border-white/10 flex flex-col sm:flex-row gap-2 max-w-xl mx-auto">
+            <div className="mt-4 pt-4 border-t border-stone-200 flex flex-col sm:flex-row gap-2 max-w-xl mx-auto">
               <input
                 type="url"
                 value={mediaUrlInput}
                 onChange={(e) => setMediaUrlInput(e.target.value)}
                 placeholder="https://example.com/photo.jpg or video link"
-                className="flex-1 bg-black/60 border border-white/15 focus:border-amber-500 text-white rounded-xl px-3 py-2 text-xs focus:outline-none"
+                className="flex-1 bg-white border border-stone-200 focus:border-[#C06853] text-stone-900 rounded-xl px-3 py-2 text-xs focus:outline-none shadow-xs"
               />
               <button
                 type="button"
                 onClick={handleAddMediaUrl}
-                className="px-4 py-2 bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 text-xs font-bold rounded-xl transition cursor-pointer whitespace-nowrap border border-amber-500/30"
+                className="px-4 py-2 bg-[#C06853]/10 hover:bg-[#C06853]/20 text-[#C06853] text-xs font-bold rounded-xl transition cursor-pointer whitespace-nowrap border border-[#C06853]/30"
               >
                 Add URL
               </button>
@@ -437,15 +437,15 @@ export const WizardStep2Details: React.FC<WizardStep2DetailsProps> = ({
         </div>
 
         {photoError && (
-          <div className="text-xs text-rose-400 bg-rose-500/10 border border-rose-500/20 p-2.5 rounded-xl flex items-center gap-2">
-            <AlertCircle className="w-4 h-4 shrink-0" />
+          <div className="text-xs text-rose-700 bg-rose-50 border border-rose-200 p-3 rounded-xl flex items-center gap-2">
+            <AlertCircle className="w-4 h-4 shrink-0 text-rose-600" />
             <span>{photoError}</span>
           </div>
         )}
 
         {videoError && (
-          <div className="text-xs text-rose-400 bg-rose-500/10 border border-rose-500/20 p-2.5 rounded-xl flex items-center gap-2">
-            <AlertCircle className="w-4 h-4 shrink-0" />
+          <div className="text-xs text-rose-700 bg-rose-50 border border-rose-200 p-3 rounded-xl flex items-center gap-2">
+            <AlertCircle className="w-4 h-4 shrink-0 text-rose-600" />
             <span>{videoError}</span>
           </div>
         )}
@@ -453,24 +453,24 @@ export const WizardStep2Details: React.FC<WizardStep2DetailsProps> = ({
         {/* Photos Thumbnail Grid */}
         {imagesList.length > 0 && (
           <div className="space-y-2 pt-2">
-            <span className="text-[11px] text-white/60 font-medium">
+            <span className="text-[11px] text-stone-600 font-medium">
               Uploaded Photos ({imagesList.length}) &bull; First photo is Cover Photo
             </span>
             <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 gap-2.5">
               {imagesList.map((img, idx) => (
-                <div key={idx} className="relative aspect-square rounded-xl overflow-hidden border border-white/15 bg-black group">
+                <div key={idx} className="relative aspect-square rounded-xl overflow-hidden border border-stone-200 bg-stone-100 group shadow-xs">
                   <img src={img} alt={`Upload ${idx + 1}`} className="w-full h-full object-cover" />
                   {idx === 0 && (
-                    <span className="absolute top-1.5 left-1.5 bg-amber-500 text-black text-[9px] font-black px-1.5 py-0.5 rounded shadow">
+                    <span className="absolute top-1.5 left-1.5 bg-[#C06853] text-white text-[9px] font-black px-1.5 py-0.5 rounded shadow-xs">
                       ⭐ Cover Photo
                     </span>
                   )}
-                  <div className="absolute inset-0 bg-black/70 opacity-0 group-hover:opacity-100 transition flex items-center justify-center gap-1.5 p-1">
+                  <div className="absolute inset-0 bg-stone-900/70 opacity-0 group-hover:opacity-100 transition flex items-center justify-center gap-1.5 p-1">
                     {idx > 0 && (
                       <button
                         type="button"
                         onClick={() => handleSetCoverPhoto(idx)}
-                        className="bg-amber-500 text-black text-[9px] font-bold px-2 py-1 rounded hover:bg-amber-400 transition"
+                        className="bg-[#C06853] text-white text-[9px] font-bold px-2 py-1 rounded hover:bg-[#A85340] transition"
                         title="Make Cover"
                       >
                         Cover
@@ -499,7 +499,7 @@ export const WizardStep2Details: React.FC<WizardStep2DetailsProps> = ({
                     <button
                       type="button"
                       onClick={() => setImagesList(prev => prev.filter((_, i) => i !== idx))}
-                      className="p-1 bg-rose-500/80 hover:bg-rose-500 rounded text-white text-[10px]"
+                      className="p-1 bg-rose-600 hover:bg-rose-700 rounded text-white text-[10px]"
                       title="Delete Photo"
                     >
                       <Trash2 className="w-3 h-3" />
@@ -512,15 +512,15 @@ export const WizardStep2Details: React.FC<WizardStep2DetailsProps> = ({
         )}
 
         {fieldsState.video && (
-          <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl flex items-center justify-between">
-            <div className="flex items-center gap-2 text-xs text-amber-300 font-medium truncate">
-              <Film className="w-4 h-4 text-amber-400 shrink-0" />
+          <div className="p-3 bg-[#C06853]/10 border border-[#C06853]/20 rounded-xl flex items-center justify-between">
+            <div className="flex items-center gap-2 text-xs text-[#C06853] font-medium truncate">
+              <Film className="w-4 h-4 text-[#C06853] shrink-0" />
               <span className="truncate">Video attached: {fieldsState.video.slice(0, 40)}...</span>
             </div>
             <button
               type="button"
               onClick={handleRemoveVideo}
-              className="text-xs text-rose-400 hover:text-rose-300 hover:underline cursor-pointer shrink-0 ml-2"
+              className="text-xs text-rose-600 hover:text-rose-700 hover:underline cursor-pointer shrink-0 ml-2 font-semibold"
             >
               Remove
             </button>
