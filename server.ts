@@ -342,17 +342,6 @@ const getInitialData = () => {
       isSystem: true
     },
     {
-      id: 'about-us',
-      titleEn: 'About Us',
-      titleOm: "Waa'ee Keenya",
-      titleAm: 'ስለ እኛ',
-      contentEn: "Named after the legendary Sof Omar Caves in Bale, Ethiopia, Sof Umer represents depth, safety, connectivity, and robust local heritage. Established in 2026, we serve as Ethiopia's premier multi-lingual property and product marketplace.",
-      contentOm: "Eenyummaan keenya holqa beekamaa Sof Omar Bale keessa jiru irraa kan moggaafame yoo ta'u, daldala amansiisaa, nageenya, fi seenaa naannoo keenyaa calaqqisiisa. Bara 2026 keessatti hundeeffame.",
-      contentAm: "ስሙ በባሌ፣ ኢትዮጵያ ከሚገኘው ታዋቂው የሶፍ ኡመር ዋሻዎች የተወሰደ ሲሆን፥ ጥልቀትን፣ ደህንነትን እና ጠንካራ የአካባቢ ቅርሶችን ይወክላል። በ2026 የተመሰረተ።",
-      iconName: 'Globe',
-      isSystem: true
-    },
-    {
       id: 'how-it-works',
       titleEn: 'How It Works',
       titleOm: 'Inni Akkamitti Hojjata',

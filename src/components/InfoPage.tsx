@@ -147,9 +147,9 @@ export default function InfoPage({ pageId, onBack, onOpenReportModalFromInfo }: 
       am: "ደህንነት እና ድጋፍ"
     },
     aboutHeader: {
-      en: "About Sof Umer",
-      om: "Waa'ee Sof Umer",
-      am: "ስለ ሶፍ ኡመር"
+      en: "About SOF-UMER",
+      om: "Waa'ee SOF-UMER",
+      am: "ስለ SOF-UMER"
     },
     tabs: {
       'marketplace-rules': {
@@ -188,9 +188,9 @@ export default function InfoPage({ pageId, onBack, onOpenReportModalFromInfo }: 
         am: "የግላዊነት ፖሊሲ"
       },
       'about-us': {
-        en: "About Us",
-        om: "Waa'ee Keenya",
-        am: "ስለ እኛ"
+        en: "About SOF-UMER",
+        om: "Waa'ee SOF-UMER",
+        am: "ስለ SOF-UMER"
       },
       'how-it-works': {
         en: "How It Works",
@@ -588,20 +588,20 @@ export default function InfoPage({ pageId, onBack, onOpenReportModalFromInfo }: 
 
       case 'about-us':
         return (
-          <div className="space-y-6">
+          <div className="space-y-6 text-left">
             <div className="flex items-center gap-3 border-b border-[#10b981]/15 pb-4">
-              <Globe className="w-8 h-8 text-emerald-400" />
+              <Globe className="w-8 h-8 text-emerald-400 shrink-0" />
               <div>
                 <h2 className="text-2xl font-serif text-white font-bold">
-                  {t('about.title')}
+                  {t('about.title') || (currentLanguage === 'om' ? "Waa'ee SOF-UMER" : currentLanguage === 'am' ? "ስለ SOF-UMER" : "About SOF-UMER")}
                 </h2>
                 <p className="text-xs text-white/40">
-                  {t('about.subtitle')}
+                  {t('about.subtitle') || (currentLanguage === 'om' ? "Gabaa dhiyeessii hedduu Itoophiyaa isa duraa kan namoota, daldalaafi carraawwan walitti hidhu." : currentLanguage === 'am' ? "ሰዎችን፣ ንግዶችን እና እድሎችን የሚያገናኝ የኢትዮጵያ ግንባር ቀደም ባለብዙ-ምድብ ገበያ።" : "Ethiopia's premier multi-category marketplace connecting people, businesses, and opportunities.")}
                 </p>
               </div>
             </div>
 
-            <div className="bg-[#0c0c10]/60 p-6 rounded-2xl border border-white/5 space-y-4 text-xs text-white/70 leading-relaxed">
+            <div className="bg-[#0c0c10]/60 p-6 md:p-8 rounded-2xl border border-white/5 space-y-4 text-xs text-white/70 leading-relaxed font-light">
               <p>
                 {t('about.p1')}
               </p>
@@ -615,23 +615,23 @@ export default function InfoPage({ pageId, onBack, onOpenReportModalFromInfo }: 
                 {t('about.p4')}
               </p>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 border-t border-white/5">
-                <div className="text-center p-3.5 bg-black/40 rounded-xl border border-white/5">
-                  <h4 className="text-base font-serif text-emerald-400 font-bold">{formatStatNumber(verifiedListingsCount)}</h4>
-                  <p className="text-[10px] uppercase text-white/40 mt-1">
-                    {t('about.verified_listings')}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-6 border-t border-white/5">
+                <div className="text-center p-4 bg-black/40 rounded-xl border border-white/5">
+                  <h4 className="text-lg font-serif text-emerald-400 font-bold">{formatStatNumber(verifiedListingsCount)}</h4>
+                  <p className="text-[10px] uppercase tracking-wider text-white/40 mt-1">
+                    {t('about.verified_listings') || (currentLanguage === 'om' ? "Beeksisa Mirkanaa'e" : currentLanguage === 'am' ? "የተረጋገጡ ማስታወቂያዎች" : "Verified Listings")}
                   </p>
                 </div>
-                <div className="text-center p-3.5 bg-black/40 rounded-xl border border-white/5">
-                  <h4 className="text-base font-serif text-amber-500 font-bold">{formatStatNumber(activeProfilesCount)}</h4>
-                  <p className="text-[10px] uppercase text-white/40 mt-1">
-                    {t('about.active_profiles')}
+                <div className="text-center p-4 bg-black/40 rounded-xl border border-white/5">
+                  <h4 className="text-lg font-serif text-amber-500 font-bold">{formatStatNumber(activeProfilesCount)}</h4>
+                  <p className="text-[10px] uppercase tracking-wider text-white/40 mt-1">
+                    {t('about.active_profiles') || (currentLanguage === 'om' ? "Profeelii Socho'aa" : currentLanguage === 'am' ? "ንቁ መገለጫዎች" : "Active Profiles")}
                   </p>
                 </div>
-                <div className="text-center p-3.5 bg-black/40 rounded-xl border border-white/5">
-                  <h4 className="text-base font-serif text-emerald-400 font-bold">3</h4>
-                  <p className="text-[10px] uppercase text-white/40 mt-1">
-                    {t('about.ethiopian_languages')}
+                <div className="text-center p-4 bg-black/40 rounded-xl border border-white/5">
+                  <h4 className="text-lg font-serif text-emerald-400 font-bold">3</h4>
+                  <p className="text-[10px] uppercase tracking-wider text-white/40 mt-1">
+                    {t('about.ethiopian_languages') || (currentLanguage === 'om' ? "Afaanota Itoophiyaa" : currentLanguage === 'am' ? "የኢትዮጵያ ቋንቋዎች" : "Ethiopian Languages")}
                   </p>
                 </div>
               </div>
@@ -979,7 +979,6 @@ export default function InfoPage({ pageId, onBack, onOpenReportModalFromInfo }: 
           else if (genericFeat.id === 'verify-ownership') IconComponent = UserCheck;
           else if (genericFeat.id === 'safety-tips') IconComponent = AlertTriangle;
           else if (genericFeat.id === 'how-it-works') IconComponent = HelpCircle;
-          else if (genericFeat.id === 'about-us') IconComponent = Globe;
           
           return (
             <div className="space-y-6 text-left animate-fade-in">
@@ -1067,15 +1066,18 @@ export default function InfoPage({ pageId, onBack, onOpenReportModalFromInfo }: 
               {getTranslation(tInfo.aboutHeader)}
             </h3>
             <div className="flex flex-col gap-1.5">
-              {(aboutFeatures.length > 0 ? aboutFeatures : [
-                { id: 'about-us', titleEn: 'About Us', titleOm: "Waa'ee Keenya", titleAm: 'ስለ እኛ' },
-                { id: 'how-it-works', titleEn: 'How It Works', titleOm: 'Inni Akkamitti Hojjata', titleAm: 'እንዴት እንደሚሰራ' },
-                { id: 'contact-us', titleEn: 'Contact Us', titleOm: 'Nu Quunnamaa', titleAm: 'እኛን ያግኙን' },
-                { id: 'careers', titleEn: 'Careers', titleOm: 'Carraa Hojii', titleAm: 'ስራዎች' }
-              ]).map(feat => {
-                const title = (feat as any).titleEn 
-                  ? (currentLanguage === 'om' ? (feat as any).titleOm : currentLanguage === 'am' ? (feat as any).titleAm : (feat as any).titleEn)
-                  : getTranslation((tInfo.tabs as any)[feat.id]);
+              {[
+                { id: 'about-us' },
+                { id: 'how-it-works' },
+                { id: 'contact-us' },
+                { id: 'careers' },
+                ...aboutFeatures.filter(f => !['about-us', 'how-it-works', 'contact-us', 'careers'].includes(f.id))
+              ].map(feat => {
+                const title = (tInfo.tabs as any)[feat.id] 
+                  ? getTranslation((tInfo.tabs as any)[feat.id])
+                  : ((feat as any).titleEn 
+                    ? (currentLanguage === 'om' ? (feat as any).titleOm : currentLanguage === 'am' ? (feat as any).titleAm : (feat as any).titleEn)
+                    : feat.id);
                 return (
                   <button
                     key={feat.id}
