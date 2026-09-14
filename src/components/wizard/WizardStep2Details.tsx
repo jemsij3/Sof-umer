@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { 
   Camera, ArrowLeft, ArrowRight, Trash2, Film, AlertCircle, Loader2 
 } from 'lucide-react';
+import { useApp } from '../../lib/AppContext';
 
 interface WizardStep2DetailsProps {
   majorCategory: string;
@@ -17,6 +18,7 @@ interface WizardStep2DetailsProps {
   isVideoUploading: boolean;
   photoError: string;
   videoError: string;
+  currentUser?: any;
 }
 
 export const WizardStep2Details: React.FC<WizardStep2DetailsProps> = ({
@@ -32,8 +34,22 @@ export const WizardStep2Details: React.FC<WizardStep2DetailsProps> = ({
   isCompressingPhotos,
   isVideoUploading,
   photoError,
-  videoError
+  videoError,
+  currentUser
 }) => {
+  const { currentUser: contextUser } = useApp();
+  const user = currentUser || contextUser;
+
+  const formData = fieldsState;
+  const setFormData = (updater: any) => {
+    if (typeof updater === 'function') {
+      const next = updater(fieldsState);
+      Object.keys(next).forEach(k => handleFieldChange(k, next[k]));
+    } else {
+      Object.keys(updater).forEach(k => handleFieldChange(k, updater[k]));
+    }
+  };
+
   const [isDragging, setIsDragging] = useState(false);
   const [showUrlInput, setShowUrlInput] = useState(false);
   const [mediaUrlInput, setMediaUrlInput] = useState('');
@@ -178,6 +194,31 @@ export const WizardStep2Details: React.FC<WizardStep2DetailsProps> = ({
               className="w-full p-3 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white focus:outline-none transition"
             />
           </div>
+
+          {/* Admin-Only: Listing on Behalf of Owner */}
+          {(user?.role === 'admin' || user?.isAdmin) && (
+            <div className="flex flex-col gap-2 my-4 p-4 bg-[#141418] border border-[#F5A623]/30 rounded-xl">
+              <div className="flex items-center gap-2">
+                <span className="text-xs bg-[#F5A623] text-black font-bold px-2 py-0.5 rounded uppercase">
+                  Admin Only
+                </span>
+                <label className="text-sm font-medium text-[#F5A623] tracking-wider">
+                  Property / Item Owner Name *
+                </label>
+              </div>
+              <input
+                type="text"
+                placeholder="e.g., Abebe Kebede (Client Name)"
+                value={formData.ownerName || ''}
+                onChange={(e) => setFormData({ ...formData, ownerName: e.target.value })}
+                className="w-full bg-[#1A1B22] text-white border border-[#22242E] rounded-lg p-3 focus:border-[#F5A623] outline-none text-sm placeholder:text-gray-500"
+                required={(user?.role === 'admin' || user?.isAdmin)}
+              />
+              <p className="text-xs text-gray-400">
+                Enter the full name of the owner you are listing on behalf of.
+              </p>
+            </div>
+          )}
         </div>
       ) : (
         <div className="space-y-4">
@@ -351,6 +392,31 @@ export const WizardStep2Details: React.FC<WizardStep2DetailsProps> = ({
               className="w-full p-3 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white focus:outline-none transition"
             />
           </div>
+
+          {/* Admin-Only: Listing on Behalf of Owner */}
+          {(user?.role === 'admin' || user?.isAdmin) && (
+            <div className="flex flex-col gap-2 my-4 p-4 bg-[#141418] border border-[#F5A623]/30 rounded-xl">
+              <div className="flex items-center gap-2">
+                <span className="text-xs bg-[#F5A623] text-black font-bold px-2 py-0.5 rounded uppercase">
+                  Admin Only
+                </span>
+                <label className="text-sm font-medium text-[#F5A623] tracking-wider">
+                  Property / Item Owner Name *
+                </label>
+              </div>
+              <input
+                type="text"
+                placeholder="e.g., Abebe Kebede (Client Name)"
+                value={formData.ownerName || ''}
+                onChange={(e) => setFormData({ ...formData, ownerName: e.target.value })}
+                className="w-full bg-[#1A1B22] text-white border border-[#22242E] rounded-lg p-3 focus:border-[#F5A623] outline-none text-sm placeholder:text-gray-500"
+                required={(user?.role === 'admin' || user?.isAdmin)}
+              />
+              <p className="text-xs text-gray-400">
+                Enter the full name of the owner you are listing on behalf of.
+              </p>
+            </div>
+          )}
         </div>
       )}
 

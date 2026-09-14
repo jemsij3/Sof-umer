@@ -1349,6 +1349,7 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
               isVideoUploading={isVideoUploading}
               photoError={photoError}
               videoError={videoError}
+              currentUser={currentUser}
             />
           )}
 
