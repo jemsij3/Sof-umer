@@ -1,6 +1,7 @@
 import React from 'react';
 import { 
-  Camera, MapPin, Phone, User as UserIcon, Sparkles, Loader2 
+  Camera, MapPin, Phone, User as UserIcon, Sparkles, Loader2,
+  BedDouble, Bath, Maximize, Truck, ShieldCheck, Tag
 } from 'lucide-react';
 import { NormalizedSellingType, getPluralizedUnit } from '../../utils/wholesalePricing';
 import { getTranslatedCategoryName, getTranslatedSubcategoryName } from '../../lib/categoriesData';
@@ -56,10 +57,36 @@ export const WizardStep4Review: React.FC<WizardStep4ReviewProps> = ({
 }) => {
   const deliveryOptions: string[] = Array.isArray(fieldsState.deliveryOptions) ? fieldsState.deliveryOptions : [];
 
+  const isRealEstate = 
+    majorCategory === 'Properties' || 
+    majorCategory?.toLowerCase() === 'properties' || 
+    fieldsState?.category === 'properties' || 
+    fieldsState?.category === 'Properties';
+
+  const isVehicles = 
+    majorCategory === 'Vehicles' || 
+    majorCategory?.toLowerCase() === 'vehicles';
+
+  const isProducts = 
+    majorCategory === 'Products' || 
+    majorCategory?.toLowerCase() === 'products';
+
+  // Normalize numeric fields safely
+  const bedroomsNum = fieldsState?.bedrooms !== undefined && fieldsState?.bedrooms !== '' ? Number(fieldsState.bedrooms) : undefined;
+  const bathroomsNum = fieldsState?.bathrooms !== undefined && fieldsState?.bathrooms !== '' ? Number(fieldsState.bathrooms) : undefined;
+  const areaNum = fieldsState?.area !== undefined && fieldsState?.area !== '' ? Number(fieldsState.area) : undefined;
+
+  const hasPhysicalSpecs = isRealEstate && (
+    (bedroomsNum !== undefined && bedroomsNum > 0) || 
+    (bathroomsNum !== undefined && bathroomsNum > 0) || 
+    (areaNum !== undefined && areaNum > 0)
+  );
+
   return (
     <div className="space-y-5 animate-in fade-in duration-300">
       {/* Preview Listing Card */}
-      <div className="bg-zinc-900/60 rounded-2xl border border-white/10 overflow-hidden shadow-xl max-w-xl mx-auto">
+      <div className="bg-[#141418] rounded-2xl border border-[#22242E] overflow-hidden shadow-xl max-w-xl mx-auto">
+        {/* 1. HEADER & MEDIA PREVIEW */}
         <div className="relative h-56 bg-zinc-800">
           <img
             src={imagesList[0] || 'https://images.unsplash.com/photo-1613490493576-7fde63acd811?auto=format&fit=crop&w=1200&q=80'}
@@ -67,12 +94,12 @@ export const WizardStep4Review: React.FC<WizardStep4ReviewProps> = ({
             className="w-full h-full object-cover"
             referrerPolicy="no-referrer"
           />
-          <div className="absolute top-3 left-3 bg-black/75 backdrop-blur-md px-3 py-1 rounded-full text-[10px] font-bold text-amber-400 uppercase tracking-wider border border-white/10">
+          <div className="absolute top-3 left-3 bg-black/75 backdrop-blur-md px-3 py-1 rounded-full text-[10px] font-bold text-[#F5A623] uppercase tracking-wider border border-white/10">
             {getTranslatedCategoryName(majorCategory, currentLanguage)} &bull; {getTranslatedSubcategoryName(subcategory, currentLanguage)}
           </div>
           {imagesList.length > 1 && (
             <div className="absolute bottom-3 right-3 bg-black/80 px-2.5 py-1 rounded-md text-[10px] font-bold text-white flex items-center gap-1">
-              <Camera className="w-3 h-3 text-amber-400" />
+              <Camera className="w-3 h-3 text-[#F5A623]" />
               <span>{imagesList.length} photos</span>
             </div>
           )}
@@ -85,20 +112,20 @@ export const WizardStep4Review: React.FC<WizardStep4ReviewProps> = ({
                 {fieldsState.title || 'Untitled Listing'}
               </h3>
               <div className="text-xs text-white/70 flex items-start gap-1.5 mt-1.5 leading-relaxed bg-white/5 p-2 rounded-xl border border-white/5">
-                <MapPin className="w-3.5 h-3.5 text-amber-500 shrink-0 mt-0.5" />
+                <MapPin className="w-3.5 h-3.5 text-[#F5A623] shrink-0 mt-0.5" />
                 <span className="whitespace-pre-wrap break-words flex-1 text-white/90 leading-snug">
                   {fieldsState.location || 'Location not specified'}
                 </span>
               </div>
             </div>
-            <div className="text-right">
-              {majorCategory === 'Properties' ? (
-                <span className="text-lg font-extrabold text-amber-400 font-mono block">
+            <div className="text-right shrink-0">
+              {isRealEstate ? (
+                <span className="text-lg font-extrabold text-[#F5A623] font-mono block">
                   {fieldsState.price ? `${Number(fieldsState.price).toLocaleString()} ${currency}` : 'Contact for Price'}
                 </span>
               ) : sellingType === 'Wholesale' ? (
                 <>
-                  <span className="text-lg font-extrabold text-amber-400 font-mono block">
+                  <span className="text-lg font-extrabold text-[#F5A623] font-mono block">
                     {wholesaleTiers[0]?.pricePerUnit ? `${Number(wholesaleTiers[0]?.pricePerUnit).toLocaleString()} ${currency}` : (fieldsState.wholesalePrice ? `${Number(fieldsState.wholesalePrice).toLocaleString()} ${currency}` : 'Contact for Price')}
                     <span className="text-xs font-normal text-amber-300/80 ml-1">/ {fieldsState.unit || 'Piece'}</span>
                   </span>
@@ -108,7 +135,7 @@ export const WizardStep4Review: React.FC<WizardStep4ReviewProps> = ({
                 </>
               ) : sellingType === 'Retail + Wholesale' || (sellingType as string) === 'Retail & Wholesale' ? (
                 <>
-                  <span className="text-lg font-extrabold text-amber-400 font-mono block">
+                  <span className="text-lg font-extrabold text-[#F5A623] font-mono block">
                     {fieldsState.retailPrice || fieldsState.price ? `${Number(fieldsState.retailPrice || fieldsState.price).toLocaleString()} ${currency}` : 'Contact for Price'}
                   </span>
                   <span className="text-[10px] text-amber-300 font-bold block mt-0.5">
@@ -116,54 +143,208 @@ export const WizardStep4Review: React.FC<WizardStep4ReviewProps> = ({
                   </span>
                 </>
               ) : (
-                <span className="text-lg font-extrabold text-amber-400 font-mono block">
+                <span className="text-lg font-extrabold text-[#F5A623] font-mono block">
                   {fieldsState.retailPrice || fieldsState.price ? `${Number(fieldsState.retailPrice || fieldsState.price).toLocaleString()} ${currency}` : 'Contact for Price'}
                 </span>
               )}
             </div>
           </div>
 
-          {/* Specifications Pills */}
-          <div className="flex flex-wrap gap-2 pt-2 border-t border-white/5 text-[11px]">
-            {fieldsState.brand && (
-              <span className="bg-white/5 border border-white/10 px-2.5 py-1 rounded-lg text-white/80">
-                Brand: <strong>{fieldsState.brand}</strong>
-              </span>
-            )}
-            {fieldsState.model && (
-              <span className="bg-white/5 border border-white/10 px-2.5 py-1 rounded-lg text-white/80">
-                Model: <strong>{fieldsState.model}</strong>
-              </span>
-            )}
+          {/* 2. SPECIFICATIONS & CONDITION GRID */}
+          {/* Top Primary Physical Specs for Real Estate (Bedrooms, Bathrooms, Area) */}
+          {hasPhysicalSpecs && (
+            <div className="grid grid-cols-3 gap-2 text-center my-3 border-y border-[#22242E] py-3 bg-[#0A0A0C]/50 rounded-xl">
+              {bedroomsNum !== undefined && bedroomsNum > 0 && (
+                <div className="bg-[#1A1B22] rounded-xl p-2.5 border border-[#22242E]">
+                  <BedDouble className="w-4 h-4 text-[#F5A623] mx-auto mb-1" />
+                  <span className="text-sm font-bold text-white block">{bedroomsNum}</span>
+                  <span className="text-[9px] font-bold text-[#F5A623] uppercase tracking-wider">
+                    BEDROOMS
+                  </span>
+                </div>
+              )}
+              {bathroomsNum !== undefined && bathroomsNum > 0 && (
+                <div className="bg-[#1A1B22] rounded-xl p-2.5 border border-[#22242E]">
+                  <Bath className="w-4 h-4 text-[#F5A623] mx-auto mb-1" />
+                  <span className="text-sm font-bold text-white block">{bathroomsNum}</span>
+                  <span className="text-[9px] font-bold text-[#F5A623] uppercase tracking-wider">
+                    BATHROOMS
+                  </span>
+                </div>
+              )}
+              {areaNum !== undefined && areaNum > 0 && (
+                <div className="bg-[#1A1B22] rounded-xl p-2.5 border border-[#22242E]">
+                  <Maximize className="w-4 h-4 text-[#F5A623] mx-auto mb-1" />
+                  <span className="text-sm font-bold text-white block">{areaNum} m²</span>
+                  <span className="text-[9px] font-bold text-[#F5A623] uppercase tracking-wider">
+                    TOTAL AREA
+                  </span>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Dynamic Specs & Condition Preview Grid (Deduped - No area/bedrooms/bathrooms repeated) */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 my-3">
+            {/* Condition / Furnishing */}
             {fieldsState.condition && (
-              <span className="bg-white/5 border border-white/10 px-2.5 py-1 rounded-lg text-white/80">
-                Condition: <strong>{fieldsState.condition}</strong>
-              </span>
+              <div className="bg-[#1A1B22] p-2.5 rounded-xl border border-[#22242E]">
+                <span className="text-[#F5A623] text-[10px] font-semibold uppercase block mb-0.5 tracking-wider">
+                  {isRealEstate ? 'Condition / Furnishing' : 'Condition'}
+                </span>
+                <span className="text-white text-xs font-medium truncate block">
+                  {fieldsState.condition}
+                </span>
+              </div>
             )}
+
+            {/* Subcategory */}
+            {subcategory && (
+              <div className="bg-[#1A1B22] p-2.5 rounded-xl border border-[#22242E]">
+                <span className="text-[#F5A623] text-[10px] font-semibold uppercase block mb-0.5 tracking-wider">
+                  Subcategory
+                </span>
+                <span className="text-white text-xs font-medium truncate block">
+                  {getTranslatedSubcategoryName(subcategory, currentLanguage)}
+                </span>
+              </div>
+            )}
+
+            {/* Purpose (Real Estate) */}
+            {isRealEstate && fieldsState.purpose && (
+              <div className="bg-[#1A1B22] p-2.5 rounded-xl border border-[#22242E]">
+                <span className="text-[#F5A623] text-[10px] font-semibold uppercase block mb-0.5 tracking-wider">
+                  Purpose
+                </span>
+                <span className="text-white text-xs font-medium truncate block">
+                  {fieldsState.purpose === 'Rent' ? 'For Rent' : 'For Sale'}
+                </span>
+              </div>
+            )}
+
+            {/* Brand (Vehicles & Goods) */}
+            {fieldsState.brand && (
+              <div className="bg-[#1A1B22] p-2.5 rounded-xl border border-[#22242E]">
+                <span className="text-[#F5A623] text-[10px] font-semibold uppercase block mb-0.5 tracking-wider">
+                  Brand
+                </span>
+                <span className="text-white text-xs font-medium truncate block">
+                  {fieldsState.brand}
+                </span>
+              </div>
+            )}
+
+            {/* Model (Vehicles & Goods) */}
+            {fieldsState.model && (
+              <div className="bg-[#1A1B22] p-2.5 rounded-xl border border-[#22242E]">
+                <span className="text-[#F5A623] text-[10px] font-semibold uppercase block mb-0.5 tracking-wider">
+                  Model
+                </span>
+                <span className="text-white text-xs font-medium truncate block">
+                  {fieldsState.model}
+                </span>
+              </div>
+            )}
+
+            {/* Year (Vehicles) */}
+            {fieldsState.year && (
+              <div className="bg-[#1A1B22] p-2.5 rounded-xl border border-[#22242E]">
+                <span className="text-[#F5A623] text-[10px] font-semibold uppercase block mb-0.5 tracking-wider">
+                  Year
+                </span>
+                <span className="text-white text-xs font-medium truncate block">
+                  {fieldsState.year}
+                </span>
+              </div>
+            )}
+
+            {/* Storage / Specs (Products) */}
             {fieldsState.storageSpec && (
-              <span className="bg-white/5 border border-white/10 px-2.5 py-1 rounded-lg text-white/80">
-                Specs: <strong>{fieldsState.storageSpec}</strong>
-              </span>
+              <div className="bg-[#1A1B22] p-2.5 rounded-xl border border-[#22242E]">
+                <span className="text-[#F5A623] text-[10px] font-semibold uppercase block mb-0.5 tracking-wider">
+                  Specs
+                </span>
+                <span className="text-white text-xs font-medium truncate block">
+                  {fieldsState.storageSpec}
+                </span>
+              </div>
             )}
-            {majorCategory !== 'Properties' && majorCategory?.toLowerCase() !== 'properties' && fieldsState?.category !== 'properties' && deliveryOptions.map((opt: string) => (
-              <span key={opt} className="bg-[#F5A623]/10 border border-[#F5A623]/20 text-[#F5A623] px-2.5 py-1 rounded-lg">
-                🚚 {opt}
-              </span>
-            ))}
+
+            {/* Selling Mode / Intent (Products & Non-Properties) */}
+            {!isRealEstate && (sellingType || fieldsState.sellingMode) && (
+              <div className="bg-[#1A1B22] p-2.5 rounded-xl border border-[#22242E]">
+                <span className="text-[#F5A623] text-[10px] font-semibold uppercase block mb-0.5 tracking-wider">
+                  Selling Mode
+                </span>
+                <span className="text-white text-xs font-medium truncate block">
+                  {sellingType === 'Retail' ? 'Single Units (Retail)' : 
+                   sellingType === 'Wholesale' ? 'Bulk Only (Wholesale)' : 
+                   sellingType === 'Retail + Wholesale' || (sellingType as string) === 'Retail & Wholesale' ? 'Dual Pricing (Retail + Bulk)' :
+                   fieldsState.sellingMode || sellingType}
+                </span>
+              </div>
+            )}
+
+            {/* Available Stock */}
+            {!isRealEstate && fieldsState.stockQuantity !== undefined && fieldsState.stockQuantity !== '' && (
+              <div className="bg-[#1A1B22] p-2.5 rounded-xl border border-[#22242E]">
+                <span className="text-[#F5A623] text-[10px] font-semibold uppercase block mb-0.5 tracking-wider">
+                  Available Stock
+                </span>
+                <span className="text-white text-xs font-medium truncate block">
+                  {fieldsState.stockQuantity} {fieldsState.unit || 'Units'}
+                </span>
+              </div>
+            )}
+
+            {/* Minimum Order Quantity (MOQ) */}
+            {!isRealEstate && (sellingType === 'Wholesale' || sellingType === 'Retail + Wholesale' || fieldsState.minimumOrderQuantity) && (
+              <div className="bg-[#1A1B22] p-2.5 rounded-xl border border-[#22242E]">
+                <span className="text-[#F5A623] text-[10px] font-semibold uppercase block mb-0.5 tracking-wider">
+                  Min. Order (MOQ)
+                </span>
+                <span className="text-white text-xs font-medium truncate block">
+                  {fieldsState.minimumOrderQuantity || wholesaleTiers[0]?.minimumQuantity || 10} {getPluralizedUnit(Number(fieldsState.minimumOrderQuantity || 10), fieldsState.unit || 'Piece')}
+                </span>
+              </div>
+            )}
           </div>
 
-          {/* Description snippet */}
-          <div className="text-xs text-white/60 line-clamp-2 pt-1 border-t border-white/5">
-            {fieldsState.description || 'No description provided'}
+          {/* 3. DESCRIPTION & LOGISTICS PREVIEW */}
+          {/* Configured Delivery & Logistics Preferences (Non-Properties) */}
+          {!isRealEstate && deliveryOptions.length > 0 && (
+            <div className="pt-2 border-t border-[#22242E]">
+              <span className="text-[10px] font-semibold text-[#F5A623] uppercase tracking-wider block mb-1.5">
+                Delivery & Logistics Options
+              </span>
+              <div className="flex flex-wrap gap-1.5">
+                {deliveryOptions.map((opt: string) => (
+                  <span key={opt} className="bg-[#F5A623]/10 border border-[#F5A623]/20 text-[#F5A623] px-2.5 py-1 rounded-lg text-xs font-medium flex items-center gap-1">
+                    <Truck className="w-3 h-3" />
+                    <span>{opt}</span>
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Full Description text */}
+          <div className="pt-2 border-t border-[#22242E]">
+            <span className="text-[10px] font-semibold text-[#F5A623] uppercase tracking-wider block mb-1">
+              Description
+            </span>
+            <p className="text-xs text-white/70 whitespace-pre-line leading-relaxed bg-[#0A0A0C]/40 p-3 rounded-xl border border-[#22242E]/60 max-h-36 overflow-y-auto">
+              {fieldsState.description || 'No description provided'}
+            </p>
           </div>
 
           {/* Seller Info Badge */}
-          <div className="bg-black/40 p-3 rounded-xl border border-white/5 flex items-center justify-between text-xs">
+          <div className="bg-[#1A1B22] p-3 rounded-xl border border-[#22242E] flex items-center justify-between text-xs">
             <div className="flex items-center gap-2">
-              <UserIcon className="w-4 h-4 text-amber-400" />
+              <UserIcon className="w-4 h-4 text-[#F5A623]" />
               <span className="text-white/80 font-medium">{fieldsState.ownerName || currentUser?.fullName || 'Seller'}</span>
             </div>
-            <div className="flex items-center gap-1.5 text-amber-400 font-mono">
+            <div className="flex items-center gap-1.5 text-[#F5A623] font-mono font-medium">
               <Phone className="w-3.5 h-3.5" />
               <span>{fieldsState.contactPhone || '+251 91 123 4567'}</span>
             </div>
