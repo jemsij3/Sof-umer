@@ -73,7 +73,7 @@ function MainAppLayout() {
   }, [selectedProperty]);
   
   // Info page ID state
-  const [activeInfoPageId, setActiveInfoPageId] = useState<string>('marketplace-rules');
+  const [activeInfoPageId, setActiveInfoPageId] = useState<string>('about-us');
 
   // Marketplace filter state
   const [marketplaceFilter, setMarketplaceFilter] = useState<{ majorCategory?: string; propertyType?: string; featuredOnly?: boolean; key?: number }>({});
