@@ -16,7 +16,7 @@ import {
   ChevronRight, UploadCloud, HelpCircle, FileText, AlertTriangle, Send, 
   ShieldCheck, Camera, Heart, Eye, Trash2, Edit2, Play, Pause, TrendingUp, 
   Info, List, Clock, Zap, DollarSign, Languages, Smartphone, Globe, ShieldAlert, Check, Plus, Lock, EyeOff, CheckSquare,
-  ChevronDown, Search, ArrowRight, Shield, ToggleLeft, ToggleRight, X, Folder, FolderOpen, Building, Gift
+  ChevronDown, Search, ArrowRight, Shield, ToggleLeft, ToggleRight, X, Folder, FolderOpen, Building, Gift, Briefcase
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -803,7 +803,7 @@ export default function UserDashboard({
     { id: 'messages', label_en: 'Messages', label_om: 'Ergawwan', label_am: 'መልእክቶች', icon: <MessageSquare className="w-4 h-4" />, badge: unreadMessagesCount > 0 ? unreadMessagesCount : undefined, badgeColor: 'bg-red-500 text-white' },
     { id: 'notifications', label_en: 'Notifications', label_om: 'Beeksisa Caffee', label_am: 'ማሳወቂያዎች', icon: <Bell className="w-4 h-4" />, badge: unreadNotifCount > 0 ? unreadNotifCount : undefined, badgeColor: 'bg-amber-500 text-black' },
     { id: 'recentlyviewed', label_en: 'Recently Viewed', label_om: 'Dhiyeenatti Daawwatame', label_am: 'በቅርቡ የታዩ', icon: <Clock className="w-4 h-4" /> },
-    { id: 'supportsafety', label_en: 'Support & Safety', label_om: 'Deggarsa & Nageenya', label_am: 'ድጋፍ እና ደህንነት', icon: <Shield className="w-4 h-4" /> },
+    { id: 'supportsafety', label_en: 'Support, Rules & Safety Guide', label_om: 'Deggarsa, Seera & Nageenya', label_am: 'ድጋፍ፣ ደንቦች እና የደህንነት መመሪያ', icon: <Shield className="w-4 h-4" /> },
     { id: 'settings', label_en: 'Settings', label_om: 'Sajatoo', label_am: 'ቅንብሮች', icon: <Settings className="w-4 h-4" /> },
     { id: 'logout', label_en: 'Log Out', label_om: 'Ba’i', label_am: 'ውጣ', icon: <LogOut className="w-4 h-4 text-red-400" /> }
   ];
@@ -1981,6 +1981,78 @@ export default function UserDashboard({
                   <div className="border-b border-white/5 pb-4">
                     <h3 className="text-lg font-bold text-white">Support, Rules & Safety Guide</h3>
                     <p className="text-[11px] text-white/40 mt-0.5">Explore secure guidelines, report problem tickets, or log official support requests.</p>
+                  </div>
+
+                  {/* Primary Navigation Cards for Help Center, Marketplace Rules, Safety Tips, Careers */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                    {[
+                      {
+                        id: 'help-center',
+                        titleEn: 'Help Center',
+                        titleOm: 'Giddugala Deggarsaa',
+                        titleAm: 'የእርዳታ ማዕከል',
+                        descEn: 'Browse help guides, FAQs, and instant user support.',
+                        descOm: 'Qajeelfama gargaarsaa, gaaffilee yeroo baay’ee gaafataman daawwadhaa.',
+                        descAm: 'የእርዳታ መመሪያዎችን፣ ተደጋጋሚ ጥያቄዎችን እና ድጋፍን ያግኙ።',
+                        icon: <HelpCircle className="w-5 h-5 text-emerald-400" />
+                      },
+                      {
+                        id: 'marketplace-rules',
+                        titleEn: 'Marketplace Rules',
+                        titleOm: 'Seera Gabaa',
+                        titleAm: 'የገበያ ቦታ ደንቦች',
+                        descEn: 'Listing standards, prohibited items, and platform policies.',
+                        descOm: 'Ulaagaalee beeksisaa, meeshaalee dhorkamaniifi seerota gabaa.',
+                        descAm: 'የማስታወቂያ መስፈርቶች፣ የተከለከሉ እቃዎች እና የገበያ ደንቦች።',
+                        icon: <FileText className="w-5 h-5 text-amber-400" />
+                      },
+                      {
+                        id: 'safety-tips',
+                        titleEn: 'Safety Tips',
+                        titleOm: 'Gorsa Nageenyaa',
+                        titleAm: 'የደህንነት ምክሮች',
+                        descEn: 'Verified safety recommendations for secure transactions.',
+                        descOm: 'Gorsawwan nageenyaa daldala amansiisaa gaggeessuuf.',
+                        descAm: 'ደህንነቱ የተጠበቀ ግብይት ለማድረግ የሚረዱ የደህንነት ምክሮች።',
+                        icon: <ShieldCheck className="w-5 h-5 text-emerald-400" />
+                      },
+                      {
+                        id: 'careers',
+                        titleEn: 'Careers',
+                        titleOm: 'Carraa Hojii',
+                        titleAm: 'ስራዎች',
+                        descEn: 'Join our team and explore active employment openings.',
+                        descOm: 'Garee keenyatti makamaa, carraawwan hojii banaa daawwadhaa.',
+                        descAm: 'ቡድናችንን ይቀላቀሉ፣ ክፍት የስራ እድሎችን ይመልከቱ።',
+                        icon: <Briefcase className="w-5 h-5 text-amber-400" />
+                      }
+                    ].map((item) => {
+                      const title = lang === 'om' ? item.titleOm : lang === 'am' ? item.titleAm : item.titleEn;
+                      const desc = lang === 'om' ? item.descOm : lang === 'am' ? item.descAm : item.descEn;
+                      return (
+                        <button
+                          key={item.id}
+                          type="button"
+                          onClick={() => onNavigateToInfo?.(item.id)}
+                          className="group p-4 bg-black/40 hover:bg-white/5 border border-white/10 hover:border-amber-500/40 rounded-2xl text-left transition-all duration-200 cursor-pointer flex flex-col justify-between"
+                        >
+                          <div>
+                            <div className="flex items-center justify-between mb-2.5">
+                              <div className="p-2 rounded-xl bg-white/5 group-hover:bg-amber-500/10 transition">
+                                {item.icon}
+                              </div>
+                              <ArrowRight className="w-3.5 h-3.5 text-white/30 group-hover:text-amber-400 group-hover:translate-x-1 transition-all" />
+                            </div>
+                            <h4 className="text-sm font-bold text-white group-hover:text-amber-400 transition">
+                              {title}
+                            </h4>
+                            <p className="text-[11px] text-white/50 font-light mt-1 line-clamp-2 leading-relaxed">
+                              {desc}
+                            </p>
+                          </div>
+                        </button>
+                      );
+                    })}
                   </div>
 
                   {/* Safety Advice Card */}
