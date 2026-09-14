@@ -53,7 +53,11 @@ import {
   Film,
   Trash2,
   Globe,
-  Copy
+  Copy,
+  Home,
+  Car,
+  Tag,
+  Sliders
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -365,8 +369,8 @@ export default function PropertyDetails({
 
   const categoryAllowedKeys: Record<string, string[]> = {
     Products: ['subcategory', 'brand', 'model', 'size', 'dimensions', 'color', 'material', 'condition', 'gender', 'clothing type', 'storage / spec'],
-    Properties: ['subcategory', 'property type', 'purpose', 'toilets', 'toilet', 'furnished', 'furnished status', 'parking', 'parking available', 'floor level', 'ownership', 'ownership / title deed', 'title deed', 'zoning'],
-    Vehicles: ['subcategory', 'vehicle type', 'make / brand', 'transmission', 'fuel type', 'engine capacity', 'year', 'mileage', 'mileage (km)', 'color', 'brand', 'condition', 'model'],
+    Properties: ['subcategory', 'property type', 'purpose', 'condition', 'property condition', 'property condition / status', 'furnished', 'furnished status', 'toilets', 'toilet', 'parking', 'parking available', 'floor level', 'ownership', 'ownership / title deed', 'title deed', 'zoning', 'bedrooms', 'bathrooms', 'area', 'area (m²)', 'total area'],
+    Vehicles: ['subcategory', 'vehicle type', 'body type', 'make / brand', 'transmission', 'fuel type', 'engine capacity', 'year', 'mileage', 'mileage (km)', 'color', 'brand', 'condition', 'model'],
     Jobs: ['subcategory', 'job type', 'employment type', 'sector', 'sector / industry', 'industry', 'salary range', 'qualification', 'education required', 'experience', 'experience required', 'deadline', 'application deadline'],
     Services: ['subcategory', 'service type', 'service category', 'pricing unit', 'years of experience', 'coverage area', 'availability', 'opening hours'],
     'Local Businesses': ['subcategory', 'business category', 'business type', 'opening hours', 'website', 'website / social link', 'services offered'],
@@ -463,6 +467,193 @@ export default function PropertyDetails({
       }
     }
   }
+
+  const listing = property;
+
+  // Safe helper to find a field from direct prop, specifications/attributes objects, or amenities "Key: Value"
+  const getListingMeta = (keys: string[]): string | undefined => {
+    for (const k of keys) {
+      const direct = (listing as any)[k];
+      if (direct !== undefined && direct !== null && String(direct).trim() !== '') {
+        return String(direct).trim();
+      }
+    }
+    const specs = (listing as any).specifications;
+    if (specs && typeof specs === 'object') {
+      for (const k of keys) {
+        const normTarget = k.toLowerCase().replace(/[^a-z0-9]/g, '');
+        for (const [sk, sv] of Object.entries(specs)) {
+          if (sk.toLowerCase().replace(/[^a-z0-9]/g, '') === normTarget) {
+            if (sv !== undefined && sv !== null && String(sv).trim() !== '') return String(sv).trim();
+          }
+        }
+      }
+    }
+    const attrs = (listing as any).attributes;
+    if (attrs && typeof attrs === 'object') {
+      for (const k of keys) {
+        const normTarget = k.toLowerCase().replace(/[^a-z0-9]/g, '');
+        for (const [ak, av] of Object.entries(attrs)) {
+          if (ak.toLowerCase().replace(/[^a-z0-9]/g, '') === normTarget) {
+            if (av !== undefined && av !== null && String(av).trim() !== '') return String(av).trim();
+          }
+        }
+      }
+    }
+    if (Array.isArray(listing.amenities)) {
+      for (const item of listing.amenities) {
+        if (typeof item === 'string' && item.includes(':')) {
+          const parts = item.split(':');
+          const aKey = parts[0].toLowerCase().replace(/[^a-z0-9]/g, '');
+          for (const k of keys) {
+            if (aKey === k.toLowerCase().replace(/[^a-z0-9]/g, '')) {
+              const aVal = parts.slice(1).join(':').trim();
+              if (aVal) return aVal;
+            }
+          }
+        }
+      }
+    }
+    return undefined;
+  };
+
+  const isVehiclesCategory = currentCategory === 'Vehicles' || listing.majorCategory === 'Vehicles' || listing.propertyType === 'Vehicles';
+  const isRealEstateCategory = currentCategory === 'Properties' || isProperty;
+  const isProductsCategory = !isRealEstateCategory && !isVehiclesCategory && currentCategory !== 'Jobs' && currentCategory !== 'Services' && currentCategory !== 'Community';
+
+  // Resolved metadata values with fallbacks
+  const metaCondition = listing.condition || getListingMeta(['condition', 'property condition', 'property condition / status', 'furnished', 'furnished status']);
+  const metaSubcategory = (listing as any).subcategory || (listing as any).subCategoryName || listing.propertyType || getListingMeta(['subcategory', 'property type', 'vehicle type']);
+  const metaPurpose = (listing as any).purpose || (listing as any).category || (listing.category ? (listing.category === 'Sale' || listing.category === 'For Sale' ? 'For Sale' : listing.category === 'Rent' || listing.category === 'For Rent' ? 'For Rent' : listing.category) : undefined) || getListingMeta(['purpose']);
+  
+  const metaBedrooms = (listing.bedrooms !== undefined && listing.bedrooms > 0) ? listing.bedrooms : (getListingMeta(['bedrooms', 'beds']) ? Number(getListingMeta(['bedrooms', 'beds'])) : undefined);
+  const metaBathrooms = (listing.bathrooms !== undefined && listing.bathrooms > 0) ? listing.bathrooms : (getListingMeta(['bathrooms', 'baths']) ? Number(getListingMeta(['bathrooms', 'baths'])) : undefined);
+  const metaArea = (listing.area !== undefined && listing.area > 0) ? listing.area : (getListingMeta(['area', 'total area', 'area (m²)', 'area m2']) ? Number(getListingMeta(['area', 'total area', 'area (m²)', 'area m2'])) : undefined);
+
+  // Vehicle specific metadata
+  const metaTransmission = (listing as any).transmission || getListingMeta(['transmission', 'gearbox']);
+  const metaFuelType = (listing as any).fuelType || (listing as any).fuel_type || getListingMeta(['fuel type', 'fuel', 'engine fuel']);
+  const metaMileage = (listing as any).mileage || getListingMeta(['mileage', 'odometer', 'mileage (km)', 'kilometers']);
+  const metaYear = (listing as any).year || getListingMeta(['year', 'model year', 'manufacture year']);
+  const metaBodyType = (listing as any).bodyType || (listing as any).vehicleType || getListingMeta(['body type', 'vehicle type', 'car type']);
+
+  // Products specific metadata
+  const metaBrand = listing.brand || getListingMeta(['brand', 'make']);
+  const metaModel = (listing as any).model || getListingMeta(['model']);
+  
+  let metaSellingMode = (listing as any).sellingMode || (listing as any).selling_mode;
+  if (!metaSellingMode && listing.sellingType) {
+    const stNorm = String(listing.sellingType).toLowerCase();
+    if (stNorm === 'retail') {
+      metaSellingMode = 'Single Units';
+    } else if (stNorm === 'wholesale') {
+      metaSellingMode = 'Bulk Only (MOQ)';
+    } else if (stNorm.includes('retail') && stNorm.includes('wholesale')) {
+      metaSellingMode = 'Dual Pricing';
+    } else {
+      metaSellingMode = listing.sellingType;
+    }
+  }
+  if (!metaSellingMode) {
+    metaSellingMode = getListingMeta(['selling mode', 'selling intent', 'selling type', 'sales mode']);
+  }
+
+  const metaMoq = (listing as any).moq ?? listing.minimumOrderQuantity ?? (getListingMeta(['moq', 'minimum order quantity', 'minimum order']) ? Number(getListingMeta(['moq', 'minimum order quantity', 'minimum order'])) : undefined);
+  const metaStock = (listing as any).stock ?? listing.availableQuantity ?? listing.retailQuantity ?? (getListingMeta(['stock', 'quantity', 'available stock', 'available quantity']) ? Number(getListingMeta(['stock', 'quantity', 'available stock', 'available quantity'])) : undefined);
+
+  // Leftover specs collector for Universal Fallback Card
+  const renderedFieldNames = new Set<string>();
+  const markRendered = (...names: (string | undefined)[]) => {
+    for (const name of names) {
+      if (!name) continue;
+      renderedFieldNames.add(name.toLowerCase().replace(/[^a-z0-9]/g, ''));
+    }
+  };
+
+  if (metaCondition) markRendered('condition', 'propertycondition', 'propertyconditionstatus', 'furnished', 'furnishedstatus');
+  if (metaSubcategory) markRendered('subcategory', 'propertytype', 'vehicletype', 'type');
+  if (metaPurpose) markRendered('purpose', 'category');
+  if (metaBedrooms) markRendered('bedrooms', 'beds');
+  if (metaBathrooms) markRendered('bathrooms', 'baths');
+  if (metaArea) markRendered('area', 'totalarea', 'aream2');
+  if (metaTransmission) markRendered('transmission', 'gearbox');
+  if (metaFuelType) markRendered('fueltype', 'fuel');
+  if (metaMileage) markRendered('mileage', 'odometer');
+  if (metaYear) markRendered('year', 'modelyear');
+  if (metaBodyType) markRendered('bodytype', 'vehicletype');
+  if (metaBrand) markRendered('brand', 'make');
+  if (metaModel) markRendered('model');
+  if (metaSellingMode) markRendered('sellingmode', 'sellingintent', 'sellingtype');
+  if (metaMoq) markRendered('moq', 'minimumorderquantity', 'minimumorder');
+  if (metaStock) markRendered('stock', 'quantity', 'availablestock', 'availablequantity', 'retailquantity');
+  
+  markRendered(
+    'id', 'title', 'description', 'price', 'currency', 'images', 'location', 'region', 
+    'city', 'address', 'landmark', 'latitude', 'longitude', 'ownerid', 'ownername', 
+    'contactphone', 'contactemail', 'createdat', 'publishedat', 'isfeatured', 
+    'isrecommended', 'viewscount', 'isverifiedlisting', 'verificationstatus', 
+    'verificationnotes', 'verificationdocument', 'approvalstatus', 'boostplan', 
+    'istopad', 'promotionexpiresat', 'negotiable', 'isnegotiable', 'unit', 
+    'wholesaleunit', 'businesstype', 'deliveryoptions', 'wholesalenotes', 
+    'wholesaleprice', 'wholesalepricetiers', 'retailprice', 'variations'
+  );
+
+  const leftoverSpecs: { label: string; value: string }[] = [];
+  const addedLeftoverKeys = new Set<string>();
+
+  const tryAddLeftover = (label: string, rawVal: any) => {
+    if (rawVal === undefined || rawVal === null) return;
+    const valStr = String(rawVal).trim();
+    if (!valStr) return;
+    const lowerVal = valStr.toLowerCase();
+    if (['null', 'undefined', 'n/a', 'na', 'none', 'placeholder', '-', '--', 'not specified', 'not provided'].includes(lowerVal)) return;
+    
+    const normKey = label.toLowerCase().replace(/[^a-z0-9]/g, '');
+    if (renderedFieldNames.has(normKey) || addedLeftoverKeys.has(normKey)) return;
+
+    addedLeftoverKeys.add(normKey);
+    leftoverSpecs.push({ label, value: valStr });
+  };
+
+  const rawSpecsObj = (listing as any).specifications;
+  if (rawSpecsObj && typeof rawSpecsObj === 'object') {
+    for (const [k, v] of Object.entries(rawSpecsObj)) {
+      tryAddLeftover(k, v);
+    }
+  }
+
+  const rawAttrsObj = (listing as any).attributes;
+  if (rawAttrsObj && typeof rawAttrsObj === 'object') {
+    for (const [k, v] of Object.entries(rawAttrsObj)) {
+      tryAddLeftover(k, v);
+    }
+  }
+
+  for (const spec of parsedSpecs) {
+    tryAddLeftover(spec.label, spec.value);
+  }
+
+  for (const item of rawAmenities) {
+    if (typeof item === 'string' && item.includes(':')) {
+      const parts = item.split(':');
+      const l = parts[0].trim();
+      const v = parts.slice(1).join(':').trim();
+      if (l && v) tryAddLeftover(l, v);
+    }
+  }
+
+  const hasAnyMetadata = Boolean(
+    metaCondition || metaSubcategory || metaPurpose || 
+    (metaBedrooms !== undefined && Number(metaBedrooms) > 0) || 
+    (metaBathrooms !== undefined && Number(metaBathrooms) > 0) || 
+    (metaArea !== undefined && Number(metaArea) > 0) || 
+    metaTransmission || metaFuelType || metaMileage || metaYear || metaBodyType || 
+    metaBrand || metaModel || metaSellingMode || 
+    (metaMoq !== undefined && Number(metaMoq) > 0) || 
+    (metaStock !== undefined && Number(metaStock) > 0) ||
+    leftoverSpecs.length > 0 ||
+    parsedSpecs.length > 0
+  );
 
   const handleSendInquiry = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -971,14 +1162,23 @@ export default function PropertyDetails({
             </div>
           )}
 
-          {/* ORDER 4: Property Information (Specifications) */}
-          {parsedSpecs.length > 0 || currentCategory === 'Properties' ? (
-            <div className="bg-[#0d0d12]/90 rounded-3xl p-6 md:p-8 border border-white/5 shadow-lg text-left text-[#F5F5F4]">
+          {/* ORDER 4: Dynamic Category-Specific Metadata & Specifications */}
+          {hasAnyMetadata ? (
+            <div className="bg-[#121318] rounded-3xl p-6 md:p-8 border border-[#22242E] shadow-lg text-left text-[#F5F5F4]">
               <h3 className="text-lg font-serif font-bold text-white mb-5 flex items-center gap-2.5">
-                <Sparkles className="w-5 h-5 text-amber-500" />
+                {isRealEstateCategory ? (
+                  <Home className="w-5 h-5 text-[#F5A623]" />
+                ) : isVehiclesCategory ? (
+                  <Car className="w-5 h-5 text-[#F5A623]" />
+                ) : isProductsCategory ? (
+                  <Package className="w-5 h-5 text-[#F5A623]" />
+                ) : (
+                  <Sparkles className="w-5 h-5 text-[#F5A623]" />
+                )}
                 <span>
-                  {currentCategory === 'Products' ? (t('product_specifications') || getTranslatedFieldLabel('Product Specifications', currentLanguage)) :
-                   currentCategory === 'Vehicles' ? (t('vehicle_specifications') || getTranslatedFieldLabel('Vehicle Specifications', currentLanguage)) :
+                  {isRealEstateCategory ? (t('property_specifications') || getTranslatedFieldLabel('Property Information & Specifications', currentLanguage)) :
+                   isVehiclesCategory ? (t('vehicle_specifications') || getTranslatedFieldLabel('Vehicle Specifications', currentLanguage)) :
+                   isProductsCategory ? (t('product_details_pricing') || getTranslatedFieldLabel('Product Details & Pricing', currentLanguage) || 'Product Details & Pricing') :
                    currentCategory === 'Jobs' ? (t('job_details') || getTranslatedFieldLabel('Job Details', currentLanguage)) :
                    currentCategory === 'Services' ? (t('service_information') || getTranslatedFieldLabel('Service Information', currentLanguage)) :
                    currentCategory === 'Community' ? (t('post_information') || getTranslatedFieldLabel('Post Information', currentLanguage)) :
@@ -986,77 +1186,293 @@ export default function PropertyDetails({
                 </span>
               </h3>
 
-              {/* Core bed/bath/area summary if Properties */}
-              {currentCategory === 'Properties' && (
-                <div className="grid grid-cols-3 gap-4 text-center mb-6 border-b border-white/5 pb-6">
-                  {property.bedrooms > 0 && (
-                    <div className="bg-[#12121a] rounded-2xl p-4 border border-white/5">
-                      <BedDouble className="w-5 h-5 text-amber-500/80 mx-auto mb-2" />
-                      <span className="text-base font-bold text-[#F5F5F4] block">{property.bedrooms}</span>
-                      <span className="text-[10px] font-bold text-white/40 uppercase tracking-wider">
-                        {t('bedrooms') || getTranslatedFieldLabel('Bedrooms', currentLanguage) || 'Bedrooms'}
+              {/* 1. REAL ESTATE & PROPERTY METADATA GRID */}
+              {isRealEstateCategory && (
+                <div>
+                  {/* Physical Specs Top Banner */}
+                  {((metaBedrooms !== undefined && Number(metaBedrooms) > 0) || 
+                    (metaBathrooms !== undefined && Number(metaBathrooms) > 0) || 
+                    (metaArea !== undefined && Number(metaArea) > 0)) && (
+                    <div className="grid grid-cols-3 gap-4 text-center mb-6 border-b border-[#22242E] pb-6">
+                      {metaBedrooms !== undefined && Number(metaBedrooms) > 0 && (
+                        <div className="bg-[#1A1B22] rounded-2xl p-4 border border-[#22242E]">
+                          <BedDouble className="w-5 h-5 text-[#F5A623] mx-auto mb-2" />
+                          <span className="text-base font-bold text-white block">{metaBedrooms}</span>
+                          <span className="text-[10px] font-bold text-[#F5A623] uppercase tracking-wider">
+                            {t('bedrooms') || getTranslatedFieldLabel('Bedrooms', currentLanguage) || 'Bedrooms'}
+                          </span>
+                        </div>
+                      )}
+                      {metaBathrooms !== undefined && Number(metaBathrooms) > 0 && (
+                        <div className="bg-[#1A1B22] rounded-2xl p-4 border border-[#22242E]">
+                          <Bath className="w-5 h-5 text-[#F5A623] mx-auto mb-2" />
+                          <span className="text-base font-bold text-white block">{metaBathrooms}</span>
+                          <span className="text-[10px] font-bold text-[#F5A623] uppercase tracking-wider">
+                            {t('bathrooms') || getTranslatedFieldLabel('Bathrooms', currentLanguage) || 'Bathrooms'}
+                          </span>
+                        </div>
+                      )}
+                      {metaArea !== undefined && Number(metaArea) > 0 && (
+                        <div className="bg-[#1A1B22] rounded-2xl p-4 border border-[#22242E]">
+                          <Maximize className="w-5 h-5 text-[#F5A623] mx-auto mb-2" />
+                          <span className="text-base font-bold text-white block">{metaArea} m²</span>
+                          <span className="text-[10px] font-bold text-[#F5A623] uppercase tracking-wider">
+                            {t('total_area') || t('area') || getTranslatedFieldLabel('Area (m²)', currentLanguage) || 'Area (m²)'}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Property Badges Grid */}
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3 my-4">
+                    {metaCondition && (
+                      <div className="bg-[#1A1B22] p-3.5 rounded-xl border border-[#22242E]">
+                        <span className="text-[#F5A623] text-xs font-semibold uppercase tracking-wider block mb-1">
+                          Condition / Furnishing
+                        </span>
+                        <span className="text-white text-sm font-medium">
+                          {getTranslatedCondition(metaCondition, currentLanguage) || metaCondition}
+                        </span>
+                      </div>
+                    )}
+
+                    {metaSubcategory && (
+                      <div className="bg-[#1A1B22] p-3.5 rounded-xl border border-[#22242E]">
+                        <span className="text-[#F5A623] text-xs font-semibold uppercase tracking-wider block mb-1">
+                          Subcategory
+                        </span>
+                        <span className="text-white text-sm font-medium">
+                          {getTranslatedSubcategoryName(metaSubcategory, currentLanguage) || metaSubcategory}
+                        </span>
+                      </div>
+                    )}
+
+                    {metaPurpose && (
+                      <div className="bg-[#1A1B22] p-3.5 rounded-xl border border-[#22242E]">
+                        <span className="text-[#F5A623] text-xs font-semibold uppercase tracking-wider block mb-1">
+                          Purpose
+                        </span>
+                        <span className="text-white text-sm font-medium">
+                          {getTranslatedOption(metaPurpose, currentLanguage) || metaPurpose}
+                        </span>
+                      </div>
+                    )}
+
+                    {metaBedrooms !== undefined && Number(metaBedrooms) > 0 && (
+                      <div className="bg-[#1A1B22] p-3.5 rounded-xl border border-[#22242E]">
+                        <span className="text-[#F5A623] text-xs font-semibold uppercase tracking-wider block mb-1">
+                          Bedrooms
+                        </span>
+                        <span className="text-white text-sm font-medium">
+                          {metaBedrooms}
+                        </span>
+                      </div>
+                    )}
+
+                    {metaBathrooms !== undefined && Number(metaBathrooms) > 0 && (
+                      <div className="bg-[#1A1B22] p-3.5 rounded-xl border border-[#22242E]">
+                        <span className="text-[#F5A623] text-xs font-semibold uppercase tracking-wider block mb-1">
+                          Bathrooms
+                        </span>
+                        <span className="text-white text-sm font-medium">
+                          {metaBathrooms}
+                        </span>
+                      </div>
+                    )}
+
+                    {metaArea !== undefined && Number(metaArea) > 0 && (
+                      <div className="bg-[#1A1B22] p-3.5 rounded-xl border border-[#22242E]">
+                        <span className="text-[#F5A623] text-xs font-semibold uppercase tracking-wider block mb-1">
+                          Total Area
+                        </span>
+                        <span className="text-white text-sm font-medium">
+                          {metaArea} m²
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* 2. VEHICLES & AUTOMOTIVE METADATA GRID */}
+              {isVehiclesCategory && (
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3 my-4">
+                  {metaCondition && (
+                    <div className="bg-[#1A1B22] p-3.5 rounded-xl border border-[#22242E]">
+                      <span className="text-[#F5A623] text-xs font-semibold uppercase tracking-wider block mb-1">
+                        Condition
+                      </span>
+                      <span className="text-white text-sm font-medium">
+                        {getTranslatedCondition(metaCondition, currentLanguage) || metaCondition}
                       </span>
                     </div>
                   )}
-                  {property.bathrooms > 0 && (
-                    <div className="bg-[#12121a] rounded-2xl p-4 border border-white/5">
-                      <Bath className="w-5 h-5 text-amber-500/80 mx-auto mb-2" />
-                      <span className="text-base font-bold text-[#F5F5F4] block">{property.bathrooms}</span>
-                      <span className="text-[10px] font-bold text-white/40 uppercase tracking-wider">
-                        {t('bathrooms') || getTranslatedFieldLabel('Bathrooms', currentLanguage) || 'Bathrooms'}
+
+                  {metaTransmission && (
+                    <div className="bg-[#1A1B22] p-3.5 rounded-xl border border-[#22242E]">
+                      <span className="text-[#F5A623] text-xs font-semibold uppercase tracking-wider block mb-1">
+                        Transmission
+                      </span>
+                      <span className="text-white text-sm font-medium">
+                        {getTranslatedOption(metaTransmission, currentLanguage) || metaTransmission}
                       </span>
                     </div>
                   )}
-                  {property.area > 0 && (
-                    <div className="bg-[#12121a] rounded-2xl p-4 border border-white/5">
-                      <Maximize className="w-5 h-5 text-amber-500/80 mx-auto mb-2" />
-                      <span className="text-base font-bold text-[#F5F5F4] block">{property.area} m²</span>
-                      <span className="text-[10px] font-bold text-white/40 uppercase tracking-wider">
-                        {t('total_area') || t('area') || getTranslatedFieldLabel('Area (m²)', currentLanguage) || 'Area (m²)'}
+
+                  {metaFuelType && (
+                    <div className="bg-[#1A1B22] p-3.5 rounded-xl border border-[#22242E]">
+                      <span className="text-[#F5A623] text-xs font-semibold uppercase tracking-wider block mb-1">
+                        Fuel Type
+                      </span>
+                      <span className="text-white text-sm font-medium">
+                        {getTranslatedOption(metaFuelType, currentLanguage) || metaFuelType}
+                      </span>
+                    </div>
+                  )}
+
+                  {metaMileage && (
+                    <div className="bg-[#1A1B22] p-3.5 rounded-xl border border-[#22242E]">
+                      <span className="text-[#F5A623] text-xs font-semibold uppercase tracking-wider block mb-1">
+                        Mileage
+                      </span>
+                      <span className="text-white text-sm font-medium">
+                        {metaMileage}
+                      </span>
+                    </div>
+                  )}
+
+                  {metaYear && (
+                    <div className="bg-[#1A1B22] p-3.5 rounded-xl border border-[#22242E]">
+                      <span className="text-[#F5A623] text-xs font-semibold uppercase tracking-wider block mb-1">
+                        Year
+                      </span>
+                      <span className="text-white text-sm font-medium">
+                        {metaYear}
+                      </span>
+                    </div>
+                  )}
+
+                  {metaBodyType && (
+                    <div className="bg-[#1A1B22] p-3.5 rounded-xl border border-[#22242E]">
+                      <span className="text-[#F5A623] text-xs font-semibold uppercase tracking-wider block mb-1">
+                        Body Type
+                      </span>
+                      <span className="text-white text-sm font-medium">
+                        {getTranslatedOption(metaBodyType, currentLanguage) || metaBodyType}
+                      </span>
+                    </div>
+                  )}
+
+                  {(metaBrand || metaModel) && (
+                    <div className="bg-[#1A1B22] p-3.5 rounded-xl border border-[#22242E]">
+                      <span className="text-[#F5A623] text-xs font-semibold uppercase tracking-wider block mb-1">
+                        Brand / Model
+                      </span>
+                      <span className="text-white text-sm font-medium">
+                        {metaBrand ? `${metaBrand}${metaModel ? ` - ${metaModel}` : ''}` : metaModel}
                       </span>
                     </div>
                   )}
                 </div>
               )}
 
-              {/* Specification Grid */}
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-                {parsedSpecs.map((spec, idx) => {
-                  const translatedLabel = t(spec.label) || getTranslatedFieldLabel(spec.label, currentLanguage) || spec.label;
-
-                  let translatedValue = spec.value;
-                  const normKey = spec.label.toLowerCase().trim();
-
-                  if (normKey === 'subcategory') {
-                    translatedValue = getTranslatedSubcategoryName(spec.value, currentLanguage);
-                  } else if (normKey === 'condition' || normKey.includes('condition') || normKey.includes('haala') || normKey.includes('ሁኔታ')) {
-                    translatedValue = getTranslatedCondition(spec.value, currentLanguage);
-                  } else if (normKey === 'negotiable') {
-                    translatedValue = getTranslatedOption(spec.value, currentLanguage);
-                  } else if (normKey === 'property type' || normKey === 'type' || normKey === 'property_type') {
-                    translatedValue = getTranslatedPropertyType(spec.value, currentLanguage);
-                  } else {
-                    const optVal = getTranslatedOption(spec.value, currentLanguage);
-                    if (optVal && optVal !== spec.value) {
-                      translatedValue = optVal;
-                    } else {
-                      const catVal = getTranslatedCategoryName(spec.value, currentLanguage);
-                      if (catVal && catVal !== spec.value) {
-                        translatedValue = catVal;
-                      } else {
-                        translatedValue = extractString(spec.value, currentLanguage);
-                      }
-                    }
-                  }
-
-                  return (
-                    <div key={idx} className="bg-[#12121a] p-3.5 rounded-2xl border border-white/5 flex flex-col justify-between">
-                      <span className="text-[10px] font-bold text-amber-500/80 uppercase tracking-wider block font-mono">{translatedLabel}</span>
-                      <span className="text-xs font-bold text-white mt-1.5 break-words">{translatedValue}</span>
+              {/* 3. PRODUCTS, ELECTRONICS & OTHER CATEGORIES METADATA GRID */}
+              {isProductsCategory && (
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3 my-4">
+                  {metaCondition && (
+                    <div className="bg-[#1A1B22] p-3.5 rounded-xl border border-[#22242E]">
+                      <span className="text-[#F5A623] text-xs font-semibold uppercase tracking-wider block mb-1">
+                        Condition
+                      </span>
+                      <span className="text-white text-sm font-medium">
+                        {getTranslatedCondition(metaCondition, currentLanguage) || metaCondition}
+                      </span>
                     </div>
-                  );
-                })}
-              </div>
+                  )}
+
+                  {(metaBrand || metaModel) && (
+                    <div className="bg-[#1A1B22] p-3.5 rounded-xl border border-[#22242E]">
+                      <span className="text-[#F5A623] text-xs font-semibold uppercase tracking-wider block mb-1">
+                        Brand / Model
+                      </span>
+                      <span className="text-white text-sm font-medium">
+                        {metaBrand ? `${metaBrand}${metaModel ? ` - ${metaModel}` : ''}` : metaModel}
+                      </span>
+                    </div>
+                  )}
+
+                  {metaSellingMode && (
+                    <div className="bg-[#1A1B22] p-3.5 rounded-xl border border-[#22242E]">
+                      <span className="text-[#F5A623] text-xs font-semibold uppercase tracking-wider block mb-1">
+                        Selling Mode
+                      </span>
+                      <span className="text-white text-sm font-medium">
+                        {metaSellingMode}
+                      </span>
+                    </div>
+                  )}
+
+                  {metaMoq !== undefined && Number(metaMoq) > 0 && (
+                    <div className="bg-[#1A1B22] p-3.5 rounded-xl border border-[#22242E]">
+                      <span className="text-[#F5A623] text-xs font-semibold uppercase tracking-wider block mb-1">
+                        MOQ (Min. Order)
+                      </span>
+                      <span className="text-white text-sm font-medium">
+                        {metaMoq} {pricingInfo.unit ? getLocalizedUnit(pricingInfo.unit, currentLanguage) : 'Units'}
+                      </span>
+                    </div>
+                  )}
+
+                  {metaStock !== undefined && Number(metaStock) > 0 && (
+                    <div className="bg-[#1A1B22] p-3.5 rounded-xl border border-[#22242E]">
+                      <span className="text-[#F5A623] text-xs font-semibold uppercase tracking-wider block mb-1">
+                        Available Stock
+                      </span>
+                      <span className="text-white text-sm font-medium">
+                        {Number(metaStock).toLocaleString()} {pricingInfo.unit ? getLocalizedUnit(pricingInfo.unit, currentLanguage) : 'Units'}
+                      </span>
+                    </div>
+                  )}
+
+                  {metaSubcategory && (
+                    <div className="bg-[#1A1B22] p-3.5 rounded-xl border border-[#22242E]">
+                      <span className="text-[#F5A623] text-xs font-semibold uppercase tracking-wider block mb-1">
+                        Subcategory
+                      </span>
+                      <span className="text-white text-sm font-medium">
+                        {getTranslatedSubcategoryName(metaSubcategory, currentLanguage) || metaSubcategory}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* 4. UNIVERSAL FALLBACK METADATA CARD (No saved input field is ever hidden or lost) */}
+              {leftoverSpecs.length > 0 && (
+                <div className={`${isRealEstateCategory || isVehiclesCategory || isProductsCategory ? 'mt-6 pt-6 border-t border-[#22242E]' : ''}`}>
+                  {(isRealEstateCategory || isVehiclesCategory || isProductsCategory) && (
+                    <div className="flex items-center gap-2 mb-3">
+                      <Sliders className="w-4 h-4 text-[#F5A623]" />
+                      <span className="text-xs font-semibold text-[#F5A623] uppercase tracking-wider">
+                        {t('additional_specifications') || 'Additional Specifications'}
+                      </span>
+                    </div>
+                  )}
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                    {leftoverSpecs.map((spec, idx) => (
+                      <div key={idx} className="bg-[#1A1B22] p-3.5 rounded-xl border border-[#22242E]">
+                        <span className="text-[#F5A623] text-xs font-semibold uppercase tracking-wider block mb-1">
+                          {t(spec.label) || getTranslatedFieldLabel(spec.label, currentLanguage) || spec.label}
+                        </span>
+                        <span className="text-white text-sm font-medium break-words">
+                          {getTranslatedOption(spec.value, currentLanguage) || spec.value}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           ) : null}
 
