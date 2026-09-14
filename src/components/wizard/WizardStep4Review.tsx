@@ -1,12 +1,13 @@
 import React from 'react';
 import { 
   Camera, MapPin, Phone, User as UserIcon, Sparkles, Loader2,
-  BedDouble, Bath, Maximize, Truck, ShieldCheck, Tag
+  BedDouble, Bath, Maximize, Truck, ShieldCheck, Tag, CreditCard, CheckCircle2
 } from 'lucide-react';
 import { NormalizedSellingType, getPluralizedUnit } from '../../utils/wholesalePricing';
 import { getTranslatedCategoryName, getTranslatedSubcategoryName } from '../../lib/categoriesData';
 import { WholesalePriceTier } from '../../types';
 import { ReceiptUploadInput } from '../ReceiptUploadInput';
+import { useApp } from '../../lib/AppContext';
 
 interface WizardStep4ReviewProps {
   majorCategory: string;
@@ -55,6 +56,8 @@ export const WizardStep4Review: React.FC<WizardStep4ReviewProps> = ({
   currentUser,
   currentLanguage
 }) => {
+  const { systemSettings } = useApp();
+
   const deliveryOptions: string[] = Array.isArray(fieldsState.deliveryOptions) ? fieldsState.deliveryOptions : [];
 
   const isRealEstate = 
@@ -81,6 +84,53 @@ export const WizardStep4Review: React.FC<WizardStep4ReviewProps> = ({
     (bathroomsNum !== undefined && bathroomsNum > 0) || 
     (areaNum !== undefined && areaNum > 0)
   );
+
+  // Dynamic Admin-Defined Promotion Packages from Context with fallback defaults
+  const dynamicAdminPackages = (systemSettings?.adPackages && systemSettings.adPackages.length > 0)
+    ? systemSettings.adPackages.map(p => ({
+        id: p.id || p.name.toLowerCase().replace(/\s+/g, '_'),
+        name: p.name.toLowerCase().includes('boost') ? p.name : `${p.name} Boost`,
+        price: Number(p.price) || 0,
+        currency: p.currency || 'ETB',
+        duration: p.duration || '7 days',
+        desc: p.desc || `Promotional ad boost package: ${p.name}`,
+        badge: p.badge || p.name.toUpperCase()
+      }))
+    : [
+        { id: 'basic', name: 'Basic Boost', price: 49, currency: 'ETB', duration: '7 days', desc: 'Category top placement + Basic Verified Badge', badge: 'BASIC' },
+        { id: 'premium', name: 'Premium Boost', price: 149, currency: 'ETB', duration: '15 days', desc: 'Featured hero slider placement + High priority ranking', badge: 'PREMIUM' },
+        { id: 'vip', name: 'VIP Elite Boost', price: 399, currency: 'ETB', duration: '30 days', desc: 'Top search billboard pin + Full site promotion + Gold Badge', badge: 'VIP ELITE' }
+      ];
+
+  const adminPromotionPackages = [
+    {
+      id: 'free',
+      name: 'Free Listing / Standard',
+      price: 0,
+      currency: 'ETB',
+      duration: 'Standard',
+      desc: 'Standard catalog listing with basic search visibility across Ethiopia',
+      badge: 'FREE'
+    },
+    ...dynamicAdminPackages
+  ];
+
+  const [selectedPkgId, setSelectedPkgId] = React.useState<string>(() => {
+    if (isFeaturedAddon) {
+      const paidPkg = adminPromotionPackages.find(p => p.price > 0);
+      return paidPkg ? paidPkg.id : 'basic';
+    }
+    return 'free';
+  });
+
+  const handleSelectPackage = (pkg: typeof adminPromotionPackages[0]) => {
+    setSelectedPkgId(pkg.id);
+    const isPaid = pkg.price > 0;
+    setIsFeaturedAddon(isPaid);
+  };
+
+  const activePackage = adminPromotionPackages.find(p => p.id === selectedPkgId) || adminPromotionPackages[0];
+  const isPaidPackage = activePackage.price > 0;
 
   return (
     <div className="space-y-5 animate-in fade-in duration-300">
@@ -118,6 +168,7 @@ export const WizardStep4Review: React.FC<WizardStep4ReviewProps> = ({
                 </span>
               </div>
             </div>
+
             <div className="text-right shrink-0">
               {isRealEstate ? (
                 <span className="text-lg font-extrabold text-[#F5A623] font-mono block">
@@ -151,7 +202,6 @@ export const WizardStep4Review: React.FC<WizardStep4ReviewProps> = ({
           </div>
 
           {/* 2. SPECIFICATIONS & CONDITION GRID */}
-          {/* Top Primary Physical Specs for Real Estate (Bedrooms, Bathrooms, Area) */}
           {hasPhysicalSpecs && (
             <div className="grid grid-cols-3 gap-2 text-center my-3 border-y border-[#22242E] py-3 bg-[#0A0A0C]/50 rounded-xl">
               {bedroomsNum !== undefined && bedroomsNum > 0 && (
@@ -184,9 +234,8 @@ export const WizardStep4Review: React.FC<WizardStep4ReviewProps> = ({
             </div>
           )}
 
-          {/* Dynamic Specs & Condition Preview Grid (Deduped - No area/bedrooms/bathrooms repeated) */}
+          {/* Dynamic Specs & Condition Preview Grid */}
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 my-3">
-            {/* Condition / Furnishing */}
             {fieldsState.condition && (
               <div className="bg-[#1A1B22] p-2.5 rounded-xl border border-[#22242E]">
                 <span className="text-[#F5A623] text-[10px] font-semibold uppercase block mb-0.5 tracking-wider">
@@ -198,7 +247,6 @@ export const WizardStep4Review: React.FC<WizardStep4ReviewProps> = ({
               </div>
             )}
 
-            {/* Subcategory */}
             {subcategory && (
               <div className="bg-[#1A1B22] p-2.5 rounded-xl border border-[#22242E]">
                 <span className="text-[#F5A623] text-[10px] font-semibold uppercase block mb-0.5 tracking-wider">
@@ -210,7 +258,6 @@ export const WizardStep4Review: React.FC<WizardStep4ReviewProps> = ({
               </div>
             )}
 
-            {/* Purpose (Real Estate) */}
             {isRealEstate && fieldsState.purpose && (
               <div className="bg-[#1A1B22] p-2.5 rounded-xl border border-[#22242E]">
                 <span className="text-[#F5A623] text-[10px] font-semibold uppercase block mb-0.5 tracking-wider">
@@ -222,7 +269,6 @@ export const WizardStep4Review: React.FC<WizardStep4ReviewProps> = ({
               </div>
             )}
 
-            {/* Brand (Vehicles & Goods) */}
             {fieldsState.brand && (
               <div className="bg-[#1A1B22] p-2.5 rounded-xl border border-[#22242E]">
                 <span className="text-[#F5A623] text-[10px] font-semibold uppercase block mb-0.5 tracking-wider">
@@ -234,7 +280,6 @@ export const WizardStep4Review: React.FC<WizardStep4ReviewProps> = ({
               </div>
             )}
 
-            {/* Model (Vehicles & Goods) */}
             {fieldsState.model && (
               <div className="bg-[#1A1B22] p-2.5 rounded-xl border border-[#22242E]">
                 <span className="text-[#F5A623] text-[10px] font-semibold uppercase block mb-0.5 tracking-wider">
@@ -246,7 +291,6 @@ export const WizardStep4Review: React.FC<WizardStep4ReviewProps> = ({
               </div>
             )}
 
-            {/* Year (Vehicles) */}
             {fieldsState.year && (
               <div className="bg-[#1A1B22] p-2.5 rounded-xl border border-[#22242E]">
                 <span className="text-[#F5A623] text-[10px] font-semibold uppercase block mb-0.5 tracking-wider">
@@ -258,7 +302,6 @@ export const WizardStep4Review: React.FC<WizardStep4ReviewProps> = ({
               </div>
             )}
 
-            {/* Storage / Specs (Products) */}
             {fieldsState.storageSpec && (
               <div className="bg-[#1A1B22] p-2.5 rounded-xl border border-[#22242E]">
                 <span className="text-[#F5A623] text-[10px] font-semibold uppercase block mb-0.5 tracking-wider">
@@ -270,7 +313,6 @@ export const WizardStep4Review: React.FC<WizardStep4ReviewProps> = ({
               </div>
             )}
 
-            {/* Selling Mode / Intent (Products & Non-Properties) */}
             {!isRealEstate && (sellingType || fieldsState.sellingMode) && (
               <div className="bg-[#1A1B22] p-2.5 rounded-xl border border-[#22242E]">
                 <span className="text-[#F5A623] text-[10px] font-semibold uppercase block mb-0.5 tracking-wider">
@@ -285,7 +327,6 @@ export const WizardStep4Review: React.FC<WizardStep4ReviewProps> = ({
               </div>
             )}
 
-            {/* Available Stock */}
             {!isRealEstate && fieldsState.stockQuantity !== undefined && fieldsState.stockQuantity !== '' && (
               <div className="bg-[#1A1B22] p-2.5 rounded-xl border border-[#22242E]">
                 <span className="text-[#F5A623] text-[10px] font-semibold uppercase block mb-0.5 tracking-wider">
@@ -297,7 +338,6 @@ export const WizardStep4Review: React.FC<WizardStep4ReviewProps> = ({
               </div>
             )}
 
-            {/* Minimum Order Quantity (MOQ) */}
             {!isRealEstate && (sellingType === 'Wholesale' || sellingType === 'Retail + Wholesale' || fieldsState.minimumOrderQuantity) && (
               <div className="bg-[#1A1B22] p-2.5 rounded-xl border border-[#22242E]">
                 <span className="text-[#F5A623] text-[10px] font-semibold uppercase block mb-0.5 tracking-wider">
@@ -311,7 +351,6 @@ export const WizardStep4Review: React.FC<WizardStep4ReviewProps> = ({
           </div>
 
           {/* 3. DESCRIPTION & LOGISTICS PREVIEW */}
-          {/* Configured Delivery & Logistics Preferences (Non-Properties) */}
           {!isRealEstate && deliveryOptions.length > 0 && (
             <div className="pt-2 border-t border-[#22242E]">
               <span className="text-[10px] font-semibold text-[#F5A623] uppercase tracking-wider block mb-1.5">
@@ -328,7 +367,6 @@ export const WizardStep4Review: React.FC<WizardStep4ReviewProps> = ({
             </div>
           )}
 
-          {/* Full Description text */}
           <div className="pt-2 border-t border-[#22242E]">
             <span className="text-[10px] font-semibold text-[#F5A623] uppercase tracking-wider block mb-1">
               Description
@@ -352,59 +390,98 @@ export const WizardStep4Review: React.FC<WizardStep4ReviewProps> = ({
         </div>
       </div>
 
-      {/* Promotional Boost: Optional Checkbox */}
+      {/* Dynamic Admin Promotion Packages & Manual Payment Flow */}
       <div className="max-w-xl mx-auto space-y-4">
-        <label className={`p-4 rounded-2xl border flex items-start gap-3.5 cursor-pointer transition ${
-          isFeaturedAddon
-            ? 'bg-amber-500/15 border-amber-500 ring-1 ring-amber-500/30'
-            : 'bg-zinc-900/60 border-white/10 hover:border-white/20'
-        }`}>
-          <input
-            type="checkbox"
-            checked={isFeaturedAddon}
-            onChange={(e) => setIsFeaturedAddon(e.target.checked)}
-            className="mt-1 w-4 h-4 rounded text-amber-500 focus:ring-amber-400 border-white/20 bg-black cursor-pointer"
-          />
-          <div className="flex-1">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-white flex items-center gap-1.5">
-                <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-                Feature this listing on top of searches (+ ETB 500)
+        {/* Promotion Packages Header */}
+        <div className="space-y-1">
+          <h4 className="text-sm font-bold text-white flex items-center gap-2">
+            <Sparkles className="w-4 h-4 text-[#F5A623]" />
+            <span>Select Promotion / Boost Package</span>
+          </h4>
+          <p className="text-xs text-white/60">
+            Choose a promotion package to maximize your listing's visibility or proceed with standard free listing.
+          </p>
+        </div>
+
+        {/* Dynamic Admin Promotion Packages Options */}
+        <div className="space-y-2.5">
+          {adminPromotionPackages.map((pkg) => {
+            const isSelected = selectedPkgId === pkg.id;
+            return (
+              <div
+                key={pkg.id}
+                onClick={() => handleSelectPackage(pkg)}
+                className={`p-3.5 rounded-2xl border transition-all duration-200 cursor-pointer flex items-start justify-between gap-3 ${
+                  isSelected
+                    ? 'bg-[#141418] border-[#F5A623] shadow-lg shadow-[#F5A623]/10 ring-1 ring-[#F5A623]'
+                    : 'bg-[#141418]/60 border-[#22242E] hover:border-white/20 hover:bg-[#141418]'
+                }`}
+              >
+                <div className="flex items-start gap-3 flex-1">
+                  <div className={`mt-0.5 w-4 h-4 rounded-full border flex items-center justify-center shrink-0 ${
+                    isSelected ? 'border-[#F5A623] bg-[#F5A623]' : 'border-white/30 bg-transparent'
+                  }`}>
+                    {isSelected && <div className="w-1.5 h-1.5 rounded-full bg-black" />}
+                  </div>
+                  <div className="space-y-0.5">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-bold text-white">{pkg.name}</span>
+                      {pkg.badge && (
+                        <span className={`text-[9px] font-extrabold px-2 py-0.5 rounded-full uppercase tracking-wider ${
+                          pkg.price === 0
+                            ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                            : 'bg-[#F5A623]/20 text-[#F5A623] border border-[#F5A623]/30'
+                        }`}>
+                          {pkg.badge}
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-[11px] text-white/60 leading-relaxed">{pkg.desc}</p>
+                    <div className="text-[10px] text-white/40 font-mono pt-0.5">
+                      Duration: {pkg.duration}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="text-right shrink-0">
+                  <span className={`text-xs font-mono font-extrabold block ${
+                    pkg.price === 0 ? 'text-emerald-400' : 'text-[#F5A623]'
+                  }`}>
+                    {pkg.price === 0 ? 'FREE' : `${pkg.price} ${pkg.currency}`}
+                  </span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Direct Payment details if a Paid Boost Package is selected */}
+        {isPaidPackage && (
+          <div className="p-4 rounded-2xl bg-[#141418] border border-[#F5A623]/40 space-y-3 shadow-xl">
+            <div className="flex items-center justify-between pb-2 border-b border-[#22242E]">
+              <span className="text-xs font-bold text-[#F5A623] uppercase tracking-wider flex items-center gap-1.5">
+                <CreditCard className="w-3.5 h-3.5" />
+                <span>Manual Payment ({activePackage.name})</span>
               </span>
-              <span className="text-xs font-mono font-bold text-amber-400">
-                +500 ETB
+              <span className="text-xs font-bold text-[#F5A623] font-mono">
+                {activePackage.price} {activePackage.currency}
               </span>
             </div>
-            <p className="text-[11px] text-white/60 mt-0.5 leading-relaxed">
-              Pin your listing to the top of category feeds, unlock gold VIP badge, and reach up to 10x more prospective buyers across Ethiopia.
-            </p>
-          </div>
-        </label>
 
-        {/* Direct Payment details if Boost is selected */}
-        {isFeaturedAddon && (
-          <div className="p-4 rounded-2xl bg-amber-500/5 border border-amber-500/20 space-y-3">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-amber-400 uppercase tracking-wider">
-                Monetization & Direct Payment
-              </span>
-              <span className="text-xs font-bold text-white font-mono">500 ETB</span>
-            </div>
-
-            <p className="text-[11px] text-white/60">
-              Transfer to Telebirr or Commercial Bank of Ethiopia (CBE) and attach the receipt or transaction reference number:
+            <p className="text-[11px] text-white/70 leading-relaxed">
+              Transfer payment via Telebirr or Commercial Bank of Ethiopia (CBE) and attach the receipt or transaction reference number:
             </p>
 
             <div className="space-y-2">
-              <label className="block text-[10px] font-bold text-white/80 uppercase">
+              <label className="block text-[10px] font-bold text-[#F5A623] uppercase tracking-wider">
                 Select Payment Method *
               </label>
               <select
                 value={selectedDirectMethodId}
                 onChange={e => setSelectedDirectMethodId(e.target.value)}
-                className="w-full p-2.5 bg-black/60 border border-white/15 focus:border-amber-500 rounded-xl text-xs text-white"
+                className="w-full p-2.5 bg-[#0A0A0C] border border-[#22242E] focus:border-[#F5A623] rounded-xl text-xs text-white outline-none transition"
               >
-                <option value="">-- Choose Payment Channel --</option>
+                <option value="">-- Choose Payment Channel (CBE / Telebirr) --</option>
                 {paymentMethods.map(m => (
                   <option key={m.id} value={m.id}>
                     {m.name} {m.accountNumber ? `(${m.accountNumber})` : ''}
@@ -427,9 +504,9 @@ export const WizardStep4Review: React.FC<WizardStep4ReviewProps> = ({
         <div className="space-y-2.5 pt-2">
           <button
             type="button"
-            disabled={submitting || (isFeaturedAddon && !selectedDirectMethodId)}
+            disabled={submitting || (isPaidPackage && !selectedDirectMethodId)}
             onClick={onPublish}
-            className="w-full py-3.5 bg-amber-500 text-black font-extrabold text-sm rounded-xl hover:bg-amber-400 disabled:opacity-50 transition cursor-pointer shadow-lg shadow-amber-500/10 flex items-center justify-center gap-2"
+            className="w-full py-3.5 bg-[#F5A623] text-black font-extrabold text-sm rounded-xl hover:bg-[#f5b342] disabled:opacity-50 transition cursor-pointer shadow-lg shadow-[#F5A623]/10 flex items-center justify-center gap-2"
           >
             {submitting ? (
               <>
@@ -440,7 +517,9 @@ export const WizardStep4Review: React.FC<WizardStep4ReviewProps> = ({
               <>
                 <Sparkles className="w-4 h-4 fill-black" />
                 <span>
-                  {isFeaturedAddon ? '🚀 PAY 500 ETB & PUBLISH LISTING NOW' : '🚀 PUBLISH LISTING NOW'}
+                  {isPaidPackage
+                    ? `🚀 PAY ${activePackage.price} ${activePackage.currency} & PUBLISH LISTING NOW`
+                    : '🚀 PUBLISH LISTING NOW'}
                 </span>
               </>
             )}
