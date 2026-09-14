@@ -1,5 +1,5 @@
-import React from 'react';
-import { ShieldCheck, MapPin, Mail, Globe, ArrowUpRight } from 'lucide-react';
+import React, { useState } from 'react';
+import { ChevronDown, ChevronUp, Folder, FolderOpen, Mail, CheckCircle2, ArrowRight } from 'lucide-react';
 import { useApp } from '../lib/AppContext';
 
 interface FooterProps {
@@ -7,7 +7,11 @@ interface FooterProps {
 }
 
 export default function Footer({ onFooterLinkClick }: FooterProps) {
-  const { currentLanguage, appFeatures, t } = useApp();
+  const { currentLanguage } = useApp();
+  const [isAboutExpanded, setIsAboutExpanded] = useState(false);
+  const [email, setEmail] = useState('');
+  const [subscribed, setSubscribed] = useState(false);
+  const [subError, setSubError] = useState('');
 
   const rightsText: Record<string, string> = {
     en: "© 2026 SOF-UMER. All Rights Reserved.",
@@ -21,19 +25,13 @@ export default function Footer({ onFooterLinkClick }: FooterProps) {
     am: "ስለ SOF-UMER"
   };
 
-  const taglineText: Record<string, string> = {
-    en: "Ethiopia's premier multi-category marketplace connecting people, businesses, and opportunities.",
-    om: "Gabaa dhiyeessii hedduu Itoophiyaa isa duraa kan namoota, daldalaafi carraawwan walitti hidhu.",
-    am: "ሰዎችን፣ ንግዶችን እና እድሎችን የሚያገናኝ የኢትዮጵያ ግንባር ቀደም ባለብዙ-ምድብ ገበያ።"
-  };
-
-  // The original ABOUT SOF-UMER sub-sections remaining after moving Help Center, Marketplace Rules, Safety Tips, and Careers to Profile
+  // Exactly the 5 requested features under ABOUT SOF-UMER
   const aboutSofUmerLinks = [
     {
       id: 'about-us',
-      titleEn: 'About Us',
-      titleOm: "Waa'ee Keenya",
-      titleAm: 'ስለ እኛ'
+      titleEn: 'About SOF-UMER',
+      titleOm: "Waa'ee SOF-UMER",
+      titleAm: 'ስለ SOF-UMER'
     },
     {
       id: 'how-it-works',
@@ -46,12 +44,6 @@ export default function Footer({ onFooterLinkClick }: FooterProps) {
       titleEn: 'Contact Us',
       titleOm: 'Nu Quunnamaa',
       titleAm: 'ያግኙን'
-    },
-    {
-      id: 'verify-ownership',
-      titleEn: 'Verify Ownership',
-      titleOm: 'Mirkaneessa Abbummaa',
-      titleAm: 'ባለቤትነትን ያረጋግጡ'
     },
     {
       id: 'terms-of-service',
@@ -67,9 +59,35 @@ export default function Footer({ onFooterLinkClick }: FooterProps) {
     }
   ];
 
-  // Any dynamic custom features added by admin
-  const knownIds = new Set(aboutSofUmerLinks.map(l => l.id));
-  const customFeatures = (appFeatures || []).filter(f => !knownIds.has(f.id));
+  const stayUpdatedTitle: Record<string, string> = {
+    en: 'Stay Updated',
+    om: 'Odeeffannoo Haaraa Argadhaa',
+    am: 'ወቅታዊ መረጃ ያግኙ'
+  };
+
+  const stayUpdatedSubtitle: Record<string, string> = {
+    en: 'Get updates, new listings, offers, and important SOF-UMER information.',
+    om: 'Odeeffannoo haarawa, beeksisa dhiheenyaa, carraafi odeeffannoo barbaachisaa SOF-UMER argadhaa.',
+    am: 'አዳዲስ ማስታወቂያዎችን፣ ልዩ ቅናሾችን እና አስፈላጊ የ SOF-UMER መረጃዎችን በኢሜልዎ ያግኙ።'
+  };
+
+  const emailPlaceholder: Record<string, string> = {
+    en: 'Enter your email',
+    om: 'Imeelii keessan galchaa',
+    am: 'ኢሜይልዎን ያስገቡ'
+  };
+
+  const subscribeButtonText: Record<string, string> = {
+    en: 'Subscribe',
+    om: "Galmaa'i",
+    am: 'ይመዝገቡ'
+  };
+
+  const successMessage: Record<string, string> = {
+    en: "Thank you for subscribing! You'll receive the latest SOF-UMER updates.",
+    om: 'Galatoomaa! Odeeffannoo haaraa SOF-UMER ni argattu.',
+    am: 'እናመሰግናለን! የቅርብ ጊዜ የ SOF-UMER መረጃዎች ይደርስዎታል።'
+  };
 
   const getTitle = (item: { titleEn: string; titleOm: string; titleAm: string }) => {
     if (currentLanguage === 'om') return item.titleOm || item.titleEn;
@@ -77,129 +95,146 @@ export default function Footer({ onFooterLinkClick }: FooterProps) {
     return item.titleEn;
   };
 
+  const handleSubscribe = (e: React.FormEvent) => {
+    e.preventDefault();
+    setSubError('');
+
+    const trimmed = email.trim();
+    if (!trimmed || !trimmed.includes('@') || !trimmed.includes('.')) {
+      setSubError(currentLanguage === 'om' ? 'Imeelii sirrii galchaa' : currentLanguage === 'am' ? 'እባክዎ ትክክለኛ ኢሜይል ያስገቡ' : 'Please enter a valid email address');
+      return;
+    }
+
+    try {
+      const stored = localStorage.getItem('sof_umer_subscribers');
+      const subscribers = stored ? JSON.parse(stored) : [];
+      if (!subscribers.includes(trimmed)) {
+        subscribers.push(trimmed);
+        localStorage.setItem('sof_umer_subscribers', JSON.stringify(subscribers));
+      }
+    } catch {
+      // safe fallback
+    }
+
+    setSubscribed(true);
+    setEmail('');
+  };
+
   const currentRights = rightsText[currentLanguage] || rightsText.en;
   const currentAboutHeader = aboutHeaderTitle[currentLanguage] || aboutHeaderTitle.en;
-  const currentTagline = taglineText[currentLanguage] || taglineText.en;
 
   return (
-    <footer className="bg-[#050806] border-t border-white/10 text-[#F5F5F4] relative z-20 transition-colors">
-      {/* Main Footer Links & Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-14 pb-10">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12 text-left">
-          
-          {/* Brand & Mission Column */}
-          <div className="lg:col-span-5 space-y-4">
-            <div className="flex items-center gap-2.5">
-              <span className="font-serif text-xl tracking-wider text-amber-400 font-black">
-                SOF-UMER
-              </span>
-              <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[10px] text-emerald-400 font-semibold uppercase tracking-wider">
-                Ethiopia
-              </span>
-            </div>
-
-            <p className="text-xs text-white/60 leading-relaxed font-light pr-4 max-w-md">
-              {currentTagline}
-            </p>
-
-            <div className="pt-2 space-y-2 text-xs text-white/50">
-              <div className="flex items-center gap-2">
-                <MapPin className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-                <span>Churchill Road, Addis Ababa, Ethiopia</span>
+    <footer className="bg-[#050806] border-t border-white/10 text-[#F5F5F4] relative z-20 transition-colors pb-24 md:pb-12">
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 pt-10 pb-8 text-center space-y-10">
+        
+        {/* 1. Expandable / Folder-style ABOUT SOF-UMER Section */}
+        <div className="w-full">
+          <button
+            type="button"
+            onClick={() => setIsAboutExpanded(!isAboutExpanded)}
+            className="w-full flex items-center justify-between p-4 rounded-2xl bg-white/[0.03] hover:bg-white/[0.06] border border-white/10 hover:border-amber-500/30 transition-all duration-200 cursor-pointer group text-left"
+            aria-expanded={isAboutExpanded}
+          >
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-xl bg-amber-500/10 text-amber-400 group-hover:bg-amber-500/20 transition">
+                {isAboutExpanded ? (
+                  <FolderOpen className="w-5 h-5" />
+                ) : (
+                  <Folder className="w-5 h-5" />
+                )}
               </div>
-              <div className="flex items-center gap-2">
-                <Mail className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-                <span>info@sofumer.com</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Globe className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                <span className="text-[11px] text-white/40">English • Afaan Oromoo • አማርኛ</span>
+              <div>
+                <h3 className="text-xs sm:text-sm font-bold uppercase tracking-wider text-amber-400 group-hover:text-amber-300 transition">
+                  {currentAboutHeader}
+                </h3>
+                <span className="text-[11px] text-white/40 font-light">
+                  {isAboutExpanded 
+                    ? (currentLanguage === 'om' ? 'Cufi' : currentLanguage === 'am' ? 'ዝጋ' : 'Click to close')
+                    : (currentLanguage === 'om' ? 'Bani' : currentLanguage === 'am' ? 'ክፈት' : 'Click to explore')}
+                </span>
               </div>
             </div>
-          </div>
 
-          {/* ABOUT SOF-UMER Section */}
-          <div className="lg:col-span-7 space-y-4">
-            <div className="flex items-center gap-2 border-b border-white/10 pb-2">
-              <h3 className="text-xs font-bold uppercase tracking-widest text-amber-400">
-                {currentAboutHeader}
-              </h3>
+            <div className="p-1.5 rounded-lg bg-white/5 text-white/40 group-hover:text-amber-400 transition">
+              {isAboutExpanded ? (
+                <ChevronUp className="w-4 h-4" />
+              ) : (
+                <ChevronDown className="w-4 h-4" />
+              )}
             </div>
+          </button>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-2.5 pt-1">
-              {aboutSofUmerLinks.map((item) => (
-                <button
-                  key={item.id}
-                  onClick={() => onFooterLinkClick('info', item.id)}
-                  className="group text-left text-xs text-white/65 hover:text-amber-400 transition-colors duration-150 flex items-center justify-between cursor-pointer py-1"
-                >
-                  <span className="group-hover:translate-x-0.5 transition-transform duration-150">
-                    {getTitle(item)}
-                  </span>
-                  <ArrowUpRight className="w-3 h-3 opacity-0 group-hover:opacity-100 text-amber-400 transition-opacity shrink-0 ml-1" />
-                </button>
-              ))}
-
-              {/* Dynamic custom features if any */}
-              {customFeatures.map((feat) => {
-                const title = currentLanguage === 'om' ? feat.titleOm : currentLanguage === 'am' ? feat.titleAm : feat.titleEn;
-                return (
+          {/* Expanded 5 Items */}
+          {isAboutExpanded && (
+            <div className="mt-3 p-3 sm:p-4 rounded-2xl bg-black/40 border border-white/5 shadow-inner">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-left">
+                {aboutSofUmerLinks.map((item) => (
                   <button
-                    key={feat.id}
-                    onClick={() => onFooterLinkClick('info', feat.id)}
-                    className="group text-left text-xs text-white/65 hover:text-amber-400 transition-colors duration-150 flex items-center justify-between cursor-pointer py-1"
+                    key={item.id}
+                    type="button"
+                    onClick={() => onFooterLinkClick('info', item.id)}
+                    className="group flex items-center justify-between p-3 rounded-xl hover:bg-white/5 text-xs text-white/70 hover:text-amber-400 transition-all duration-150 cursor-pointer border border-transparent hover:border-white/5"
                   >
-                    <span className="group-hover:translate-x-0.5 transition-transform duration-150">
-                      {title}
+                    <span className="font-medium group-hover:translate-x-1 transition-transform">
+                      {getTitle(item)}
                     </span>
-                    <ArrowUpRight className="w-3 h-3 opacity-0 group-hover:opacity-100 text-amber-400 transition-opacity shrink-0 ml-1" />
+                    <ArrowRight className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 text-amber-400 transition-all" />
                   </button>
-                );
-              })}
+                ))}
+              </div>
             </div>
+          )}
+        </div>
+
+        {/* 2. Subscription Area (Stay Updated) */}
+        <div className="w-full p-6 sm:p-8 rounded-3xl bg-gradient-to-b from-white/[0.04] to-transparent border border-white/10 space-y-4 text-center">
+          <div className="space-y-1.5 max-w-md mx-auto">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-[11px] text-amber-400 font-medium mb-1">
+              <Mail className="w-3.5 h-3.5" />
+              <span>{stayUpdatedTitle[currentLanguage] || stayUpdatedTitle.en}</span>
+            </div>
+            <p className="text-xs text-white/60 font-light leading-relaxed">
+              {stayUpdatedSubtitle[currentLanguage] || stayUpdatedSubtitle.en}
+            </p>
           </div>
 
+          {subscribed ? (
+            <div className="inline-flex items-center gap-2 p-3.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-medium">
+              <CheckCircle2 className="w-4 h-4 shrink-0" />
+              <span>{successMessage[currentLanguage] || successMessage.en}</span>
+            </div>
+          ) : (
+            <form onSubmit={handleSubscribe} className="max-w-md mx-auto space-y-2">
+              <div className="flex flex-col sm:flex-row gap-2">
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder={emailPlaceholder[currentLanguage] || emailPlaceholder.en}
+                  className="flex-1 px-4 py-2.5 rounded-xl bg-black/60 border border-white/15 text-xs text-white placeholder:text-white/30 focus:outline-none focus:border-amber-400/60 focus:ring-1 focus:ring-amber-400/30 transition"
+                  required
+                />
+                <button
+                  type="submit"
+                  className="px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-black text-xs font-bold transition duration-150 cursor-pointer shadow-md hover:shadow-amber-500/20 shrink-0"
+                >
+                  {subscribeButtonText[currentLanguage] || subscribeButtonText.en}
+                </button>
+              </div>
+              {subError && (
+                <p className="text-[11px] text-red-400 text-left pl-1">{subError}</p>
+              )}
+            </form>
+          )}
         </div>
-      </div>
 
-      {/* Bottom Bar with Copyright, Legal & Safety Status */}
-      <div className="border-t border-white/5 bg-black/40 py-6">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row justify-between items-center gap-4 text-xs text-white/40">
-          <p className="text-center sm:text-left font-light">
-            {currentRights}
-          </p>
-
-          <div className="flex items-center gap-4 font-medium">
-            <button 
-              onClick={() => onFooterLinkClick('info', 'terms-of-service')}
-              className="hover:text-amber-400 transition cursor-pointer"
-            >
-              {getTitle({ titleEn: 'Terms', titleOm: 'Waliigaltee', titleAm: 'ስምምነት' })}
-            </button>
-            <span>·</span>
-            <button 
-              onClick={() => onFooterLinkClick('info', 'privacy-policy')}
-              className="hover:text-amber-400 transition cursor-pointer"
-            >
-              {getTitle({ titleEn: 'Privacy', titleOm: 'Iccitii', titleAm: 'ግላዊነት' })}
-            </button>
-            <span>·</span>
-            <button 
-              onClick={() => onFooterLinkClick('info', 'marketplace-rules')}
-              className="hover:text-amber-400 transition cursor-pointer"
-            >
-              {getTitle({ titleEn: 'Rules', titleOm: 'Seera', titleAm: 'ደንቦች' })}
-            </button>
-            <span>·</span>
-            <button 
-              onClick={() => onFooterLinkClick('info', 'help-center')}
-              className="hover:text-amber-400 transition cursor-pointer"
-            >
-              {getTitle({ titleEn: 'Help', titleOm: 'Gargaarsa', titleAm: 'እርዳታ' })}
-            </button>
-          </div>
+        {/* 3. Existing Copyright Text */}
+        <div className="pt-2 text-xs text-white/40 font-light">
+          <p>{currentRights}</p>
         </div>
+
       </div>
     </footer>
   );
 }
+
