@@ -333,7 +333,7 @@ function getFieldsForSelection(majorCategory: string, subcategory: string, t?: (
       { id: 'purpose', label: 'Purpose', type: 'select', options: ['Rent', 'Sale', 'Buy'], colSpan: 'half' },
       { id: 'bedrooms', label: 'Bedrooms', type: 'number', placeholder: 'e.g., 3', colSpan: 'half' },
       { id: 'bathrooms', label: 'Bathrooms', type: 'number', placeholder: 'e.g., 2', colSpan: 'half' },
-      { id: 'furnished', label: 'Furnished Status', type: 'select', options: ['Unfurnished', 'Furnished', 'Semi-Furnished'], colSpan: 'half' },
+      { id: 'condition', label: 'Property Condition / Status', type: 'select', options: ['Furnished', 'Unfurnished', 'Semi-Furnished', 'Under Construction', 'Brand New / Newly Built'], colSpan: 'half' },
       { id: 'area', label: 'Area (m²)', type: 'number', placeholder: 'e.g., 150', required: true, colSpan: 'half' },
       { id: 'price', label: 'Price', type: 'number', placeholder: 'e.g., 25000', required: true, colSpan: 'half' },
       { id: 'location', label: 'Location', type: 'text', placeholder: 'e.g., Bole, Addis Ababa', required: true, colSpan: 'full' },
@@ -577,6 +577,10 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
         const next = { ...prev };
         for (const f of activeFields) {
           if (f.type === 'select' && f.options && f.options.length > 0) {
+            // For properties, do not hardcode default condition or furnished values
+            if (f.id === 'condition' && (majorCategory === 'Properties' || majorCategory?.toLowerCase() === 'properties')) {
+              continue;
+            }
             if (next[f.id] === undefined || next[f.id] === '') {
               next[f.id] = f.options[0];
               changed = true;
@@ -1117,7 +1121,7 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
         retailPrice: isPropertyCategory ? undefined : retailVal,
         currency,
         brand: fieldsState.brand || '',
-        condition: (fieldsState.condition !== undefined && fieldsState.condition !== '') ? fieldsState.condition : 'New',
+        condition: (fieldsState.condition !== undefined && fieldsState.condition !== '') ? fieldsState.condition : (isPropertyCategory ? '' : 'New'),
         unit: isPropertyCategory ? '' : finalUnit,
         wholesaleUnit: isPropertyCategory ? '' : finalUnit,
         negotiable: fieldsState.negotiable || 'No',

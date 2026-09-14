@@ -27,6 +27,17 @@ export const WizardStep3Pricing: React.FC<WizardStep3PricingProps> = ({
 }) => {
   const currentDelivery = Array.isArray(fieldsState.deliveryOptions) ? fieldsState.deliveryOptions : [];
 
+  const isRealEstate = 
+    majorCategory === 'Properties' || 
+    majorCategory?.toLowerCase() === 'properties' || 
+    fieldsState?.category === 'properties' || 
+    fieldsState?.category === 'Properties';
+
+  const formData = {
+    ...fieldsState,
+    category: isRealEstate ? 'properties' : (fieldsState.category || majorCategory?.toLowerCase() || majorCategory)
+  };
+
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
       {/* Currency & Base Unit */}
@@ -38,7 +49,7 @@ export const WizardStep3Pricing: React.FC<WizardStep3PricingProps> = ({
           <select
             value={currency}
             onChange={e => setCurrency(e.target.value)}
-            className="w-full p-3 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white focus:outline-none transition"
+            className="w-full p-3 bg-zinc-900 border border-white/10 focus:border-[#F5A623] rounded-xl text-xs text-white focus:outline-none transition"
           >
             <option value="ETB" className="bg-[#0c0c0c]">ETB (Ethiopian Birr)</option>
             <option value="USD" className="bg-[#0c0c0c]">USD ($)</option>
@@ -48,7 +59,7 @@ export const WizardStep3Pricing: React.FC<WizardStep3PricingProps> = ({
           </select>
         </div>
 
-        {majorCategory !== 'Properties' && (
+        {formData.category !== 'properties' && (
           <div>
             <label className="block text-xs font-bold text-white/80 uppercase mb-1">
               Pricing Unit *
@@ -59,7 +70,7 @@ export const WizardStep3Pricing: React.FC<WizardStep3PricingProps> = ({
                 handleFieldChange('unit', e.target.value);
                 handleFieldChange('wholesaleUnit', e.target.value);
               }}
-              className="w-full p-3 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white focus:outline-none transition"
+              className="w-full p-3 bg-zinc-900 border border-white/10 focus:border-[#F5A623] rounded-xl text-xs text-white focus:outline-none transition"
             >
               {STANDARD_UNITS.map(u => (
                 <option key={u} value={u} className="bg-[#0c0c0c]">{u}</option>
@@ -69,11 +80,11 @@ export const WizardStep3Pricing: React.FC<WizardStep3PricingProps> = ({
         )}
       </div>
 
-      {/* Real Estate Pricing */}
-      {majorCategory === 'Properties' && (
-        <div className="p-4 rounded-2xl bg-zinc-900/60 border border-white/10 space-y-3">
-          <h4 className="text-xs font-bold text-amber-400 uppercase tracking-wider">
-            Property Pricing
+      {/* Real Estate Pricing & Condition */}
+      {formData.category === 'properties' && (
+        <div className="p-4 rounded-2xl bg-[#141418] border border-white/10 space-y-4">
+          <h4 className="text-xs font-bold text-[#F5A623] uppercase tracking-wider">
+            Property Pricing & Details
           </h4>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
@@ -86,7 +97,7 @@ export const WizardStep3Pricing: React.FC<WizardStep3PricingProps> = ({
                 value={fieldsState.price || ''}
                 placeholder="e.g. 4500000"
                 onChange={e => handleFieldChange('price', e.target.value)}
-                className="w-full p-3 bg-black/50 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white focus:outline-none transition font-mono text-base font-bold text-amber-400"
+                className="w-full p-3 bg-[#0A0A0C] border border-white/10 focus:border-[#F5A623] rounded-xl text-xs text-white focus:outline-none transition font-mono text-base font-bold text-[#F5A623]"
               />
             </div>
             <div>
@@ -96,12 +107,31 @@ export const WizardStep3Pricing: React.FC<WizardStep3PricingProps> = ({
               <select
                 value={fieldsState.negotiable || 'No'}
                 onChange={e => handleFieldChange('negotiable', e.target.value)}
-                className="w-full p-3 bg-black/50 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white"
+                className="w-full p-3 bg-[#0A0A0C] border border-white/10 focus:border-[#F5A623] rounded-xl text-xs text-white"
               >
-                <option value="No">Fixed Price (Non-negotiable)</option>
-                <option value="Yes">Negotiable</option>
+                <option value="No" className="bg-[#0A0A0C]">Fixed Price (Non-negotiable)</option>
+                <option value="Yes" className="bg-[#0A0A0C]">Negotiable</option>
               </select>
             </div>
+          </div>
+
+          {/* Property Condition / Status Dropdown (Real Estate Only) */}
+          <div>
+            <label className="block text-xs font-bold text-white/80 uppercase mb-1">
+              Property Condition / Status *
+            </label>
+            <select
+              value={formData.condition || ''}
+              onChange={e => handleFieldChange('condition', e.target.value)}
+              className="w-full p-3 bg-[#0A0A0C] border border-white/10 focus:border-[#F5A623] rounded-xl text-xs text-white focus:outline-none transition"
+            >
+              <option value="" disabled className="bg-[#0A0A0C] text-white/40">Select Property Condition / Status...</option>
+              <option value="Furnished" className="bg-[#0A0A0C]">Furnished</option>
+              <option value="Unfurnished" className="bg-[#0A0A0C]">Unfurnished</option>
+              <option value="Semi-Furnished" className="bg-[#0A0A0C]">Semi-Furnished</option>
+              <option value="Under Construction" className="bg-[#0A0A0C]">Under Construction</option>
+              <option value="Brand New / Newly Built" className="bg-[#0A0A0C]">Brand New / Newly Built</option>
+            </select>
           </div>
         </div>
       )}
@@ -351,52 +381,54 @@ export const WizardStep3Pricing: React.FC<WizardStep3PricingProps> = ({
         </div>
       )}
 
-      {/* Delivery & Logistics Checkboxes */}
-      <div className="p-4 rounded-2xl bg-zinc-900/60 border border-white/10 space-y-3">
-        <div className="flex items-center gap-2">
-          <Truck className="w-4 h-4 text-amber-400" />
-          <h4 className="text-xs font-bold text-white uppercase tracking-wider">
-            Delivery & Logistics Options
-          </h4>
-        </div>
-        <p className="text-[11px] text-white/50">Select all fulfillment methods you provide to buyers:</p>
+      {/* Delivery & Logistics Options - Hidden for Real Estate */}
+      {formData.category !== 'properties' && (
+        <div className="p-4 rounded-2xl bg-[#141418] border border-white/10 space-y-3">
+          <div className="flex items-center gap-2">
+            <Truck className="w-4 h-4 text-[#F5A623]" />
+            <h4 className="text-xs font-bold text-white uppercase tracking-wider">
+              Delivery & Logistics Options
+            </h4>
+          </div>
+          <p className="text-[11px] text-white/50">Select all fulfillment methods you provide to buyers:</p>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-1">
-          {[
-            { id: 'Store/Warehouse Pickup', title: 'Store/Warehouse Pickup', desc: 'Buyer picks up at your location' },
-            { id: 'Local City Delivery', title: 'Local City Delivery', desc: 'Direct courier within the same city' },
-            { id: 'Freight Shipping', title: 'Freight Shipping', desc: 'Nationwide truck/cargo shipping' }
-          ].map(delOpt => {
-            const isChecked = currentDelivery.includes(delOpt.id);
-            return (
-              <label
-                key={delOpt.id}
-                className={`p-3 rounded-xl border flex items-start gap-2.5 cursor-pointer transition ${
-                  isChecked
-                    ? 'bg-amber-500/10 border-amber-500/60 text-white ring-1 ring-amber-500/30'
-                    : 'bg-black/40 border-white/10 text-white/70 hover:border-white/20'
-                }`}
-              >
-                <input
-                  type="checkbox"
-                  checked={isChecked}
-                  onChange={() => {
-                    const next = isChecked
-                      ? currentDelivery.filter((item: string) => item !== delOpt.id)
-                      : [...currentDelivery, delOpt.id];
-                    handleFieldChange('deliveryOptions', next);
-                  }}
-                  className="mt-0.5 w-4 h-4 rounded text-amber-500 focus:ring-amber-400 border-white/20 bg-black"
-                />
-                <div>
-                  <span className="text-xs font-bold text-white block">{delOpt.title}</span>
-                  <span className="text-[10px] text-white/40 block leading-tight">{delOpt.desc}</span>
-                </div>
-              </label>
-            );
-          })}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-1">
+            {[
+              { id: 'Store/Warehouse Pickup', title: 'Store/Warehouse Pickup', desc: 'Buyer picks up at your location' },
+              { id: 'Local City Delivery', title: 'Local City Delivery', desc: 'Direct courier within the same city' },
+              { id: 'Freight Shipping', title: 'Freight Shipping', desc: 'Nationwide truck/cargo shipping' }
+            ].map(delOpt => {
+              const isChecked = currentDelivery.includes(delOpt.id);
+              return (
+                <label
+                  key={delOpt.id}
+                  className={`p-3 rounded-xl border flex items-start gap-2.5 cursor-pointer transition ${
+                    isChecked
+                      ? 'bg-[#F5A623]/10 border-[#F5A623]/60 text-white ring-1 ring-[#F5A623]/30'
+                      : 'bg-[#0A0A0C] border-white/10 text-white/70 hover:border-white/20'
+                  }`}
+                >
+                  <input
+                    type="checkbox"
+                    checked={isChecked}
+                    onChange={() => {
+                      const next = isChecked
+                        ? currentDelivery.filter((item: string) => item !== delOpt.id)
+                        : [...currentDelivery, delOpt.id];
+                      handleFieldChange('deliveryOptions', next);
+                    }}
+                    className="mt-0.5 w-4 h-4 rounded text-[#F5A623] focus:ring-[#F5A623] border-white/20 bg-[#0A0A0C]"
+                  />
+                  <div>
+                    <span className="text-xs font-bold text-white block">{delOpt.title}</span>
+                    <span className="text-[10px] text-white/40 block leading-tight">{delOpt.desc}</span>
+                  </div>
+                </label>
+              );
+            })}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };

@@ -203,47 +203,67 @@ export const WizardStep2Details: React.FC<WizardStep2DetailsProps> = ({
           </div>
 
           {majorCategory === 'Properties' && (
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div className="space-y-3">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <div>
+                  <label className="block text-xs font-bold text-white/80 uppercase mb-1">Purpose *</label>
+                  <select
+                    value={fieldsState.purpose || 'Sale'}
+                    onChange={e => handleFieldChange('purpose', e.target.value)}
+                    className="w-full p-2.5 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white"
+                  >
+                    <option value="Sale">For Sale</option>
+                    <option value="Rent">For Rent</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-white/80 uppercase mb-1">Bedrooms</label>
+                  <input
+                    type="number"
+                    value={fieldsState.bedrooms || ''}
+                    placeholder="3"
+                    onChange={e => handleFieldChange('bedrooms', e.target.value)}
+                    className="w-full p-2.5 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-white/80 uppercase mb-1">Bathrooms</label>
+                  <input
+                    type="number"
+                    value={fieldsState.bathrooms || ''}
+                    placeholder="2"
+                    onChange={e => handleFieldChange('bathrooms', e.target.value)}
+                    className="w-full p-2.5 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-white/80 uppercase mb-1">Area (m²)</label>
+                  <input
+                    type="number"
+                    value={fieldsState.area || ''}
+                    placeholder="150"
+                    onChange={e => handleFieldChange('area', e.target.value)}
+                    className="w-full p-2.5 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white"
+                  />
+                </div>
+              </div>
+
               <div>
-                <label className="block text-xs font-bold text-white/80 uppercase mb-1">Purpose *</label>
+                <label className="block text-xs font-bold text-white/80 uppercase mb-1">
+                  Property Condition / Status
+                </label>
                 <select
-                  value={fieldsState.purpose || 'Sale'}
-                  onChange={e => handleFieldChange('purpose', e.target.value)}
-                  className="w-full p-2.5 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white"
+                  value={fieldsState.condition || ''}
+                  onChange={e => handleFieldChange('condition', e.target.value)}
+                  className="w-full p-3 bg-[#0A0A0C] border border-white/10 focus:border-[#F5A623] rounded-xl text-xs text-white focus:outline-none transition"
                 >
-                  <option value="Sale">For Sale</option>
-                  <option value="Rent">For Rent</option>
+                  <option value="" disabled className="bg-[#0A0A0C] text-white/40">Select Property Condition / Status...</option>
+                  <option value="Furnished" className="bg-[#0A0A0C]">Furnished</option>
+                  <option value="Unfurnished" className="bg-[#0A0A0C]">Unfurnished</option>
+                  <option value="Semi-Furnished" className="bg-[#0A0A0C]">Semi-Furnished</option>
+                  <option value="Under Construction" className="bg-[#0A0A0C]">Under Construction</option>
+                  <option value="Brand New / Newly Built" className="bg-[#0A0A0C]">Brand New / Newly Built</option>
                 </select>
-              </div>
-              <div>
-                <label className="block text-xs font-bold text-white/80 uppercase mb-1">Bedrooms</label>
-                <input
-                  type="number"
-                  value={fieldsState.bedrooms || ''}
-                  placeholder="3"
-                  onChange={e => handleFieldChange('bedrooms', e.target.value)}
-                  className="w-full p-2.5 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-bold text-white/80 uppercase mb-1">Bathrooms</label>
-                <input
-                  type="number"
-                  value={fieldsState.bathrooms || ''}
-                  placeholder="2"
-                  onChange={e => handleFieldChange('bathrooms', e.target.value)}
-                  className="w-full p-2.5 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-bold text-white/80 uppercase mb-1">Area (m²)</label>
-                <input
-                  type="number"
-                  value={fieldsState.area || ''}
-                  placeholder="150"
-                  onChange={e => handleFieldChange('area', e.target.value)}
-                  className="w-full p-2.5 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white"
-                />
               </div>
             </div>
           )}

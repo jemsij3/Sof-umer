@@ -145,8 +145,8 @@ export const WizardStep4Review: React.FC<WizardStep4ReviewProps> = ({
                 Specs: <strong>{fieldsState.storageSpec}</strong>
               </span>
             )}
-            {deliveryOptions.map((opt: string) => (
-              <span key={opt} className="bg-amber-500/10 border border-amber-500/20 text-amber-300 px-2.5 py-1 rounded-lg">
+            {majorCategory !== 'Properties' && majorCategory?.toLowerCase() !== 'properties' && fieldsState?.category !== 'properties' && deliveryOptions.map((opt: string) => (
+              <span key={opt} className="bg-[#F5A623]/10 border border-[#F5A623]/20 text-[#F5A623] px-2.5 py-1 rounded-lg">
                 🚚 {opt}
               </span>
             ))}
