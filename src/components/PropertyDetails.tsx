@@ -570,12 +570,23 @@ export default function PropertyDetails({
     }
   };
 
+  // Primary fields that must NEVER leak into additional specs
+  const dedupeExcludedKeywords = [
+    'bedrooms', 'bedroom', 'beds', 'bed',
+    'bathrooms', 'bathroom', 'baths', 'bath',
+    'area', 'totalarea', 'aream', 'aream2', 'sqm', 'm2', 'surface',
+    'condition', 'propertycondition', 'propertyconditionstatus', 'furnishing', 'furnished', 'furnishedstatus',
+    'subcategory', 'subcat', 'propertytype', 'vehicletype', 'type',
+    'purpose', 'category'
+  ];
+  markRendered(...dedupeExcludedKeywords);
+
   if (metaCondition) markRendered('condition', 'propertycondition', 'propertyconditionstatus', 'furnished', 'furnishedstatus');
   if (metaSubcategory) markRendered('subcategory', 'propertytype', 'vehicletype', 'type');
   if (metaPurpose) markRendered('purpose', 'category');
   if (metaBedrooms) markRendered('bedrooms', 'beds');
   if (metaBathrooms) markRendered('bathrooms', 'baths');
-  if (metaArea) markRendered('area', 'totalarea', 'aream2');
+  if (metaArea) markRendered('area', 'totalarea', 'aream', 'aream2', 'sqm');
   if (metaTransmission) markRendered('transmission', 'gearbox');
   if (metaFuelType) markRendered('fueltype', 'fuel');
   if (metaMileage) markRendered('mileage', 'odometer');
@@ -601,6 +612,12 @@ export default function PropertyDetails({
   const leftoverSpecs: { label: string; value: string }[] = [];
   const addedLeftoverKeys = new Set<string>();
 
+  const isDedupeExcluded = (label: string) => {
+    const rawLower = label.toLowerCase();
+    const normKey = rawLower.replace(/[^a-z0-9]/g, '');
+    return dedupeExcludedKeywords.some(kw => normKey === kw || normKey.includes(kw) || rawLower.includes(kw));
+  };
+
   const tryAddLeftover = (label: string, rawVal: any) => {
     if (rawVal === undefined || rawVal === null) return;
     const valStr = String(rawVal).trim();
@@ -608,6 +625,8 @@ export default function PropertyDetails({
     const lowerVal = valStr.toLowerCase();
     if (['null', 'undefined', 'n/a', 'na', 'none', 'placeholder', '-', '--', 'not specified', 'not provided'].includes(lowerVal)) return;
     
+    if (isDedupeExcluded(label)) return;
+
     const normKey = label.toLowerCase().replace(/[^a-z0-9]/g, '');
     if (renderedFieldNames.has(normKey) || addedLeftoverKeys.has(normKey)) return;
 
@@ -642,6 +661,8 @@ export default function PropertyDetails({
     }
   }
 
+  const visibleLeftoverSpecs = leftoverSpecs.filter(spec => !isDedupeExcluded(spec.label));
+
   const hasAnyMetadata = Boolean(
     metaCondition || metaSubcategory || metaPurpose || 
     (metaBedrooms !== undefined && Number(metaBedrooms) > 0) || 
@@ -651,8 +672,7 @@ export default function PropertyDetails({
     metaBrand || metaModel || metaSellingMode || 
     (metaMoq !== undefined && Number(metaMoq) > 0) || 
     (metaStock !== undefined && Number(metaStock) > 0) ||
-    leftoverSpecs.length > 0 ||
-    parsedSpecs.length > 0
+    visibleLeftoverSpecs.length > 0
   );
 
   const handleSendInquiry = async (e: React.FormEvent) => {
@@ -1189,17 +1209,17 @@ export default function PropertyDetails({
               {/* 1. REAL ESTATE & PROPERTY METADATA GRID */}
               {isRealEstateCategory && (
                 <div>
-                  {/* Physical Specs Top Banner */}
+                  {/* 1. TOP CARDS (PRIMARY) */}
                   {((metaBedrooms !== undefined && Number(metaBedrooms) > 0) || 
                     (metaBathrooms !== undefined && Number(metaBathrooms) > 0) || 
                     (metaArea !== undefined && Number(metaArea) > 0)) && (
-                    <div className="grid grid-cols-3 gap-4 text-center mb-6 border-b border-[#22242E] pb-6">
+                    <div className="grid grid-cols-3 gap-2 sm:gap-4 text-center mb-4 sm:mb-6 border-b border-[#22242E] pb-6">
                       {metaBedrooms !== undefined && Number(metaBedrooms) > 0 && (
                         <div className="bg-[#1A1B22] rounded-2xl p-4 border border-[#22242E]">
                           <BedDouble className="w-5 h-5 text-[#F5A623] mx-auto mb-2" />
                           <span className="text-base font-bold text-white block">{metaBedrooms}</span>
                           <span className="text-[10px] font-bold text-[#F5A623] uppercase tracking-wider">
-                            {t('bedrooms') || getTranslatedFieldLabel('Bedrooms', currentLanguage) || 'Bedrooms'}
+                            {t('bedrooms') || getTranslatedFieldLabel('Bedrooms', currentLanguage) || 'BEDROOMS'}
                           </span>
                         </div>
                       )}
@@ -1208,7 +1228,7 @@ export default function PropertyDetails({
                           <Bath className="w-5 h-5 text-[#F5A623] mx-auto mb-2" />
                           <span className="text-base font-bold text-white block">{metaBathrooms}</span>
                           <span className="text-[10px] font-bold text-[#F5A623] uppercase tracking-wider">
-                            {t('bathrooms') || getTranslatedFieldLabel('Bathrooms', currentLanguage) || 'Bathrooms'}
+                            {t('bathrooms') || getTranslatedFieldLabel('Bathrooms', currentLanguage) || 'BATHROOMS'}
                           </span>
                         </div>
                       )}
@@ -1217,15 +1237,15 @@ export default function PropertyDetails({
                           <Maximize className="w-5 h-5 text-[#F5A623] mx-auto mb-2" />
                           <span className="text-base font-bold text-white block">{metaArea} m²</span>
                           <span className="text-[10px] font-bold text-[#F5A623] uppercase tracking-wider">
-                            {t('total_area') || t('area') || getTranslatedFieldLabel('Area (m²)', currentLanguage) || 'Area (m²)'}
+                            {t('total_area') || t('area') || getTranslatedFieldLabel('Total Area', currentLanguage) || 'TOTAL AREA'}
                           </span>
                         </div>
                       )}
                     </div>
                   )}
 
-                  {/* Property Badges Grid */}
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3 my-4">
+                  {/* 2. MIDDLE GRID (ONLY UNIQUE NON-DUPLICATE FIELDS) */}
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3 my-4">
                     {metaCondition && (
                       <div className="bg-[#1A1B22] p-3.5 rounded-xl border border-[#22242E]">
                         <span className="text-[#F5A623] text-xs font-semibold uppercase tracking-wider block mb-1">
@@ -1255,39 +1275,6 @@ export default function PropertyDetails({
                         </span>
                         <span className="text-white text-sm font-medium">
                           {getTranslatedOption(metaPurpose, currentLanguage) || metaPurpose}
-                        </span>
-                      </div>
-                    )}
-
-                    {metaBedrooms !== undefined && Number(metaBedrooms) > 0 && (
-                      <div className="bg-[#1A1B22] p-3.5 rounded-xl border border-[#22242E]">
-                        <span className="text-[#F5A623] text-xs font-semibold uppercase tracking-wider block mb-1">
-                          Bedrooms
-                        </span>
-                        <span className="text-white text-sm font-medium">
-                          {metaBedrooms}
-                        </span>
-                      </div>
-                    )}
-
-                    {metaBathrooms !== undefined && Number(metaBathrooms) > 0 && (
-                      <div className="bg-[#1A1B22] p-3.5 rounded-xl border border-[#22242E]">
-                        <span className="text-[#F5A623] text-xs font-semibold uppercase tracking-wider block mb-1">
-                          Bathrooms
-                        </span>
-                        <span className="text-white text-sm font-medium">
-                          {metaBathrooms}
-                        </span>
-                      </div>
-                    )}
-
-                    {metaArea !== undefined && Number(metaArea) > 0 && (
-                      <div className="bg-[#1A1B22] p-3.5 rounded-xl border border-[#22242E]">
-                        <span className="text-[#F5A623] text-xs font-semibold uppercase tracking-wider block mb-1">
-                          Total Area
-                        </span>
-                        <span className="text-white text-sm font-medium">
-                          {metaArea} m²
                         </span>
                       </div>
                     )}
@@ -1448,8 +1435,8 @@ export default function PropertyDetails({
                 </div>
               )}
 
-              {/* 4. UNIVERSAL FALLBACK METADATA CARD (No saved input field is ever hidden or lost) */}
-              {leftoverSpecs.length > 0 && (
+              {/* 3. ADDITIONAL SPECS LOOP (FILTER OUT DUPLICATES) */}
+              {visibleLeftoverSpecs.length > 0 && (
                 <div className={`${isRealEstateCategory || isVehiclesCategory || isProductsCategory ? 'mt-6 pt-6 border-t border-[#22242E]' : ''}`}>
                   {(isRealEstateCategory || isVehiclesCategory || isProductsCategory) && (
                     <div className="flex items-center gap-2 mb-3">
@@ -1460,7 +1447,7 @@ export default function PropertyDetails({
                     </div>
                   )}
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                    {leftoverSpecs.map((spec, idx) => (
+                    {visibleLeftoverSpecs.map((spec, idx) => (
                       <div key={idx} className="bg-[#1A1B22] p-3.5 rounded-xl border border-[#22242E]">
                         <span className="text-[#F5A623] text-xs font-semibold uppercase tracking-wider block mb-1">
                           {t(spec.label) || getTranslatedFieldLabel(spec.label, currentLanguage) || spec.label}
