@@ -806,9 +806,9 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
   const featuredPrice = systemSettings?.marketplaceSettings?.featuredAdPrice ?? 300;
 
   const DEFAULT_AD_PACKAGES = [
-    { id: 'starter', name: 'STARTER', price: 100, currency: 'ETB', duration: '3 days', daysCount: 3, views: 'Category top placement', badge: 'STARTER', desc: 'Category top placement + Basic Verified Badge' },
-    { id: 'premium', name: 'PREMIUM', price: 150, currency: 'ETB', duration: '7 days', daysCount: 7, views: 'Featured hero slider', badge: 'PREMIUM', desc: 'Featured hero slider + High priority ranking' },
-    { id: 'vip', name: 'VIP ELITE', price: 500, currency: 'ETB', duration: '30 days', daysCount: 30, views: 'Top search billboard pin', badge: 'VIP ELITE', desc: 'Top search billboard pin + Full site promotion' }
+    { id: 'basic', name: 'Basic Boost', price: 49, currency: 'ETB', duration: '3 days', daysCount: 3, views: 'Category top placement', badge: 'BASIC', desc: 'Category top placement + Basic Verified Badge' },
+    { id: 'premium', name: 'Premium Boost', price: 149, currency: 'ETB', duration: '7 days', daysCount: 7, views: 'Featured hero slider', badge: 'PREMIUM', desc: 'Featured hero slider + High priority ranking' },
+    { id: 'vip', name: 'VIP Elite Boost', price: 399, currency: 'ETB', duration: '30 days', daysCount: 30, views: 'Top search billboard pin', badge: 'VIP ELITE', desc: 'Top search billboard pin + Full site promotion' }
   ];
 
   const checkFreeListingActive = (fls: any) => {
@@ -840,15 +840,17 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
   const freeDurationText = campaignInfo.displayText;
 
   const allPromotionPlans = [
-    ...(isFreeListingEnabled ? [{ 
+    { 
       id: 'free', 
-      name: 'Standard Free Listing', 
+      name: 'Free Listing / Standard', 
       cost: 0, 
-      days: freeDurationText, 
+      days: isFreeListingEnabled ? freeDurationText : 'Standard', 
       daysCount: 0, 
-      desc: `Standard catalog listing (Campaign: ${campaignInfo.displayText}, limit ${maxFree} free listings)`, 
-      badge: campaignInfo.isLastDay ? 'LAST DAY' : 'FREE' 
-    }] : []),
+      desc: isFreeListingEnabled 
+        ? `Standard catalog listing (Campaign: ${campaignInfo.displayText}, limit ${maxFree} free listings)` 
+        : 'Standard catalog listing with basic search visibility.', 
+      badge: isFreeListingEnabled ? (campaignInfo.isLastDay ? 'LAST DAY' : 'FREE') : 'STANDARD' 
+    },
     ...dynamicPackages.map((pkg: any) => ({
       id: pkg.id || pkg.name,
       name: pkg.name,
@@ -860,9 +862,7 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
     }))
   ];
 
-  const effectiveSelectedPlan = (selectedPlan === 'free' && !isFreeListingEnabled)
-    ? (allPromotionPlans[0]?.id || 'starter')
-    : selectedPlan;
+  const effectiveSelectedPlan = selectedPlan || 'free';
 
   const selectedPlanObj = allPromotionPlans.find(p => p.id === effectiveSelectedPlan) || allPromotionPlans[0];
   const baseCost = selectedPlanObj ? selectedPlanObj.cost : 0;
@@ -1375,6 +1375,17 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
               fieldsState={fieldsState}
               imagesList={imagesList}
               wholesaleTiers={wholesaleTiers}
+              selectedPlan={selectedPlan}
+              setSelectedPlan={(val: any) => {
+                setSelectedPlan(val);
+                if (val === 'free') {
+                  setIsFeaturedAddon(false);
+                  setIsTopAdAddon(false);
+                } else {
+                  setIsFeaturedAddon(true);
+                  if (val === 'vip') setIsTopAdAddon(true);
+                }
+              }}
               isFeaturedAddon={isFeaturedAddon}
               setIsFeaturedAddon={(val) => {
                 setIsFeaturedAddon(val);
