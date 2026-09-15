@@ -11,9 +11,10 @@ interface TwoFactorSecurityModuleProps {
   currentUser: User;
   onUserUpdated: (user: User) => void;
   isAdminContext?: boolean;
+  minimal?: boolean;
 }
 
-export function TwoFactorSecurityModule({ currentUser, onUserUpdated, isAdminContext = false }: TwoFactorSecurityModuleProps) {
+export function TwoFactorSecurityModule({ currentUser, onUserUpdated, isAdminContext = false, minimal = false }: TwoFactorSecurityModuleProps) {
   const { t } = useApp();
   // Setup States
   const [isSetupOpen, setIsSetupOpen] = useState(false);
@@ -225,6 +226,302 @@ export function TwoFactorSecurityModule({ currentUser, onUserUpdated, isAdminCon
 
   const isUserAdmin = currentUser.role === 'admin' || currentUser.isEmployee === true;
   const is2FAEnabled = Boolean(currentUser.twoFactorEnabled);
+
+  if (minimal) {
+    return (
+      <div className="space-y-4">
+        {!is2FAEnabled ? (
+          <button
+            type="button"
+            onClick={handleStartSetup}
+            disabled={setupSubmitting}
+            className="py-3.5 px-6 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black font-extrabold text-xs uppercase tracking-wider rounded-xl transition shadow-lg shadow-amber-500/10 cursor-pointer flex items-center justify-center gap-2 disabled:opacity-50"
+          >
+            {setupSubmitting ? <RefreshCw className="w-4 h-4 animate-spin" /> : null}
+            <span>Enable 2FA</span>
+          </button>
+        ) : (
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-xs font-semibold">
+              <CheckCircle2 className="w-4 h-4" />
+              <span>2FA Enabled</span>
+            </div>
+            {!isUserAdmin && (
+              <button
+                type="button"
+                onClick={() => setIsDisableOpen(true)}
+                className="py-2.5 px-4 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 text-xs font-semibold rounded-xl transition cursor-pointer"
+              >
+                Disable 2FA
+              </button>
+            )}
+          </div>
+        )}
+
+        {/* Setup Modal / Wizard */}
+        <AnimatePresence>
+          {isSetupOpen && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                className="w-full max-w-lg bg-[#0d0d12] border border-white/10 rounded-3xl p-6 md:p-8 space-y-6 shadow-2xl relative"
+              >
+                <button
+                  onClick={() => setIsSetupOpen(false)}
+                  className="absolute top-5 right-5 p-2 text-white/40 hover:text-white rounded-full hover:bg-white/5 transition"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+
+                <div className="space-y-2 text-center">
+                  <div className="mx-auto w-12 h-12 bg-amber-500/10 text-amber-500 border border-amber-500/20 rounded-2xl flex items-center justify-center">
+                    <Smartphone className="w-6 h-6" />
+                  </div>
+                  <h3 className="text-2xl font-serif font-bold text-white">Google Authenticator Setup</h3>
+                  <p className="text-xs text-white/50">Follow the steps below to link Google Authenticator to Sof Umer.</p>
+                </div>
+
+                {setupError && (
+                  <div className="bg-red-500/10 border border-red-500/20 text-red-300 text-xs p-3.5 rounded-xl text-center">
+                    {setupError}
+                  </div>
+                )}
+
+                {!showManualKey ? (
+                  <div className="space-y-4">
+                    <div className="p-4 bg-white rounded-2xl flex flex-col items-center justify-center border border-amber-500/30 shadow-xl max-w-[220px] mx-auto">
+                      {qrCodeUrl ? (
+                        <img src={qrCodeUrl} alt="2FA QR Code" className="w-44 h-44 object-contain" />
+                      ) : (
+                        <div className="w-44 h-44 flex items-center justify-center text-black/50 text-xs">Generating QR...</div>
+                      )}
+                    </div>
+                    <p className="text-center text-xs text-white/60">
+                      Scan this QR code in Google Authenticator or another TOTP app.
+                    </p>
+                    <div className="text-center">
+                      <button
+                        type="button"
+                        onClick={() => setShowManualKey(true)}
+                        className="text-xs text-amber-400 hover:text-amber-300 underline font-medium cursor-pointer"
+                      >
+                        Cannot scan? Enter setup key manually
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-4 bg-black/40 border border-white/10 p-4 rounded-2xl">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-semibold text-white/70">Secret Key</span>
+                      <button
+                        type="button"
+                        onClick={() => copyToClipboard(setupSecret)}
+                        className="text-xs text-amber-400 hover:text-amber-300 flex items-center gap-1 font-mono cursor-pointer"
+                      >
+                        {copiedKey ? <Check className="w-3.5 h-3.5 text-green-400" /> : <Copy className="w-3.5 h-3.5" />}
+                        <span>{copiedKey ? 'Copied' : 'Copy'}</span>
+                      </button>
+                    </div>
+                    <div className="p-3 bg-black/60 rounded-xl border border-white/5 font-mono text-center text-amber-400 text-sm tracking-wider break-all select-all">
+                      {setupSecret}
+                    </div>
+                    <div className="text-center">
+                      <button
+                        type="button"
+                        onClick={() => setShowManualKey(false)}
+                        className="text-xs text-amber-400 hover:text-amber-300 underline cursor-pointer"
+                      >
+                        Back to QR Code
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                <form onSubmit={handleEnable2FA} className="space-y-4 pt-2 border-t border-white/10">
+                  <div>
+                    <label className="block text-xs font-semibold text-white/80 uppercase tracking-wider mb-2">
+                      Enter 6-digit Authenticator Code
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      maxLength={6}
+                      value={verificationCode}
+                      onChange={(e) => setVerificationCode(e.target.value.replace(/\D/g, ''))}
+                      placeholder="123456"
+                      className="w-full text-center font-mono text-xl py-3 bg-black/60 border border-white/10 rounded-xl text-amber-400 placeholder-white/20 focus:outline-none focus:border-amber-500 tracking-[0.3em]"
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-end gap-3 pt-2">
+                    <button
+                      type="button"
+                      onClick={() => setIsSetupOpen(false)}
+                      className="px-4 py-2.5 text-xs text-white/60 hover:text-white transition cursor-pointer"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={setupSubmitting || verificationCode.length !== 6}
+                      className="px-6 py-3 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black font-bold text-xs uppercase tracking-wider rounded-xl shadow-lg transition flex items-center gap-2 cursor-pointer disabled:opacity-50"
+                    >
+                      {setupSubmitting ? <RefreshCw className="w-4 h-4 animate-spin" /> : <ShieldCheck className="w-4 h-4" />}
+                      <span>Verify & Activate</span>
+                    </button>
+                  </div>
+                </form>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
+
+        {/* Generated Backup Recovery Codes Modal */}
+        <AnimatePresence>
+          {generatedBackupCodes && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                className="w-full max-w-lg bg-[#0d0d12] border border-amber-500/30 rounded-3xl p-6 md:p-8 space-y-6 shadow-2xl relative"
+              >
+                <div className="space-y-2 text-center">
+                  <div className="mx-auto w-12 h-12 bg-green-500/10 text-green-400 border border-green-500/20 rounded-2xl flex items-center justify-center">
+                    <ShieldCheck className="w-6 h-6" />
+                  </div>
+                  <h3 className="text-2xl font-serif font-bold text-white">2FA Activated Successfully!</h3>
+                  <p className="text-xs text-amber-300">
+                    Save these backup recovery codes immediately. They are shown only once!
+                  </p>
+                </div>
+
+                <div className="bg-black/60 border border-white/10 rounded-2xl p-4">
+                  <div className="grid grid-cols-2 gap-2 font-mono text-center text-xs text-white">
+                    {generatedBackupCodes.map((code, idx) => (
+                      <div key={idx} className="p-2 bg-white/5 rounded-lg border border-white/5 tracking-wider">
+                        {code}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => copyToClipboard(generatedBackupCodes.join('\n'), true)}
+                      className="px-3.5 py-2.5 bg-white/5 hover:bg-white/10 text-white text-xs font-semibold rounded-xl border border-white/10 transition flex items-center gap-1.5 cursor-pointer"
+                    >
+                      {copiedBackupCodes ? <Check className="w-4 h-4 text-green-400" /> : <Copy className="w-4 h-4" />}
+                      <span>{copiedBackupCodes ? 'Copied All' : 'Copy All'}</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={downloadBackupCodes}
+                      className="px-3.5 py-2.5 bg-white/5 hover:bg-white/10 text-white text-xs font-semibold rounded-xl border border-white/10 transition flex items-center gap-1.5 cursor-pointer"
+                    >
+                      <Download className="w-4 h-4" />
+                      <span>Download</span>
+                    </button>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => setGeneratedBackupCodes(null)}
+                    className="px-6 py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black font-bold text-xs uppercase tracking-wider rounded-xl transition shadow-lg cursor-pointer"
+                  >
+                    I Have Saved These Codes
+                  </button>
+                </div>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
+
+        {/* Disable 2FA Modal */}
+        <AnimatePresence>
+          {isDisableOpen && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                className="w-full max-w-md bg-[#0d0d12] border border-red-500/30 rounded-3xl p-6 md:p-8 space-y-6 shadow-2xl relative"
+              >
+                <button
+                  onClick={() => setIsDisableOpen(false)}
+                  className="absolute top-5 right-5 p-2 text-white/40 hover:text-white rounded-full hover:bg-white/5 transition"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+
+                <div className="space-y-2 text-center">
+                  <div className="mx-auto w-12 h-12 bg-red-500/10 text-red-500 border border-red-500/20 rounded-2xl flex items-center justify-center">
+                    <AlertTriangle className="w-6 h-6" />
+                  </div>
+                  <h3 className="text-2xl font-serif font-bold text-white">Disable Two-Factor Authentication</h3>
+                  <p className="text-xs text-white/50">Enter your password and current 2FA code to confirm disabling 2FA.</p>
+                </div>
+
+                {disableError && (
+                  <div className="bg-red-500/10 border border-red-500/20 text-red-300 text-xs p-3 rounded-xl text-center">
+                    {disableError}
+                  </div>
+                )}
+
+                <form onSubmit={handleDisable2FA} className="space-y-4">
+                  <div>
+                    <label className="block text-xs font-semibold text-white/80 uppercase tracking-wider mb-2">Account Password</label>
+                    <input
+                      type="password"
+                      required
+                      value={disablePassword}
+                      onChange={e => setDisablePassword(e.target.value)}
+                      placeholder="••••••••"
+                      className="w-full px-4 py-3 bg-black/60 border border-white/10 rounded-xl text-white placeholder-white/20 text-sm focus:outline-none focus:border-red-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-white/80 uppercase tracking-wider mb-2">Google Authenticator or Backup Code</label>
+                    <input
+                      type="text"
+                      required
+                      value={disableCode}
+                      onChange={e => setDisableCode(e.target.value.trim())}
+                      placeholder="123456"
+                      className="w-full text-center font-mono text-lg py-2.5 bg-black/60 border border-white/10 rounded-xl text-amber-400 focus:outline-none focus:border-red-500"
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-end gap-3 pt-2">
+                    <button
+                      type="button"
+                      onClick={() => setIsDisableOpen(false)}
+                      className="px-4 py-2.5 text-xs text-white/60 hover:text-white transition cursor-pointer"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={disableSubmitting}
+                      className="px-6 py-3 bg-red-600 hover:bg-red-500 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition flex items-center gap-2 cursor-pointer disabled:opacity-50"
+                    >
+                      {disableSubmitting ? <RefreshCw className="w-4 h-4 animate-spin" /> : <X className="w-4 h-4" />}
+                      <span>Confirm & Disable</span>
+                    </button>
+                  </div>
+                </form>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

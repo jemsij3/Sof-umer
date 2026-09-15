@@ -1103,180 +1103,137 @@ export default function UserDashboard({
             className="text-left"
           >
             {/* SUB-VIEW: EDIT PROFILE */}
-            {(activeTab === 'edit-profile' || activeTab === 'profile') && (
-                <div className="space-y-6">
-                  {/* 1. Section Title & Subtitle */}
-                  <div className="border-b border-white/5 pb-4">
-                    <h3 className="text-xl font-bold text-white tracking-tight">Edit Profile</h3>
-                    <p className="text-xs text-white/50 mt-1">
-                      Update your personal details and public profile avatar
-                    </p>
+            {activeTab === 'edit-profile' && (
+              <div className="space-y-6 max-w-lg">
+                <div className="border-b border-white/5 pb-4">
+                  <h3 className="text-xl font-bold text-white tracking-tight uppercase">EDIT PROFILE</h3>
+                </div>
+
+                {profileSuccess && (
+                  <div className="p-3.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs rounded-xl text-center font-medium flex items-center justify-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 shrink-0" />
+                    <span>{profileSuccess}</span>
+                  </div>
+                )}
+                {profileError && (
+                  <div className="p-3.5 bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs rounded-xl text-center font-medium flex items-center justify-center gap-2">
+                    <AlertTriangle className="w-4 h-4 shrink-0" />
+                    <span>{profileError}</span>
+                  </div>
+                )}
+
+                <form onSubmit={handleUpdateProfile} className="space-y-5">
+                  {/* Profile Photo */}
+                  <div>
+                    <label className="block text-xs font-bold text-white/70 uppercase mb-2 font-mono">
+                      Profile Photo
+                    </label>
+
+                    <div className="w-48 sm:w-56 p-6 rounded-2xl bg-black/40 border border-white/10 flex flex-col items-center justify-center text-center gap-4 shadow-xl">
+                      {profilePhotoUrl ? (
+                        <img 
+                          src={profilePhotoUrl} 
+                          alt={currentUser.fullName} 
+                          referrerPolicy="no-referrer"
+                          className="w-20 h-20 rounded-full object-cover border-2 border-amber-500/40 shadow-md" 
+                        />
+                      ) : (
+                        <div className="w-20 h-20 rounded-full bg-gradient-to-tr from-amber-400 to-amber-600 text-black font-black flex items-center justify-center text-3xl shadow-md border border-amber-500/30 font-serif">
+                          {currentUser.fullName ? currentUser.fullName.trim()[0]?.toUpperCase() : 'J'}
+                        </div>
+                      )}
+
+                      {/* Hidden File Input */}
+                      <input 
+                        type="file" 
+                        ref={avatarInputRef}
+                        accept="image/png, image/jpeg, image/jpg, image/webp, image/gif"
+                        onChange={handleAvatarFileChange}
+                        className="hidden" 
+                      />
+
+                      <button 
+                        type="button"
+                        onClick={() => avatarInputRef.current?.click()}
+                        disabled={uploadingAvatar}
+                        className="px-4 py-2 bg-white/5 hover:bg-white/10 text-amber-400 hover:text-amber-300 border border-white/10 font-bold text-xs rounded-xl transition cursor-pointer disabled:opacity-50"
+                      >
+                        {uploadingAvatar ? 'Uploading...' : 'Change Photo'}
+                      </button>
+                    </div>
                   </div>
 
-                  {profileSuccess && (
-                    <div className="p-3.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs rounded-xl text-center font-medium flex items-center justify-center gap-2">
-                      <CheckCircle2 className="w-4 h-4 shrink-0" />
-                      <span>{profileSuccess}</span>
-                    </div>
-                  )}
-                  {profileError && (
-                    <div className="p-3.5 bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs rounded-xl text-center font-medium flex items-center justify-center gap-2">
-                      <AlertTriangle className="w-4 h-4 shrink-0" />
-                      <span>{profileError}</span>
-                    </div>
-                  )}
+                  {/* Full Name */}
+                  <div>
+                    <label className="block text-xs font-bold text-white/70 uppercase mb-1.5 font-mono">
+                      Full Name
+                    </label>
+                    <input 
+                      type="text" 
+                      required 
+                      value={fullName} 
+                      onChange={e => setFullName(e.target.value)} 
+                      placeholder="Full Name"
+                      className="w-full p-3.5 bg-black border border-white/10 focus:border-amber-500/50 text-sm text-white rounded-xl focus:outline-none focus:ring-1 focus:ring-amber-500/30 transition" 
+                    />
+                  </div>
 
-                  <form onSubmit={handleUpdateProfile} className="space-y-5">
-                    {/* 2. Profile Picture Block */}
-                    <div className="bg-black/40 border border-white/10 p-5 rounded-2xl shadow-xl">
-                      <div className="flex flex-col sm:flex-row items-center gap-5">
-                        <div className="relative shrink-0">
-                          {profilePhotoUrl ? (
-                            <img 
-                              src={profilePhotoUrl} 
-                              alt={currentUser.fullName} 
-                              referrerPolicy="no-referrer"
-                              className="w-20 h-20 rounded-2xl object-cover border-2 border-amber-500/40 shadow-xl" 
-                            />
-                          ) : (
-                            <div className="w-20 h-20 rounded-2xl bg-gradient-to-tr from-amber-400 to-amber-600 text-black font-black flex items-center justify-center text-2xl shadow-xl border border-amber-500/30">
-                              {currentUser.fullName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
-                            </div>
-                          )}
-                        </div>
+                  {/* Phone Number */}
+                  <div>
+                    <label className="block text-xs font-bold text-white/70 uppercase mb-1.5 font-mono">
+                      Phone Number
+                    </label>
+                    <input 
+                      type="text" 
+                      value={profilePhone} 
+                      onChange={e => setProfilePhone(e.target.value)} 
+                      placeholder="Phone Number"
+                      className="w-full p-3.5 bg-black border border-white/10 focus:border-amber-500/50 text-sm text-white rounded-xl focus:outline-none focus:ring-1 focus:ring-amber-500/30 transition" 
+                    />
+                  </div>
 
-                        <div className="space-y-2 text-center sm:text-left flex-1">
-                          <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2">
-                            <h4 className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-1.5">
-                              <Camera className="w-4 h-4 text-amber-500" />
-                              <span>{tLocal('profile_pic_title') || 'Profile Picture'}</span>
-                            </h4>
-                          </div>
+                  {/* Email Address (Read-only) */}
+                  <div>
+                    <label className="block text-xs font-bold text-white/40 uppercase mb-1.5 font-mono flex items-center justify-between">
+                      <span>Email Address</span>
+                      <span className="text-[10px] text-white/30 uppercase font-mono tracking-wider">Read-only</span>
+                    </label>
+                    <input 
+                      type="email" 
+                      value={currentUser.email} 
+                      readOnly 
+                      disabled
+                      className="w-full p-3.5 bg-black/50 border border-white/5 text-white/50 rounded-xl cursor-not-allowed text-xs font-mono select-none" 
+                    />
+                    <span className="text-[11px] text-white/30 font-mono mt-1 block">Read-only</span>
+                  </div>
 
-                          <p className="text-[11px] text-white/50 font-mono">
-                            {tLocal('profile_pic_hint') || 'PNG, JPG or WebP up to 5MB (800x800px recommended)'}
-                          </p>
-
-                          {/* Hidden File Input */}
-                          <input 
-                            type="file" 
-                            ref={avatarInputRef}
-                            accept="image/png, image/jpeg, image/jpg, image/webp, image/gif"
-                            onChange={handleAvatarFileChange}
-                            className="hidden" 
-                          />
-
-                          <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 pt-1">
-                            <button 
-                              type="button"
-                              onClick={() => avatarInputRef.current?.click()}
-                              disabled={uploadingAvatar}
-                              className="px-4 py-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black font-extrabold text-xs rounded-xl flex items-center gap-2 transition shadow-lg cursor-pointer uppercase tracking-wider disabled:opacity-50"
-                            >
-                              <UploadCloud className="w-4 h-4" />
-                              <span>{uploadingAvatar ? (tLocal('uploading') || 'Uploading...') : profilePhotoUrl ? 'Change Profile Picture' : 'Add Profile Picture'}</span>
-                            </button>
-
-                            {profilePhotoUrl && (
-                              <button 
-                                type="button"
-                                onClick={handleRemoveAvatar}
-                                disabled={uploadingAvatar}
-                                className="px-3.5 py-2 bg-white/5 hover:bg-rose-500/20 text-rose-400 border border-white/10 hover:border-rose-500/30 font-bold text-xs rounded-xl flex items-center gap-1.5 transition cursor-pointer"
-                              >
-                                <Trash2 className="w-3.5 h-3.5" />
-                                <span>{tLocal('remove_photo') || 'Remove'}</span>
-                              </button>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* 3. Full Name */}
-                    <div>
-                      <label className="block text-xs font-bold text-white/70 uppercase mb-1.5 font-mono">
-                        Full Name
-                      </label>
-                      <input 
-                        type="text" 
-                        required 
-                        value={fullName} 
-                        onChange={e => setFullName(e.target.value)} 
-                        placeholder="e.g. Abebe Kebede"
-                        className="w-full p-3.5 bg-black border border-white/10 focus:border-amber-500/50 text-sm text-white rounded-xl focus:outline-none focus:ring-1 focus:ring-amber-500/30 transition" 
-                      />
-                    </div>
-
-                    {/* 4. Phone Number */}
-                    <div>
-                      <label className="block text-xs font-bold text-white/70 uppercase mb-1.5 font-mono">
-                        Phone Number
-                      </label>
-                      <input 
-                        type="text" 
-                        value={profilePhone} 
-                        onChange={e => setProfilePhone(e.target.value)} 
-                        placeholder="+251 912 345 678"
-                        className="w-full p-3.5 bg-black border border-white/10 focus:border-amber-500/50 text-sm text-white rounded-xl focus:outline-none focus:ring-1 focus:ring-amber-500/30 transition" 
-                      />
-                    </div>
-
-                    {/* 5. Profile Image URL */}
-                    <div>
-                      <label className="block text-xs font-bold text-white/70 uppercase mb-1.5 font-mono">
-                        Profile Image URL
-                      </label>
-                      <input 
-                        type="text" 
-                        value={profilePhotoUrl} 
-                        onChange={e => setProfilePhotoUrl(e.target.value)} 
-                        placeholder="https://images.unsplash.com/... or upload photo above"
-                        className="w-full p-3.5 bg-black border border-white/10 focus:border-amber-500/50 text-xs text-white rounded-xl focus:outline-none focus:ring-1 focus:ring-amber-500/30 font-mono transition" 
-                      />
-                    </div>
-
-                    {/* 6. Email Address (Read-Only) */}
-                    <div>
-                      <label className="block text-xs font-bold text-white/40 uppercase mb-1.5 font-mono flex items-center justify-between">
-                        <span>Email Address</span>
-                        <span className="text-[10px] text-white/30 uppercase font-mono tracking-wider">Read-Only</span>
-                      </label>
-                      <input 
-                        type="email" 
-                        value={currentUser.email} 
-                        readOnly 
-                        disabled
-                        className="w-full p-3.5 bg-black/50 border border-white/5 text-white/50 rounded-xl cursor-not-allowed text-xs font-mono select-none" 
-                      />
-                    </div>
-
-                    {/* 7. Member Since (Read-Only) */}
-                    <div>
-                      <label className="block text-xs font-bold text-white/40 uppercase mb-1.5 font-mono flex items-center justify-between">
-                        <span>Member Since</span>
-                        <span className="text-[10px] text-white/30 uppercase font-mono tracking-wider">Read-Only</span>
-                      </label>
-                      <input 
-                        type="text" 
-                        value={currentUser.createdAt ? new Date(currentUser.createdAt).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' }) : 'N/A'} 
-                        readOnly 
-                        disabled
-                        className="w-full p-3.5 bg-black/50 border border-white/5 text-white/50 rounded-xl cursor-not-allowed text-xs font-mono select-none" 
-                      />
-                    </div>
-
-                    {/* 8. Full-width action button: "Save Profile Updates" */}
+                  {/* Action Buttons: Cancel and Save */}
+                  <div className="flex items-center gap-3 pt-2">
+                    <button 
+                      type="button"
+                      onClick={() => {
+                        setFullName(currentUser.fullName || '');
+                        setProfilePhone(currentUser.phone || '');
+                        setProfilePhotoUrl(currentUser.profilePhoto || '');
+                        setProfileSuccess('');
+                        setProfileError('');
+                        setActiveTab('profile');
+                      }}
+                      className="flex-1 py-3.5 px-6 bg-white/5 hover:bg-white/10 text-white font-bold text-xs uppercase tracking-wider rounded-xl border border-white/10 transition cursor-pointer text-center"
+                    >
+                      Cancel
+                    </button>
                     <button 
                       type="submit" 
-                      className="w-full py-4 px-6 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black font-extrabold text-xs uppercase tracking-wider rounded-xl transition shadow-lg shadow-amber-500/10 cursor-pointer flex items-center justify-center gap-2"
+                      className="flex-1 py-3.5 px-6 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black font-extrabold text-xs uppercase tracking-wider rounded-xl transition shadow-lg shadow-amber-500/10 cursor-pointer text-center"
                     >
-                      <Save className="w-4 h-4 text-black" />
-                      <span>Save Changes</span>
+                      Save
                     </button>
-                  </form>
-                </div>
-              )}
+                  </div>
+                </form>
+              </div>
+            )}
 
               {/* SECTION 2: MY LISTINGS */}
               {activeTab === 'mylistings' && (
@@ -2328,299 +2285,99 @@ export default function UserDashboard({
                 </div>
               )}
 
-              {/* SECTION: SECURITY & SETTINGS */}
-              {(activeTab === 'security' || activeTab === 'settings') && (() => {
-                const folders = [
-                  {
-                    id: 'password',
-                    label: 'Password & Security',
-                    label_om: 'Eegumsa & Iccitii',
-                    label_am: 'የደህንነት የይለፍ ቃል',
-                    desc: 'Update your login credentials and security password.',
-                    desc_om: 'Iccitii seensa keetii fi ulaagaalee nageenyaa haaromsi.',
-                    desc_am: 'የመግቢያ መረጃዎን እና የደህንነት የይለፍ ቃልዎን ያዘምኑ።',
-                    icon: <Lock className="w-4 h-4 text-amber-500/80" />
-                  },
-                  {
-                    id: 'notifications',
-                    label: 'Notification Preferences',
-                    label_om: 'Filannoo Beeksisaa',
-                    label_am: 'የማሳወቂያ ምርጫዎች',
-                    desc: 'Manage email digests, SMS alerts, and platform push notices.',
-                    desc_om: 'Digests e-mail, SMS fi beeksisa bilbilaa kee to’adhu.',
-                    desc_am: 'የኢሜል መልዕክቶችን፣ የኤስኤምኤስ ማንቂያዎችን እና ማሳወቂያዎችን ያስተዳድሩ።',
-                    icon: <Bell className="w-4 h-4 text-amber-500/80" />
-                  },
-                  {
-                    id: 'privacy',
-                    label: 'Privacy & Account Safety',
-                    label_om: 'Iccitii & Nageenya Herregaa',
-                    label_am: 'የግላዊነት እና ደህንነት ቅንብሮች',
-                    desc: 'Control public visibility, search crawling, and account termination.',
-                    desc_om: 'Mul’atni kee, barbaacha Google fi haquu herregaa to’adhu.',
-                    desc_am: 'የህዝብ ታይነትን፣ የፍለጋ ሞተር መረጃ መውሰጃን እና መለያ መሰረዝን ይቆጣጠሩ።',
-                    icon: <Shield className="w-4 h-4 text-amber-500/80" />
-                  },
-                  {
-                    id: 'language',
-                    label: 'Language Settings / ቋንቋ',
-                    label_om: 'Sajatoo Afaanii',
-                    label_am: 'የቋንቋ ምርጫ',
-                    desc: 'Choose your preferred translation language for the marketplace interface.',
-                    desc_om: 'Afaan ittiin fayyadamtu filadhu.',
-                    desc_am: 'ለገበያ ቦታ በይነገጽ የመረጡትን የትርጉም ቋንቋ ይምረጡ።',
-                    icon: <Languages className="w-4 h-4 text-amber-500/80" />
-                  }
-                ];
-
-                const getFolderLabel = (f: typeof folders[0]) => {
-                  if (lang === 'om') return f.label_om;
-                  if (lang === 'am') return f.label_am;
-                  return f.label;
-                };
-
-                const getFolderDesc = (f: typeof folders[0]) => {
-                  if (lang === 'om') return f.desc_om;
-                  if (lang === 'am') return f.desc_am;
-                  return f.desc;
-                };
-
-                const toggleSettingFolder = (folderId: string) => {
-                  setOpenSettingFolder(openSettingFolder === folderId ? null : folderId);
-                };
-
-                return (
-                  <div className="space-y-6">
-                    <div className="border-b border-white/5 pb-4">
-                      <h3 className="text-xl font-bold text-white tracking-tight">Security</h3>
-                      <p className="text-xs text-white/40 mt-1">Manage your credentials, login information, and two-factor authentication</p>
-                    </div>
-
-                    {/* Login & Security Details Overview Card */}
-                    <div className="bg-black/40 border border-white/10 p-5 rounded-2xl shadow-xl space-y-3">
-                      <h4 className="text-xs font-black uppercase text-amber-400 tracking-wider font-mono flex items-center gap-2">
-                        <Shield className="w-4 h-4" />
-                        <span>LOGIN & SECURITY OVERVIEW</span>
-                      </h4>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-                        <div className="p-3 rounded-xl bg-black/50 border border-white/5">
-                          <span className="text-[10px] uppercase font-mono text-white/40 block mb-1">Registered Account Email</span>
-                          <span className="text-white font-medium">{currentUser.email}</span>
-                        </div>
-                        <div className="p-3 rounded-xl bg-black/50 border border-white/5">
-                          <span className="text-[10px] uppercase font-mono text-white/40 block mb-1">Account Role</span>
-                          <span className="text-white font-medium">{currentUser.role === 'admin' ? 'Administrator' : 'Standard User'}</span>
-                        </div>
-                        <div className="p-3 rounded-xl bg-black/50 border border-white/5">
-                          <span className="text-[10px] uppercase font-mono text-white/40 block mb-1">Member Since</span>
-                          <span className="text-white font-medium">
-                            {currentUser.createdAt ? new Date(currentUser.createdAt).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' }) : 'N/A'}
-                          </span>
-                        </div>
-                        <div className="p-3 rounded-xl bg-black/50 border border-white/5">
-                          <span className="text-[10px] uppercase font-mono text-white/40 block mb-1">Connection Security</span>
-                          <div className="flex items-center gap-1.5 text-emerald-400 font-medium">
-                            <ShieldCheck className="w-3.5 h-3.5" />
-                            <span>SSL / TLS Encrypted Session</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="space-y-4">
-                      {folders.map(f => {
-                        const isOpen = openSettingFolder === f.id;
-                        return (
-                          <div 
-                            key={f.id} 
-                            className={`border transition-all duration-300 rounded-2xl overflow-hidden ${
-                              isOpen 
-                                ? 'border-amber-500/30 bg-[#12121a]/85 shadow-lg shadow-amber-500/5' 
-                                : 'border-white/5 bg-black/20 hover:bg-white/5 hover:border-white/10'
-                            }`}
-                          >
-                            {/* Folder Tab Header */}
-                            <button
-                              type="button"
-                              onClick={() => toggleSettingFolder(f.id)}
-                              className="w-full flex items-center justify-between p-4 text-left cursor-pointer transition-colors"
-                            >
-                              <div className="flex items-center gap-3.5">
-                                <div className="p-2 rounded-xl bg-amber-500/10 text-amber-500 border border-amber-500/10 flex items-center justify-center">
-                                  {isOpen ? <FolderOpen className="w-4 h-4" /> : <Folder className="w-4 h-4" />}
-                                </div>
-                                <div>
-                                  <div className="flex items-center gap-2">
-                                    {f.icon}
-                                    <h4 className="text-xs font-black text-white uppercase tracking-wider">{getFolderLabel(f)}</h4>
-                                  </div>
-                                  <p className="text-[10px] text-white/40 mt-0.5 leading-relaxed">{getFolderDesc(f)}</p>
-                                </div>
-                              </div>
-                              <div className="flex items-center gap-2">
-                                <ChevronRight className={`w-4 h-4 text-white/40 transition-transform duration-300 ${isOpen ? 'rotate-90 text-amber-500' : ''}`} />
-                              </div>
-                            </button>
-
-                            {/* Folder Content Area */}
-                            <AnimatePresence initial={false}>
-                              {isOpen && (
-                                <motion.div
-                                  initial={{ height: 0, opacity: 0 }}
-                                  animate={{ height: 'auto', opacity: 1 }}
-                                  exit={{ height: 0, opacity: 0 }}
-                                  transition={{ duration: 0.2, ease: 'easeInOut' }}
-                                  className="overflow-hidden"
-                                >
-                                  <div className="p-5 pt-1 border-t border-white/5 bg-black/40">
-                                    {f.id === 'password' && (
-                                      <div className="space-y-4 pt-3">
-                                        {passSuccess && <p className="p-3 bg-emerald-500/10 text-emerald-400 text-xs rounded-xl text-center font-medium">{passSuccess}</p>}
-                                        {passError && <p className="p-3 bg-rose-500/10 text-rose-400 text-xs rounded-xl text-center font-medium">{passError}</p>}
-                                        <form onSubmit={handleChangePassword} className="space-y-4">
-                                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                                            <div>
-                                              <label className="block text-[10px] font-bold text-white/40 uppercase mb-1 font-mono">Current Password</label>
-                                              <input type="password" required value={currPassword} onChange={e => setCurrPassword(e.target.value)} className="w-full p-2.5 bg-black border border-white/10 text-xs text-white rounded-xl focus:outline-none focus:border-amber-500/50" />
-                                            </div>
-                                            <div>
-                                              <label className="block text-[10px] font-bold text-white/40 uppercase mb-1 font-mono">New Password</label>
-                                              <input type="password" required value={newPassword} onChange={e => setNewPassword(e.target.value)} className="w-full p-2.5 bg-black border border-white/10 text-xs text-white rounded-xl focus:outline-none focus:border-amber-500/50" />
-                                            </div>
-                                            <div>
-                                              <label className="block text-[10px] font-bold text-white/40 uppercase mb-1 font-mono">Confirm Password</label>
-                                              <input type="password" required value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} className="w-full p-2.5 bg-black border border-white/10 text-xs text-white rounded-xl focus:outline-none focus:border-amber-500/50" />
-                                            </div>
-                                          </div>
-                                          <button type="submit" className="bg-amber-500 hover:bg-amber-400 text-black font-extrabold py-2 px-5 rounded-xl text-[10px] uppercase tracking-wider transition cursor-pointer">
-                                            Change Security Password
-                                          </button>
-                                        </form>
-
-                                        {currentUser && (
-                                          <div className="pt-6 border-t border-white/10">
-                                            <TwoFactorSecurityModule 
-                                              currentUser={currentUser} 
-                                              onUserUpdated={(updatedUser) => setCurrentUser(updatedUser)} 
-                                            />
-                                          </div>
-                                        )}
-                                      </div>
-                                    )}
-
-                                    {f.id === 'notifications' && (
-                                      <div className="space-y-4 text-xs pt-3">
-                                        <div className="flex justify-between items-center py-2 border-b border-white/5">
-                                          <div>
-                                            <p className="font-bold text-white">Email Digests</p>
-                                            <p className="text-[10px] text-white/40">Receive daily summaries of visitor inquiries and saved items updates.</p>
-                                          </div>
-                                          <button type="button" onClick={() => setEmailDigests(!emailDigests)} className="cursor-pointer">
-                                            {emailDigests ? <ToggleRight className="w-8 h-8 text-amber-500" /> : <ToggleLeft className="w-8 h-8 text-white/30" />}
-                                          </button>
-                                        </div>
-
-                                        <div className="flex justify-between items-center py-2 border-b border-white/5">
-                                          <div>
-                                            <p className="font-bold text-white">SMS Alerts</p>
-                                            <p className="text-[10px] text-white/40">Receive instant SMS alerts for incoming chats on active listings.</p>
-                                          </div>
-                                          <button type="button" onClick={() => setSmsAlerts(!smsAlerts)} className="cursor-pointer">
-                                            {smsAlerts ? <ToggleRight className="w-8 h-8 text-amber-500" /> : <ToggleLeft className="w-8 h-8 text-white/30" />}
-                                          </button>
-                                        </div>
-
-                                        <div className="flex justify-between items-center py-2">
-                                          <div>
-                                            <p className="font-bold text-white">Push Notifications</p>
-                                            <p className="text-[10px] text-white/40">Show floating banners for platform system updates.</p>
-                                          </div>
-                                          <button type="button" onClick={() => setPushEnabled(!pushEnabled)} className="cursor-pointer">
-                                            {pushEnabled ? <ToggleRight className="w-8 h-8 text-amber-500" /> : <ToggleLeft className="w-8 h-8 text-white/30" />}
-                                          </button>
-                                        </div>
-                                      </div>
-                                    )}
-
-                                    {f.id === 'privacy' && (
-                                      <div className="space-y-4 text-xs pt-3">
-                                        <div className="flex justify-between items-center py-2 border-b border-white/5">
-                                          <div>
-                                            <p className="font-bold text-white">Public Profile Search</p>
-                                            <p className="text-[10px] text-white/40">Allow anonymous users to look up listings by your registered profile handle.</p>
-                                          </div>
-                                          <button type="button" onClick={() => setProfilePublic(!profilePublic)} className="cursor-pointer">
-                                            {profilePublic ? <ToggleRight className="w-8 h-8 text-amber-500" /> : <ToggleLeft className="w-8 h-8 text-white/30" />}
-                                          </button>
-                                        </div>
-
-                                        <div className="flex justify-between items-center py-2 border-b border-white/5">
-                                          <div>
-                                            <p className="font-bold text-white">Search Engine Indexing</p>
-                                            <p className="text-[10px] text-white/40">Let Google and external crawlers index your uploaded listings.</p>
-                                          </div>
-                                          <button type="button" onClick={() => setSearchIndexable(!searchIndexable)} className="cursor-pointer">
-                                            {searchIndexable ? <ToggleRight className="w-8 h-8 text-amber-500" /> : <ToggleLeft className="w-8 h-8 text-white/30" />}
-                                          </button>
-                                        </div>
-
-                                        <div className="pt-3">
-                                          <button 
-                                            type="button"
-                                            onClick={() => {
-                                              if (window.confirm('Delete account permanently? This action is fully irreversible.')) {
-                                                logout();
-                                                onNavigate('marketplace');
-                                              }
-                                            }}
-                                            className="px-4 py-2.5 bg-rose-500/15 hover:bg-rose-500/25 text-rose-400 text-[10px] font-bold uppercase rounded-xl transition cursor-pointer"
-                                          >
-                                            Terminate Account Permanently
-                                          </button>
-                                        </div>
-                                      </div>
-                                    )}
-
-                                    {f.id === 'language' && (
-                                      <div className="py-2 pt-3">
-                                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                                          {[
-                                            { code: 'en', label: 'English', native: 'English', flag: '🇬🇧' },
-                                            { code: 'om', label: 'Afaan Oromoo', native: 'Afaan Oromoo', flag: '🇪🇹' },
-                                            { code: 'am', label: 'Amharic', native: 'አማርኛ', flag: '🇪🇹' }
-                                          ].map(langItem => (
-                                            <button
-                                              key={langItem.code}
-                                              onClick={() => setLanguage(langItem.code)}
-                                              className={`p-5 rounded-2xl border transition text-left cursor-pointer flex flex-col justify-between h-28 ${
-                                                currentLanguage === langItem.code 
-                                                  ? 'bg-amber-500 text-black border-amber-500 font-extrabold shadow-lg shadow-amber-500/5' 
-                                                  : 'bg-white/5 border-white/5 text-white/80 hover:bg-white/10'
-                                              }`}
-                                            >
-                                              <span className="text-2xl">{langItem.flag}</span>
-                                              <div>
-                                                <p className="text-xs font-black">{langItem.label}</p>
-                                                <p className={`text-[10px] mt-0.5 ${currentLanguage === langItem.code ? 'text-black/70' : 'text-white/40'}`}>
-                                                  {langItem.native}
-                                                </p>
-                                              </div>
-                                            </button>
-                                          ))}
-                                        </div>
-                                      </div>
-                                    )}
-                                  </div>
-                                </motion.div>
-                              )}
-                            </AnimatePresence>
-                          </div>
-                        );
-                      })}
-                    </div>
+              {/* SUB-VIEW: SECURITY */}
+              {(activeTab === 'security' || activeTab === 'settings') && (
+                <div className="space-y-8 max-w-lg">
+                  {/* Header */}
+                  <div className="border-b border-white/5 pb-4">
+                    <h3 className="text-xl font-bold text-white tracking-tight uppercase">SECURITY</h3>
                   </div>
-                );
-              })()}
+
+                  {/* 1. PASSWORD & SECURITY */}
+                  <div className="space-y-4">
+                    <h4 className="text-xs font-black uppercase text-white/70 tracking-wider font-mono">
+                      PASSWORD & SECURITY
+                    </h4>
+
+                    {passSuccess && (
+                      <div className="p-3.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs rounded-xl text-center font-medium">
+                        {passSuccess}
+                      </div>
+                    )}
+                    {passError && (
+                      <div className="p-3.5 bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs rounded-xl text-center font-medium">
+                        {passError}
+                      </div>
+                    )}
+
+                    <form onSubmit={handleChangePassword} className="space-y-4">
+                      <div>
+                        <label className="block text-xs font-bold text-white/70 uppercase mb-1.5 font-mono">
+                          Current Password
+                        </label>
+                        <input 
+                          type="password" 
+                          required 
+                          value={currPassword} 
+                          onChange={e => setCurrPassword(e.target.value)} 
+                          placeholder="Current Password"
+                          className="w-full p-3.5 bg-black border border-white/10 focus:border-amber-500/50 text-sm text-white rounded-xl focus:outline-none focus:ring-1 focus:ring-amber-500/30 transition" 
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-bold text-white/70 uppercase mb-1.5 font-mono">
+                          New Password
+                        </label>
+                        <input 
+                          type="password" 
+                          required 
+                          value={newPassword} 
+                          onChange={e => setNewPassword(e.target.value)} 
+                          placeholder="New Password"
+                          className="w-full p-3.5 bg-black border border-white/10 focus:border-amber-500/50 text-sm text-white rounded-xl focus:outline-none focus:ring-1 focus:ring-amber-500/30 transition" 
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-bold text-white/70 uppercase mb-1.5 font-mono">
+                          Confirm Password
+                        </label>
+                        <input 
+                          type="password" 
+                          required 
+                          value={confirmPassword} 
+                          onChange={e => setConfirmPassword(e.target.value)} 
+                          placeholder="Confirm Password"
+                          className="w-full p-3.5 bg-black border border-white/10 focus:border-amber-500/50 text-sm text-white rounded-xl focus:outline-none focus:ring-1 focus:ring-amber-500/30 transition" 
+                        />
+                      </div>
+
+                      <div>
+                        <button 
+                          type="submit" 
+                          className="py-3.5 px-6 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black font-extrabold text-xs uppercase tracking-wider rounded-xl transition shadow-lg shadow-amber-500/10 cursor-pointer"
+                        >
+                          Change Security Password
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+
+                  {/* 2. TWO-FACTOR AUTHENTICATION */}
+                  <div className="space-y-4 pt-6 border-t border-white/5">
+                    <h4 className="text-xs font-black uppercase text-white/70 tracking-wider font-mono">
+                      TWO-FACTOR AUTHENTICATION
+                    </h4>
+
+                    <TwoFactorSecurityModule 
+                      currentUser={currentUser} 
+                      onUserUpdated={(updatedUser) => setCurrentUser(updatedUser)} 
+                      minimal={true}
+                    />
+                  </div>
+                </div>
+              )}
 
           </motion.div>
         </AnimatePresence>
