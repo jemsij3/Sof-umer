@@ -30,6 +30,8 @@ export default function Navbar({ onNavigate, activeView, onOpenCreateModal, onOp
 
   const bellButtonRef = useRef<HTMLButtonElement>(null);
   const notifDropdownRef = useRef<HTMLDivElement>(null);
+  const userButtonRef = useRef<HTMLButtonElement>(null);
+  const userDropdownRef = useRef<HTMLDivElement>(null);
   const [notifStyle, setNotifStyle] = useState<{ left: string; width: string }>({ left: '0px', width: '320px' });
 
   // Compute position to keep dropdown anchored beneath bell icon and fully visible inside viewport
@@ -80,9 +82,17 @@ export default function Navbar({ onNavigate, activeView, onOpenCreateModal, onOp
       ) {
         setNotifDropdownOpen(false);
       }
+      if (
+        userDropdownRef.current &&
+        !userDropdownRef.current.contains(event.target as Node) &&
+        userButtonRef.current &&
+        !userButtonRef.current.contains(event.target as Node)
+      ) {
+        setUserDropdownOpen(false);
+      }
     };
 
-    if (notifDropdownOpen) {
+    if (notifDropdownOpen || userDropdownOpen) {
       document.addEventListener('mousedown', handleClickOutside);
       document.addEventListener('touchstart', handleClickOutside);
       return () => {
@@ -90,7 +100,7 @@ export default function Navbar({ onNavigate, activeView, onOpenCreateModal, onOp
         document.removeEventListener('touchstart', handleClickOutside);
       };
     }
-  }, [notifDropdownOpen]);
+  }, [notifDropdownOpen, userDropdownOpen]);
 
   // Active languages filter with guaranteed support for EN, OM, AM
   const fallbackLanguages = [
@@ -304,6 +314,7 @@ export default function Navbar({ onNavigate, activeView, onOpenCreateModal, onOp
             {currentUser ? (
               <div className="relative">
                 <button
+                  ref={userButtonRef}
                   onClick={() => {
                     setUserDropdownOpen(!userDropdownOpen);
                     setLangDropdownOpen(false);
@@ -338,52 +349,53 @@ export default function Navbar({ onNavigate, activeView, onOpenCreateModal, onOp
                 <AnimatePresence>
                   {userDropdownOpen && (
                     <motion.div
+                      ref={userDropdownRef}
                       initial={{ opacity: 0, y: 10, scale: 0.95 }}
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                      className="absolute right-0 mt-2 w-60 bg-[#0d0d12] rounded-2xl shadow-2xl border border-white/10 py-2.5 z-50 overflow-hidden"
+                      className="absolute right-0 mt-2 w-52 bg-[#0d0d12] rounded-2xl shadow-2xl border border-white/10 py-2 z-50 overflow-hidden"
                     >
-                      <div className="px-4 py-3 border-b border-white/5 flex items-center gap-3">
-                        {currentUser.photoUrl ? (
-                          <img
-                            src={currentUser.photoUrl}
-                            alt={currentUser.fullName}
-                            className="w-10 h-10 object-cover rounded-xl border border-amber-500/30"
-                            referrerPolicy="no-referrer"
-                          />
-                        ) : currentUser.role === 'admin' && systemSettings?.logoUrl ? (
-                          <img
-                            src={systemSettings.logoUrl}
-                            alt="Brand Logo"
-                            className="w-10 h-10 object-cover rounded-xl border border-amber-500/30"
-                            referrerPolicy="no-referrer"
-                          />
-                        ) : (
-                          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 to-amber-600 text-[#050505] font-black flex items-center justify-center text-sm shadow">
-                            {currentUser.fullName.charAt(0)}
-                          </div>
-                        )}
-                        <div className="flex-1 min-w-0">
-                          <p className="font-bold text-xs text-white truncate uppercase tracking-wider">{currentUser.fullName}</p>
-                          <p className="text-[10px] text-white/40 truncate font-mono">{currentUser.email}</p>
-                          <span className="inline-block mt-1 text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-500">
-                            {currentUser.role === 'admin' ? t('role_admin_badge') : t('role_agent_badge')}
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* Common Links */}
-                      <button
-                        onClick={() => { onNavigate('profile'); setUserDropdownOpen(false); }}
-                        className="w-full text-left px-4 py-2 text-[11px] uppercase tracking-wider hover:bg-white/5 text-white/60 hover:text-white transition flex items-center gap-2.5 cursor-pointer"
-                      >
-                        <User className="w-4 h-4 text-white/50" />
-                        <span>{t("nav_my_dashboard")}</span>
-                      </button>
-
-                      {/* Admin Links */}
-                      {currentUser.role === 'admin' && (
+                      {currentUser.role === 'admin' ? (
                         <>
+                          <div className="px-4 py-3 border-b border-white/5 flex items-center gap-3">
+                            {currentUser.photoUrl ? (
+                              <img
+                                src={currentUser.photoUrl}
+                                alt={currentUser.fullName}
+                                className="w-10 h-10 object-cover rounded-xl border border-amber-500/30"
+                                referrerPolicy="no-referrer"
+                              />
+                            ) : systemSettings?.logoUrl ? (
+                              <img
+                                src={systemSettings.logoUrl}
+                                alt="Brand Logo"
+                                className="w-10 h-10 object-cover rounded-xl border border-amber-500/30"
+                                referrerPolicy="no-referrer"
+                              />
+                            ) : (
+                              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 to-amber-600 text-[#050505] font-black flex items-center justify-center text-sm shadow">
+                                {currentUser.fullName.charAt(0)}
+                              </div>
+                            )}
+                            <div className="flex-1 min-w-0">
+                              <p className="font-bold text-xs text-white truncate uppercase tracking-wider">{currentUser.fullName}</p>
+                              <p className="text-[10px] text-white/40 truncate font-mono">{currentUser.email}</p>
+                              <span className="inline-block mt-1 text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-500">
+                                {t('role_admin_badge')}
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* Common Links */}
+                          <button
+                            onClick={() => { onNavigate('profile'); setUserDropdownOpen(false); }}
+                            className="w-full text-left px-4 py-2 text-[11px] uppercase tracking-wider hover:bg-white/5 text-white/60 hover:text-white transition flex items-center gap-2.5 cursor-pointer"
+                          >
+                            <User className="w-4 h-4 text-white/50" />
+                            <span>{t("nav_my_dashboard")}</span>
+                          </button>
+
+                          {/* Admin Links */}
                           <div className="border-t border-white/5 my-1.5"></div>
                           <button
                             onClick={() => { onNavigate('admin'); setUserDropdownOpen(false); }}
@@ -392,17 +404,41 @@ export default function Navbar({ onNavigate, activeView, onOpenCreateModal, onOp
                             <Shield className="w-4 h-4 text-amber-500" />
                             <span>{t('admin_dashboard')}</span>
                           </button>
-                        </>
-                      )}
 
-                      <div className="border-t border-white/5 my-1.5"></div>
-                      <button
-                        onClick={handleLogout}
-                        className="w-full text-left px-4 py-2.5 text-[11px] uppercase tracking-wider hover:bg-red-500/15 text-red-400 hover:text-red-300 transition flex items-center gap-2.5 cursor-pointer"
-                      >
-                        <LogOut className="w-4 h-4 text-red-400/70" />
-                        <span>{t('logout')}</span>
-                      </button>
+                          <div className="border-t border-white/5 my-1.5"></div>
+                          <button
+                            onClick={handleLogout}
+                            className="w-full text-left px-4 py-2.5 text-[11px] uppercase tracking-wider hover:bg-red-500/15 text-red-400 hover:text-red-300 transition flex items-center gap-2.5 cursor-pointer"
+                          >
+                            <LogOut className="w-4 h-4 text-red-400/70" />
+                            <span>{t('logout')}</span>
+                          </button>
+                        </>
+                      ) : (
+                        /* REGULAR USER DROPDOWN: ONLY TWO USER-LEVEL ITEMS (Settings & Log Out) */
+                        <div className="py-1">
+                          <button
+                            onClick={() => {
+                              onNavigate('settings');
+                              setUserDropdownOpen(false);
+                            }}
+                            className="w-full text-left px-4 py-2.5 text-xs font-semibold uppercase tracking-wider hover:bg-white/5 text-white/80 hover:text-white transition flex items-center gap-2.5 cursor-pointer"
+                          >
+                            <Settings className="w-4 h-4 text-amber-400" />
+                            <span>{t('settings') || 'Settings'}</span>
+                          </button>
+
+                          <div className="border-t border-white/5 my-1"></div>
+
+                          <button
+                            onClick={handleLogout}
+                            className="w-full text-left px-4 py-2.5 text-xs font-semibold uppercase tracking-wider hover:bg-red-500/15 text-red-400 hover:text-red-300 transition flex items-center gap-2.5 cursor-pointer"
+                          >
+                            <LogOut className="w-4 h-4 text-red-400" />
+                            <span>{t('logout') || 'Log Out'}</span>
+                          </button>
+                        </div>
+                      )}
                     </motion.div>
                   )}
                 </AnimatePresence>

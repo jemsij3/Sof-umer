@@ -16,7 +16,7 @@ import {
   ChevronRight, UploadCloud, HelpCircle, FileText, AlertTriangle, Send, 
   ShieldCheck, Camera, Heart, Eye, Trash2, Edit2, Play, Pause, TrendingUp, 
   Info, List, Clock, Zap, DollarSign, Languages, Smartphone, Globe, ShieldAlert, Check, Plus, Lock, EyeOff, CheckSquare,
-  ChevronDown, Search, ArrowRight, Shield, ToggleLeft, ToggleRight, X, Folder, FolderOpen, Building, Gift, Briefcase
+  ChevronDown, Search, ArrowRight, Shield, ToggleLeft, ToggleRight, X, Folder, FolderOpen, Building, Gift, Briefcase, Save
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -88,7 +88,7 @@ const FAQ_ITEMS = [
 ];
 
 interface UserDashboardProps {
-  initialTab?: 'profile' | 'mylistings' | 'favorites' | 'messages' | 'payments';
+  initialTab?: 'profile' | 'mylistings' | 'favorites' | 'messages' | 'payments' | 'notifications' | 'settings' | 'supportsafety';
   onNavigate: (view: 'marketplace' | 'profile') => void;
   onNavigateToInfo?: (pageId: string) => void;
   onOpenCreateModal?: () => void;
@@ -186,6 +186,9 @@ export default function UserDashboard({
       else if (initialTab === 'favorites') setActiveTab('saveditems');
       else if (initialTab === 'messages') setActiveTab('messages');
       else if (initialTab === 'payments') setActiveTab('payments');
+      else if (initialTab === 'notifications') setActiveTab('notifications');
+      else if (initialTab === 'settings') setActiveTab('settings');
+      else if (initialTab === 'supportsafety') setActiveTab('supportsafety');
     }
   }, [initialTab]);
 
@@ -816,122 +819,161 @@ export default function UserDashboard({
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 font-sans text-[#F5F5F4] text-left">
-      
-      {/* Cover Header Banner displaying customer profile photo and full name at the top (Strictly no generic "User"/"Agent") */}
-      <div className="mb-8 relative overflow-hidden rounded-3xl bg-gradient-to-r from-zinc-900 via-[#12121a] to-black border border-white/5 p-6 md:p-8 shadow-2xl flex flex-col md:flex-row md:items-center justify-between gap-6">
-        <div className="absolute top-0 right-0 w-80 h-80 bg-amber-500/5 rounded-full blur-3xl pointer-events-none" />
-        
-        <div className="flex items-center gap-5 relative z-10">
-          <div className="relative group cursor-pointer" onClick={() => avatarInputRef.current?.click()} title="Click to upload profile picture">
-            {profilePhotoUrl ? (
-              <img 
-                src={profilePhotoUrl} 
-                alt={currentUser.fullName} 
-                referrerPolicy="no-referrer"
-                className="w-16 h-16 md:w-20 md:h-20 rounded-full object-cover border-2 border-amber-500/20 shadow-xl group-hover:opacity-80 transition" 
-              />
-            ) : (
-              <div className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-gradient-to-tr from-amber-400 to-amber-600 text-black font-black flex items-center justify-center text-xl md:text-2xl shadow-xl border border-amber-500/20 group-hover:opacity-80 transition">
-                {currentUser.fullName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
-              </div>
-            )}
-            <div className="absolute inset-0 rounded-full bg-black/60 opacity-0 group-hover:opacity-100 transition flex items-center justify-center text-amber-400">
-              <Camera className="w-5 h-5" />
-            </div>
-            <span className={`absolute bottom-0.5 right-0.5 w-4 h-4 rounded-full border-2 border-black ${currentUser.isVerified ? 'bg-emerald-500' : 'bg-amber-500 animate-pulse'}`} />
-          </div>
-
-          <div>
-            <span className="text-[10px] font-black tracking-widest text-amber-500 uppercase block mb-1">{tLocal('registered_customer')}</span>
-            <h2 className="text-2xl md:text-3xl font-bold text-white tracking-tight">
-              {currentUser.fullName}
-            </h2>
-            <div className="flex flex-wrap items-center gap-2 mt-2">
-              <span className="text-[10px] text-white/50 bg-white/5 px-2 py-0.5 rounded-full border border-white/5 font-mono">{currentUser.email}</span>
-              {currentUser.isVerified ? (
-                <span className="inline-flex items-center gap-1 text-[9px] font-bold uppercase bg-emerald-500/10 text-emerald-400 px-2 py-0.5 rounded-full border border-emerald-500/20">
-                  <ShieldCheck className="w-3 h-3" />
-                  <span>{tLocal('verified_badge')}</span>
-                </span>
-              ) : currentUser.verificationStatus === 'pending' ? (
-                <span className="inline-flex items-center gap-1 text-[9px] font-bold uppercase bg-amber-500/10 text-amber-500 px-2 py-0.5 rounded-full border border-amber-500/20">
-                  <Clock className="w-3 h-3" />
-                  <span>{tLocal('pending_badge')}</span>
-                </span>
-              ) : (
-                <span className="inline-flex items-center gap-1 text-[9px] font-bold uppercase bg-white/5 text-white/40 px-2 py-0.5 rounded-full border border-white/5">
-                  <AlertTriangle className="w-3 h-3" />
-                  <span>{tLocal('unverified_badge')}</span>
-                </span>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* Quick status counters */}
-        <div className="flex gap-4 relative z-10">
-          <div className="px-4 py-3 bg-white/5 border border-white/5 rounded-2xl text-center min-w-[90px]">
-            <span className="text-xs text-white/40 block">{tLocal('listings_count')}</span>
-            <span className="text-xl font-bold text-white">{myListings.length}</span>
-          </div>
-          <div className="px-4 py-3 bg-white/5 border border-white/5 rounded-2xl text-center min-w-[90px]">
-            <span className="text-xs text-white/40 block">{tLocal('favorites_count')}</span>
-            <span className="text-xl font-bold text-white">{mySavedItems.length}</span>
-          </div>
-          <div className="px-4 py-3 bg-white/5 border border-white/5 rounded-2xl text-center min-w-[90px]">
-            <span className="text-xs text-white/40 block">{tLocal('inbox_chats')}</span>
-            <span className="text-xl font-bold text-white">{myInquiries.length}</span>
-          </div>
-        </div>
-      </div>
-
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         
-        {/* Navigation Sidebar (Desktop: Left Rail / Mobile: Premium grid for instant selection) */}
-        <div className="lg:col-span-4 space-y-4">
-          <div className="bg-[#0d0d12]/95 border border-white/5 p-4 rounded-3xl shadow-xl">
-            <h3 className="text-[10px] font-black uppercase text-white/40 tracking-wider mb-4 px-2">{tLocal('account_center_menu')}</h3>
+        {/* Navigation Hub */}
+        <div className="lg:col-span-4 space-y-6">
+          {/* ACCOUNT CENTER MENU (2x2 Grid) */}
+          <div className="bg-[#0d0d12]/95 border border-white/5 p-5 rounded-3xl shadow-xl">
+            <h3 className="text-[11px] font-black uppercase text-amber-500 tracking-wider mb-4 px-1 flex items-center gap-2 font-mono">
+              <span className="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
+              <span>{tLocal('account_center_menu') || 'ACCOUNT CENTER MENU'}</span>
+            </h3>
             
-            {/* Desktop Menu List / Mobile Grid */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-1 gap-2">
-              {SECTIONS.map((sec) => {
-                const isActive = activeTab === sec.id;
-                return (
-                  <button
-                    key={sec.id}
-                    onClick={() => {
-                      if (sec.id === 'logout') {
-                        logout();
-                        onNavigate('marketplace');
-                      } else {
-                        setActiveTab(sec.id);
-                        // scroll on mobile devices for ease of navigation
-                        if (window.innerWidth < 1024) {
-                          const el = document.getElementById('dashboard-main-content-pane');
-                          if (el) el.scrollIntoView({ behavior: 'smooth' });
-                        }
-                      }
-                    }}
-                    className={`w-full text-left px-3.5 py-3 rounded-2xl text-xs font-bold transition flex items-center justify-between cursor-pointer group ${
-                      isActive 
-                        ? 'bg-amber-500 text-black font-extrabold shadow-lg shadow-amber-500/5' 
-                        : 'text-white/60 hover:text-white hover:bg-white/5 border border-transparent hover:border-white/5'
-                    }`}
-                  >
-                    <div className="flex items-center gap-2.5 truncate">
-                      <span className={`${isActive ? 'text-black' : 'text-amber-500/80 group-hover:text-amber-500'} transition`}>
-                        {sec.icon}
-                      </span>
-                      <span className="truncate">{getSectionLabel(sec)}</span>
-                    </div>
-                    {sec.badge !== undefined && (
-                      <span className={`text-[10px] px-2 py-0.5 rounded-full font-black font-mono leading-none ${sec.badgeColor || 'bg-white/10 text-white'}`}>
-                        {sec.badge}
-                      </span>
-                    )}
-                  </button>
-                );
-              })}
+            <div className="grid grid-cols-2 gap-3">
+              {/* 1. My Listings */}
+              <button
+                onClick={() => {
+                  setActiveTab('mylistings');
+                  if (window.innerWidth < 1024) {
+                    const el = document.getElementById('dashboard-main-content-pane');
+                    if (el) el.scrollIntoView({ behavior: 'smooth' });
+                  }
+                }}
+                className={`p-4 rounded-2xl text-left transition flex flex-col justify-between min-h-[96px] cursor-pointer group border ${
+                  activeTab === 'mylistings'
+                    ? 'bg-amber-500 text-black border-amber-400 shadow-lg shadow-amber-500/20 font-black'
+                    : 'bg-black/40 text-white/80 hover:text-white hover:bg-white/5 border-white/5'
+                }`}
+              >
+                <div className="flex items-center justify-between w-full">
+                  <List className={`w-5 h-5 ${activeTab === 'mylistings' ? 'text-black' : 'text-amber-400 group-hover:scale-110'} transition`} />
+                  <span className={`text-[11px] font-mono px-2 py-0.5 rounded-full font-bold ${
+                    activeTab === 'mylistings' ? 'bg-black text-amber-400' : 'bg-amber-500/15 text-amber-400 border border-amber-500/20'
+                  }`}>
+                    {myListings.length}
+                  </span>
+                </div>
+                <span className={`text-xs font-bold mt-2 ${activeTab === 'mylistings' ? 'text-black font-extrabold' : 'text-white'}`}>
+                  {lang === 'om' ? 'Beeksisa Koo' : lang === 'am' ? 'የእኔ ማስታወቂያዎች' : 'My Listings'}
+                </span>
+              </button>
+
+              {/* 2. Profile / Edit Profile */}
+              <button
+                onClick={() => {
+                  setActiveTab('profile');
+                  if (window.innerWidth < 1024) {
+                    const el = document.getElementById('dashboard-main-content-pane');
+                    if (el) el.scrollIntoView({ behavior: 'smooth' });
+                  }
+                }}
+                className={`p-4 rounded-2xl text-left transition flex flex-col justify-between min-h-[96px] cursor-pointer group border ${
+                  activeTab === 'profile'
+                    ? 'bg-amber-500 text-black border-amber-400 shadow-lg shadow-amber-500/20 font-black'
+                    : 'bg-black/40 text-white/80 hover:text-white hover:bg-white/5 border-white/5'
+                }`}
+              >
+                <div className="flex items-center justify-between w-full">
+                  <User className={`w-5 h-5 ${activeTab === 'profile' ? 'text-black' : 'text-amber-400 group-hover:scale-110'} transition`} />
+                </div>
+                <span className={`text-xs font-bold mt-2 ${activeTab === 'profile' ? 'text-black font-extrabold' : 'text-white'}`}>
+                  {lang === 'om' ? 'Profaayilii' : lang === 'am' ? 'መገለጫ' : 'Profile'}
+                </span>
+              </button>
+
+              {/* 3. Notifications */}
+              <button
+                onClick={() => {
+                  setActiveTab('notifications');
+                  if (window.innerWidth < 1024) {
+                    const el = document.getElementById('dashboard-main-content-pane');
+                    if (el) el.scrollIntoView({ behavior: 'smooth' });
+                  }
+                }}
+                className={`p-4 rounded-2xl text-left transition flex flex-col justify-between min-h-[96px] cursor-pointer group border ${
+                  activeTab === 'notifications'
+                    ? 'bg-amber-500 text-black border-amber-400 shadow-lg shadow-amber-500/20 font-black'
+                    : 'bg-black/40 text-white/80 hover:text-white hover:bg-white/5 border-white/5'
+                }`}
+              >
+                <div className="flex items-center justify-between w-full">
+                  <Bell className={`w-5 h-5 ${activeTab === 'notifications' ? 'text-black' : 'text-amber-400 group-hover:scale-110'} transition`} />
+                  {unreadNotifCount > 0 && (
+                    <span className={`text-[11px] font-mono px-2 py-0.5 rounded-full font-bold ${
+                      activeTab === 'notifications' ? 'bg-black text-amber-400' : 'bg-amber-500 text-black'
+                    }`}>
+                      {unreadNotifCount}
+                    </span>
+                  )}
+                </div>
+                <span className={`text-xs font-bold mt-2 ${activeTab === 'notifications' ? 'text-black font-extrabold' : 'text-white'}`}>
+                  {lang === 'om' ? 'Beeksisa Caffee' : lang === 'am' ? 'ማሳወቂያዎች' : 'Notifications'}
+                </span>
+              </button>
+
+              {/* 4. Support & Rules */}
+              <button
+                onClick={() => {
+                  setActiveTab('supportsafety');
+                  if (window.innerWidth < 1024) {
+                    const el = document.getElementById('dashboard-main-content-pane');
+                    if (el) el.scrollIntoView({ behavior: 'smooth' });
+                  }
+                }}
+                className={`p-4 rounded-2xl text-left transition flex flex-col justify-between min-h-[96px] cursor-pointer group border ${
+                  activeTab === 'supportsafety'
+                    ? 'bg-amber-500 text-black border-amber-400 shadow-lg shadow-amber-500/20 font-black'
+                    : 'bg-black/40 text-white/80 hover:text-white hover:bg-white/5 border-white/5'
+                }`}
+              >
+                <div className="flex items-center justify-between w-full">
+                  <Shield className={`w-5 h-5 ${activeTab === 'supportsafety' ? 'text-black' : 'text-amber-400 group-hover:scale-110'} transition`} />
+                </div>
+                <span className={`text-xs font-bold mt-2 ${activeTab === 'supportsafety' ? 'text-black font-extrabold' : 'text-white'}`}>
+                  {lang === 'om' ? 'Deggarsa & Seera' : lang === 'am' ? 'ድጋፍ እና ደንቦች' : 'Support & Rules'}
+                </span>
+              </button>
+            </div>
+
+            {/* OTHER OPTIONS FOOTER BLOCK */}
+            <div className="mt-6 pt-5 border-t border-white/5">
+              <h4 className="text-[10px] font-black uppercase text-white/40 tracking-wider mb-3 px-1 font-mono">
+                {tLocal('other_options') || 'OTHER OPTIONS'}
+              </h4>
+              
+              <div className="grid grid-cols-2 gap-2">
+                {/* Settings */}
+                <button
+                  onClick={() => {
+                    setActiveTab('settings');
+                    if (window.innerWidth < 1024) {
+                      const el = document.getElementById('dashboard-main-content-pane');
+                      if (el) el.scrollIntoView({ behavior: 'smooth' });
+                    }
+                  }}
+                  className={`px-3.5 py-3 rounded-2xl text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer border ${
+                    activeTab === 'settings'
+                      ? 'bg-amber-500 text-black border-amber-400 font-extrabold shadow-lg shadow-amber-500/10'
+                      : 'bg-black/30 text-white/70 hover:text-white hover:bg-white/5 border-white/5'
+                  }`}
+                >
+                  <Settings className={`w-4 h-4 ${activeTab === 'settings' ? 'text-black' : 'text-amber-400'}`} />
+                  <span className="truncate">{lang === 'om' ? 'Sajatoo' : lang === 'am' ? 'ቅንብሮች' : 'Settings'}</span>
+                </button>
+
+                {/* Log Out */}
+                <button
+                  onClick={() => {
+                    logout();
+                    onNavigate('marketplace');
+                  }}
+                  className="px-3.5 py-3 rounded-2xl text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer bg-red-500/10 hover:bg-red-500/20 text-red-400 hover:text-red-300 border border-red-500/15"
+                >
+                  <LogOut className="w-4 h-4 text-red-400" />
+                  <span className="truncate">{lang === 'om' ? 'Ba’i' : lang === 'am' ? 'ውጣ' : 'Log Out'}</span>
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -951,224 +993,188 @@ export default function UserDashboard({
               {/* SECTION 1: PROFILE */}
               {activeTab === 'profile' && (
                 <div className="space-y-6">
-                  <div className="flex justify-between items-center border-b border-white/5 pb-4">
-                    <div>
-                      <h3 className="text-lg font-bold text-white">{tLocal('profile_details')}</h3>
-                      <p className="text-[11px] text-white/40 mt-0.5">{tLocal('profile_subtitle')}</p>
-                    </div>
+                  {/* 1. Section Title & Subtitle */}
+                  <div className="border-b border-white/5 pb-4">
+                    <h3 className="text-xl font-bold text-white tracking-tight">Profile Details</h3>
+                    <p className="text-xs text-white/50 mt-1">
+                      Manage your user registration credentials and marketplace identity
+                    </p>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-black/40 p-5 rounded-2xl border border-white/5">
-                    <div>
-                      <span className="text-[10px] font-bold text-white/40 uppercase block mb-1 font-mono">{tLocal('full_name')}</span>
-                      <p className="text-sm font-semibold text-white">{currentUser.fullName}</p>
+                  {profileSuccess && (
+                    <div className="p-3.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs rounded-xl text-center font-medium flex items-center justify-center gap-2">
+                      <CheckCircle2 className="w-4 h-4 shrink-0" />
+                      <span>{profileSuccess}</span>
                     </div>
-                    <div>
-                      <span className="text-[10px] font-bold text-white/40 uppercase block mb-1 font-mono">{tLocal('email_address')}</span>
-                      <p className="text-sm font-semibold text-white/80">{currentUser.email}</p>
+                  )}
+                  {profileError && (
+                    <div className="p-3.5 bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs rounded-xl text-center font-medium flex items-center justify-center gap-2">
+                      <AlertTriangle className="w-4 h-4 shrink-0" />
+                      <span>{profileError}</span>
                     </div>
-                    <div>
-                      <span className="text-[10px] font-bold text-white/40 uppercase block mb-1 font-mono">{tLocal('phone_number')}</span>
-                      <p className="text-sm font-semibold text-white">{currentUser.phone || tLocal('not_provided')}</p>
-                    </div>
-                    <div>
-                      <span className="text-[10px] font-bold text-white/40 uppercase block mb-1 font-mono">{tLocal('member_since')}</span>
-                      <p className="text-sm font-semibold text-white/60">{new Date(currentUser.createdAt).toLocaleDateString()}</p>
-                    </div>
-                  </div>
+                  )}
 
-                  {/* Profile Picture Upload & Management Card */}
-                  <div className="bg-gradient-to-r from-[#12121a] to-black/80 border border-white/10 p-5 rounded-2xl shadow-xl">
-                    <div className="flex flex-col sm:flex-row items-center gap-5">
-                      <div className="relative shrink-0">
-                        {profilePhotoUrl ? (
-                          <img 
-                            src={profilePhotoUrl} 
-                            alt={currentUser.fullName} 
-                            referrerPolicy="no-referrer"
-                            className="w-20 h-20 rounded-2xl object-cover border-2 border-amber-500/40 shadow-xl" 
-                          />
-                        ) : (
-                          <div className="w-20 h-20 rounded-2xl bg-gradient-to-tr from-amber-400 to-amber-600 text-black font-black flex items-center justify-center text-2xl shadow-xl border border-amber-500/30">
-                            {currentUser.fullName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
-                          </div>
-                        )}
-                      </div>
-
-                      <div className="space-y-2 text-center sm:text-left flex-1">
-                        <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2">
-                          <h4 className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-1.5">
-                            <Camera className="w-4 h-4 text-amber-500" />
-                            <span>{tLocal('profile_pic_title')}</span>
-                          </h4>
-                          <span className="text-[9px] bg-amber-500/10 text-amber-400 border border-amber-500/20 px-2 py-0.5 rounded font-mono">
-                            {tLocal('saved_to_account')}
-                          </span>
-                        </div>
-
-                        <p className="text-xs text-white/70">
-                          {tLocal('profile_pic_desc')}
-                        </p>
-                        <p className="text-[10px] text-white/40 font-mono">
-                          {tLocal('profile_pic_hint')}
-                        </p>
-
-                        {/* Hidden File Input */}
-                        <input 
-                          type="file" 
-                          ref={avatarInputRef}
-                          accept="image/png, image/jpeg, image/jpg, image/webp, image/gif"
-                          onChange={handleAvatarFileChange}
-                          className="hidden" 
-                        />
-
-                        <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 pt-1">
-                          <button 
-                            type="button"
-                            onClick={() => avatarInputRef.current?.click()}
-                            disabled={uploadingAvatar}
-                            className="px-4 py-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black font-extrabold text-xs rounded-xl flex items-center gap-2 transition shadow-lg cursor-pointer uppercase tracking-wider disabled:opacity-50"
-                          >
-                            <UploadCloud className="w-4 h-4" />
-                            <span>{uploadingAvatar ? tLocal('uploading') : profilePhotoUrl ? tLocal('change_profile_pic') : tLocal('add_profile_pic')}</span>
-                          </button>
-
-                          {profilePhotoUrl && (
-                            <button 
-                              type="button"
-                              onClick={handleRemoveAvatar}
-                              disabled={uploadingAvatar}
-                              className="px-3.5 py-2 bg-white/5 hover:bg-rose-500/20 text-rose-400 border border-white/10 hover:border-rose-500/30 font-bold text-xs rounded-xl flex items-center gap-1.5 transition cursor-pointer"
-                            >
-                              <Trash2 className="w-3.5 h-3.5" />
-                              <span>{tLocal('remove_photo')}</span>
-                            </button>
+                  <form onSubmit={handleUpdateProfile} className="space-y-5">
+                    {/* 2. Profile Picture Block */}
+                    <div className="bg-black/40 border border-white/10 p-5 rounded-2xl shadow-xl">
+                      <div className="flex flex-col sm:flex-row items-center gap-5">
+                        <div className="relative shrink-0">
+                          {profilePhotoUrl ? (
+                            <img 
+                              src={profilePhotoUrl} 
+                              alt={currentUser.fullName} 
+                              referrerPolicy="no-referrer"
+                              className="w-20 h-20 rounded-2xl object-cover border-2 border-amber-500/40 shadow-xl" 
+                            />
+                          ) : (
+                            <div className="w-20 h-20 rounded-2xl bg-gradient-to-tr from-amber-400 to-amber-600 text-black font-black flex items-center justify-center text-2xl shadow-xl border border-amber-500/30">
+                              {currentUser.fullName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
+                            </div>
                           )}
                         </div>
+
+                        <div className="space-y-2 text-center sm:text-left flex-1">
+                          <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2">
+                            <h4 className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-1.5">
+                              <Camera className="w-4 h-4 text-amber-500" />
+                              <span>{tLocal('profile_pic_title') || 'Profile Picture'}</span>
+                            </h4>
+                          </div>
+
+                          <p className="text-[11px] text-white/50 font-mono">
+                            {tLocal('profile_pic_hint') || 'PNG, JPG or WebP up to 5MB (800x800px recommended)'}
+                          </p>
+
+                          {/* Hidden File Input */}
+                          <input 
+                            type="file" 
+                            ref={avatarInputRef}
+                            accept="image/png, image/jpeg, image/jpg, image/webp, image/gif"
+                            onChange={handleAvatarFileChange}
+                            className="hidden" 
+                          />
+
+                          <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 pt-1">
+                            <button 
+                              type="button"
+                              onClick={() => avatarInputRef.current?.click()}
+                              disabled={uploadingAvatar}
+                              className="px-4 py-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black font-extrabold text-xs rounded-xl flex items-center gap-2 transition shadow-lg cursor-pointer uppercase tracking-wider disabled:opacity-50"
+                            >
+                              <UploadCloud className="w-4 h-4" />
+                              <span>{uploadingAvatar ? (tLocal('uploading') || 'Uploading...') : profilePhotoUrl ? 'Change Profile Picture' : 'Add Profile Picture'}</span>
+                            </button>
+
+                            {profilePhotoUrl && (
+                              <button 
+                                type="button"
+                                onClick={handleRemoveAvatar}
+                                disabled={uploadingAvatar}
+                                className="px-3.5 py-2 bg-white/5 hover:bg-rose-500/20 text-rose-400 border border-white/10 hover:border-rose-500/30 font-bold text-xs rounded-xl flex items-center gap-1.5 transition cursor-pointer"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                                <span>{tLocal('remove_photo') || 'Remove'}</span>
+                              </button>
+                            )}
+                          </div>
+                        </div>
                       </div>
                     </div>
-                  </div>
 
-                  {/* Edit Profile Sub-Section */}
-                  <div className="border-t border-white/5 pt-6">
-                    <h4 className="text-xs font-black uppercase text-amber-500 tracking-wider mb-4">{tLocal('edit_profile_info')}</h4>
-                    
-                    {profileSuccess && <p className="p-3 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs rounded-xl mb-4 text-center">{profileSuccess}</p>}
-                    {profileError && <p className="p-3 bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs rounded-xl mb-4 text-center">{profileError}</p>}
+                    {/* 3. Full Name */}
+                    <div>
+                      <label className="block text-xs font-bold text-white/70 uppercase mb-1.5 font-mono">
+                        Full Name
+                      </label>
+                      <input 
+                        type="text" 
+                        required 
+                        value={fullName} 
+                        onChange={e => setFullName(e.target.value)} 
+                        placeholder="e.g. Abebe Kebede"
+                        className="w-full p-3.5 bg-black border border-white/10 focus:border-amber-500/50 text-sm text-white rounded-xl focus:outline-none focus:ring-1 focus:ring-amber-500/30 transition" 
+                      />
+                    </div>
 
-                    <form onSubmit={handleUpdateProfile} className="space-y-4">
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div>
-                          <label className="block text-[10px] font-bold text-white/40 uppercase mb-1.5 font-mono">{tLocal('full_name')}</label>
-                          <input 
-                            type="text" 
-                            required 
-                            value={fullName} 
-                            onChange={e => setFullName(e.target.value)} 
-                            className="w-full p-3 bg-black border border-white/5 focus:border-amber-500/30 text-xs text-white rounded-xl focus:outline-none focus:ring-1 focus:ring-amber-500/20" 
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-[10px] font-bold text-white/40 uppercase mb-1.5 font-mono">{tLocal('phone_number')}</label>
-                          <input 
-                            type="text" 
-                            value={profilePhone} 
-                            onChange={e => setProfilePhone(e.target.value)} 
-                            placeholder="+251 912 345 678"
-                            className="w-full p-3 bg-black border border-white/5 focus:border-amber-500/30 text-xs text-white rounded-xl focus:outline-none focus:ring-1 focus:ring-amber-500/20" 
-                          />
-                        </div>
-                      </div>
-                      <div>
-                        <label className="block text-[10px] font-bold text-white/40 uppercase mb-1.5 font-mono">{tLocal('profile_photo_url_label')}</label>
-                        <input 
-                          type="text" 
-                          value={profilePhotoUrl} 
-                          onChange={e => setProfilePhotoUrl(e.target.value)} 
-                          placeholder="https://images.unsplash.com/... / portrait.jpg"
-                          className="w-full p-3 bg-black border border-white/5 focus:border-amber-500/30 text-xs text-white rounded-xl focus:outline-none focus:ring-1 focus:ring-amber-500/20 font-mono" 
-                        />
-                      </div>
-                      <button 
-                        type="submit" 
-                        className="bg-amber-500 hover:bg-amber-400 text-black font-extrabold py-2.5 px-6 rounded-xl text-xs uppercase tracking-wider transition cursor-pointer"
-                      >
-                        {tLocal('save_changes')}
-                      </button>
-                    </form>
-                  </div>
+                    {/* 4. Phone Number */}
+                    <div>
+                      <label className="block text-xs font-bold text-white/70 uppercase mb-1.5 font-mono">
+                        Phone Number
+                      </label>
+                      <input 
+                        type="text" 
+                        value={profilePhone} 
+                        onChange={e => setProfilePhone(e.target.value)} 
+                        placeholder="+251 912 345 678"
+                        className="w-full p-3.5 bg-black border border-white/10 focus:border-amber-500/50 text-sm text-white rounded-xl focus:outline-none focus:ring-1 focus:ring-amber-500/30 transition" 
+                      />
+                    </div>
+
+                    {/* 5. Profile Image URL */}
+                    <div>
+                      <label className="block text-xs font-bold text-white/70 uppercase mb-1.5 font-mono">
+                        Profile Image URL
+                      </label>
+                      <input 
+                        type="text" 
+                        value={profilePhotoUrl} 
+                        onChange={e => setProfilePhotoUrl(e.target.value)} 
+                        placeholder="https://images.unsplash.com/... or upload photo above"
+                        className="w-full p-3.5 bg-black border border-white/10 focus:border-amber-500/50 text-xs text-white rounded-xl focus:outline-none focus:ring-1 focus:ring-amber-500/30 font-mono transition" 
+                      />
+                    </div>
+
+                    {/* 6. Email Address (Read-Only) */}
+                    <div>
+                      <label className="block text-xs font-bold text-white/40 uppercase mb-1.5 font-mono flex items-center justify-between">
+                        <span>Email Address</span>
+                        <span className="text-[10px] text-white/30 uppercase font-mono tracking-wider">Read-Only</span>
+                      </label>
+                      <input 
+                        type="email" 
+                        value={currentUser.email} 
+                        readOnly 
+                        disabled
+                        className="w-full p-3.5 bg-black/50 border border-white/5 text-white/50 rounded-xl cursor-not-allowed text-xs font-mono select-none" 
+                      />
+                    </div>
+
+                    {/* 7. Member Since (Read-Only) */}
+                    <div>
+                      <label className="block text-xs font-bold text-white/40 uppercase mb-1.5 font-mono flex items-center justify-between">
+                        <span>Member Since</span>
+                        <span className="text-[10px] text-white/30 uppercase font-mono tracking-wider">Read-Only</span>
+                      </label>
+                      <input 
+                        type="text" 
+                        value={currentUser.createdAt ? new Date(currentUser.createdAt).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' }) : 'N/A'} 
+                        readOnly 
+                        disabled
+                        className="w-full p-3.5 bg-black/50 border border-white/5 text-white/50 rounded-xl cursor-not-allowed text-xs font-mono select-none" 
+                      />
+                    </div>
+
+                    {/* 8. Full-width action button: "Save Profile Updates" */}
+                    <button 
+                      type="submit" 
+                      className="w-full py-4 px-6 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black font-extrabold text-xs uppercase tracking-wider rounded-xl transition shadow-lg shadow-amber-500/10 cursor-pointer flex items-center justify-center gap-2"
+                    >
+                      <Save className="w-4 h-4 text-black" />
+                      <span>Save Profile Updates</span>
+                    </button>
+                  </form>
                 </div>
               )}
 
               {/* SECTION 2: MY LISTINGS */}
               {activeTab === 'mylistings' && (
                 <div className="space-y-6">
-                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-white/5 pb-4">
-                    <div>
-                      <h3 className="text-lg font-bold text-white">{tLocal('my_listings_title')}</h3>
-                      <p className="text-[11px] text-white/40 mt-0.5">{tLocal('edit_listing_subtitle')}</p>
-                    </div>
-                    {onOpenCreateModal && (
-                      <button 
-                        onClick={onOpenCreateModal}
-                        className="bg-amber-500 hover:bg-amber-400 text-black text-xs font-black px-4 py-2 rounded-xl transition flex items-center gap-1.5 cursor-pointer"
-                      >
-                        <Plus className="w-4 h-4" />
-                        <span>{tLocal('post_new_listing')}</span>
-                      </button>
-                    )}
+                  <div className="border-b border-white/5 pb-4">
+                    <h3 className="text-xl font-bold text-white tracking-tight">My Listings</h3>
+                    <p className="text-xs text-white/40 mt-1">
+                      {myListings.length} {myListings.length === 1 ? 'property listing' : 'property listings'} in your account
+                    </p>
                   </div>
-
-                  {/* Dynamic Free Listing Campaign Status & Quota Banner */}
-                  {(() => {
-                    const fls = systemSettings?.freeListingSettings || { enabled: true, maxFreeListingsPerUser: 5, startDate: '2026-08-01', endDate: '2026-08-31' };
-                    const campaignInfo = getCampaignStatusInfo(fls);
-                    const maxFree = campaignInfo.maxListings;
-                    const userFreeUsed = myListings.filter(p => !p.description?.includes('**PAUSED**')).length;
-                    const remainingFree = Math.max(0, maxFree - userFreeUsed);
-
-                    return (
-                      <div className="bg-gradient-to-r from-amber-500/10 via-black/40 to-emerald-500/10 border border-amber-500/30 p-5 rounded-3xl shadow-xl relative overflow-hidden">
-                        <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 relative z-10">
-                          <div className="space-y-1.5 text-left">
-                            <div className="flex flex-wrap items-center gap-2">
-                              <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-extrabold font-mono uppercase border ${campaignInfo.badgeColor}`}>
-                                {tLocal('campaign_status')}: {campaignInfo.status}
-                              </span>
-                              <span className="text-[10px] text-amber-400 font-mono font-bold bg-amber-500/10 px-2 py-0.5 rounded-md border border-amber-500/20">
-                                {campaignInfo.displayText}
-                              </span>
-                            </div>
-                            <h4 className="text-sm font-bold text-white flex items-center gap-2">
-                              <Gift className="w-4 h-4 text-amber-400 shrink-0" />
-                              <span>
-                                {campaignInfo.isUpcoming && `🎉 Free Listing Campaign`}
-                                {campaignInfo.isActive && (campaignInfo.isLastDay ? `⚠️ Last day of the Free Listing Campaign!` : `🎉 Free Listing Campaign is LIVE!`)}
-                                {campaignInfo.isExpired && `Free Listing Campaign has ended.`}
-                              </span>
-                            </h4>
-                            <p className="text-xs text-white/70">
-                              <span className="font-semibold text-white/90">Campaign Period:</span> {campaignInfo.startDateFormatted} → {campaignInfo.endDateFormatted}
-                            </p>
-                          </div>
-
-                          <div className="bg-black/60 border border-white/10 p-3.5 rounded-2xl text-center shrink-0 min-w-[200px]">
-                            <span className="text-[10px] uppercase font-bold text-white/40 block mb-1">{tLocal('free_listing_quota')}</span>
-                            <div className="flex justify-center items-center gap-2 text-xs font-mono font-extrabold">
-                              <span className="text-white/60">{tLocal('quota_used')}: <strong className="text-amber-400">{userFreeUsed} / {maxFree}</strong></span>
-                              <span className="text-white/30">•</span>
-                              <span className="text-emerald-400">{tLocal('quota_remaining')}: <strong className="text-white">{remainingFree}</strong></span>
-                            </div>
-                            {campaignInfo.isActive && (
-                              <p className="text-[9px] text-emerald-400/90 font-medium mt-1">
-                                You can publish up to {remainingFree} free listings.
-                              </p>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })()}
 
                   {/* Listings Grid */}
                   {myListings.length === 0 ? (
