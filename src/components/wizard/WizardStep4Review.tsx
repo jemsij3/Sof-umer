@@ -64,86 +64,78 @@ export const WizardStep4Review: React.FC<WizardStep4ReviewProps> = ({
 }) => {
   const { systemSettings } = useApp();
 
-  // Dynamic admin-defined promotion packages stored in state/context
-  const defaultAdminPackages = [
-    { id: 'basic', name: 'Basic Boost', price: 49, currency: 'ETB', duration: '3 Days', badge: 'BASIC', desc: 'Category top placement + Basic Verified Badge' },
+  const adminSettings = (systemSettings as any) || {};
+  const rawFreeCampaign = adminSettings.freeListingCampaign || adminSettings.freeListingSettings;
+  const isCampaignEnabled = Boolean(rawFreeCampaign?.enabled);
+
+  const freeListingCampaign = {
+    enabled: isCampaignEnabled,
+    startDate: rawFreeCampaign?.startDate || '',
+    endDate: rawFreeCampaign?.endDate || 'Active Campaign Period',
+    maxListings: rawFreeCampaign?.maxListings || rawFreeCampaign?.maxFreeListingsPerUser || 30
+  };
+
+  const safeAdminSettings = {
+    ...adminSettings,
+    freeListingCampaign
+  };
+
+  const defaultPromotionPackages = [
+    { id: 'starter', name: 'Starter Boost', price: 49, currency: 'ETB', duration: '3 Days', badge: 'STARTER', desc: 'Category top placement + Basic Verified Badge' },
     { id: 'premium', name: 'Premium Boost', price: 149, currency: 'ETB', duration: '7 Days', badge: 'PREMIUM', desc: 'Featured hero slider + High priority ranking' },
     { id: 'vip', name: 'VIP Elite Boost', price: 399, currency: 'ETB', duration: '30 Days', badge: 'VIP ELITE', desc: 'Top search billboard pin + Full site promotion' }
   ];
 
-  const liveAdminPackages = (propAdminPackages && propAdminPackages.length > 0)
+  const rawPackages = (propAdminPackages && propAdminPackages.length > 0)
     ? propAdminPackages
     : (systemSettings?.adPackages && systemSettings.adPackages.length > 0)
     ? systemSettings.adPackages.filter((p: any) => p.name !== 'New Custom Promotion Package' && !p.name.includes('Custom'))
-    : defaultAdminPackages;
+    : defaultPromotionPackages;
 
-  const adminPromotionPackages = liveAdminPackages.length > 0 ? liveAdminPackages : defaultAdminPackages;
+  const promotionPackages = rawPackages.map((pkg: any, idx: number) => ({
+    id: pkg.id || (idx === 0 ? 'starter' : idx === 1 ? 'premium' : 'vip'),
+    name: pkg.name || `Boost Package ${idx + 1}`,
+    price: Number(pkg.price) || (idx === 0 ? 49 : idx === 1 ? 149 : 399),
+    currency: pkg.currency || 'ETB',
+    duration: pkg.duration || (idx === 0 ? '3 Days' : idx === 1 ? '7 Days' : '30 Days'),
+    badge: pkg.badge || (idx === 0 ? 'STARTER' : idx === 1 ? 'PREMIUM' : 'VIP ELITE'),
+    desc: pkg.desc || ''
+  }));
 
-  const isFreeCampaignActive = Boolean(
-    systemSettings?.freeListingSettings?.isCampaignActive || 
-    systemSettings?.freeListingSettings?.enabled
-  );
+  const [selectedPackage, setSelectedPackageState] = useState<any>(() => {
+    if (isCampaignEnabled && (!selectedPlan || selectedPlan === 'free')) {
+      return { id: 'free', price: 0, name: 'Free Listing / Standard' };
+    }
+    const found = promotionPackages.find((p: any) => p.id === selectedPlan);
+    return found || promotionPackages[0];
+  });
 
-  const freeOption = {
-    id: 'free',
-    name: 'Free Listing / Standard',
-    price: 0,
-    currency: 'ETB',
-    duration: 'Standard',
-    badge: isFreeCampaignActive ? 'FREE PROMO' : 'STANDARD',
-    desc: isFreeCampaignActive
-      ? 'Standard free listing included under the active Free Listing Campaign.'
-      : 'Standard catalog listing with organic search ranking and direct buyer inquiries.'
-  };
-
-  const allPromotionPackages = [freeOption, ...adminPromotionPackages];
-
-  const [internalPlan, setInternalPlan] = useState<string>(
-    selectedPlan || (isFeaturedAddon ? 'vip' : 'free')
-  );
-  const [showPaymentStep, setShowPaymentStep] = useState<boolean>(false);
-  const [paymentError, setPaymentError] = useState<string>('');
-  const [copiedId, setCopiedId] = useState<string | null>(null);
-
-  const effectivePlanId = selectedPlan !== undefined ? selectedPlan : internalPlan;
-  const activePackage = allPromotionPackages.find(p => p.id === effectivePlanId) || freeOption;
-  const isPaidBoost = activePackage.price > 0 && activePackage.id !== 'free';
-
-  const handleSelectPackage = (pkg: any) => {
-    setInternalPlan(pkg.id);
+  const setSelectedPackage = (pkg: any) => {
+    setSelectedPackageState(pkg);
     setSelectedPlan?.(pkg.id);
-    setPaymentError('');
-
     if (pkg.id === 'free' || pkg.price === 0) {
       setIsFeaturedAddon(false);
-      setShowPaymentStep(false);
+      setShowManualPaymentModal(false);
     } else {
       setIsFeaturedAddon(true);
     }
+    setPaymentError('');
   };
 
-  const handlePublishAction = () => {
-    setPaymentError('');
+  const [showManualPaymentModal, setShowManualPaymentModal] = useState<boolean>(false);
+  const [paymentError, setPaymentError] = useState<string>('');
+  const [copiedId, setCopiedId] = useState<string | null>(null);
 
-    if (isPaidBoost) {
-      // 1. If manual payment step/modal is not yet open, trigger it so customer views accounts & submits receipt
-      if (!showPaymentStep) {
-        setShowPaymentStep(true);
-        return;
-      }
+  const handleDirectPublish = () => {
+    onPublish();
+  };
 
-      // 2. If payment step is open, validate that an official payment channel has been chosen
-      if (!selectedDirectMethodId) {
-        setPaymentError('Please select an official payment account (Telebirr or CBE Bank) to proceed.');
-        return;
-      }
-
-      // Proceed with paid listing creation and receipt submission
-      onPublish();
-    } else {
-      // Free Listing / Standard or Free Campaign ON -> directly complete publishing without manual payment
-      onPublish();
+  const handleManualPaymentSubmit = () => {
+    if (!selectedDirectMethodId) {
+      setPaymentError('Please select the payment method you used (CBE, Telebirr, or Awash Bank).');
+      return;
     }
+    onPublish();
   };
 
   const handleCopyAccount = (accountNum: string, id: string) => {
@@ -154,7 +146,38 @@ export const WizardStep4Review: React.FC<WizardStep4ReviewProps> = ({
     }
   };
 
-  const activeMethods = paymentMethods.filter(m => m.isActive !== false);
+  const activeMethods = (paymentMethods && paymentMethods.length > 0)
+    ? paymentMethods.filter(m => m.isActive !== false)
+    : [
+        {
+          id: 'pay-cbe',
+          name: 'CBE Bank (Commercial Bank of Ethiopia)',
+          accountName: 'SOF-UMER Real Estate PLC',
+          accountNumber: '1000345672819',
+          phoneNumber: '+251911000000',
+          instructions: 'Transfer to CBE account and upload receipt screenshot.',
+          isActive: true
+        },
+        {
+          id: 'pay-telebirr',
+          name: 'Telebirr Wallet',
+          accountName: 'SOF-UMER MARKETPLACE',
+          accountNumber: '0911000000',
+          phoneNumber: '0911000000',
+          instructions: 'Send money to merchant number 0911000000 and enter transaction reference.',
+          isActive: true
+        },
+        {
+          id: 'pay-awash',
+          name: 'Awash Bank',
+          accountName: 'SOF-UMER PLATFORMS',
+          accountNumber: '01320492837400',
+          phoneNumber: '+251911000000',
+          instructions: 'Transfer to Awash Bank account and attach payment slip.',
+          isActive: true
+        }
+      ];
+
   const deliveryOptions: string[] = Array.isArray(fieldsState.deliveryOptions) ? fieldsState.deliveryOptions : [];
 
   const isRealEstate = 
@@ -461,63 +484,63 @@ export const WizardStep4Review: React.FC<WizardStep4ReviewProps> = ({
             Promotion & Visibility Packages
           </span>
           <span className="text-[11px] text-white/50 font-mono">
-            {activePackage.price === 0 ? 'Standard Listing' : `${activePackage.price} ETB Boost`}
+            {selectedPackage?.price === 0 ? 'Standard Listing' : `${selectedPackage?.price} ETB Boost`}
           </span>
         </div>
         <p className="text-[11px] text-white/60 leading-relaxed -mt-1">
           Spotlight your listing on top of searches and homepage feeds, or publish as a standard listing.
         </p>
 
-        {/* Dynamic Admin-Defined Packages Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-          {allPromotionPackages.map(pkg => {
-            const isSelected = effectivePlanId === pkg.id;
+        {/* 1. CONDITIONAL FREE LISTING CAMPAIGN CARD (HIDE WHEN ADMIN TOGGLE IS OFF) */}
+        {safeAdminSettings?.freeListingCampaign?.enabled && (
+          <div 
+            onClick={() => setSelectedPackage({ id: 'free', price: 0, name: 'Free Listing / Standard' })}
+            className={`p-4 rounded-xl border cursor-pointer mb-3 transition-all ${
+              selectedPackage?.id === 'free' ? 'border-[#F5A623] bg-[#1A1B22]' : 'border-[#22242E] bg-[#141418]'
+            }`}
+          >
+            <div className="flex justify-between items-center mb-1">
+              <span className="text-xs font-bold bg-[#F5A623]/20 text-[#F5A623] px-2 py-0.5 rounded">CAMPAIGN ACTIVE</span>
+              <span className="text-xs text-gray-400">
+                Ends: {safeAdminSettings.freeListingCampaign.endDate}
+              </span>
+            </div>
+            <div className="text-white font-bold text-sm mt-1">Free Listing / Standard</div>
+            <p className="text-xs text-gray-400 mt-1">
+              Max free listings allowed per user: {safeAdminSettings.freeListingCampaign.maxListings || 30}
+            </p>
+          </div>
+        )}
+
+        {/* 2. DYNAMICALLY CLICKABLE BOOST PACKAGES LOOP */}
+        <div className="flex flex-col gap-3 my-3">
+          {promotionPackages.map((pkg) => {
+            const isSelected = selectedPackage?.id === pkg.id;
             return (
               <div
                 key={pkg.id}
-                onClick={() => handleSelectPackage(pkg)}
-                className={`p-3.5 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between ${
-                  isSelected
-                    ? 'bg-[#F5A623]/10 border-[#F5A623] ring-1 ring-[#F5A623]/40 shadow-lg shadow-[#F5A623]/10'
-                    : 'bg-[#141418] border-[#22242E] hover:border-[#F5A623]/40'
+                onClick={() => setSelectedPackage(pkg)}
+                className={`p-4 rounded-xl border cursor-pointer transition-all ${
+                  isSelected ? 'border-[#F5A623] bg-[#1A1B22]' : 'border-[#22242E] bg-[#141418]'
                 }`}
               >
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center gap-2">
-                      <div className={`w-4 h-4 rounded-full border flex items-center justify-center transition ${
-                        isSelected ? 'border-[#F5A623] bg-[#F5A623]' : 'border-white/30 bg-black/40'
-                      }`}>
-                        {isSelected && <div className="w-1.5 h-1.5 rounded-full bg-black" />}
-                      </div>
-                      <span className={`text-[10px] font-black uppercase font-mono px-2 py-0.5 rounded-full ${
-                        isSelected
-                          ? 'bg-[#F5A623] text-black'
-                          : 'bg-[#F5A623]/15 text-[#F5A623] border border-[#F5A623]/30'
-                      }`}>
-                        {pkg.badge || 'PROMO'}
-                      </span>
-                    </div>
-                    <span className="text-[10px] font-mono text-white/50">{pkg.duration}</span>
-                  </div>
-                  <h4 className="text-xs font-extrabold text-white mb-1">{pkg.name}</h4>
-                  <p className="text-[11px] text-white/60 leading-relaxed mb-2 line-clamp-2">{pkg.desc}</p>
-                </div>
-                <div className="pt-2 border-t border-white/5 flex items-baseline justify-between">
-                  <span className="text-[10px] uppercase font-bold text-white/40">Price</span>
-                  <span className={`font-mono text-sm font-black ${
-                    isSelected ? 'text-[#F5A623]' : 'text-white/80'
-                  }`}>
-                    {pkg.price > 0 ? `${pkg.price} ETB` : 'FREE'}
+                <div className="flex justify-between items-center mb-1">
+                  <span className="text-xs font-bold text-[#F5A623] bg-[#F5A623]/10 px-2 py-0.5 rounded uppercase">
+                    {pkg.badge || pkg.name}
                   </span>
+                  <span className="text-xs text-gray-400">{pkg.duration}</span>
+                </div>
+                <div className="flex justify-between items-center mt-2">
+                  <span className="text-white font-semibold text-sm">{pkg.name}</span>
+                  <span className="text-[#F5A623] font-bold text-sm">{pkg.price} ETB</span>
                 </div>
               </div>
             );
           })}
         </div>
 
-        {/* Manual Payment Step / Modal for Paid Boosts */}
-        {isPaidBoost && showPaymentStep && (
+        {/* Manual Payment Step / Modal for Paid Boosts (Without Unmounting or Black Screen) */}
+        {selectedPackage?.price > 0 && showManualPaymentModal && (
           <div className="p-4 sm:p-5 rounded-2xl bg-[#141418] border border-[#F5A623]/30 shadow-2xl space-y-4 animate-in fade-in duration-200">
             <div className="flex items-start justify-between pb-3 border-b border-white/10">
               <div className="flex items-center gap-2.5">
@@ -529,17 +552,17 @@ export const WizardStep4Review: React.FC<WizardStep4ReviewProps> = ({
                     Manual Payment Verification
                   </span>
                   <span className="text-[11px] text-white/60">
-                    Selected: <strong className="text-[#F5A623]">{activePackage.name}</strong> ({activePackage.price} ETB for {activePackage.duration})
+                    Selected: <strong className="text-[#F5A623]">{selectedPackage.name}</strong> ({selectedPackage.price} ETB)
                   </span>
                 </div>
               </div>
               <span className="text-sm font-black font-mono text-[#F5A623] bg-[#F5A623]/10 px-2.5 py-1 rounded-lg border border-[#F5A623]/20">
-                {activePackage.price} ETB
+                {selectedPackage.price} ETB
               </span>
             </div>
 
             <p className="text-[11px] text-white/70 leading-relaxed">
-              Transfer the exact amount (<strong className="text-[#F5A623]">{activePackage.price} ETB</strong>) to one of our official accounts below via Mobile Banking or Branch Deposit, then select your account and attach your reference number or transfer slip:
+              Transfer the exact amount (<strong className="text-[#F5A623]">{selectedPackage.price} ETB</strong>) to one of our official accounts below via Mobile Banking or Branch Deposit, then select your account and attach your reference number or transfer slip:
             </p>
 
             {/* Official Accounts Cards */}
@@ -628,56 +651,61 @@ export const WizardStep4Review: React.FC<WizardStep4ReviewProps> = ({
           </div>
         )}
 
-        {/* Final Action Buttons */}
-        <div className="space-y-2.5 pt-2">
-          <button
-            type="button"
-            disabled={submitting}
-            onClick={handlePublishAction}
-            className="w-full py-3.5 bg-[#F5A623] text-black font-extrabold text-sm rounded-xl hover:bg-[#F5A623]/90 disabled:opacity-50 transition cursor-pointer shadow-lg shadow-[#F5A623]/10 flex items-center justify-center gap-2"
-          >
-            {submitting ? (
-              <>
-                <Loader2 className="w-4 h-4 animate-spin" />
-                <span>Publishing Listing...</span>
-              </>
-            ) : (
-              <>
-                <Sparkles className="w-4 h-4 fill-black" />
-                <span>
-                  {isPaidBoost
-                    ? showPaymentStep
-                      ? `🚀 SUBMIT RECEIPT & PUBLISH LISTING (${activePackage.price} ETB)`
-                      : `🚀 PROCEED TO PAYMENT (${activePackage.price} ETB) & PUBLISH`
-                    : '🚀 PUBLISH LISTING NOW'}
-                </span>
-              </>
-            )}
-          </button>
-
-          {isPaidBoost && showPaymentStep && (
-            <div className="text-center pt-1">
-              <button
-                type="button"
-                onClick={() => {
-                  handleSelectPackage(freeOption);
-                }}
-                className="text-xs text-[#F5A623] hover:underline cursor-pointer font-medium inline-flex items-center gap-1"
-              >
-                <span>Switch back to Standard Free Listing (0 ETB)</span>
-              </button>
-            </div>
+        {/* 3. SAFE SUBMIT & MANUAL PAYMENT ACTION (PREVENT BLACK SCREEN) */}
+        <button
+          type="button"
+          disabled={submitting}
+          onClick={() => {
+            if (!selectedPackage) return;
+            if (selectedPackage.price === 0) {
+              handleDirectPublish();
+            } else {
+              if (!showManualPaymentModal) {
+                // Open existing Manual Payment Modal / Step safely without unmounting parent state
+                setShowManualPaymentModal(true);
+              } else {
+                handleManualPaymentSubmit();
+              }
+            }
+          }}
+          className="w-full bg-[#F5A623] text-black font-bold py-3.5 rounded-xl text-center text-sm uppercase tracking-wider mt-4 cursor-pointer hover:bg-[#F5A623]/90 transition disabled:opacity-50 flex items-center justify-center gap-2 shadow-lg shadow-[#F5A623]/10"
+        >
+          {submitting ? (
+            <>
+              <Loader2 className="w-4 h-4 animate-spin" />
+              <span>Publishing Listing...</span>
+            </>
+          ) : (
+            selectedPackage?.price > 0 
+              ? (showManualPaymentModal
+                  ? `SUBMIT RECEIPT & PUBLISH (${selectedPackage.price} ETB)`
+                  : `PROCEED TO PAYMENT (${selectedPackage.price} ETB) & PUBLISH`)
+              : 'PUBLISH LISTING NOW'
           )}
+        </button>
 
-          <div className="text-center">
+        {selectedPackage?.price > 0 && showManualPaymentModal && safeAdminSettings?.freeListingCampaign?.enabled && (
+          <div className="text-center pt-1">
             <button
               type="button"
-              onClick={onBackToPricing}
-              className="text-xs text-white/50 hover:text-white underline underline-offset-4 cursor-pointer transition font-medium"
+              onClick={() => {
+                setSelectedPackage({ id: 'free', price: 0, name: 'Free Listing / Standard' });
+              }}
+              className="text-xs text-[#F5A623] hover:underline cursor-pointer font-medium inline-flex items-center gap-1"
             >
-              🡠 Back to Pricing
+              <span>Switch back to Standard Free Listing (0 ETB)</span>
             </button>
           </div>
+        )}
+
+        <div className="text-center">
+          <button
+            type="button"
+            onClick={onBackToPricing}
+            className="text-xs text-white/50 hover:text-white underline underline-offset-4 cursor-pointer transition font-medium"
+          >
+            🡠 Back to Pricing
+          </button>
         </div>
       </div>
     </div>
