@@ -16,7 +16,7 @@ import {
   ChevronRight, UploadCloud, HelpCircle, FileText, AlertTriangle, Send, 
   ShieldCheck, Camera, Heart, Eye, Trash2, Edit2, Play, Pause, TrendingUp, 
   Info, List, Clock, Zap, DollarSign, Languages, Smartphone, Globe, ShieldAlert, Check, Plus, Lock, EyeOff, CheckSquare,
-  ChevronDown, Search, ArrowRight, Shield, ToggleLeft, ToggleRight, X, Folder, FolderOpen, Building, Gift, Briefcase, Save
+  ChevronDown, Search, ArrowRight, ArrowLeft, Mail, Shield, ToggleLeft, ToggleRight, X, Folder, FolderOpen, Building, Gift, Briefcase, Save
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -88,7 +88,7 @@ const FAQ_ITEMS = [
 ];
 
 interface UserDashboardProps {
-  initialTab?: 'profile' | 'mylistings' | 'favorites' | 'messages' | 'payments' | 'notifications' | 'settings' | 'supportsafety';
+  initialTab?: 'profile' | 'mylistings' | 'favorites' | 'messages' | 'payments' | 'notifications' | 'settings' | 'supportsafety' | 'edit-profile' | 'security';
   onNavigate: (view: 'marketplace' | 'profile') => void;
   onNavigateToInfo?: (pageId: string) => void;
   onOpenCreateModal?: () => void;
@@ -130,7 +130,13 @@ export default function UserDashboard({
   } = useApp();
 
   // Navigation and State Tabs mapping
-  const [activeTab, setActiveTab] = useState<string>('profile');
+  const [activeTab, setActiveTab] = useState<string>(() => {
+    if (initialTab === 'mylistings') return 'mylistings';
+    if (initialTab === 'notifications') return 'notifications';
+    if (initialTab === 'settings' || initialTab === 'security') return 'security';
+    if (initialTab === 'edit-profile') return 'edit-profile';
+    return 'profile';
+  });
 
   // Helper to extract localized text from FAQ items (handles both string and object forms)
   const getFaqText = (val: any, targetLang: string) => {
@@ -187,7 +193,8 @@ export default function UserDashboard({
       else if (initialTab === 'messages') setActiveTab('messages');
       else if (initialTab === 'payments') setActiveTab('payments');
       else if (initialTab === 'notifications') setActiveTab('notifications');
-      else if (initialTab === 'settings') setActiveTab('settings');
+      else if (initialTab === 'settings' || initialTab === 'security') setActiveTab('security');
+      else if (initialTab === 'edit-profile') setActiveTab('edit-profile');
       else if (initialTab === 'supportsafety') setActiveTab('supportsafety');
     }
   }, [initialTab]);
@@ -817,187 +824,292 @@ export default function UserDashboard({
     return sec.label_en;
   };
 
-  return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 font-sans text-[#F5F5F4] text-left">
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-        
-        {/* Navigation Hub */}
-        <div className="lg:col-span-4 space-y-6">
-          {/* ACCOUNT CENTER MENU (2x2 Grid) */}
-          <div className="bg-[#0d0d12]/95 border border-white/5 p-5 rounded-3xl shadow-xl">
-            <h3 className="text-[11px] font-black uppercase text-amber-500 tracking-wider mb-4 px-1 flex items-center gap-2 font-mono">
-              <span className="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
-              <span>{tLocal('account_center_menu') || 'ACCOUNT CENTER MENU'}</span>
-            </h3>
-            
-            <div className="grid grid-cols-2 gap-3">
-              {/* 1. My Listings */}
-              <button
-                onClick={() => {
-                  setActiveTab('mylistings');
-                  if (window.innerWidth < 1024) {
-                    const el = document.getElementById('dashboard-main-content-pane');
-                    if (el) el.scrollIntoView({ behavior: 'smooth' });
-                  }
-                }}
-                className={`p-4 rounded-2xl text-left transition flex flex-col justify-between min-h-[96px] cursor-pointer group border ${
-                  activeTab === 'mylistings'
-                    ? 'bg-amber-500 text-black border-amber-400 shadow-lg shadow-amber-500/20 font-black'
-                    : 'bg-black/40 text-white/80 hover:text-white hover:bg-white/5 border-white/5'
-                }`}
-              >
-                <div className="flex items-center justify-between w-full">
-                  <List className={`w-5 h-5 ${activeTab === 'mylistings' ? 'text-black' : 'text-amber-400 group-hover:scale-110'} transition`} />
-                  <span className={`text-[11px] font-mono px-2 py-0.5 rounded-full font-bold ${
-                    activeTab === 'mylistings' ? 'bg-black text-amber-400' : 'bg-amber-500/15 text-amber-400 border border-amber-500/20'
-                  }`}>
-                    {myListings.length}
-                  </span>
-                </div>
-                <span className={`text-xs font-bold mt-2 ${activeTab === 'mylistings' ? 'text-black font-extrabold' : 'text-white'}`}>
-                  {lang === 'om' ? 'Beeksisa Koo' : lang === 'am' ? 'የእኔ ማስታወቂያዎች' : 'My Listings'}
-                </span>
-              </button>
+  if (activeTab === 'profile') {
+    return (
+      <div className="max-w-xl mx-auto px-4 py-8 font-sans text-[#F5F5F4] text-left">
+        {/* PROFILE TITLE */}
+        <h1 className="text-2xl sm:text-3xl font-serif font-bold text-white mb-6 text-center tracking-tight">
+          PROFILE
+        </h1>
 
-              {/* 2. Profile / Edit Profile */}
-              <button
-                onClick={() => {
-                  setActiveTab('profile');
-                  if (window.innerWidth < 1024) {
-                    const el = document.getElementById('dashboard-main-content-pane');
-                    if (el) el.scrollIntoView({ behavior: 'smooth' });
-                  }
-                }}
-                className={`p-4 rounded-2xl text-left transition flex flex-col justify-between min-h-[96px] cursor-pointer group border ${
-                  activeTab === 'profile'
-                    ? 'bg-amber-500 text-black border-amber-400 shadow-lg shadow-amber-500/20 font-black'
-                    : 'bg-black/40 text-white/80 hover:text-white hover:bg-white/5 border-white/5'
-                }`}
-              >
-                <div className="flex items-center justify-between w-full">
-                  <User className={`w-5 h-5 ${activeTab === 'profile' ? 'text-black' : 'text-amber-400 group-hover:scale-110'} transition`} />
-                </div>
-                <span className={`text-xs font-bold mt-2 ${activeTab === 'profile' ? 'text-black font-extrabold' : 'text-white'}`}>
-                  {lang === 'om' ? 'Profaayilii' : lang === 'am' ? 'መገለጫ' : 'Profile'}
-                </span>
-              </button>
-
-              {/* 3. Notifications */}
-              <button
-                onClick={() => {
-                  setActiveTab('notifications');
-                  if (window.innerWidth < 1024) {
-                    const el = document.getElementById('dashboard-main-content-pane');
-                    if (el) el.scrollIntoView({ behavior: 'smooth' });
-                  }
-                }}
-                className={`p-4 rounded-2xl text-left transition flex flex-col justify-between min-h-[96px] cursor-pointer group border ${
-                  activeTab === 'notifications'
-                    ? 'bg-amber-500 text-black border-amber-400 shadow-lg shadow-amber-500/20 font-black'
-                    : 'bg-black/40 text-white/80 hover:text-white hover:bg-white/5 border-white/5'
-                }`}
-              >
-                <div className="flex items-center justify-between w-full">
-                  <Bell className={`w-5 h-5 ${activeTab === 'notifications' ? 'text-black' : 'text-amber-400 group-hover:scale-110'} transition`} />
-                  {unreadNotifCount > 0 && (
-                    <span className={`text-[11px] font-mono px-2 py-0.5 rounded-full font-bold ${
-                      activeTab === 'notifications' ? 'bg-black text-amber-400' : 'bg-amber-500 text-black'
-                    }`}>
-                      {unreadNotifCount}
-                    </span>
-                  )}
-                </div>
-                <span className={`text-xs font-bold mt-2 ${activeTab === 'notifications' ? 'text-black font-extrabold' : 'text-white'}`}>
-                  {lang === 'om' ? 'Beeksisa Caffee' : lang === 'am' ? 'ማሳወቂያዎች' : 'Notifications'}
-                </span>
-              </button>
-
-              {/* 4. Support & Rules */}
-              <button
-                onClick={() => {
-                  setActiveTab('supportsafety');
-                  if (window.innerWidth < 1024) {
-                    const el = document.getElementById('dashboard-main-content-pane');
-                    if (el) el.scrollIntoView({ behavior: 'smooth' });
-                  }
-                }}
-                className={`p-4 rounded-2xl text-left transition flex flex-col justify-between min-h-[96px] cursor-pointer group border ${
-                  activeTab === 'supportsafety'
-                    ? 'bg-amber-500 text-black border-amber-400 shadow-lg shadow-amber-500/20 font-black'
-                    : 'bg-black/40 text-white/80 hover:text-white hover:bg-white/5 border-white/5'
-                }`}
-              >
-                <div className="flex items-center justify-between w-full">
-                  <Shield className={`w-5 h-5 ${activeTab === 'supportsafety' ? 'text-black' : 'text-amber-400 group-hover:scale-110'} transition`} />
-                </div>
-                <span className={`text-xs font-bold mt-2 ${activeTab === 'supportsafety' ? 'text-black font-extrabold' : 'text-white'}`}>
-                  {lang === 'om' ? 'Deggarsa & Seera' : lang === 'am' ? 'ድጋፍ እና ደንቦች' : 'Support & Rules'}
-                </span>
-              </button>
-            </div>
-
-            {/* OTHER OPTIONS FOOTER BLOCK */}
-            <div className="mt-6 pt-5 border-t border-white/5">
-              <h4 className="text-[10px] font-black uppercase text-white/40 tracking-wider mb-3 px-1 font-mono">
-                {tLocal('other_options') || 'OTHER OPTIONS'}
-              </h4>
-              
-              <div className="grid grid-cols-2 gap-2">
-                {/* Settings */}
-                <button
-                  onClick={() => {
-                    setActiveTab('settings');
-                    if (window.innerWidth < 1024) {
-                      const el = document.getElementById('dashboard-main-content-pane');
-                      if (el) el.scrollIntoView({ behavior: 'smooth' });
-                    }
-                  }}
-                  className={`px-3.5 py-3 rounded-2xl text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer border ${
-                    activeTab === 'settings'
-                      ? 'bg-amber-500 text-black border-amber-400 font-extrabold shadow-lg shadow-amber-500/10'
-                      : 'bg-black/30 text-white/70 hover:text-white hover:bg-white/5 border-white/5'
-                  }`}
-                >
-                  <Settings className={`w-4 h-4 ${activeTab === 'settings' ? 'text-black' : 'text-amber-400'}`} />
-                  <span className="truncate">{lang === 'om' ? 'Sajatoo' : lang === 'am' ? 'ቅንብሮች' : 'Settings'}</span>
-                </button>
-
-                {/* Log Out */}
-                <button
-                  onClick={() => {
-                    logout();
-                    onNavigate('marketplace');
-                  }}
-                  className="px-3.5 py-3 rounded-2xl text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer bg-red-500/10 hover:bg-red-500/20 text-red-400 hover:text-red-300 border border-red-500/15"
-                >
-                  <LogOut className="w-4 h-4 text-red-400" />
-                  <span className="truncate">{lang === 'om' ? 'Ba’i' : lang === 'am' ? 'ውጣ' : 'Log Out'}</span>
-                </button>
+        {/* PROFILE HEADER */}
+        <div className="flex flex-col items-center text-center pb-6">
+          <div className="relative mb-3">
+            {profilePhotoUrl ? (
+              <img 
+                src={profilePhotoUrl} 
+                alt={currentUser.fullName} 
+                referrerPolicy="no-referrer"
+                className="w-24 h-24 rounded-full object-cover border-2 border-amber-500/40 shadow-xl" 
+              />
+            ) : (
+              <div className="w-24 h-24 rounded-full bg-gradient-to-tr from-amber-400 to-amber-600 text-black font-black flex items-center justify-center text-3xl shadow-xl border border-amber-500/30 font-serif">
+                {currentUser.fullName?.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || 'U'}
               </div>
-            </div>
+            )}
+          </div>
+
+          <h2 className="text-xl font-bold text-white font-serif tracking-tight">
+            {currentUser.fullName}
+          </h2>
+
+          <p className="text-xs text-white/40 mt-1 font-mono">
+            {currentUser.email}
+          </p>
+
+          <div className="mt-2.5">
+            {currentUser.isVerified || currentUser.verificationStatus === 'verified' ? (
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-xs font-semibold">
+                <ShieldCheck className="w-3.5 h-3.5" />
+                <span>Verified</span>
+              </div>
+            ) : currentUser.verificationStatus === 'pending' ? (
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20 text-xs font-semibold">
+                <Clock className="w-3.5 h-3.5" />
+                <span>Pending Verification</span>
+              </div>
+            ) : currentUser.verificationStatus === 'rejected' ? (
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-500/10 text-rose-400 border border-rose-500/20 text-xs font-semibold">
+                <ShieldAlert className="w-3.5 h-3.5" />
+                <span>Verification Rejected</span>
+              </div>
+            ) : (
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/5 text-white/50 border border-white/10 text-xs font-semibold">
+                <ShieldAlert className="w-3.5 h-3.5" />
+                <span>Unverified</span>
+              </div>
+            )}
           </div>
         </div>
 
-        {/* Content Pane Panel */}
-        <div id="dashboard-main-content-pane" className="lg:col-span-8">
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={activeTab}
-              initial={{ opacity: 0, y: 15 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -15 }}
-              transition={{ duration: 0.2 }}
-              className="bg-[#0d0d12]/95 border border-white/5 rounded-3xl p-6 md:p-8 shadow-2xl text-left"
+        {/* SECTION: MY ACTIVITY */}
+        <div className="border-t border-white/10 pt-6 pb-2">
+          <h3 className="text-[11px] font-black uppercase text-white/40 tracking-wider mb-2.5 px-2 font-mono">
+            MY ACTIVITY
+          </h3>
+          <div className="bg-[#0d0d12]/95 border border-white/5 rounded-2xl overflow-hidden divide-y divide-white/5 shadow-xl">
+            <button
+              type="button"
+              onClick={() => setActiveTab('mylistings')}
+              className="w-full flex items-center justify-between p-4 text-left hover:bg-white/5 transition-colors cursor-pointer group"
             >
-              
-              {/* SECTION 1: PROFILE */}
-              {activeTab === 'profile' && (
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-xl bg-amber-500/10 text-amber-400 border border-amber-500/10 group-hover:scale-105 transition-transform">
+                  <List className="w-4 h-4" />
+                </div>
+                <span className="text-sm font-semibold text-white group-hover:text-amber-400 transition-colors">
+                  My Listings
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <ChevronRight className="w-4 h-4 text-white/40 group-hover:text-amber-400 group-hover:translate-x-0.5 transition-all" />
+              </div>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveTab('notifications')}
+              className="w-full flex items-center justify-between p-4 text-left hover:bg-white/5 transition-colors cursor-pointer group"
+            >
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-xl bg-amber-500/10 text-amber-400 border border-amber-500/10 group-hover:scale-105 transition-transform">
+                  <Bell className="w-4 h-4" />
+                </div>
+                <span className="text-sm font-semibold text-white group-hover:text-amber-400 transition-colors">
+                  Notifications
+                </span>
+              </div>
+              <div className="flex items-center gap-2.5">
+                {unreadNotifCount > 0 && (
+                  <span className="px-2 py-0.5 rounded-full text-xs font-mono font-bold bg-amber-500 text-black">
+                    {unreadNotifCount}
+                  </span>
+                )}
+                <ChevronRight className="w-4 h-4 text-white/40 group-hover:text-amber-400 group-hover:translate-x-0.5 transition-all" />
+              </div>
+            </button>
+          </div>
+        </div>
+
+        {/* SECTION: ACCOUNT & SECURITY */}
+        <div className="border-t border-white/10 pt-6 pb-2">
+          <h3 className="text-[11px] font-black uppercase text-white/40 tracking-wider mb-2.5 px-2 font-mono">
+            ACCOUNT & SECURITY
+          </h3>
+          <div className="bg-[#0d0d12]/95 border border-white/5 rounded-2xl overflow-hidden divide-y divide-white/5 shadow-xl">
+            <button
+              type="button"
+              onClick={() => setActiveTab('edit-profile')}
+              className="w-full flex items-center justify-between p-4 text-left hover:bg-white/5 transition-colors cursor-pointer group"
+            >
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-xl bg-amber-500/10 text-amber-400 border border-amber-500/10 group-hover:scale-105 transition-transform">
+                  <User className="w-4 h-4" />
+                </div>
+                <span className="text-sm font-semibold text-white group-hover:text-amber-400 transition-colors">
+                  Edit Profile
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <ChevronRight className="w-4 h-4 text-white/40 group-hover:text-amber-400 group-hover:translate-x-0.5 transition-all" />
+              </div>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                setOpenSettingFolder('password');
+                setActiveTab('security');
+              }}
+              className="w-full flex items-center justify-between p-4 text-left hover:bg-white/5 transition-colors cursor-pointer group"
+            >
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-xl bg-amber-500/10 text-amber-400 border border-amber-500/10 group-hover:scale-105 transition-transform">
+                  <Lock className="w-4 h-4" />
+                </div>
+                <span className="text-sm font-semibold text-white group-hover:text-amber-400 transition-colors">
+                  Security
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <ChevronRight className="w-4 h-4 text-white/40 group-hover:text-amber-400 group-hover:translate-x-0.5 transition-all" />
+              </div>
+            </button>
+          </div>
+        </div>
+
+        {/* SECTION: HELP & SUPPORT */}
+        <div className="border-t border-white/10 pt-6 pb-2">
+          <h3 className="text-[11px] font-black uppercase text-white/40 tracking-wider mb-2.5 px-2 font-mono">
+            HELP & SUPPORT
+          </h3>
+          <div className="bg-[#0d0d12]/95 border border-white/5 rounded-2xl overflow-hidden divide-y divide-white/5 shadow-xl">
+            {/* 1. Contact Us */}
+            <button
+              type="button"
+              onClick={() => onNavigateToInfo?.('contact-us')}
+              className="w-full flex items-center justify-between p-4 text-left hover:bg-white/5 transition-colors cursor-pointer group"
+            >
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-xl bg-amber-500/10 text-amber-400 border border-amber-500/10 group-hover:scale-105 transition-transform">
+                  <Mail className="w-4 h-4" />
+                </div>
+                <span className="text-sm font-semibold text-white group-hover:text-amber-400 transition-colors">
+                  Contact Us
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <ChevronRight className="w-4 h-4 text-white/40 group-hover:text-amber-400 group-hover:translate-x-0.5 transition-all" />
+              </div>
+            </button>
+
+            {/* 2. Marketplace Rules */}
+            <button
+              type="button"
+              onClick={() => onNavigateToInfo?.('marketplace-rules')}
+              className="w-full flex items-center justify-between p-4 text-left hover:bg-white/5 transition-colors cursor-pointer group"
+            >
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-xl bg-amber-500/10 text-amber-400 border border-amber-500/10 group-hover:scale-105 transition-transform">
+                  <FileText className="w-4 h-4" />
+                </div>
+                <span className="text-sm font-semibold text-white group-hover:text-amber-400 transition-colors">
+                  Marketplace Rules
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <ChevronRight className="w-4 h-4 text-white/40 group-hover:text-amber-400 group-hover:translate-x-0.5 transition-all" />
+              </div>
+            </button>
+
+            {/* 3. Safety Tips */}
+            <button
+              type="button"
+              onClick={() => onNavigateToInfo?.('safety-tips')}
+              className="w-full flex items-center justify-between p-4 text-left hover:bg-white/5 transition-colors cursor-pointer group"
+            >
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-xl bg-amber-500/10 text-amber-400 border border-amber-500/10 group-hover:scale-105 transition-transform">
+                  <ShieldCheck className="w-4 h-4" />
+                </div>
+                <span className="text-sm font-semibold text-white group-hover:text-amber-400 transition-colors">
+                  Safety Tips
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <ChevronRight className="w-4 h-4 text-white/40 group-hover:text-amber-400 group-hover:translate-x-0.5 transition-all" />
+              </div>
+            </button>
+
+            {/* 4. FAQ */}
+            <button
+              type="button"
+              onClick={() => onNavigateToInfo?.('help-center')}
+              className="w-full flex items-center justify-between p-4 text-left hover:bg-white/5 transition-colors cursor-pointer group"
+            >
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-xl bg-amber-500/10 text-amber-400 border border-amber-500/10 group-hover:scale-105 transition-transform">
+                  <HelpCircle className="w-4 h-4" />
+                </div>
+                <span className="text-sm font-semibold text-white group-hover:text-amber-400 transition-colors">
+                  FAQ
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <ChevronRight className="w-4 h-4 text-white/40 group-hover:text-amber-400 group-hover:translate-x-0.5 transition-all" />
+              </div>
+            </button>
+          </div>
+        </div>
+
+        {/* SECTION: LOG OUT */}
+        <div className="border-t border-white/10 pt-6">
+          <button
+            type="button"
+            onClick={() => {
+              logout();
+              onNavigate('marketplace');
+            }}
+            className="w-full flex items-center justify-center gap-2 p-3.5 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 hover:text-rose-300 border border-rose-500/20 rounded-2xl text-xs font-bold uppercase tracking-wider transition cursor-pointer"
+          >
+            <LogOut className="w-4 h-4 text-rose-400" />
+            <span>Log Out</span>
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 font-sans text-[#F5F5F4] text-left">
+      {/* Back button to Profile */}
+      <button
+        type="button"
+        onClick={() => setActiveTab('profile')}
+        className="inline-flex items-center gap-2 text-xs font-bold text-amber-400 hover:text-amber-300 mb-6 px-3.5 py-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 transition cursor-pointer group"
+      >
+        <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
+        <span>Back to Profile</span>
+      </button>
+
+      <div className="bg-[#0d0d12]/95 border border-white/5 rounded-3xl p-6 md:p-8 shadow-2xl">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={activeTab}
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -15 }}
+            transition={{ duration: 0.2 }}
+            className="text-left"
+          >
+            {/* SUB-VIEW: EDIT PROFILE */}
+            {(activeTab === 'edit-profile' || activeTab === 'profile') && (
                 <div className="space-y-6">
                   {/* 1. Section Title & Subtitle */}
                   <div className="border-b border-white/5 pb-4">
-                    <h3 className="text-xl font-bold text-white tracking-tight">Profile Details</h3>
+                    <h3 className="text-xl font-bold text-white tracking-tight">Edit Profile</h3>
                     <p className="text-xs text-white/50 mt-1">
-                      Manage your user registration credentials and marketplace identity
+                      Update your personal details and public profile avatar
                     </p>
                   </div>
 
@@ -1160,7 +1272,7 @@ export default function UserDashboard({
                       className="w-full py-4 px-6 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black font-extrabold text-xs uppercase tracking-wider rounded-xl transition shadow-lg shadow-amber-500/10 cursor-pointer flex items-center justify-center gap-2"
                     >
                       <Save className="w-4 h-4 text-black" />
-                      <span>Save Profile Updates</span>
+                      <span>Save Changes</span>
                     </button>
                   </form>
                 </div>
@@ -2216,8 +2328,8 @@ export default function UserDashboard({
                 </div>
               )}
 
-              {/* SECTION 9: SETTINGS */}
-              {activeTab === 'settings' && (() => {
+              {/* SECTION: SECURITY & SETTINGS */}
+              {(activeTab === 'security' || activeTab === 'settings') && (() => {
                 const folders = [
                   {
                     id: 'password',
@@ -2280,8 +2392,39 @@ export default function UserDashboard({
                 return (
                   <div className="space-y-6">
                     <div className="border-b border-white/5 pb-4">
-                      <h3 className="text-lg font-bold text-white">System Settings</h3>
-                      <p className="text-[11px] text-white/40 mt-0.5">Manage notifications preferences, privacy controls and change passwords.</p>
+                      <h3 className="text-xl font-bold text-white tracking-tight">Security</h3>
+                      <p className="text-xs text-white/40 mt-1">Manage your credentials, login information, and two-factor authentication</p>
+                    </div>
+
+                    {/* Login & Security Details Overview Card */}
+                    <div className="bg-black/40 border border-white/10 p-5 rounded-2xl shadow-xl space-y-3">
+                      <h4 className="text-xs font-black uppercase text-amber-400 tracking-wider font-mono flex items-center gap-2">
+                        <Shield className="w-4 h-4" />
+                        <span>LOGIN & SECURITY OVERVIEW</span>
+                      </h4>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                        <div className="p-3 rounded-xl bg-black/50 border border-white/5">
+                          <span className="text-[10px] uppercase font-mono text-white/40 block mb-1">Registered Account Email</span>
+                          <span className="text-white font-medium">{currentUser.email}</span>
+                        </div>
+                        <div className="p-3 rounded-xl bg-black/50 border border-white/5">
+                          <span className="text-[10px] uppercase font-mono text-white/40 block mb-1">Account Role</span>
+                          <span className="text-white font-medium">{currentUser.role === 'admin' ? 'Administrator' : 'Standard User'}</span>
+                        </div>
+                        <div className="p-3 rounded-xl bg-black/50 border border-white/5">
+                          <span className="text-[10px] uppercase font-mono text-white/40 block mb-1">Member Since</span>
+                          <span className="text-white font-medium">
+                            {currentUser.createdAt ? new Date(currentUser.createdAt).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' }) : 'N/A'}
+                          </span>
+                        </div>
+                        <div className="p-3 rounded-xl bg-black/50 border border-white/5">
+                          <span className="text-[10px] uppercase font-mono text-white/40 block mb-1">Connection Security</span>
+                          <div className="flex items-center gap-1.5 text-emerald-400 font-medium">
+                            <ShieldCheck className="w-3.5 h-3.5" />
+                            <span>SSL / TLS Encrypted Session</span>
+                          </div>
+                        </div>
+                      </div>
                     </div>
 
                     <div className="space-y-4">
@@ -2479,12 +2622,9 @@ export default function UserDashboard({
                 );
               })()}
 
-            </motion.div>
-          </AnimatePresence>
-        </div>
-
+          </motion.div>
+        </AnimatePresence>
       </div>
-
     </div>
   );
 }

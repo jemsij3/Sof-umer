@@ -511,6 +511,7 @@ export default function InfoPage({ pageId, onBack, onOpenReportModalFromInfo }: 
         );
 
       case 'help-center':
+      case 'faq':
         return <HelpCenter />;
 
       case 'terms-of-service':
