@@ -864,7 +864,7 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
 
   const effectiveSelectedPlan = selectedPlan || 'free';
 
-  const selectedPlanObj = allPromotionPlans.find(p => p.id === effectiveSelectedPlan) || allPromotionPlans[0];
+  const selectedPlanObj = allPromotionPlans.find(p => p.id === effectiveSelectedPlan || p.name === effectiveSelectedPlan || (p.id === 'basic' && (effectiveSelectedPlan as string) === 'starter')) || allPromotionPlans[0];
   const baseCost = selectedPlanObj ? selectedPlanObj.cost : 0;
   const addonTopCost = isTopAdAddon ? topAdPrice : 0;
   const addonFeaturedCost = isFeaturedAddon ? featuredPrice : 0;

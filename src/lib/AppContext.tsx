@@ -149,7 +149,16 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const [languages, setLanguages] = useState<Language[]>([]);
   const [translations, setTranslations] = useState<TranslationKey[]>([]);
   const [properties, setProperties] = useState<Property[]>([]);
-  const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
+  const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>(() => {
+    try {
+      const saved = localStorage.getItem('sof_umer_payment_methods');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch (e) {}
+    return [];
+  });
   const [receipts, setReceipts] = useState<PaymentReceipt[]>([]);
   const [inquiries, setInquiries] = useState<Inquiry[]>([]);
   const [advertisements, setAdvertisements] = useState<Advertisement[]>([]);

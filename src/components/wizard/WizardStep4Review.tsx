@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Camera, MapPin, Phone, User as UserIcon, Sparkles, Loader2,
   BedDouble, Bath, Maximize, Truck, ShieldCheck, Tag, Zap, Check, Copy, AlertCircle, CreditCard
@@ -81,7 +81,7 @@ export const WizardStep4Review: React.FC<WizardStep4ReviewProps> = ({
   };
 
   const defaultPromotionPackages = [
-    { id: 'starter', name: 'Starter Boost', price: 49, currency: 'ETB', duration: '3 Days', badge: 'STARTER', desc: 'Category top placement + Basic Verified Badge' },
+    { id: 'basic', name: 'Basic Boost', price: 49, currency: 'ETB', duration: '3 Days', badge: 'BASIC', desc: 'Category top placement + Basic Verified Badge' },
     { id: 'premium', name: 'Premium Boost', price: 149, currency: 'ETB', duration: '7 Days', badge: 'PREMIUM', desc: 'Featured hero slider + High priority ranking' },
     { id: 'vip', name: 'VIP Elite Boost', price: 399, currency: 'ETB', duration: '30 Days', badge: 'VIP ELITE', desc: 'Top search billboard pin + Full site promotion' }
   ];
@@ -93,12 +93,12 @@ export const WizardStep4Review: React.FC<WizardStep4ReviewProps> = ({
     : defaultPromotionPackages;
 
   const promotionPackages = rawPackages.map((pkg: any, idx: number) => ({
-    id: pkg.id || (idx === 0 ? 'starter' : idx === 1 ? 'premium' : 'vip'),
+    id: pkg.id || (idx === 0 ? 'basic' : idx === 1 ? 'premium' : 'vip'),
     name: pkg.name || `Boost Package ${idx + 1}`,
     price: Number(pkg.price) || (idx === 0 ? 49 : idx === 1 ? 149 : 399),
     currency: pkg.currency || 'ETB',
     duration: pkg.duration || (idx === 0 ? '3 Days' : idx === 1 ? '7 Days' : '30 Days'),
-    badge: pkg.badge || (idx === 0 ? 'STARTER' : idx === 1 ? 'PREMIUM' : 'VIP ELITE'),
+    badge: pkg.badge || (idx === 0 ? 'BASIC' : idx === 1 ? 'PREMIUM' : 'VIP ELITE'),
     desc: pkg.desc || ''
   }));
 
@@ -106,9 +106,19 @@ export const WizardStep4Review: React.FC<WizardStep4ReviewProps> = ({
     if (isCampaignEnabled && (!selectedPlan || selectedPlan === 'free')) {
       return { id: 'free', price: 0, name: 'Free Listing / Standard' };
     }
-    const found = promotionPackages.find((p: any) => p.id === selectedPlan);
-    return found || promotionPackages[0];
+    const found = promotionPackages.find((p: any) => p.id === selectedPlan || (p.id === 'basic' && selectedPlan === 'starter'));
+    return found || (isCampaignEnabled ? { id: 'free', price: 0, name: 'Free Listing / Standard' } : promotionPackages[0]);
   });
+
+  // Keep selectedPackage synchronized if selectedPlan changes externally
+  useEffect(() => {
+    if (selectedPlan === 'free' && isCampaignEnabled) {
+      setSelectedPackageState({ id: 'free', price: 0, name: 'Free Listing / Standard' });
+    } else if (selectedPlan) {
+      const found = promotionPackages.find((p: any) => p.id === selectedPlan || (p.id === 'basic' && selectedPlan === 'starter'));
+      if (found) setSelectedPackageState(found);
+    }
+  }, [selectedPlan, isCampaignEnabled]);
 
   const setSelectedPackage = (pkg: any) => {
     setSelectedPackageState(pkg);
@@ -135,6 +145,11 @@ export const WizardStep4Review: React.FC<WizardStep4ReviewProps> = ({
       setPaymentError('Please select the payment method you used (CBE, Telebirr, or Awash Bank).');
       return;
     }
+    if (!receiptRefNumber.trim() && !receiptFileData?.url) {
+      setPaymentError('Please provide a transfer reference number or upload your payment receipt screenshot before submitting.');
+      return;
+    }
+    setPaymentError('');
     onPublish();
   };
 
@@ -146,8 +161,24 @@ export const WizardStep4Review: React.FC<WizardStep4ReviewProps> = ({
     }
   };
 
-  const activeMethods = (paymentMethods && paymentMethods.length > 0)
-    ? paymentMethods.filter(m => m.isActive !== false)
+  // Authoritative admin-configured manual payment methods
+  const resolvedPaymentMethods = (() => {
+    if (paymentMethods && Array.isArray(paymentMethods) && paymentMethods.length > 0) {
+      return paymentMethods;
+    }
+    try {
+      const saved = localStorage.getItem('sof_umer_payment_methods');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch (e) {}
+    return [];
+  })();
+
+  // Filter only active / live payment methods configured by admin
+  const activeMethods = resolvedPaymentMethods.length > 0
+    ? resolvedPaymentMethods.filter((m: any) => m.isActive === true || m.isActive === 'true')
     : [
         {
           id: 'pay-cbe',
@@ -155,7 +186,7 @@ export const WizardStep4Review: React.FC<WizardStep4ReviewProps> = ({
           accountName: 'SOF-UMER Real Estate PLC',
           accountNumber: '1000345672819',
           phoneNumber: '+251911000000',
-          instructions: 'Transfer to CBE account and upload receipt screenshot.',
+          instructions: 'Please transfer the required amount to our CBE account. Make sure to enter your full name as the transfer reference and upload a clear screenshot of the completed transaction receipt.',
           isActive: true
         },
         {
@@ -164,7 +195,7 @@ export const WizardStep4Review: React.FC<WizardStep4ReviewProps> = ({
           accountName: 'SOF-UMER MARKETPLACE',
           accountNumber: '0911000000',
           phoneNumber: '0911000000',
-          instructions: 'Send money to merchant number 0911000000 and enter transaction reference.',
+          instructions: 'Pay directly using Telebirr Pay. Select "Send Money" or "Pay Merchant" to our registered number 0911000000. Take a screenshot of the payment SMS/receipt and upload it here.',
           isActive: true
         },
         {
@@ -173,10 +204,17 @@ export const WizardStep4Review: React.FC<WizardStep4ReviewProps> = ({
           accountName: 'SOF-UMER PLATFORMS',
           accountNumber: '01320492837400',
           phoneNumber: '+251911000000',
-          instructions: 'Transfer to Awash Bank account and attach payment slip.',
-          isActive: true
+          instructions: 'Transfer to Awash Bank. Include your property ID or user email in the transaction remarks. Upload transaction slip.',
+          isActive: false
         }
-      ];
+      ].filter(m => m.isActive);
+
+  // Auto-select first active payment method if none selected
+  useEffect(() => {
+    if ((!selectedDirectMethodId || !activeMethods.some((m: any) => m.id === selectedDirectMethodId)) && activeMethods.length > 0) {
+      setSelectedDirectMethodId(activeMethods[0].id);
+    }
+  }, [activeMethods, selectedDirectMethodId, setSelectedDirectMethodId]);
 
   const deliveryOptions: string[] = Array.isArray(fieldsState.deliveryOptions) ? fieldsState.deliveryOptions : [];
 
@@ -541,106 +579,159 @@ export const WizardStep4Review: React.FC<WizardStep4ReviewProps> = ({
 
         {/* Manual Payment Step / Modal for Paid Boosts (Without Unmounting or Black Screen) */}
         {selectedPackage?.price > 0 && showManualPaymentModal && (
-          <div className="p-4 sm:p-5 rounded-2xl bg-[#141418] border border-[#F5A623]/30 shadow-2xl space-y-4 animate-in fade-in duration-200">
+          <div className="p-4 sm:p-5 rounded-2xl bg-[#141418] border border-[#F5A623]/40 shadow-2xl space-y-4 animate-in fade-in duration-200">
             <div className="flex items-start justify-between pb-3 border-b border-white/10">
               <div className="flex items-center gap-2.5">
-                <div className="p-2 bg-[#F5A623]/20 rounded-xl border border-[#F5A623]/30 text-[#F5A623]">
-                  <CreditCard className="w-4 h-4" />
+                <div className="p-2.5 bg-[#F5A623]/20 rounded-xl border border-[#F5A623]/30 text-[#F5A623]">
+                  <CreditCard className="w-5 h-5" />
                 </div>
                 <div>
-                  <span className="text-xs font-bold text-white uppercase tracking-wider block font-mono">
-                    Manual Payment Verification
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-bold text-white uppercase tracking-wider block font-mono">
+                      Manual Payment Verification
+                    </span>
+                    <span className="px-2 py-0.5 text-[9px] font-bold uppercase rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+                      Live Admin Methods
+                    </span>
+                  </div>
                   <span className="text-[11px] text-white/60">
-                    Selected: <strong className="text-[#F5A623]">{selectedPackage.name}</strong> ({selectedPackage.price} ETB)
+                    Selected: <strong className="text-[#F5A623]">{selectedPackage.name}</strong> ({selectedPackage.duration})
                   </span>
                 </div>
               </div>
-              <span className="text-sm font-black font-mono text-[#F5A623] bg-[#F5A623]/10 px-2.5 py-1 rounded-lg border border-[#F5A623]/20">
-                {selectedPackage.price} ETB
-              </span>
+              <div className="text-right">
+                <span className="text-base font-black font-mono text-[#F5A623] bg-[#F5A623]/10 px-3 py-1 rounded-lg border border-[#F5A623]/20 block">
+                  {selectedPackage.price} ETB
+                </span>
+                <span className="text-[10px] text-white/40 font-mono mt-0.5 block">Total Payable</span>
+              </div>
             </div>
 
-            <p className="text-[11px] text-white/70 leading-relaxed">
-              Transfer the exact amount (<strong className="text-[#F5A623]">{selectedPackage.price} ETB</strong>) to one of our official accounts below via Mobile Banking or Branch Deposit, then select your account and attach your reference number or transfer slip:
+            <p className="text-xs text-white/80 leading-relaxed">
+              Transfer the exact package amount (<strong className="text-[#F5A623] font-mono">{selectedPackage.price} ETB</strong>) to any of our official admin-configured accounts below via Mobile Banking or Branch Deposit, then attach your transaction reference or receipt screenshot:
             </p>
 
             {/* Official Accounts Cards */}
-            {activeMethods.length > 0 && (
-              <div className="space-y-2">
-                <span className="text-[10px] font-bold text-white/60 uppercase tracking-wider block font-mono">
-                  Official Sofumer Accounts:
-                </span>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  {activeMethods.map(m => (
-                    <div key={m.id} className="p-3 bg-black/50 rounded-xl border border-white/10 text-xs flex flex-col justify-between">
-                      <div>
-                        <div className="flex items-center justify-between mb-1">
-                          <span className="font-bold text-white text-[11px]">{m.name}</span>
-                          <button
-                            type="button"
-                            onClick={() => handleCopyAccount(m.accountNumber, m.id)}
-                            className="p-1 hover:bg-white/10 rounded text-white/60 hover:text-white transition cursor-pointer flex items-center gap-1 text-[10px]"
-                            title="Copy Account Number"
-                          >
-                            {copiedId === m.id ? (
-                              <>
-                                <Check className="w-3 h-3 text-emerald-400" />
-                                <span className="text-emerald-400">Copied</span>
-                              </>
-                            ) : (
-                              <>
-                                <Copy className="w-3 h-3 text-[#F5A623]" />
-                                <span>Copy</span>
-                              </>
-                            )}
-                          </button>
+            {activeMethods.length > 0 ? (
+              <div className="space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-bold text-white/70 uppercase tracking-wider block font-mono">
+                    Select Transfer Account ({activeMethods.length} Active):
+                  </span>
+                  <span className="text-[10px] text-white/40 font-mono">
+                    Click to select account
+                  </span>
+                </div>
+                <div className="grid grid-cols-1 gap-2.5">
+                  {activeMethods.map((m: any) => {
+                    const isSelected = selectedDirectMethodId === m.id;
+                    return (
+                      <div
+                        key={m.id}
+                        onClick={() => {
+                          setSelectedDirectMethodId(m.id);
+                          setPaymentError('');
+                        }}
+                        className={`p-3.5 rounded-xl border text-xs transition cursor-pointer flex flex-col gap-2 ${
+                          isSelected
+                            ? 'border-[#F5A623] bg-[#1A1B22] shadow-md shadow-[#F5A623]/5'
+                            : 'border-white/10 bg-black/50 hover:border-white/20 hover:bg-black/70'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${
+                              isSelected ? 'border-[#F5A623] bg-[#F5A623]' : 'border-white/30 bg-transparent'
+                            }`}>
+                              {isSelected && <div className="w-1.5 h-1.5 rounded-full bg-black" />}
+                            </div>
+                            <span className="font-bold text-white text-xs">{m.name}</span>
+                          </div>
+                          <span className="px-2 py-0.5 text-[9px] font-bold uppercase rounded-md bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-mono">
+                            Active
+                          </span>
                         </div>
-                        <div className="font-mono text-xs font-bold text-[#F5A623] mb-0.5">
-                          {m.accountNumber}
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 bg-black/40 p-2.5 rounded-lg border border-white/5">
+                          <div>
+                            <span className="text-[10px] text-white/40 block font-mono">Account / Number:</span>
+                            <div className="flex items-center justify-between gap-1 mt-0.5">
+                              <span className="font-mono text-xs font-bold text-[#F5A623] truncate">
+                                {m.accountNumber}
+                              </span>
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleCopyAccount(m.accountNumber, m.id);
+                                }}
+                                className="px-2 py-0.5 bg-white/10 hover:bg-white/20 rounded text-white/70 hover:text-white transition cursor-pointer flex items-center gap-1 text-[10px] shrink-0 font-mono"
+                                title="Copy Account Number"
+                              >
+                                {copiedId === m.id ? (
+                                  <>
+                                    <Check className="w-3 h-3 text-emerald-400" />
+                                    <span className="text-emerald-400 font-bold">Copied</span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <Copy className="w-3 h-3 text-[#F5A623]" />
+                                    <span>Copy</span>
+                                  </>
+                                )}
+                              </button>
+                            </div>
+                          </div>
+
+                          {m.accountName && (
+                            <div>
+                              <span className="text-[10px] text-white/40 block font-mono">Account Holder:</span>
+                              <span className="text-xs text-white/80 font-medium truncate block mt-0.5">
+                                {m.accountName}
+                              </span>
+                            </div>
+                          )}
+
+                          {m.phoneNumber && (
+                            <div className="sm:col-span-2 flex items-center gap-1.5 text-[11px] text-white/60 pt-0.5">
+                              <Phone className="w-3.5 h-3.5 text-[#F5A623] shrink-0" />
+                              <span className="font-mono">Hotline / Support: <strong className="text-white">{m.phoneNumber}</strong></span>
+                            </div>
+                          )}
                         </div>
-                        {m.accountName && (
-                          <div className="text-[10px] text-white/60 truncate">
-                            Holder: {m.accountName}
+
+                        {m.instructions && (
+                          <div className="text-[11px] text-white/70 bg-white/[0.02] p-2 rounded-lg border border-white/5 flex items-start gap-1.5 leading-relaxed">
+                            <span className="text-[#F5A623] font-bold shrink-0 font-mono text-[10px] uppercase">Instructions:</span>
+                            <span>{m.instructions}</span>
                           </div>
                         )}
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
+              </div>
+            ) : (
+              <div className="p-3 bg-amber-500/10 border border-amber-500/20 text-amber-300 text-xs rounded-xl">
+                No active manual payment methods found in admin configuration. Please contact admin.
               </div>
             )}
 
-            {/* Select Payment Method */}
-            <div className="space-y-1.5">
-              <label className="block text-[10px] font-bold text-white/80 uppercase font-mono">
-                Select Payment Method Used *
-              </label>
-              <select
-                value={selectedDirectMethodId}
-                onChange={e => {
-                  setSelectedDirectMethodId(e.target.value);
-                  setPaymentError('');
-                }}
-                className="w-full p-2.5 bg-black border border-white/15 focus:border-[#F5A623] rounded-xl text-xs text-white cursor-pointer font-mono"
-              >
-                <option value="">-- Choose Transfer Account --</option>
-                {activeMethods.map(m => (
-                  <option key={m.id} value={m.id}>
-                    {m.name} {m.accountNumber ? `(${m.accountNumber})` : ''}
-                  </option>
-                ))}
-              </select>
-            </div>
-
             {/* Receipt Reference and File Upload */}
-            <ReceiptUploadInput
-              referenceNumber={receiptRefNumber}
-              onReferenceChange={setReceiptRefNumber}
-              onFileUploaded={data => setReceiptFileData(data)}
-              onFileRemoved={() => setReceiptFileData(null)}
-              uploadedFile={receiptFileData}
-            />
+            <div className="pt-2 border-t border-white/10">
+              <span className="text-[10px] font-bold text-white/70 uppercase tracking-wider block font-mono mb-2">
+                Submit Payment Verification:
+              </span>
+              <ReceiptUploadInput
+                referenceNumber={receiptRefNumber}
+                onReferenceChange={setReceiptRefNumber}
+                receiptFile={receiptFileData?.url || ''}
+                fileName={receiptFileData?.fileName}
+                fileType={receiptFileData?.fileType}
+                fileSize={receiptFileData?.fileSize}
+                onFileChange={data => setReceiptFileData(data)}
+              />
+            </div>
 
             {paymentError && (
               <div className="p-2.5 bg-red-500/10 border border-red-500/20 text-red-400 text-xs rounded-xl flex items-center gap-2">
@@ -678,23 +769,33 @@ export const WizardStep4Review: React.FC<WizardStep4ReviewProps> = ({
           ) : (
             selectedPackage?.price > 0 
               ? (showManualPaymentModal
-                  ? `SUBMIT RECEIPT & PUBLISH (${selectedPackage.price} ETB)`
-                  : `PROCEED TO PAYMENT (${selectedPackage.price} ETB) & PUBLISH`)
+                  ? `SUBMIT PAYMENT RECEIPT & PUBLISH (${selectedPackage.price} ETB)`
+                  : `PROCEED TO PAYMENT`)
               : 'PUBLISH LISTING NOW'
           )}
         </button>
 
-        {selectedPackage?.price > 0 && showManualPaymentModal && safeAdminSettings?.freeListingCampaign?.enabled && (
-          <div className="text-center pt-1">
+        {selectedPackage?.price > 0 && showManualPaymentModal && (
+          <div className="flex items-center justify-between text-xs pt-1 px-1">
             <button
               type="button"
-              onClick={() => {
-                setSelectedPackage({ id: 'free', price: 0, name: 'Free Listing / Standard' });
-              }}
-              className="text-xs text-[#F5A623] hover:underline cursor-pointer font-medium inline-flex items-center gap-1"
+              onClick={() => setShowManualPaymentModal(false)}
+              className="text-white/60 hover:text-white cursor-pointer font-medium"
             >
-              <span>Switch back to Standard Free Listing (0 ETB)</span>
+              🡠 Change Boost Package
             </button>
+            {safeAdminSettings?.freeListingCampaign?.enabled && (
+              <button
+                type="button"
+                onClick={() => {
+                  setSelectedPackage({ id: 'free', price: 0, name: 'Free Listing / Standard' });
+                  setShowManualPaymentModal(false);
+                }}
+                className="text-[#F5A623] hover:underline cursor-pointer font-medium"
+              >
+                Switch to Free Listing (0 ETB)
+              </button>
+            )}
           </div>
         )}
 

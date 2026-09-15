@@ -5,7 +5,7 @@ import { useApp } from '../lib/AppContext';
 interface ReceiptUploadInputProps {
   referenceNumber: string;
   onReferenceChange: (val: string) => void;
-  receiptFile: string;
+  receiptFile?: string;
   fileName?: string;
   fileType?: 'image' | 'pdf';
   fileSize?: number;
@@ -80,7 +80,8 @@ export const ReceiptUploadInput: React.FC<ReceiptUploadInputProps> = ({
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
   };
 
-  const detectedFileType = fileType || (receiptFile.startsWith('data:application/pdf') || receiptFile.endsWith('.pdf') ? 'pdf' : 'image');
+  const safeReceiptFile = receiptFile || '';
+  const detectedFileType = fileType || (safeReceiptFile ? (safeReceiptFile.startsWith('data:application/pdf') || safeReceiptFile.endsWith('.pdf') ? 'pdf' : 'image') : 'image');
 
   return (
     <div className="space-y-4">
