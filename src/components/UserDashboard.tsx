@@ -958,7 +958,7 @@ export default function UserDashboard({
                   <Mail className="w-4 h-4" />
                 </div>
                 <span className="text-sm font-semibold text-white group-hover:text-amber-400 transition-colors">
-                  Contact Us
+                  {currentLanguage === 'om' ? 'Nu Quunnamaa' : currentLanguage === 'am' ? 'ያግኙን' : 'Contact Us'}
                 </span>
               </div>
               <div className="flex items-center gap-2">
@@ -966,10 +966,10 @@ export default function UserDashboard({
               </div>
             </button>
 
-            {/* 2. Marketplace Rules */}
+            {/* 2. Terms of Service */}
             <button
               type="button"
-              onClick={() => onNavigateToInfo?.('marketplace-rules')}
+              onClick={() => onNavigateToInfo?.('terms-of-service')}
               className="w-full flex items-center justify-between p-4 text-left hover:bg-white/5 transition-colors cursor-pointer group"
             >
               <div className="flex items-center gap-3">
@@ -977,7 +977,7 @@ export default function UserDashboard({
                   <FileText className="w-4 h-4" />
                 </div>
                 <span className="text-sm font-semibold text-white group-hover:text-amber-400 transition-colors">
-                  Marketplace Rules
+                  {currentLanguage === 'om' ? 'Waliigaltee Tajaajilaa' : currentLanguage === 'am' ? 'የአጠቃቀም ስምምነት' : 'Terms of Service'}
                 </span>
               </div>
               <div className="flex items-center gap-2">
@@ -985,18 +985,18 @@ export default function UserDashboard({
               </div>
             </button>
 
-            {/* 3. Safety Tips */}
+            {/* 3. Privacy Policy */}
             <button
               type="button"
-              onClick={() => onNavigateToInfo?.('safety-tips')}
+              onClick={() => onNavigateToInfo?.('privacy-policy')}
               className="w-full flex items-center justify-between p-4 text-left hover:bg-white/5 transition-colors cursor-pointer group"
             >
               <div className="flex items-center gap-3">
                 <div className="p-2 rounded-xl bg-amber-500/10 text-amber-400 border border-amber-500/10 group-hover:scale-105 transition-transform">
-                  <ShieldCheck className="w-4 h-4" />
+                  <Shield className="w-4 h-4" />
                 </div>
                 <span className="text-sm font-semibold text-white group-hover:text-amber-400 transition-colors">
-                  Safety Tips
+                  {currentLanguage === 'om' ? 'Ibsa Iccitii' : currentLanguage === 'am' ? 'የግላዊነት ፖሊሲ' : 'Privacy Policy'}
                 </span>
               </div>
               <div className="flex items-center gap-2">

@@ -25,7 +25,7 @@ export default function Footer({ onFooterLinkClick }: FooterProps) {
     am: "ስለ SOF-UMER"
   };
 
-  // Exactly the 5 requested features under ABOUT SOF-UMER
+  // Exactly the 3 requested features under ABOUT SOF-UMER
   const aboutSofUmerLinks = [
     {
       id: 'about-us',
@@ -44,18 +44,6 @@ export default function Footer({ onFooterLinkClick }: FooterProps) {
       titleEn: 'Contact Us',
       titleOm: 'Nu Quunnamaa',
       titleAm: 'ያግኙን'
-    },
-    {
-      id: 'terms-of-service',
-      titleEn: 'Terms of Service',
-      titleOm: 'Waliigaltee Tajaajilaa',
-      titleAm: 'የአጠቃቀም ስምምነት'
-    },
-    {
-      id: 'privacy-policy',
-      titleEn: 'Privacy Policy',
-      titleOm: 'Ibsa Iccitii',
-      titleAm: 'የግላዊነት ፖሊሲ'
     }
   ];
 
@@ -164,10 +152,10 @@ export default function Footer({ onFooterLinkClick }: FooterProps) {
             </div>
           </button>
 
-          {/* Expanded 5 Items */}
+          {/* Expanded 3 Items */}
           {isAboutExpanded && (
             <div className="mt-3 p-3 sm:p-4 rounded-2xl bg-black/40 border border-white/5 shadow-inner">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-left">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-left">
                 {aboutSofUmerLinks.map((item) => (
                   <button
                     key={item.id}
