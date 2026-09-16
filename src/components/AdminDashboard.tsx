@@ -4314,17 +4314,56 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
                               <span className="text-[9px] font-black uppercase text-amber-400 tracking-wider flex items-center gap-1">
                                 <Zap className="w-3.5 h-3.5" /> Customer Promotion Requested (Payment Pending Audit)
                               </span>
-                              <p className="text-xs text-white/80 font-medium mt-0.5">
-                                Amount: <span className="font-extrabold text-amber-400">{pendingRec.amount.toLocaleString()} ETB</span> via {pendingRec.paymentMethodName} ({pendingRec.userEmail})
-                              </p>
-                              <p className="text-[10px] text-white/50 font-mono">Receipt Ref/Slip: {pendingRec.receiptUrlOrFile}</p>
+                              <div className="text-xs text-white/90 font-medium mt-1 flex flex-wrap items-center gap-x-2 gap-y-1">
+                                <span>
+                                  Package: <span className="font-bold text-white">{pendingRec.packageName || 'Boost Plan'}</span>
+                                  {pendingRec.packageDuration && <span className="text-white/60 text-[10px] ml-1">({pendingRec.packageDuration})</span>}
+                                </span>
+                                <span className="text-white/30">&bull;</span>
+                                <span>
+                                  Amount: <span className="font-extrabold text-amber-400 font-mono">{pendingRec.amount.toLocaleString()} ETB</span>
+                                </span>
+                                <span className="text-white/30">&bull;</span>
+                                <span>
+                                  via <span className="text-white font-semibold">{pendingRec.paymentMethodName}</span>
+                                  {pendingRec.paymentMethodAccount && (
+                                    <span className="text-white/60 font-mono text-[10px] ml-1">({pendingRec.paymentMethodAccount})</span>
+                                  )}
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-2 mt-1">
+                                <span className="text-[10px] text-white/50 font-mono">User: {pendingRec.userEmail}</span>
+                                {pendingRec.referenceNumber && (
+                                  <>
+                                    <span className="text-white/20">&bull;</span>
+                                    <span className="text-[10px] text-amber-300 font-mono font-bold">Ref: {pendingRec.referenceNumber}</span>
+                                  </>
+                                )}
+                              </div>
                             </div>
-                            <button
-                              onClick={() => handleVerifyReceipt(pendingRec.id, 'Approved')}
-                              className="px-3 py-1.5 bg-amber-500 hover:bg-amber-400 text-black font-extrabold text-xs rounded-xl shadow cursor-pointer transition flex items-center gap-1 shrink-0"
-                            >
-                              <Check className="w-3.5 h-3.5" /> Approve Receipt & Activate Promotion
-                            </button>
+                            <div className="flex items-center gap-1.5 shrink-0">
+                              <button
+                                type="button"
+                                onClick={() => setInspectingReceipt(pendingRec)}
+                                className="px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white font-bold text-xs rounded-xl shadow cursor-pointer transition flex items-center gap-1.5"
+                              >
+                                <Eye className="w-3.5 h-3.5" /> Inspect Slip
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setRejectionModalReceipt(pendingRec)}
+                                className="px-2.5 py-1.5 bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/30 font-bold text-xs rounded-xl shadow cursor-pointer transition flex items-center gap-1"
+                              >
+                                <X className="w-3.5 h-3.5" /> Reject
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleVerifyReceipt(pendingRec.id, 'Approved')}
+                                className="px-3 py-1.5 bg-amber-500 hover:bg-amber-400 text-black font-extrabold text-xs rounded-xl shadow cursor-pointer transition flex items-center gap-1"
+                              >
+                                <Check className="w-3.5 h-3.5" /> Approve
+                              </button>
+                            </div>
                           </div>
                         )}
                       </div>
@@ -5744,7 +5783,10 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
                                 <span className="text-[10px] text-white/30 font-mono">ID: {rec.userId}</span>
                               </td>
                               <td className="py-3 px-4">
-                                <span className="bg-amber-500/10 text-amber-400 border border-amber-500/20 px-2 py-0.5 rounded font-mono text-[10px] uppercase font-bold">{rec.paymentMethodName}</span>
+                                <span className="bg-amber-500/10 text-amber-400 border border-amber-500/20 px-2 py-0.5 rounded font-mono text-[10px] uppercase font-bold block max-w-fit">{rec.paymentMethodName}</span>
+                                {rec.paymentMethodAccount && (
+                                  <span className="text-[10px] text-white/50 font-mono block mt-1 truncate max-w-[150px]">{rec.paymentMethodAccount}</span>
+                                )}
                               </td>
                               <td className="py-3 px-4">
                                 {linkedProp ? (
@@ -5754,15 +5796,25 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
                                     ) : (
                                       <div className="w-9 h-9 bg-white/5 rounded-lg border border-white/10 flex items-center justify-center shrink-0"><Building className="w-4 h-4 text-white/30" /></div>
                                     )}
-                                    <div className="max-w-[180px] truncate">
+                                    <div className="max-w-[200px]">
                                       <p className="font-bold text-amber-400 truncate text-xs">{linkedProp.title}</p>
-                                      <span className="text-[9px] text-emerald-400 font-extrabold uppercase">Property Promotion Boost</span>
+                                      <span className="text-[10px] text-emerald-400 font-extrabold block">
+                                        {rec.packageName || 'Promotion Boost'} {rec.packageDuration ? `(${rec.packageDuration})` : ''}
+                                      </span>
+                                      {rec.referenceNumber && (
+                                        <p className="text-[9px] text-white/50 font-mono truncate">Ref: {rec.referenceNumber}</p>
+                                      )}
                                     </div>
                                   </div>
                                 ) : (
                                   <div>
                                     <p className="font-medium text-white/80 truncate max-w-[160px]">{rec.relatedPropertyTitle || 'Wallet Balance Top-Up'}</p>
-                                    <span className="text-[9px] text-amber-400/80 font-mono">Account Deposit</span>
+                                    <span className="text-[9px] text-amber-400/80 font-mono block">
+                                      {rec.packageName || 'Account Deposit'}
+                                    </span>
+                                    {rec.referenceNumber && (
+                                      <p className="text-[9px] text-white/50 font-mono truncate">Ref: {rec.referenceNumber}</p>
+                                    )}
                                   </div>
                                 )}
                               </td>
@@ -9161,6 +9213,271 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
                 className="px-5 py-2.5 bg-amber-500 text-black font-bold text-xs rounded-xl cursor-pointer"
               >
                 Close Audit Log
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Payment Receipt Audit & Slip Inspection Modal */}
+      {inspectingReceipt && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in">
+          <div className="bg-[#0f1015] border border-white/10 rounded-3xl max-w-4xl w-full max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
+            {/* Modal Header */}
+            <div className="p-6 border-b border-white/10 flex items-center justify-between bg-[#15161e]">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 bg-amber-500/10 border border-amber-500/20 text-amber-400 rounded-xl">
+                  <CreditCard className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                    Payment Verification & Audit Desk
+                    <span className={`px-2 py-0.5 rounded text-[10px] uppercase font-mono font-bold ${
+                      inspectingReceipt.status === 'Approved' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' :
+                      inspectingReceipt.status === 'Rejected' ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30' :
+                      'bg-amber-500/20 text-amber-400 border border-amber-500/30'
+                    }`}>
+                      {inspectingReceipt.status}
+                    </span>
+                  </h3>
+                  <p className="text-xs text-white/40">Receipt ID: <span className="font-mono text-white/70">{inspectingReceipt.id}</span> &bull; Submitted {new Date(inspectingReceipt.submittedAt).toLocaleString()}</p>
+                </div>
+              </div>
+              <button
+                onClick={() => {
+                  setInspectingReceipt(null);
+                  setReceiptZoomLevel(1);
+                }}
+                className="p-2 bg-white/5 hover:bg-white/10 rounded-full text-white/40 hover:text-white transition cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="flex-1 overflow-y-auto p-6 space-y-6">
+              {/* Transaction Summary Grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 bg-black/40 p-4 rounded-2xl border border-white/5">
+                <div>
+                  <span className="text-[10px] text-white/40 uppercase font-mono block">Amount Paid</span>
+                  <p className="text-xl font-mono font-black text-amber-400">{inspectingReceipt.amount.toLocaleString()} ETB</p>
+                  {inspectingReceipt.packagePrice !== undefined && inspectingReceipt.packagePrice !== inspectingReceipt.amount && (
+                    <span className="text-[10px] text-white/40 font-mono">Plan base: {inspectingReceipt.packagePrice} ETB</span>
+                  )}
+                </div>
+                <div>
+                  <span className="text-[10px] text-white/40 uppercase font-mono block">Selected Package</span>
+                  <p className="text-sm font-bold text-white">{inspectingReceipt.packageName || 'Promotion Boost'}</p>
+                  <span className="text-xs text-emerald-400 font-mono">{inspectingReceipt.packageDuration || 'Standard Duration'}</span>
+                </div>
+                <div>
+                  <span className="text-[10px] text-white/40 uppercase font-mono block">Payment Destination</span>
+                  <p className="text-sm font-bold text-white">{inspectingReceipt.paymentMethodName}</p>
+                  <p className="text-xs text-[#F5A623] font-mono truncate">{inspectingReceipt.paymentMethodAccount || 'Account details recorded'}</p>
+                </div>
+                <div>
+                  <span className="text-[10px] text-white/40 uppercase font-mono block">Customer Info</span>
+                  <p className="text-sm font-bold text-white truncate">{inspectingReceipt.userName || inspectingReceipt.userEmail}</p>
+                  <p className="text-[10px] text-white/50 font-mono truncate">{inspectingReceipt.userEmail}</p>
+                </div>
+              </div>
+
+              {/* Reference & Target Listing */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="p-4 bg-white/[0.02] border border-white/5 rounded-2xl">
+                  <span className="text-[10px] text-white/40 uppercase font-mono block mb-1">Target Marketplace Listing</span>
+                  <p className="text-sm font-bold text-amber-400">{inspectingReceipt.relatedPropertyTitle || 'Account Balance Top-Up'}</p>
+                  {inspectingReceipt.relatedPropertyId && (
+                    <span className="text-[10px] text-white/40 font-mono block mt-1">Listing ID: {inspectingReceipt.relatedPropertyId}</span>
+                  )}
+                </div>
+                <div className="p-4 bg-white/[0.02] border border-white/5 rounded-2xl">
+                  <span className="text-[10px] text-white/40 uppercase font-mono block mb-1">Transaction Reference Number</span>
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-sm font-mono font-bold text-white select-all">
+                      {inspectingReceipt.referenceNumber || 'Not provided directly'}
+                    </span>
+                    {inspectingReceipt.referenceNumber && (
+                      <button
+                        onClick={() => {
+                          if (navigator?.clipboard) {
+                            navigator.clipboard.writeText(inspectingReceipt.referenceNumber || '');
+                          }
+                        }}
+                        className="px-2 py-1 bg-white/5 hover:bg-white/10 text-white/70 hover:text-white rounded text-[10px] font-mono cursor-pointer transition"
+                      >
+                        Copy Ref
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Receipt File / Slip Preview */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-white/70 uppercase tracking-wider">Payment Receipt / Slip Preview</span>
+                  {inspectingReceipt.receiptUrlOrFile && (inspectingReceipt.receiptUrlOrFile.startsWith('data:image/') || inspectingReceipt.receiptUrlOrFile.startsWith('http')) && (
+                    <div className="flex items-center gap-1">
+                      <button
+                        onClick={() => setReceiptZoomLevel(z => Math.max(0.5, z - 0.25))}
+                        className="p-1.5 bg-white/5 hover:bg-white/10 rounded-lg text-white/60 hover:text-white transition cursor-pointer"
+                        title="Zoom Out"
+                      >
+                        <ZoomOut className="w-4 h-4" />
+                      </button>
+                      <span className="text-[10px] font-mono text-white/40 px-1">{Math.round(receiptZoomLevel * 100)}%</span>
+                      <button
+                        onClick={() => setReceiptZoomLevel(z => Math.min(3, z + 0.25))}
+                        className="p-1.5 bg-white/5 hover:bg-white/10 rounded-lg text-white/60 hover:text-white transition cursor-pointer"
+                        title="Zoom In"
+                      >
+                        <ZoomIn className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => setReceiptZoomLevel(1)}
+                        className="p-1.5 bg-white/5 hover:bg-white/10 rounded-lg text-white/60 hover:text-white transition cursor-pointer ml-1"
+                        title="Reset Zoom"
+                      >
+                        <RefreshCw className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                <div className="bg-black/60 rounded-2xl border border-white/10 p-4 min-h-[220px] max-h-[380px] overflow-auto flex items-center justify-center">
+                  {inspectingReceipt.receiptUrlOrFile && (inspectingReceipt.receiptUrlOrFile.startsWith('data:image/') || inspectingReceipt.receiptUrlOrFile.startsWith('http')) ? (
+                    <img
+                      src={inspectingReceipt.receiptUrlOrFile}
+                      alt="Payment Slip"
+                      style={{ transform: `scale(${receiptZoomLevel})`, transformOrigin: 'top center' }}
+                      className="max-w-full rounded-lg shadow-lg object-contain transition-transform duration-150"
+                      referrerPolicy="no-referrer"
+                    />
+                  ) : inspectingReceipt.receiptUrlOrFile && (inspectingReceipt.receiptUrlOrFile.startsWith('data:application/pdf') || inspectingReceipt.receiptUrlOrFile.endsWith('.pdf')) ? (
+                    <div className="text-center p-8 space-y-3">
+                      <div className="w-14 h-14 bg-rose-500/10 border border-rose-500/20 text-rose-400 rounded-2xl flex items-center justify-center mx-auto">
+                        <FileText className="w-8 h-8" />
+                      </div>
+                      <p className="text-sm font-bold text-white">PDF Transaction Document Uploaded</p>
+                      <a
+                        href={inspectingReceipt.receiptUrlOrFile}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex items-center gap-1.5 px-4 py-2 bg-amber-500 text-black font-bold text-xs rounded-xl shadow cursor-pointer"
+                      >
+                        Open PDF in New Window
+                      </a>
+                    </div>
+                  ) : (
+                    <div className="text-center p-6 space-y-2">
+                      <div className="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center mx-auto text-amber-400">
+                        <CreditCard className="w-6 h-6" />
+                      </div>
+                      <p className="text-sm font-bold text-white">Manual Reference Submitted</p>
+                      <p className="text-xs text-white/50 max-w-md mx-auto font-mono bg-white/5 p-3 rounded-xl border border-white/5 select-all">
+                        {inspectingReceipt.receiptUrlOrFile || inspectingReceipt.referenceNumber || 'No receipt image uploaded'}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Modal Actions */}
+            <div className="p-4 bg-[#15161e] border-t border-white/10 flex flex-wrap items-center justify-between gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  setInspectingReceipt(null);
+                  setReceiptZoomLevel(1);
+                }}
+                className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white font-bold text-xs rounded-xl cursor-pointer transition"
+              >
+                Close Desk
+              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const target = inspectingReceipt;
+                    setInspectingReceipt(null);
+                    setRejectionModalReceipt(target);
+                  }}
+                  className="px-4 py-2 bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/30 font-bold text-xs rounded-xl cursor-pointer transition flex items-center gap-1.5"
+                >
+                  <X className="w-4 h-4" /> Reject Receipt
+                </button>
+                <button
+                  type="button"
+                  onClick={async () => {
+                    await handleVerifyReceipt(inspectingReceipt.id, 'Approved');
+                    setInspectingReceipt(null);
+                  }}
+                  className="px-5 py-2 bg-amber-500 hover:bg-amber-400 text-black font-extrabold text-xs rounded-xl shadow cursor-pointer transition flex items-center gap-1.5"
+                >
+                  <Check className="w-4 h-4" /> Approve & Activate Promotion
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Payment Rejection Reason Modal */}
+      {rejectionModalReceipt && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in">
+          <div className="bg-[#0f1015] border border-white/10 rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-white/10">
+              <h4 className="text-base font-bold text-white flex items-center gap-2">
+                <AlertCircle className="w-5 h-5 text-rose-400" />
+                Reject Payment Receipt
+              </h4>
+              <button
+                onClick={() => setRejectionModalReceipt(null)}
+                className="p-1.5 bg-white/5 hover:bg-white/10 rounded-full text-white/40 hover:text-white"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div>
+              <p className="text-xs text-white/70">
+                Rejecting receipt for <span className="font-bold text-white">{rejectionModalReceipt.userEmail}</span> ({rejectionModalReceipt.amount.toLocaleString()} ETB via {rejectionModalReceipt.paymentMethodName}).
+              </p>
+              <label className="text-xs text-white/40 block mt-3 mb-1">Reason for Rejection (sent to customer):</label>
+              <textarea
+                value={rejectionReasonText}
+                onChange={e => setRejectionReasonText(e.target.value)}
+                rows={3}
+                className="w-full bg-black/50 border border-white/10 rounded-xl p-3 text-xs text-white placeholder-white/20 focus:border-rose-400 focus:outline-none"
+                placeholder="e.g. Reference number not found in bank statement, amount does not match, or slip image unreadable."
+              />
+            </div>
+
+            <div className="flex items-center justify-end gap-2 pt-2">
+              <button
+                type="button"
+                onClick={() => setRejectionModalReceipt(null)}
+                className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white font-bold text-xs rounded-xl cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={receiptActionSubmitting}
+                onClick={async () => {
+                  setReceiptActionSubmitting(true);
+                  try {
+                    await handleVerifyReceipt(rejectionModalReceipt.id, 'Rejected', rejectionReasonText);
+                    setRejectionModalReceipt(null);
+                  } finally {
+                    setReceiptActionSubmitting(false);
+                  }
+                }}
+                className="px-4 py-2 bg-rose-500 hover:bg-rose-600 text-white font-bold text-xs rounded-xl shadow cursor-pointer flex items-center gap-1.5 disabled:opacity-50"
+              >
+                {receiptActionSubmitting ? 'Rejecting...' : 'Confirm Rejection'}
               </button>
             </div>
           </div>

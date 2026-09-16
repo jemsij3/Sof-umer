@@ -172,9 +172,10 @@ export interface Property {
   // Post Ad & Promotion extensions
   brand?: string;
   condition?: 'New' | 'Used - Like New' | 'Used - Good' | 'Refurbished' | string;
-  boostPlan?: 'free' | 'basic' | 'premium' | 'vip';
+  boostPlan?: 'free' | 'basic' | 'premium' | 'vip' | string;
   isTopAd?: boolean;
   promotionExpiresAt?: string; // ISO date string
+  promotedUntil?: string; // ISO date string
   approvalStatus?: 'approved' | 'pending' | 'rejected';
 
   // Retail & Wholesale Selling extensions
@@ -242,6 +243,11 @@ export interface PaymentReceipt {
   amount: number;
   paymentMethodId: string;
   paymentMethodName: string;
+  paymentMethodAccount?: string;
+  packageId?: string;
+  packageName?: string;
+  packageDuration?: string;
+  packagePrice?: number;
   relatedPropertyId: string;
   relatedPropertyTitle: string;
   referenceNumber?: string;

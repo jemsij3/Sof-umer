@@ -8,6 +8,7 @@ import { getTranslatedCategoryName, getTranslatedSubcategoryName } from '../../l
 import { WholesalePriceTier } from '../../types';
 import { ReceiptUploadInput } from '../ReceiptUploadInput';
 import { useApp } from '../../lib/AppContext';
+import { getEffectiveAdPackages } from '../../lib/adPackages';
 
 interface WizardStep4ReviewProps {
   majorCategory: string;
@@ -80,25 +81,18 @@ export const WizardStep4Review: React.FC<WizardStep4ReviewProps> = ({
     freeListingCampaign
   };
 
-  const defaultPromotionPackages = [
-    { id: 'basic', name: 'Basic Boost', price: 49, currency: 'ETB', duration: '3 Days', badge: 'BASIC', desc: 'Category top placement + Basic Verified Badge' },
-    { id: 'premium', name: 'Premium Boost', price: 149, currency: 'ETB', duration: '7 Days', badge: 'PREMIUM', desc: 'Featured hero slider + High priority ranking' },
-    { id: 'vip', name: 'VIP Elite Boost', price: 399, currency: 'ETB', duration: '30 Days', badge: 'VIP ELITE', desc: 'Top search billboard pin + Full site promotion' }
-  ];
-
+  const effectiveAdPackages = getEffectiveAdPackages(systemSettings);
   const rawPackages = (propAdminPackages && propAdminPackages.length > 0)
     ? propAdminPackages
-    : (systemSettings?.adPackages && systemSettings.adPackages.length > 0)
-    ? systemSettings.adPackages.filter((p: any) => p.name !== 'New Custom Promotion Package' && !p.name.includes('Custom'))
-    : defaultPromotionPackages;
+    : effectiveAdPackages;
 
   const promotionPackages = rawPackages.map((pkg: any, idx: number) => ({
-    id: pkg.id || (idx === 0 ? 'basic' : idx === 1 ? 'premium' : 'vip'),
+    id: pkg.id || (idx === 0 ? 'starter' : idx === 1 ? 'premium' : 'vip'),
     name: pkg.name || `Boost Package ${idx + 1}`,
-    price: Number(pkg.price) || (idx === 0 ? 49 : idx === 1 ? 149 : 399),
+    price: Number(pkg.price) >= 0 ? Number(pkg.price) : (idx === 0 ? 50 : idx === 1 ? 150 : 399),
     currency: pkg.currency || 'ETB',
-    duration: pkg.duration || (idx === 0 ? '3 Days' : idx === 1 ? '7 Days' : '30 Days'),
-    badge: pkg.badge || (idx === 0 ? 'BASIC' : idx === 1 ? 'PREMIUM' : 'VIP ELITE'),
+    duration: pkg.duration || (idx === 0 ? '3 days' : idx === 1 ? '7 days' : '30 days'),
+    badge: pkg.badge || (idx === 0 ? 'STARTER' : idx === 1 ? 'PREMIUM' : 'VIP ELITE'),
     desc: pkg.desc || ''
   }));
 
@@ -106,7 +100,7 @@ export const WizardStep4Review: React.FC<WizardStep4ReviewProps> = ({
     if (isCampaignEnabled && (!selectedPlan || selectedPlan === 'free')) {
       return { id: 'free', price: 0, name: 'Free Listing / Standard' };
     }
-    const found = promotionPackages.find((p: any) => p.id === selectedPlan || (p.id === 'basic' && selectedPlan === 'starter'));
+    const found = promotionPackages.find((p: any) => p.id === selectedPlan || (p.id === 'basic' && selectedPlan === 'starter') || (p.id === 'starter' && selectedPlan === 'basic'));
     return found || (isCampaignEnabled ? { id: 'free', price: 0, name: 'Free Listing / Standard' } : promotionPackages[0]);
   });
 
@@ -115,7 +109,7 @@ export const WizardStep4Review: React.FC<WizardStep4ReviewProps> = ({
     if (selectedPlan === 'free' && isCampaignEnabled) {
       setSelectedPackageState({ id: 'free', price: 0, name: 'Free Listing / Standard' });
     } else if (selectedPlan) {
-      const found = promotionPackages.find((p: any) => p.id === selectedPlan || (p.id === 'basic' && selectedPlan === 'starter'));
+      const found = promotionPackages.find((p: any) => p.id === selectedPlan || (p.id === 'basic' && selectedPlan === 'starter') || (p.id === 'starter' && selectedPlan === 'basic'));
       if (found) setSelectedPackageState(found);
     }
   }, [selectedPlan, isCampaignEnabled]);
@@ -142,7 +136,7 @@ export const WizardStep4Review: React.FC<WizardStep4ReviewProps> = ({
 
   const handleManualPaymentSubmit = () => {
     if (!selectedDirectMethodId) {
-      setPaymentError('Please select the payment method you used (CBE, Telebirr, or Awash Bank).');
+      setPaymentError('Please select the payment method/account you transferred funds to (e.g. CBE, Telebirr, or Awash Bank).');
       return;
     }
     if (!receiptRefNumber.trim() && !receiptFileData?.url) {
@@ -209,12 +203,7 @@ export const WizardStep4Review: React.FC<WizardStep4ReviewProps> = ({
         }
       ].filter(m => m.isActive);
 
-  // Auto-select first active payment method if none selected
-  useEffect(() => {
-    if ((!selectedDirectMethodId || !activeMethods.some((m: any) => m.id === selectedDirectMethodId)) && activeMethods.length > 0) {
-      setSelectedDirectMethodId(activeMethods[0].id);
-    }
-  }, [activeMethods, selectedDirectMethodId, setSelectedDirectMethodId]);
+  // Note: We do NOT auto-select the first payment method so the user explicitly chooses the account used.
 
   const deliveryOptions: string[] = Array.isArray(fieldsState.deliveryOptions) ? fieldsState.deliveryOptions : [];
 

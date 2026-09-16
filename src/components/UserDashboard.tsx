@@ -5,6 +5,7 @@ import { Property, Inquiry, AppNotification } from '../types';
 import { TwoFactorSecurityModule } from './TwoFactorSecurityModule';
 import { ReceiptUploadInput } from './ReceiptUploadInput';
 import { getCampaignStatusInfo } from '../utils/campaignUtils';
+import { getEffectiveAdPackages } from '../lib/adPackages';
 import { 
   getTranslatedCategoryName, 
   getTranslatedSubcategoryName, 
@@ -591,22 +592,12 @@ export default function UserDashboard({
     setPromoteError('');
     setReceiptSuccess('');
 
-    const DEFAULT_AD_PACKAGES = [
-      { id: 'starter', name: 'STARTER', price: 100, currency: 'ETB', duration: '3 days', daysCount: 3, views: 'Category top placement', badge: 'STARTER', desc: 'Category top placement + Basic Verified Badge' },
-      { id: 'premium', name: 'PREMIUM', price: 150, currency: 'ETB', duration: '7 days', daysCount: 7, views: 'Featured hero slider', badge: 'PREMIUM', desc: 'Featured hero slider + High priority ranking' },
-      { id: 'vip', name: 'VIP ELITE', price: 500, currency: 'ETB', duration: '30 days', daysCount: 30, views: 'Top search billboard pin', badge: 'VIP ELITE', desc: 'Top search billboard pin + Full site promotion' }
-    ];
-
-    const rawPackages = (systemSettings?.adPackages && systemSettings.adPackages.length > 0)
-      ? systemSettings.adPackages.filter((p: any) => p.name !== 'New Custom Promotion Package' && !p.name.includes('Custom'))
-      : DEFAULT_AD_PACKAGES;
-
-    const dynamicPackages = rawPackages.length > 0 ? rawPackages : DEFAULT_AD_PACKAGES;
+    const dynamicPackages = getEffectiveAdPackages(systemSettings);
 
     const activePlans = dynamicPackages.map((pkg: any) => ({
       id: pkg.id || pkg.name,
       name: pkg.name,
-      cost: Number(pkg.price) || 0,
+      cost: Number(pkg.price) >= 0 ? Number(pkg.price) : 0,
       days: pkg.duration || '7 Days',
       daysCount: pkg.daysCount || (pkg.duration?.includes('30') ? 30 : pkg.duration?.includes('3') ? 3 : 7),
       badge: pkg.badge || 'PROMO',
@@ -634,6 +625,10 @@ export default function UserDashboard({
       return;
     }
     const method = paymentMethods.find(m => m.id === selectedMethodId);
+    const methodAccount = method 
+      ? (method.accountNumber ? `${method.accountNumber}${method.accountName ? ` (${method.accountName})` : ''}` : method.phoneNumber)
+      : undefined;
+
     try {
       const res = await fetch('/api/receipts', {
         method: 'POST',
@@ -645,6 +640,11 @@ export default function UserDashboard({
           amount: totalCost,
           paymentMethodId: selectedMethodId,
           paymentMethodName: method?.name || 'Bank Transfer',
+          paymentMethodAccount: methodAccount,
+          packageId: selectedPlanObj?.id,
+          packageName: selectedPlanObj?.name,
+          packageDuration: selectedPlanObj?.days,
+          packagePrice: basePrice,
           relatedPropertyId: promotingProperty.id,
           relatedPropertyTitle: promotingProperty.title,
           referenceNumber: receiptImageSim.trim() || undefined,
@@ -1323,24 +1323,12 @@ export default function UserDashboard({
                     const topAdPrice = systemSettings?.marketplaceSettings?.topAdPrice ?? 150;
                     const featuredPrice = systemSettings?.marketplaceSettings?.featuredAdPrice ?? 300;
 
-                    const dynamicPackages = (systemSettings?.adPackages && systemSettings.adPackages.length > 0)
-                      ? systemSettings.adPackages
-                      : (() => {
-                          try {
-                            const saved = localStorage.getItem('sof_umer_ad_packages');
-                            if (saved) return JSON.parse(saved);
-                          } catch (e) {}
-                          return [
-                            { id: 'starter', name: 'STARTER', price: 100, currency: 'ETB', duration: '3 days', views: 'Category top placement', badge: 'STARTER', desc: 'Category top placement + Basic Verified Badge' },
-                            { id: 'premium', name: 'PREMIUM', price: 150, currency: 'ETB', duration: '7 days', views: 'Featured hero slider', badge: 'PREMIUM', desc: 'Featured hero slider + High priority ranking' },
-                            { id: 'vip', name: 'VIP ELITE', price: 500, currency: 'ETB', duration: '30 days', views: 'Top search billboard pin', badge: 'VIP ELITE', desc: 'Top search billboard pin + Full site promotion' }
-                          ];
-                        })();
+                    const dynamicPackages = getEffectiveAdPackages(systemSettings);
 
                     const plans = dynamicPackages.map((pkg: any) => ({
                       id: pkg.id || pkg.name,
                       name: pkg.name,
-                      cost: Number(pkg.price) || 0,
+                      cost: Number(pkg.price) >= 0 ? Number(pkg.price) : 0,
                       days: pkg.duration || '7 Days',
                       badge: pkg.badge || (pkg.price >= 3000 ? 'VIP' : pkg.price >= 1000 ? 'POPULAR' : 'PROMO'),
                       desc: pkg.desc || `Promotional ad package: ${pkg.name} (${pkg.duration || '7 days'})`

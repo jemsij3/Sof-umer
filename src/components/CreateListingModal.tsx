@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../lib/AppContext';
 import { getCampaignStatusInfo } from '../utils/campaignUtils';
+import { getEffectiveAdPackages } from '../lib/adPackages';
 import { ReceiptUploadInput } from './ReceiptUploadInput';
 import { 
   getMatchingSubcategoryId, 
@@ -829,11 +830,7 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
   const campaignInfo = getCampaignStatusInfo(systemSettings?.freeListingSettings);
   const isFreeListingEnabled = campaignInfo.isActive;
 
-  const rawPackages = (systemSettings?.adPackages && systemSettings.adPackages.length > 0)
-    ? systemSettings.adPackages.filter((p: any) => p.name !== 'New Custom Promotion Package' && !p.name.includes('Custom'))
-    : DEFAULT_AD_PACKAGES;
-
-  const dynamicPackages = rawPackages.length > 0 ? rawPackages : DEFAULT_AD_PACKAGES;
+  const dynamicPackages = getEffectiveAdPackages(systemSettings);
 
   const flsConfig = systemSettings?.freeListingSettings;
   const maxFree = campaignInfo.maxListings;
@@ -854,7 +851,7 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
     ...dynamicPackages.map((pkg: any) => ({
       id: pkg.id || pkg.name,
       name: pkg.name,
-      cost: Number(pkg.price) || 0,
+      cost: Number(pkg.price) >= 0 ? Number(pkg.price) : 0,
       days: pkg.duration || '7 Days',
       daysCount: pkg.daysCount || (pkg.duration?.includes('30') ? 30 : pkg.duration?.includes('3') ? 3 : 7),
       badge: pkg.badge || 'PROMO',
@@ -864,11 +861,16 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
 
   const effectiveSelectedPlan = selectedPlan || 'free';
 
-  const selectedPlanObj = allPromotionPlans.find(p => p.id === effectiveSelectedPlan || p.name === effectiveSelectedPlan || (p.id === 'basic' && (effectiveSelectedPlan as string) === 'starter')) || allPromotionPlans[0];
-  const baseCost = selectedPlanObj ? selectedPlanObj.cost : 0;
-  const addonTopCost = isTopAdAddon ? topAdPrice : 0;
-  const addonFeaturedCost = isFeaturedAddon ? featuredPrice : 0;
-  const totalCost = baseCost + addonTopCost + addonFeaturedCost;
+  const selectedPlanObj = allPromotionPlans.find(p => 
+    p.id === effectiveSelectedPlan || 
+    p.name === effectiveSelectedPlan || 
+    (p.id === 'basic' && (effectiveSelectedPlan as string) === 'starter') ||
+    (p.id === 'starter' && (effectiveSelectedPlan as string) === 'basic')
+  ) || allPromotionPlans[0];
+
+  const packageCost = effectiveSelectedPlan === 'free' ? 0 : (selectedPlanObj ? selectedPlanObj.cost : 0);
+  // Authoritative package cost is the exact advertised package price without hidden/duplicate addon fees
+  const totalCost = packageCost;
 
   const walletBalance = currentUser?.walletBalance || 0;
 
@@ -1206,6 +1208,10 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
       // Handle monetization payment if totalCost > 0
       if (totalCost > 0) {
         const directMethod = paymentMethods.find(m => m.id === selectedDirectMethodId);
+        const accountInfo = directMethod
+          ? (directMethod.accountNumber ? `${directMethod.accountNumber}${directMethod.accountName ? ` (${directMethod.accountName})` : ''}` : directMethod.phoneNumber)
+          : undefined;
+
         await fetch('/api/receipts', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -1216,10 +1222,15 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
             amount: totalCost,
             paymentMethodId: selectedDirectMethodId || 'direct-transfer',
             paymentMethodName: directMethod?.name || 'Direct Bank / Telebirr',
+            paymentMethodAccount: accountInfo,
+            packageId: selectedPlanObj?.id || selectedPlan,
+            packageName: selectedPlanObj?.name || (selectedPlan === 'vip' ? 'VIP Elite Boost' : selectedPlan === 'premium' ? 'Premium Boost' : 'Basic Boost'),
+            packageDuration: selectedPlanObj?.days || '7 Days',
+            packagePrice: totalCost,
             relatedPropertyId: createdProp.id,
             relatedPropertyTitle: createdProp.title,
             referenceNumber: receiptRefNumber.trim() || undefined,
-            receiptUrlOrFile: receiptFileData?.url || receiptRefNumber || 'Payment Reference Submitted',
+            receiptUrlOrFile: receiptFileData?.url || receiptRefNumber.trim() || 'Payment Reference Submitted',
             fileType: receiptFileData?.fileType || 'image',
             fileName: receiptFileData?.fileName,
             fileSize: receiptFileData?.fileSize

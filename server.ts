@@ -4753,8 +4753,22 @@ async function startServer() {
           prop.isFeatured = true;
           prop.verificationStatus = 'verified';
           prop.isVerifiedListing = true;
-          if (!prop.boostPlan) prop.boostPlan = 'vip';
+          prop.boostPlan = receipt.packageId || prop.boostPlan || 'promoted';
           prop.isTopAd = true;
+          const durationStr = (receipt.packageDuration || '').toLowerCase();
+          const days = durationStr.includes('30') ? 30 : durationStr.includes('7') ? 7 : durationStr.includes('3') ? 3 : 7;
+          const expiry = new Date();
+          expiry.setDate(expiry.getDate() + days);
+          prop.promotedUntil = expiry.toISOString();
+          prop.promotionExpiresAt = expiry.toISOString();
+        }
+      }
+
+      if (isMongoConnected) {
+        try {
+          await ReceiptModel.updateOne({ id }, { $set: receipt });
+        } catch (err) {
+          console.error('[Storage] Error updating receipt in Mongo:', err);
         }
       }
 
