@@ -1026,83 +1026,17 @@ export default function InfoPage({ pageId, onBack, onOpenReportModalFromInfo }: 
         </button>
 
         <span className="text-[10px] uppercase font-black tracking-widest text-[#10b981]/60">
-          {['help-center', 'marketplace-rules', 'safety-tips', 'careers'].includes(activeTab) 
+          {['terms-of-service', 'privacy-policy'].includes(activeTab)
+            ? 'SOF-UMER • Legal Terms & Privacy'
+            : ['help-center', 'marketplace-rules', 'safety-tips', 'careers'].includes(activeTab) 
             ? 'SOF-UMER • Support, Rules & Safety Guide' 
             : 'SOF-UMER • About'}
         </span>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 text-left">
-        {/* Navigation panel */}
-        <div className="lg:col-span-3 space-y-6">
-          {['help-center', 'marketplace-rules', 'safety-tips', 'careers'].includes(activeTab) ? (
-            /* Profile -> Support, Rules & Safety Guide Section */
-            <div className="bg-[#0c0c10]/60 p-4 rounded-2xl border border-white/5 space-y-4">
-              <h3 className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest border-b border-white/5 pb-2">
-                {currentLanguage === 'om' ? 'Deggarsa, Seera & Nageenya' : currentLanguage === 'am' ? 'ድጋፍ፣ ደንቦች እና የደህንነት መመሪያ' : 'Support, Rules & Safety Guide'}
-              </h3>
-              <div className="flex flex-col gap-1.5">
-                {[
-                  { id: 'help-center', titleEn: 'FAQ', titleOm: 'Gaaffilee Yeroo Baay’ee (FAQ)', titleAm: 'ተደጋጋሚ ጥያቄዎች (FAQ)' },
-                  { id: 'marketplace-rules', titleEn: 'Marketplace Rules', titleOm: 'Seera Gabaa', titleAm: 'የገበያ ቦታ ደንቦች' },
-                  { id: 'safety-tips', titleEn: 'Safety Tips', titleOm: 'Gorsa Nageenyaa', titleAm: 'የደህንነት ምክሮች' },
-                  { id: 'careers', titleEn: 'Careers', titleOm: 'Carraa Hojii', titleAm: 'ስራዎች' }
-                ].map(feat => {
-                  const title = currentLanguage === 'om' ? feat.titleOm : currentLanguage === 'am' ? feat.titleAm : feat.titleEn;
-                  return (
-                    <button
-                      key={feat.id}
-                      onClick={() => setActiveTab(feat.id)}
-                      className={`w-full text-left p-3 rounded-xl text-xs transition-all duration-200 cursor-pointer flex items-center justify-between group ${
-                        activeTab === feat.id
-                          ? 'bg-gradient-to-r from-emerald-500/10 to-transparent border-l-2 border-emerald-500 text-emerald-400 font-bold'
-                          : 'text-white/60 hover:text-white hover:bg-white/5'
-                      }`}
-                    >
-                      <span>{title}</span>
-                      <ChevronRight className={`w-3.5 h-3.5 opacity-0 group-hover:opacity-100 transition ${activeTab === feat.id ? 'text-emerald-400 opacity-100' : 'text-white/30'}`} />
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          ) : (
-            /* ABOUT SOF-UMER Section - Independent with ONLY 5 items */
-            <div className="bg-[#0c0c10]/60 p-4 rounded-2xl border border-white/5 space-y-4">
-              <h3 className="text-[10px] font-bold text-amber-400 uppercase tracking-widest border-b border-white/5 pb-2">
-                {currentLanguage === 'om' ? "Waa'ee SOF-UMER" : currentLanguage === 'am' ? 'ስለ SOF-UMER' : 'About SOF-UMER'}
-              </h3>
-              <div className="flex flex-col gap-1.5">
-                {[
-                  { id: 'about-us', titleEn: 'About SOF-UMER', titleOm: "Waa'ee SOF-UMER", titleAm: 'ስለ SOF-UMER' },
-                  { id: 'how-it-works', titleEn: 'How It Works', titleOm: 'Inni Akkamitti Hojjata', titleAm: 'እንዴት እንደሚሰራ' },
-                  { id: 'contact-us', titleEn: 'Contact Us', titleOm: 'Nu Quunnamaa', titleAm: 'ያግኙን' },
-                  { id: 'terms-of-service', titleEn: 'Terms of Service', titleOm: 'Waliigaltee Tajaajilaa', titleAm: 'የአጠቃቀም ስምምነት' },
-                  { id: 'privacy-policy', titleEn: 'Privacy Policy', titleOm: 'Ibsa Iccitii', titleAm: 'የግላዊነት ፖሊሲ' }
-                ].map(feat => {
-                  const title = currentLanguage === 'om' ? feat.titleOm : currentLanguage === 'am' ? feat.titleAm : feat.titleEn;
-                  return (
-                    <button
-                      key={feat.id}
-                      onClick={() => setActiveTab(feat.id)}
-                      className={`w-full text-left p-3 rounded-xl text-xs transition-all duration-200 cursor-pointer flex items-center justify-between group ${
-                        activeTab === feat.id
-                          ? 'bg-gradient-to-r from-amber-500/10 to-transparent border-l-2 border-amber-500 text-amber-500 font-bold'
-                          : 'text-white/60 hover:text-white hover:bg-white/5'
-                      }`}
-                    >
-                      <span>{title}</span>
-                      <ChevronRight className={`w-3.5 h-3.5 opacity-0 group-hover:opacity-100 transition ${activeTab === feat.id ? 'text-amber-500 opacity-100' : 'text-white/30'}`} />
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Content body */}
-        <div className="lg:col-span-9 bg-[#0e0e13]/90 rounded-3xl border border-[#10b981]/15 p-6 md:p-8 backdrop-blur-xl shadow-xl">
+      {['terms-of-service', 'privacy-policy'].includes(activeTab) ? (
+        /* Standalone Legal page - ONLY existing Terms of Service / Privacy Policy content, NO ABOUT SOF-UMER section */
+        <div className="max-w-4xl mx-auto bg-[#0e0e13]/90 rounded-3xl border border-[#10b981]/15 p-6 md:p-8 backdrop-blur-xl shadow-xl">
           <AnimatePresence mode="wait">
             <motion.div
               key={activeTab}
@@ -1115,7 +1049,90 @@ export default function InfoPage({ pageId, onBack, onOpenReportModalFromInfo }: 
             </motion.div>
           </AnimatePresence>
         </div>
-      </div>
+      ) : (
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 text-left">
+          {/* Navigation panel */}
+          <div className="lg:col-span-3 space-y-6">
+            {['help-center', 'marketplace-rules', 'safety-tips', 'careers'].includes(activeTab) ? (
+              /* Profile -> Support, Rules & Safety Guide Section */
+              <div className="bg-[#0c0c10]/60 p-4 rounded-2xl border border-white/5 space-y-4">
+                <h3 className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest border-b border-white/5 pb-2">
+                  {currentLanguage === 'om' ? 'Deggarsa, Seera & Nageenya' : currentLanguage === 'am' ? 'ድጋፍ፣ ደንቦች እና የደህንነት መመሪያ' : 'Support, Rules & Safety Guide'}
+                </h3>
+                <div className="flex flex-col gap-1.5">
+                  {[
+                    { id: 'help-center', titleEn: 'FAQ', titleOm: 'Gaaffilee Yeroo Baay’ee (FAQ)', titleAm: 'ተደጋጋሚ ጥያቄዎች (FAQ)' },
+                    { id: 'marketplace-rules', titleEn: 'Marketplace Rules', titleOm: 'Seera Gabaa', titleAm: 'የገበያ ቦታ ደንቦች' },
+                    { id: 'safety-tips', titleEn: 'Safety Tips', titleOm: 'Gorsa Nageenyaa', titleAm: 'የደህንነት ምክሮች' },
+                    { id: 'careers', titleEn: 'Careers', titleOm: 'Carraa Hojii', titleAm: 'ስራዎች' }
+                  ].map(feat => {
+                    const title = currentLanguage === 'om' ? feat.titleOm : currentLanguage === 'am' ? feat.titleAm : feat.titleEn;
+                    return (
+                      <button
+                        key={feat.id}
+                        onClick={() => setActiveTab(feat.id)}
+                        className={`w-full text-left p-3 rounded-xl text-xs transition-all duration-200 cursor-pointer flex items-center justify-between group ${
+                          activeTab === feat.id
+                            ? 'bg-gradient-to-r from-emerald-500/10 to-transparent border-l-2 border-emerald-500 text-emerald-400 font-bold'
+                            : 'text-white/60 hover:text-white hover:bg-white/5'
+                        }`}
+                      >
+                        <span>{title}</span>
+                        <ChevronRight className={`w-3.5 h-3.5 opacity-0 group-hover:opacity-100 transition ${activeTab === feat.id ? 'text-emerald-400 opacity-100' : 'text-white/30'}`} />
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            ) : (
+              /* ABOUT SOF-UMER Section - 3 items */
+              <div className="bg-[#0c0c10]/60 p-4 rounded-2xl border border-white/5 space-y-4">
+                <h3 className="text-[10px] font-bold text-amber-400 uppercase tracking-widest border-b border-white/5 pb-2">
+                  {currentLanguage === 'om' ? "Waa'ee SOF-UMER" : currentLanguage === 'am' ? 'ስለ SOF-UMER' : 'About SOF-UMER'}
+                </h3>
+                <div className="flex flex-col gap-1.5">
+                  {[
+                    { id: 'about-us', titleEn: 'About SOF-UMER', titleOm: "Waa'ee SOF-UMER", titleAm: 'ስለ SOF-UMER' },
+                    { id: 'how-it-works', titleEn: 'How It Works', titleOm: 'Inni Akkamitti Hojjata', titleAm: 'እንዴት እንደሚሰራ' },
+                    { id: 'contact-us', titleEn: 'Contact Us', titleOm: 'Nu Quunnamaa', titleAm: 'ያግኙን' }
+                  ].map(feat => {
+                    const title = currentLanguage === 'om' ? feat.titleOm : currentLanguage === 'am' ? feat.titleAm : feat.titleEn;
+                    return (
+                      <button
+                        key={feat.id}
+                        onClick={() => setActiveTab(feat.id)}
+                        className={`w-full text-left p-3 rounded-xl text-xs transition-all duration-200 cursor-pointer flex items-center justify-between group ${
+                          activeTab === feat.id
+                            ? 'bg-gradient-to-r from-amber-500/10 to-transparent border-l-2 border-amber-500 text-amber-500 font-bold'
+                            : 'text-white/60 hover:text-white hover:bg-white/5'
+                        }`}
+                      >
+                        <span>{title}</span>
+                        <ChevronRight className={`w-3.5 h-3.5 opacity-0 group-hover:opacity-100 transition ${activeTab === feat.id ? 'text-amber-500 opacity-100' : 'text-white/30'}`} />
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Content body */}
+          <div className="lg:col-span-9 bg-[#0e0e13]/90 rounded-3xl border border-[#10b981]/15 p-6 md:p-8 backdrop-blur-xl shadow-xl">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={activeTab}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.2 }}
+              >
+                {renderContent()}
+              </motion.div>
+            </AnimatePresence>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
