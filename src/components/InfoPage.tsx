@@ -179,9 +179,9 @@ export default function InfoPage({ pageId, onBack, onOpenReportModalFromInfo }: 
         am: "ያልተገባ ንብረት ሪፖርት ያድርጉ"
       },
       'help-center': {
-        en: "Help Center",
-        om: "Giddugala Deggarsaa",
-        am: "የእርዳታ ማዕከል"
+        en: "Frequently Asked Questions (FAQ)",
+        om: "Gaaffilee Yeroo Baay’ee (FAQ)",
+        am: "ተደጋጋሚ ጥያቄዎች (FAQ)"
       },
       'terms-of-service': {
         en: "Terms of Service",
@@ -1043,7 +1043,7 @@ export default function InfoPage({ pageId, onBack, onOpenReportModalFromInfo }: 
               </h3>
               <div className="flex flex-col gap-1.5">
                 {[
-                  { id: 'help-center', titleEn: 'Help Center', titleOm: 'Giddugala Deggarsaa', titleAm: 'የእርዳታ ማዕከል' },
+                  { id: 'help-center', titleEn: 'FAQ', titleOm: 'Gaaffilee Yeroo Baay’ee (FAQ)', titleAm: 'ተደጋጋሚ ጥያቄዎች (FAQ)' },
                   { id: 'marketplace-rules', titleEn: 'Marketplace Rules', titleOm: 'Seera Gabaa', titleAm: 'የገበያ ቦታ ደንቦች' },
                   { id: 'safety-tips', titleEn: 'Safety Tips', titleOm: 'Gorsa Nageenyaa', titleAm: 'የደህንነት ምክሮች' },
                   { id: 'careers', titleEn: 'Careers', titleOm: 'Carraa Hojii', titleAm: 'ስራዎች' }

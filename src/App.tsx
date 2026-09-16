@@ -92,6 +92,7 @@ function MainAppLayout() {
   const [reportDesc, setReportDesc] = useState('');
   const [reportSuccess, setReportSuccess] = useState(false);
   const [reportSubmitting, setReportSubmitting] = useState(false);
+  const [returnViewFromInfo, setReturnViewFromInfo] = useState<string>('marketplace');
 
   const handleNavigate = (newView: typeof view) => {
     setSelectedProperty(null);
@@ -126,6 +127,7 @@ function MainAppLayout() {
       }
       setView('marketplace');
     } else if (type === 'info') {
+      setReturnViewFromInfo(view);
       setActiveInfoPageId(value);
       setView('info-page');
     }
@@ -318,7 +320,7 @@ function MainAppLayout() {
             >
               <InfoPage
                 pageId={activeInfoPageId}
-                onBack={() => setView('marketplace')}
+                onBack={() => setView((returnViewFromInfo as any) || 'marketplace')}
                 onOpenReportModalFromInfo={() => {
                   handleOpenReportModal('property', 'info-contact', 'Report Department / User Support');
                 }}

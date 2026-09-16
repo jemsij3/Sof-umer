@@ -51,41 +51,7 @@ function AccordionItem({ title, content, isOpen, onToggle }: { title: string; co
   );
 }
 
-// L10n Consolidated into official translations architecture
-const FAQ_ITEMS = [
-  {
-    q_en: "What is Sof Umer?",
-    q_om: "Sof Umer maali?",
-    q_am: "ሶፍ ኡመር ምንድነው?",
-    a_en: "Sof Umer is Ethiopia's trusted local marketplace where people can discover, buy, sell, rent, and connect with businesses and communities securely.",
-    a_om: "Sof Umer gabaa naannoo Itoophiyaa amanamaa ta'eedha, daldaltoonni, bitattoonni fi hawaasni adda addaa itti wal-qunnamaniidha.",
-    a_am: "ሶፍ ኡመር ሰዎች ንብረቶችን፣ ተሽከርካሪዎችን፣ ስራዎችን እና ምርቶችን የሚያገኙበት፣ የሚገዙበት እና የሚሸጡበት የታመነ የኢትዮጵያ የገበያ ቦታ ነው።"
-  },
-  {
-    q_en: "How do I promote my listing to Premium?",
-    q_om: "Beeksisa koo akkamitti beeksisa Premium godha?",
-    q_am: "ማስታወቂያዬን እንዴት ወደ ፕሪሚየም ማሳደግ እችላለሁ?",
-    a_en: "Go to 'My Listings', click 'Promote Listing', select Bank Transfer (CBE) or Telebirr, and upload your payment transaction reference/screenshot for approval.",
-    a_om: "Gara 'Beeksisa Koo' deemi, 'Promote' cuqaasi, kaffaltii CBE ykn Telebirr kaffaluun nagahee screenshot ol-ergi.",
-    a_am: "ወደ 'የእኔ ማስታወቂያዎች' ይሂዱ፣ ማስታወቂያ አስተዋውቅ የሚለውን ይጫኑ፣ በባንክ ወይም በቴሌብር ይክፈሉ እና የደረሰኝ ፎቶ ያያይዙ።"
-  },
-  {
-    q_en: "Is listing creation free?",
-    q_om: "Beeksisa baasuun bilisaan danda'amaa?",
-    q_am: "ማስታወቂያ መለጠፍ በነጻ ነው?",
-    a_en: "Yes, standard listing postings on Sof Umer are 100% free of charge. Premium enhancements are fully optional.",
-    a_om: "Eeyyee, beeksisa dhiyyeessuun kaffaltii malee bilisa dha. Filannoowwan biroo kaffaltii qabu.",
-    a_am: "አዎ፣ በሶፍ ኡመር ላይ መደበኛ ማስታወቂያ መለጠፍ ሙሉ በሙሉ ነፃ ነው። ፕሪሚየም ማሳደጊያዎች አማራጭ ናቸው።"
-  },
-  {
-    q_en: "How long does audit verification take?",
-    q_om: "Mirkaneessarra sa'aatii hammam fudhata?",
-    q_am: "የማረጋገጫ ግምገማ ምን ያህል ጊዜ ይፈጃል?",
-    a_en: "Our safety administrators review all newly created listings within 1 to 4 hours to preserve platform trustworthiness.",
-    a_om: "Koreen keenya beeksisa hundumaa qulqullinaaf ni qora. Yeroo baay’ee sa’aatii 1 hanga 4 ni fudhata.",
-    a_am: "የማህበረሰቡን ጥራት ለመጠበቅ የእኛ አወያዮች ማስታወቂያዎችን ከ1 እስከ 4 ሰዓታት ባለው ጊዜ ውስጥ ይገመግማሉ።"
-  }
-];
+// AccordionItem for expandable FAQ items
 
 interface UserDashboardProps {
   initialTab?: 'profile' | 'mylistings' | 'favorites' | 'messages' | 'payments' | 'notifications' | 'settings' | 'supportsafety' | 'edit-profile' | 'security';
@@ -147,17 +113,14 @@ export default function UserDashboard({
     return val.en || val.om || val.am || '';
   };
 
-  // Synchronized FAQs with Admin Dashboard (with default fallback items)
+  // Synchronized FAQs with Admin Dashboard (Single Source of Truth)
   const effectiveFaqs = useMemo(() => {
     if (Array.isArray(faqs) && faqs.length > 0) {
-      return faqs.filter(f => f.status !== 'draft');
+      return faqs
+        .filter(f => f && f.status !== 'draft')
+        .sort((a, b) => (a.orderIndex || 999) - (b.orderIndex || 999));
     }
-    return FAQ_ITEMS.map((item, idx) => ({
-      id: `default-${idx}`,
-      category: 'General',
-      question: { en: item.q_en, om: item.q_om, am: item.q_am },
-      answer: { en: item.a_en, om: item.a_om, am: item.a_am }
-    }));
+    return [];
   }, [faqs]);
 
   // Promote Boost Plan state
