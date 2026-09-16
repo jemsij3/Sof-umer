@@ -974,726 +974,185 @@ export default function Marketplace({
         )}
       </AnimatePresence>
 
-      {selectedRedesignedCategory ? (
-        <div className="animate-fade-in text-left">
-          {/* Breadcrumb Navigation & Obvious Back Navigation (Requirement 5) */}
-          <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
-            <div className="flex flex-wrap items-center gap-2 text-xs text-white/50 bg-[#0d0d12]/40 backdrop-blur-md px-4 py-2.5 rounded-2xl border border-white/5 w-fit">
-              <button 
-                onClick={handleGoBackToAllCategories}
-                className="hover:text-amber-400 transition flex items-center gap-1.5 cursor-pointer font-bold uppercase tracking-wider text-amber-400/90 hover:text-amber-300"
-              >
-                <ArrowLeft className="w-3.5 h-3.5" />
-                <span>{t('all_categories') || 'All Categories'}</span>
-              </button>
-              <ChevronRight className="w-3.5 h-3.5 opacity-40 text-amber-500" />
-              <button 
-                onClick={handleGoBackToMainCategory}
-                className={`hover:text-amber-400 transition font-bold uppercase tracking-wider cursor-pointer ${!selectedSubcategory ? 'text-white' : 'text-white/70'}`}
-              >
-                {currentLanguage === 'am' ? (selectedRedesignedCategory.translations?.am || selectedRedesignedCategory.name) : currentLanguage === 'om' ? (selectedRedesignedCategory.translations?.om || selectedRedesignedCategory.name) : selectedRedesignedCategory.name}
-              </button>
-              {selectedSubcategory && (
-                <>
-                  <ChevronRight className="w-3.5 h-3.5 opacity-40 text-amber-500" />
-                  <span className="text-amber-400 font-bold uppercase tracking-wider truncate">
-                    {currentLanguage === 'am' ? (selectedSubcategory.translations?.am || selectedSubcategory.name) : currentLanguage === 'om' ? (selectedSubcategory.translations?.om || selectedSubcategory.name) : selectedSubcategory.name}
-                  </span>
-                </>
-              )}
-            </div>
+      <div className="animate-fade-in text-left">
+        {/* 1. MAIN CATEGORIES — HORIZONTAL SCROLL ROW */}
+        <div className="mb-3 overflow-x-auto scrollbar-none pb-1">
+          <div className="flex items-center gap-2 flex-nowrap w-max">
+            {/* First Main Category Tab: ALL */}
+            <button
+              onClick={() => handleGoBackToAllCategories()}
+              className={`px-5 py-2.5 rounded-2xl text-xs font-bold transition-all duration-300 cursor-pointer flex items-center gap-2 shrink-0 border ${
+                !selectedRedesignedCategory
+                  ? 'bg-gradient-to-r from-amber-400 to-amber-600 text-black border-amber-400 shadow-lg shadow-amber-500/20'
+                  : 'bg-[#0e0e15] text-white/80 border-white/10 hover:border-amber-500/40 hover:text-white hover:bg-[#151522]'
+              }`}
+            >
+              <Grid className="w-4 h-4 shrink-0" />
+              <span className="uppercase tracking-wider">ALL</span>
+            </button>
 
-            {/* Obvious Back Navigation Button (Requirement 5) */}
-            {selectedSubcategory ? (
-              <button
-                onClick={handleGoBackToMainCategory}
-                className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-amber-400 hover:text-amber-300 border border-white/10 text-xs font-bold uppercase tracking-wider transition cursor-pointer"
-              >
-                <ArrowLeft className="w-4 h-4" />
-                <span>← {currentLanguage === 'am' ? (selectedRedesignedCategory.translations?.am || selectedRedesignedCategory.name) : currentLanguage === 'om' ? (selectedRedesignedCategory.translations?.om || selectedRedesignedCategory.name) : selectedRedesignedCategory.name}</span>
-              </button>
-            ) : (
-              <button
-                onClick={handleGoBackToAllCategories}
-                className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-amber-400 hover:text-amber-300 border border-white/10 text-xs font-bold uppercase tracking-wider transition cursor-pointer"
-              >
-                <ArrowLeft className="w-4 h-4" />
-                <span>← {t('all_categories') || 'All Categories'}</span>
-              </button>
-            )}
+            {/* Main Categories List */}
+            {REDESIGNED_CATEGORIES.map(cat => {
+              const isSelected = selectedRedesignedCategory?.id === cat.id;
+              const translatedName = currentLanguage === 'am'
+                ? (cat.translations?.am || cat.name)
+                : currentLanguage === 'om'
+                ? (cat.translations?.om || cat.name)
+                : cat.name;
+
+              return (
+                <button
+                  key={cat.id}
+                  onClick={() => handleSelectRedesignedCategory(cat)}
+                  className={`px-4.5 py-2.5 rounded-2xl text-xs font-bold transition-all duration-300 cursor-pointer flex items-center gap-2 shrink-0 border ${
+                    isSelected
+                      ? 'bg-gradient-to-r from-amber-400 to-amber-600 text-black border-amber-400 shadow-lg shadow-amber-500/20'
+                      : 'bg-[#0e0e15] text-white/80 border-white/10 hover:border-amber-500/40 hover:text-white hover:bg-[#151522]'
+                  }`}
+                >
+                  <span className="text-base shrink-0">{cat.emoji}</span>
+                  <span className="whitespace-nowrap">{translatedName}</span>
+                </button>
+              );
+            })}
           </div>
+        </div>
 
-          {/* Interactive Category Header Card / Banner (Requirement 7) */}
-          <div className={`mb-8 rounded-3xl overflow-hidden relative border border-white/10 shadow-2xl min-h-[160px] flex flex-col sm:flex-row items-center justify-between p-6 sm:p-8 ${selectedRedesignedCategory.bannerGradient}`}>
-            {/* Ambient Background overlays */}
-            <div className="absolute inset-0 bg-black/45 pointer-events-none" />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent pointer-events-none" />
-            
-            <div className="relative z-10 flex items-center gap-5 text-left w-full sm:w-auto">
-              <div className="p-4 bg-white/10 backdrop-blur-md border border-white/10 rounded-2xl shrink-0 shadow-inner text-3xl">
-                {selectedSubcategory ? getSubcategoryVisual(selectedSubcategory.id, selectedRedesignedCategory.emoji) : selectedRedesignedCategory.emoji}
-              </div>
-              <div>
-                <span className="text-[9px] font-black tracking-widest text-amber-300 uppercase block mb-1">
-                  {selectedSubcategory
-                    ? `${currentLanguage === 'am' ? (selectedRedesignedCategory.translations?.am || selectedRedesignedCategory.name) : currentLanguage === 'om' ? (selectedRedesignedCategory.translations?.om || selectedRedesignedCategory.name) : selectedRedesignedCategory.name} ›`
-                    : (t('so_umer_catalogs') || 'SOF UMER CATALOGS')}
-                </span>
-                <h2 className="text-2xl sm:text-3xl font-serif font-extrabold text-white tracking-wide uppercase">
-                  {selectedSubcategory
-                    ? (currentLanguage === 'am' ? (selectedSubcategory.translations?.am || selectedSubcategory.name) : currentLanguage === 'om' ? (selectedSubcategory.translations?.om || selectedSubcategory.name) : selectedSubcategory.name)
-                    : (currentLanguage === 'am' ? (selectedRedesignedCategory.translations?.am || selectedRedesignedCategory.name) : currentLanguage === 'om' ? (selectedRedesignedCategory.translations?.om || selectedRedesignedCategory.name) : selectedRedesignedCategory.name)}
-                </h2>
-                <p className="text-white/70 text-xs mt-1 font-light tracking-wide flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full bg-[#10b981] inline-block animate-pulse" />
-                  {filteredProperties.length} {t('catalog.active_listings_found') || (currentLanguage === 'om' ? 'beeksisa soscho\'an argaman' : currentLanguage === 'am' ? 'ንቁ ማስታወቂያዎች ተገኝተዋል' : 'active listings found')}
-                </p>
-              </div>
-            </div>
+        {/* 2. SUBCATEGORIES — HORIZONTAL SCROLL ROW */}
+        <div className="mb-6 overflow-x-auto scrollbar-none pb-1">
+          <div className="flex items-center gap-2 flex-nowrap w-max">
+            {/* Available subcategories depending on active category selection */}
+            {selectedRedesignedCategory ? (
+              <>
+                <button
+                  onClick={() => setSelectedSubcategory(null)}
+                  className={`px-4 py-2 rounded-xl text-xs font-semibold transition-all duration-300 cursor-pointer shrink-0 border ${
+                    !selectedSubcategory
+                      ? 'bg-white text-black border-white shadow-md font-bold'
+                      : 'bg-[#0d0d12]/60 text-white/70 border-white/5 hover:border-white/20 hover:text-white'
+                  }`}
+                >
+                  {t('all_items_in_category', { category: currentLanguage === 'am' ? (selectedRedesignedCategory.translations?.am || selectedRedesignedCategory.name) : currentLanguage === 'om' ? (selectedRedesignedCategory.translations?.om || selectedRedesignedCategory.name) : selectedRedesignedCategory.name }) || `All ${selectedRedesignedCategory.name}`}
+                </button>
 
-            {/* Quick Action Buttons */}
-            <div className="relative z-10 flex flex-wrap gap-2.5 mt-6 sm:mt-0 w-full sm:w-auto justify-start sm:justify-end">
-              <button
-                onClick={(e) => handleToggleSaveCategory(selectedRedesignedCategory.id, e)}
-                className={`p-3 rounded-2xl border transition-all duration-300 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider cursor-pointer shadow-lg ${
-                  savedCatIds.includes(selectedRedesignedCategory.id)
-                    ? 'bg-amber-500 text-black border-amber-400'
-                    : 'bg-black/40 hover:bg-black/60 text-white border-white/10'
-                }`}
-                title={t('save') || 'Save Category'}
-              >
-                {savedCatIds.includes(selectedRedesignedCategory.id) ? (
-                  <>
-                    <BookmarkCheck className="w-4 h-4" />
-                    <span>{t('saved') || 'Saved'}</span>
-                  </>
-                ) : (
-                  <>
-                    <Bookmark className="w-4 h-4" />
-                    <span>{t('save') || 'Save'}</span>
-                  </>
-                )}
-              </button>
-
-              <button
-                onClick={(e) => handleToggleFavoriteCategory(selectedRedesignedCategory.id, e)}
-                className={`p-3 rounded-2xl border transition-all duration-300 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider cursor-pointer shadow-lg ${
-                  favCatIds.includes(selectedRedesignedCategory.id)
-                    ? 'bg-rose-500 text-white border-rose-400'
-                    : 'bg-black/40 hover:bg-black/60 text-white/90 border-white/10'
-                }`}
-                title={t('favorite') || 'Favorite Category'}
-              >
-                <Heart className={`w-4 h-4 ${favCatIds.includes(selectedRedesignedCategory.id) ? 'fill-white' : ''}`} />
-                <span>{favCatIds.includes(selectedRedesignedCategory.id) ? (t('favorited') || 'Favorited') : (t('favorite') || 'Favorite')}</span>
-              </button>
-
-              <button
-                onClick={(e) => handleShareCategory(selectedRedesignedCategory, e)}
-                className="p-3 rounded-2xl bg-black/40 hover:bg-black/60 text-white border border-white/10 transition-all duration-300 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider cursor-pointer shadow-lg"
-                title={t('share') || 'Share Category'}
-              >
-                <Share2 className="w-4 h-4" />
-                <span>{t('share') || 'Share'}</span>
-              </button>
-
-              <button
-                onClick={handleGoBackToAllCategories}
-                className="p-3 rounded-2xl bg-white text-black hover:bg-zinc-200 transition-all duration-300 flex items-center gap-2 text-xs font-bold uppercase tracking-wider cursor-pointer shadow-lg ml-auto sm:ml-0"
-              >
-                <X className="w-4 h-4" />
-                <span>{t('exit') || 'Exit'}</span>
-              </button>
-            </div>
-          </div>
-
-          {/* Clean Subcategory Navigation View (Requirement 4) when no subcategory is selected */}
-          {!selectedSubcategory && (
-            <div className="mb-8">
-              <h3 className="text-[10px] font-bold text-white/40 uppercase tracking-widest mb-3.5 flex items-center gap-2">
-                <span>{t('explore_subcategories') || 'EXPLORE SUBCATEGORIES'}</span>
-                <span className="h-[1px] bg-white/5 flex-1" />
-              </h3>
-
-              <div className="divide-y divide-white/5 border border-white/10 rounded-2xl overflow-hidden bg-[#0d0d12]/60 backdrop-blur-md">
-                {selectedRedesignedCategory.subcategories.map((sub) => {
+                {selectedRedesignedCategory.subcategories.map(sub => {
                   const subCount = getSubcategoryListingCount(sub, selectedRedesignedCategory);
                   const subName = currentLanguage === 'am' ? (sub.translations?.am || sub.name) : currentLanguage === 'om' ? (sub.translations?.om || sub.name) : sub.name;
+                  const isSubSelected = selectedSubcategory?.id === sub.id;
                   const subVisual = getSubcategoryVisual(sub.id, selectedRedesignedCategory.emoji);
 
                   return (
                     <button
                       key={sub.id}
-                      onClick={() => handleSelectRedesignedCategory(selectedRedesignedCategory, sub)}
-                      className="w-full text-left p-3.5 sm:p-4 hover:bg-amber-500/[0.06] transition flex items-center justify-between group cursor-pointer"
+                      onClick={() => setSelectedSubcategory(isSubSelected ? null : sub)}
+                      className={`px-3.5 py-2 rounded-xl text-xs font-semibold transition-all duration-300 cursor-pointer flex items-center gap-1.5 shrink-0 border ${
+                        isSubSelected
+                          ? 'bg-white text-black border-white shadow-md font-bold'
+                          : 'bg-[#0d0d12]/60 text-white/70 border-white/5 hover:border-white/20 hover:text-white'
+                      }`}
                     >
-                      <div className="flex items-center gap-3 min-w-0">
-                        <span className="text-xl shrink-0">{subVisual}</span>
-                        <span className="text-sm font-semibold text-white/90 group-hover:text-amber-400 transition-colors truncate">
-                          {subName}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-3 shrink-0 ml-3">
-                        <span className="text-xs font-mono px-2.5 py-1 rounded-lg bg-white/5 text-white/60 border border-white/10 group-hover:border-amber-500/30 group-hover:text-amber-400 transition">
-                          {subCount}
-                        </span>
-                        <ChevronRight className="w-4 h-4 text-white/30 group-hover:text-amber-400 group-hover:translate-x-1 transition" />
-                      </div>
+                      <span className="text-sm shrink-0">{subVisual}</span>
+                      <span className="whitespace-nowrap">{subName}</span>
+                      <span className={`text-[10px] font-mono ${isSubSelected ? 'text-black/60' : 'text-white/40'}`}>
+                        ({subCount})
+                      </span>
                     </button>
                   );
                 })}
-              </div>
-            </div>
-          )}
-
-          {/* Subcategories Horizontal Selector Pills Bar */}
-          <div className="mb-8 text-left">
-            <h3 className="text-[10px] font-bold text-white/40 uppercase tracking-widest mb-3.5 flex items-center gap-2">
-              <span>{selectedSubcategory ? (t('change_subcategory') || 'CHANGE SUBCATEGORY') : (t('quick_filters') || 'QUICK FILTERS')}</span>
-              <span className="h-[1px] bg-white/5 flex-1" />
-            </h3>
-            <div className="flex flex-wrap gap-2">
-              <button
-                onClick={() => setSelectedSubcategory(null)}
-                className={`px-4 py-2.5 rounded-full text-xs font-medium border transition-all duration-300 cursor-pointer ${
-                  !selectedSubcategory
-                    ? 'bg-gradient-to-r from-amber-400 to-amber-600 text-black border-transparent shadow-lg shadow-amber-500/10 font-bold'
-                    : 'bg-[#0d0d12]/50 text-white/70 border-white/5 hover:border-white/15 hover:bg-[#12121b]'
-                }`}
-              >
-                {t('all_items_in_category', { category: currentLanguage === 'am' ? (selectedRedesignedCategory.translations?.am || selectedRedesignedCategory.name) : currentLanguage === 'om' ? (selectedRedesignedCategory.translations?.om || selectedRedesignedCategory.name) : selectedRedesignedCategory.name }) || `All ${selectedRedesignedCategory.name}`}
-              </button>
-              {selectedRedesignedCategory.subcategories.map(sub => {
-                const subCount = getSubcategoryListingCount(sub, selectedRedesignedCategory);
+              </>
+            ) : (
+              /* When ALL is selected, show top popular subcategories across all categories */
+              REDESIGNED_CATEGORIES.flatMap(cat =>
+                cat.subcategories.slice(0, 3).map(sub => ({ sub, cat }))
+              ).map(({ sub, cat }) => {
+                const subCount = getSubcategoryListingCount(sub, cat);
                 const subName = currentLanguage === 'am' ? (sub.translations?.am || sub.name) : currentLanguage === 'om' ? (sub.translations?.om || sub.name) : sub.name;
-                const isSelected = selectedSubcategory?.id === sub.id;
+                const subVisual = getSubcategoryVisual(sub.id, cat.emoji);
+                const isSubSelected = selectedSubcategory?.id === sub.id;
 
                 return (
                   <button
-                    key={sub.id}
-                    onClick={() => handleSelectRedesignedCategory(selectedRedesignedCategory, isSelected ? null : sub)}
-                    className={`px-4 py-2.5 rounded-full text-xs font-medium border transition-all duration-300 cursor-pointer flex items-center gap-1.5 ${
-                      isSelected
-                        ? 'bg-white text-black border-white shadow-lg font-bold'
-                        : 'bg-[#0d0d12]/50 text-white/70 border-white/5 hover:border-white/15 hover:bg-[#12121b]'
+                    key={`${cat.id}-${sub.id}`}
+                    onClick={() => {
+                      setSelectedRedesignedCategory(cat);
+                      setSelectedSubcategory(sub);
+                    }}
+                    className={`px-3.5 py-2 rounded-xl text-xs font-semibold transition-all duration-300 cursor-pointer flex items-center gap-1.5 shrink-0 border ${
+                      isSubSelected
+                        ? 'bg-white text-black border-white shadow-md font-bold'
+                        : 'bg-[#0d0d12]/60 text-white/70 border-white/5 hover:border-white/20 hover:text-white'
                     }`}
                   >
-                    <span>{subName}</span>
-                    <span className={`text-[10px] ${isSelected ? 'text-black/60' : 'text-white/30'}`}>
+                    <span className="text-sm shrink-0">{subVisual}</span>
+                    <span className="whitespace-nowrap">{subName}</span>
+                    <span className={`text-[10px] font-mono ${isSubSelected ? 'text-black/60' : 'text-white/40'}`}>
                       ({subCount})
                     </span>
                   </button>
                 );
-              })}
-            </div>
+              })
+            )}
           </div>
-
-          {/* Tailored Search & Filters Panel */}
-          <div className="bg-[#0e0e13]/95 rounded-3xl border border-white/5 p-6 md:p-8 mb-8 text-left backdrop-blur-2xl relative shadow-xl">
-            <form onSubmit={handleSearchSubmit} className="flex flex-col md:flex-row gap-4">
-              <div className="relative flex-1">
-                <Search className="absolute left-4 top-4 w-4 h-4 text-white/30" />
-                <input
-                  type="text"
-                  value={catSearchQuery}
-                  onChange={e => setCatSearchQuery(e.target.value)}
-                  placeholder={t('search_inside_category', { category: currentLanguage === 'am' ? (selectedRedesignedCategory.translations?.am || selectedRedesignedCategory.name) : currentLanguage === 'om' ? (selectedRedesignedCategory.translations?.om || selectedRedesignedCategory.name) : selectedRedesignedCategory.name }) || `Search inside ${selectedRedesignedCategory.name}...`}
-                  className="w-full pl-12 pr-4 py-3.5 bg-[#12121a] border border-white/5 focus:border-amber-500/50 focus:outline-none rounded-2xl text-[#F5F5F4] text-sm transition font-sans"
-                />
-              </div>
-
-              <div className="flex gap-3">
-                <button
-                  type="button"
-                  onClick={() => setShowFilters(!showFilters)}
-                  className={`px-5 py-3.5 rounded-2xl border font-bold text-xs uppercase tracking-wider flex items-center gap-2 transition-all duration-300 cursor-pointer ${
-                    showFilters
-                      ? 'bg-white text-[#050505] border-white shadow-lg'
-                      : 'bg-[#12121a] border-white/5 text-[#F5F5F4]/80 hover:bg-[#161622] hover:text-white'
-                  }`}
-                >
-                  <SlidersHorizontal className="w-4 h-4" />
-                  <span>{t('filters_btn')} {selectedRedesignedCategory.recommendedFilters && `(${selectedRedesignedCategory.recommendedFilters.length})`}</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={clearAllCatFilters}
-                  className="px-5 py-3.5 rounded-2xl bg-white/5 text-[#F5F5F4]/70 hover:bg-white/10 font-bold text-xs uppercase tracking-wider transition cursor-pointer border border-white/5"
-                >
-                  {t('reset_btn')}
-                </button>
-              </div>
-            </form>
-
-            {/* Custom Interactive Drawer for tailored filters */}
-            <AnimatePresence>
-              {showFilters && (
-                <motion.div
-                  initial={{ height: 0, opacity: 0 }}
-                  animate={{ height: 'auto', opacity: 1 }}
-                  exit={{ height: 0, opacity: 0 }}
-                  className="overflow-hidden"
-                >
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-5 mt-6 pt-6 border-t border-white/5">
-                    {/* Render properties specific filters */}
-                    {selectedRedesignedCategory.id === 'properties' && (
-                      <>
-                        <div>
-                          <label className="block text-[10px] font-bold text-white/40 uppercase tracking-widest mb-2">{t('buy_or_rent') || 'Buy / Rent'}</label>
-                          <select
-                            value={filterBuyRent}
-                            onChange={e => setFilterBuyRent(e.target.value)}
-                            className="w-full p-3 bg-[#12121a] border border-white/5 rounded-2xl text-xs text-white/80 focus:outline-none focus:border-amber-500/50 transition cursor-pointer"
-                          >
-                            <option value="All" className="bg-[#0c0c0c]">{t('all_transactions') || 'All Transactions'}</option>
-                            <option value="Buy" className="bg-[#0c0c0c]">{t('for_sale') || 'For Sale'}</option>
-                            <option value="Rent" className="bg-[#0c0c0c]">{t('for_rent') || 'For Rent'}</option>
-                          </select>
-                        </div>
-                        <div>
-                          <label className="block text-[10px] font-bold text-white/40 uppercase tracking-widest mb-2">{t('min_bedrooms') || 'Min Bedrooms'}</label>
-                          <select
-                            value={filterBedrooms}
-                            onChange={e => setFilterBedrooms(e.target.value)}
-                            className="w-full p-3 bg-[#12121a] border border-white/5 rounded-2xl text-xs text-white/80 focus:outline-none focus:border-amber-500/50 transition cursor-pointer"
-                          >
-                            <option value="All" className="bg-[#0c0c0c]">{t('any_bedrooms') || 'Any Bedrooms'}</option>
-                            <option value="1" className="bg-[#0c0c0c]">{t('n_plus_bedrooms', { count: 1 }) || '1+ Bedrooms'}</option>
-                            <option value="2" className="bg-[#0c0c0c]">{t('n_plus_bedrooms', { count: 2 }) || '2+ Bedrooms'}</option>
-                            <option value="3" className="bg-[#0c0c0c]">{t('n_plus_bedrooms', { count: 3 }) || '3+ Bedrooms'}</option>
-                            <option value="4" className="bg-[#0c0c0c]">{t('n_plus_bedrooms', { count: 4 }) || '4+ Bedrooms'}</option>
-                          </select>
-                        </div>
-                        <div>
-                          <label className="block text-[10px] font-bold text-white/40 uppercase tracking-widest mb-2">{t('furnishing') || 'Furnishing Status'}</label>
-                          <select
-                            value={filterFurnished === null ? 'All' : filterFurnished ? 'yes' : 'no'}
-                            onChange={e => setFilterFurnished(e.target.value === 'All' ? null : e.target.value === 'yes')}
-                            className="w-full p-3 bg-[#12121a] border border-white/5 rounded-2xl text-xs text-white/80 focus:outline-none focus:border-amber-500/50 transition cursor-pointer"
-                          >
-                            <option value="All" className="bg-[#0c0c0c]">{t('any_furnishing') || 'Any Furnishing'}</option>
-                            <option value="yes" className="bg-[#0c0c0c]">{t('furnished') || 'Fully Furnished'}</option>
-                            <option value="no" className="bg-[#0c0c0c]">{t('unfurnished') || 'Unfurnished'}</option>
-                          </select>
-                        </div>
-                        <div>
-                          <label className="block text-[10px] font-bold text-white/40 uppercase tracking-widest mb-2">{t('parking_space') || 'Parking Space'}</label>
-                          <select
-                            value={filterParking === null ? 'All' : filterParking ? 'yes' : 'no'}
-                            onChange={e => setFilterParking(e.target.value === 'All' ? null : e.target.value === 'yes')}
-                            className="w-full p-3 bg-[#12121a] border border-white/5 rounded-2xl text-xs text-white/80 focus:outline-none focus:border-amber-500/50 transition cursor-pointer"
-                          >
-                            <option value="All" className="bg-[#0c0c0c]">{t('any_parking') || 'Any Parking'}</option>
-                            <option value="yes" className="bg-[#0c0c0c]">{t('has_parking_space') || 'Has Parking Space'}</option>
-                            <option value="no" className="bg-[#0c0c0c]">{t('no_parking') || 'No Parking'}</option>
-                          </select>
-                        </div>
-                      </>
-                    )}
-
-                    {/* Render vehicles specific filters */}
-                    {selectedRedesignedCategory.id === 'vehicles' && (
-                      <>
-                        <div>
-                          <label className="block text-[10px] font-bold text-white/40 uppercase tracking-widest mb-2">{t('brand_or_make') || 'Brand / Make'}</label>
-                          <input
-                            type="text"
-                            value={filterVehBrand}
-                            onChange={e => setFilterVehBrand(e.target.value)}
-                            placeholder="Toyota, Hyundai..."
-                            className="w-full p-3 bg-[#12121a] border border-white/5 rounded-2xl text-xs text-[#F5F5F4] placeholder-white/20 focus:outline-none focus:border-amber-500/50 transition"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-[10px] font-bold text-white/40 uppercase tracking-widest mb-2">{t('transmission') || 'Transmission'}</label>
-                          <select
-                            value={filterVehTransmission}
-                            onChange={e => setFilterVehTransmission(e.target.value)}
-                            className="w-full p-3 bg-[#12121a] border border-white/5 rounded-2xl text-xs text-white/80 focus:outline-none focus:border-amber-500/50 transition cursor-pointer"
-                          >
-                            <option value="All" className="bg-[#0c0c0c]">{t('all_transmissions') || 'All Transmissions'}</option>
-                            <option value="Automatic" className="bg-[#0c0c0c]">{t('automatic') || 'Automatic'}</option>
-                            <option value="Manual" className="bg-[#0c0c0c]">{t('manual') || 'Manual'}</option>
-                          </select>
-                        </div>
-                        <div>
-                          <label className="block text-[10px] font-bold text-white/40 uppercase tracking-widest mb-2">{t('fuel_type') || 'Fuel Type'}</label>
-                          <select
-                            value={filterVehFuel}
-                            onChange={e => setFilterVehFuel(e.target.value)}
-                            className="w-full p-3 bg-[#12121a] border border-white/5 rounded-2xl text-xs text-white/80 focus:outline-none focus:border-amber-500/50 transition cursor-pointer"
-                          >
-                            <option value="All" className="bg-[#0c0c0c]">{t('all_fuels') || 'All Fuels'}</option>
-                            <option value="Petrol" className="bg-[#0c0c0c]">{t('petrol') || 'Petrol'}</option>
-                            <option value="Diesel" className="bg-[#0c0c0c]">{t('diesel') || 'Diesel'}</option>
-                            <option value="Electric" className="bg-[#0c0c0c]">{t('electric_ev') || 'Electric (EV)'}</option>
-                            <option value="Hybrid" className="bg-[#0c0c0c]">{t('hybrid') || 'Hybrid'}</option>
-                          </select>
-                        </div>
-                        <div>
-                          <label className="block text-[10px] font-bold text-white/40 uppercase tracking-widest mb-2">{t('condition') || 'Condition'}</label>
-                          <select
-                            value={filterVehCondition}
-                            onChange={e => setFilterVehCondition(e.target.value)}
-                            className="w-full p-3 bg-[#12121a] border border-white/5 rounded-2xl text-xs text-white/80 focus:outline-none focus:border-amber-500/50 transition cursor-pointer"
-                          >
-                            <option value="All" className="bg-[#0c0c0c]">{t('any_condition') || 'Any Condition'}</option>
-                            <option value="New" className="bg-[#0c0c0c]">{t('cond_new') || 'Brand New'}</option>
-                            <option value="Used" className="bg-[#0c0c0c]">{t('cond_used') || 'Used / Secondhand'}</option>
-                          </select>
-                        </div>
-                      </>
-                    )}
-
-                    {/* Render phones & electronics specific filters */}
-                    {(selectedRedesignedCategory.id === 'phones' || selectedRedesignedCategory.id === 'electronics') && (
-                      <>
-                        <div>
-                          <label className="block text-[10px] font-bold text-white/40 uppercase tracking-widest mb-2">{t('brand_or_model') || 'Brand / Model'}</label>
-                          <input
-                            type="text"
-                            value={filterElecBrand}
-                            onChange={e => setFilterElecBrand(e.target.value)}
-                            placeholder="Apple, Samsung, Sony..."
-                            className="w-full p-3 bg-[#12121a] border border-white/5 rounded-2xl text-xs text-[#F5F5F4] placeholder-white/20 focus:outline-none focus:border-amber-500/50 transition"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-[10px] font-bold text-white/40 uppercase tracking-widest mb-2">{t('storage_capacity') || 'Storage Capacity'}</label>
-                          <select
-                            value={filterElecStorage}
-                            onChange={e => setFilterElecStorage(e.target.value)}
-                            className="w-full p-3 bg-[#12121a] border border-white/5 rounded-2xl text-xs text-white/80 focus:outline-none focus:border-amber-500/50 transition cursor-pointer"
-                          >
-                            <option value="All" className="bg-[#0c0c0c]">{t('any_storage') || 'Any Storage'}</option>
-                            <option value="64GB" className="bg-[#0c0c0c]">64GB</option>
-                            <option value="128GB" className="bg-[#0c0c0c]">128GB</option>
-                            <option value="256GB" className="bg-[#0c0c0c]">256GB</option>
-                            <option value="512GB" className="bg-[#0c0c0c]">512GB+</option>
-                          </select>
-                        </div>
-                        <div>
-                          <label className="block text-[10px] font-bold text-white/40 uppercase tracking-widest mb-2">{t('condition') || 'Condition'}</label>
-                          <select
-                            value={filterElecCondition}
-                            onChange={e => setFilterElecCondition(e.target.value)}
-                            className="w-full p-3 bg-[#12121a] border border-white/5 rounded-2xl text-xs text-white/80 focus:outline-none focus:border-amber-500/50 transition cursor-pointer"
-                          >
-                            <option value="All" className="bg-[#0c0c0c]">{t('any_condition') || 'Any Condition'}</option>
-                            <option value="New" className="bg-[#0c0c0c]">{t('cond_new') || 'New / Unopened'}</option>
-                            <option value="Used" className="bg-[#0c0c0c]">{t('cond_refurbished') || 'Used / Refurbished'}</option>
-                          </select>
-                        </div>
-                        <div>
-                          <label className="block text-[10px] font-bold text-white/40 uppercase tracking-widest mb-2">{t('verified_sellers_only') || 'Verified Sellers Only'}</label>
-                          <label className="relative flex items-center gap-3.5 p-3.5 bg-[#12121a] border border-white/5 rounded-2xl cursor-pointer hover:border-white/10 transition">
-                            <input
-                              type="checkbox"
-                              checked={filterVerifiedOnly}
-                              onChange={e => setFilterVerifiedOnly(e.target.checked)}
-                              className="w-4 h-4 rounded border-white/10 bg-[#12121a] text-amber-500 focus:ring-0 focus:ring-offset-0 focus:outline-none cursor-pointer"
-                            />
-                            <span className="text-xs text-white/80 font-medium select-none">{t('verified_badge') || 'Verified Badge'}</span>
-                          </label>
-                        </div>
-                      </>
-                    )}
-
-                    {/* Render jobs specific filters */}
-                    {(selectedRedesignedCategory.id === 'jobs' || selectedRedesignedCategory.id === 'seeking_work') && (
-                      <>
-                        <div>
-                          <label className="block text-[10px] font-bold text-white/40 uppercase tracking-widest mb-2">{t('job_type') || 'Job Type'}</label>
-                          <select
-                            value={filterJobType}
-                            onChange={e => setFilterJobType(e.target.value)}
-                            className="w-full p-3 bg-[#12121a] border border-white/5 rounded-2xl text-xs text-white/80 focus:outline-none focus:border-amber-500/50 transition cursor-pointer"
-                          >
-                            <option value="All" className="bg-[#0c0c0c]">{t('all_job_types') || 'All Job Types'}</option>
-                            <option value="Full-Time" className="bg-[#0c0c0c]">{t('job_full_time') || 'Full-Time'}</option>
-                            <option value="Part-Time" className="bg-[#0c0c0c]">{t('job_part_time') || 'Part-Time'}</option>
-                            <option value="Contract" className="bg-[#0c0c0c]">{t('job_contract') || 'Contract / Project'}</option>
-                            <option value="Remote" className="bg-[#0c0c0c]">{t('job_remote') || 'Remote / WFH'}</option>
-                          </select>
-                        </div>
-                        <div>
-                          <label className="block text-[10px] font-bold text-white/40 uppercase tracking-widest mb-2">{t('industry_or_sector') || 'Industry / Sector'}</label>
-                          <select
-                            value={filterJobIndustry}
-                            onChange={e => setFilterJobIndustry(e.target.value)}
-                            className="w-full p-3 bg-[#12121a] border border-white/5 rounded-2xl text-xs text-white/80 focus:outline-none focus:border-amber-500/50 transition cursor-pointer"
-                          >
-                            <option value="All" className="bg-[#0c0c0c]">{t('all_industries') || 'All Industries'}</option>
-                            <option value="IT" className="bg-[#0c0c0c]">{t('ind_it') || 'IT & Software development'}</option>
-                            <option value="Healthcare" className="bg-[#0c0c0c]">{t('ind_health') || 'Healthcare & Medicine'}</option>
-                            <option value="Engineering" className="bg-[#0c0c0c]">{t('ind_eng') || 'Engineering & Tech'}</option>
-                            <option value="Finance" className="bg-[#0c0c0c]">{t('ind_finance') || 'Finance & Banking'}</option>
-                            <option value="Sales" className="bg-[#0c0c0c]">{t('ind_sales') || 'Sales & Marketing'}</option>
-                            <option value="Other" className="bg-[#0c0c0c]">{t('ind_other') || 'Others / Uncategorized'}</option>
-                          </select>
-                        </div>
-                        <div>
-                          <label className="block text-[10px] font-bold text-white/40 uppercase tracking-widest mb-2">{t('filter_location') || 'Region / City'}</label>
-                          <input
-                            type="text"
-                            value={filterRegion}
-                            onChange={e => setFilterRegion(e.target.value)}
-                            placeholder="Addis Ababa, Oromia..."
-                            className="w-full p-3 bg-[#12121a] border border-white/5 rounded-2xl text-xs text-[#F5F5F4] placeholder-white/20 focus:outline-none focus:border-amber-500/50 transition"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-[10px] font-bold text-white/40 uppercase tracking-widest mb-2">{t('verified_only') || 'Verified Only'}</label>
-                          <label className="relative flex items-center gap-3.5 p-3.5 bg-[#12121a] border border-white/5 rounded-2xl cursor-pointer hover:border-white/10 transition">
-                            <input
-                              type="checkbox"
-                              checked={filterVerifiedOnly}
-                              onChange={e => setFilterVerifiedOnly(e.target.checked)}
-                              className="w-4 h-4 rounded border-white/10 bg-[#12121a] text-amber-500 focus:ring-0 focus:ring-offset-0 focus:outline-none cursor-pointer"
-                            />
-                            <span className="text-xs text-white/80 font-medium select-none">{t('verified_matches') || 'Verified Matches'}</span>
-                          </label>
-                        </div>
-                      </>
-                    )}
-
-                    {/* Fallback general purpose filters */}
-                    {selectedRedesignedCategory.id !== 'properties' && selectedRedesignedCategory.id !== 'vehicles' && selectedRedesignedCategory.id !== 'phones' && selectedRedesignedCategory.id !== 'electronics' && selectedRedesignedCategory.id !== 'jobs' && selectedRedesignedCategory.id !== 'seeking_work' && (
-                      <>
-                        <div>
-                          <label className="block text-[10px] font-bold text-white/40 uppercase tracking-widest mb-2">{t('min_price') || 'Min Price'}</label>
-                          <input
-                            type="text"
-                            inputMode="text"
-                            value={filterPriceMin}
-                            onChange={e => setFilterPriceMin(e.target.value === '' ? '' : (isNaN(Number(e.target.value)) ? e.target.value as any : Number(e.target.value)))}
-                            placeholder={t('any_value') || 'Any price'}
-                            className="w-full p-3 bg-[#12121a] border border-white/5 rounded-2xl text-xs text-[#F5F5F4] placeholder-white/20 focus:outline-none focus:border-amber-500/50 transition"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-[10px] font-bold text-white/40 uppercase tracking-widest mb-2">{t('max_price') || 'Max Price'}</label>
-                          <input
-                            type="text"
-                            inputMode="text"
-                            value={filterPriceMax}
-                            onChange={e => setFilterPriceMax(e.target.value === '' ? '' : (isNaN(Number(e.target.value)) ? e.target.value as any : Number(e.target.value)))}
-                            placeholder={t('any_value') || 'Any price'}
-                            className="w-full p-3 bg-[#12121a] border border-white/5 rounded-2xl text-xs text-[#F5F5F4] placeholder-white/20 focus:outline-none focus:border-amber-500/50 transition"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-[10px] font-bold text-white/40 uppercase tracking-widest mb-2">{t('filter_location') || 'Region / City'}</label>
-                          <input
-                            type="text"
-                            value={filterRegion}
-                            onChange={e => setFilterRegion(e.target.value)}
-                            placeholder="Oromia, Harar, Addis..."
-                            className="w-full p-3 bg-[#12121a] border border-white/5 rounded-2xl text-xs text-[#F5F5F4] placeholder-white/20 focus:outline-none focus:border-amber-500/50 transition"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-[10px] font-bold text-white/40 uppercase tracking-widest mb-2">{t('verified_only') || 'Verified Only'}</label>
-                          <label className="relative flex items-center gap-3.5 p-3.5 bg-[#12121a] border border-white/5 rounded-2xl cursor-pointer hover:border-white/10 transition">
-                            <input
-                              type="checkbox"
-                              checked={filterVerifiedOnly}
-                              onChange={e => setFilterVerifiedOnly(e.target.checked)}
-                              className="w-4 h-4 rounded border-white/10 bg-[#12121a] text-amber-500 focus:ring-0 focus:ring-offset-0 focus:outline-none cursor-pointer"
-                            />
-                            <span className="text-xs text-white/80 font-medium select-none">{t('verified_listings') || 'Verified Listings'}</span>
-                          </label>
-                        </div>
-                      </>
-                    )}
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
-
-          {/* Results Toolbar with Sort and View Toggle options */}
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-8 bg-[#0d0d12]/30 p-4 rounded-2xl border border-white/5">
-            <div className="text-left w-full sm:w-auto">
-              <p className="text-xs text-white/50">
-                {t('showing_results', { current: Math.min(visibleCount, finalFilteredProperties.length), total: finalFilteredProperties.length }) || (
-                  <>Showing <span className="text-white font-bold">{Math.min(visibleCount, finalFilteredProperties.length)}</span> of <span className="text-amber-400 font-black">{finalFilteredProperties.length}</span> verified results</>
-                )}
-              </p>
-            </div>
-
-            <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto justify-end">
-              {/* Selling Type Quick Filter */}
-              <div className="flex items-center bg-[#12121a] p-1 rounded-xl border border-white/5">
-                {(['All', 'Retail', 'Wholesale'] as const).map(st => (
-                  <button
-                    key={st}
-                    onClick={() => setFilterSellingType(st)}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
-                      filterSellingType === st
-                        ? 'bg-amber-500 text-black font-bold shadow'
-                        : 'text-white/60 hover:text-white'
-                    }`}
-                  >
-                    {st === 'All' ? (t('wholesale.all_types') || 'All Types') : st === 'Retail' ? (t('wholesale.retail') || 'Retail') : (t('wholesale.wholesale') || 'Wholesale')}
-                  </button>
-                ))}
-              </div>
-
-              {/* Sort selector */}
-              <div className="flex items-center gap-2">
-                <span className="text-[10px] font-bold text-white/30 uppercase tracking-widest hidden md:inline">{t('sort_by') || 'Sort By'}</span>
-                <select
-                  value={sortBy}
-                  onChange={e => setSortBy(e.target.value)}
-                  className="bg-[#12121a] border border-white/5 p-2 px-3 rounded-xl text-xs text-white/80 focus:outline-none focus:border-amber-500/30 cursor-pointer"
-                >
-                  <option value="newest">{t('sort_newest') || 'Latest Uploads'}</option>
-                  <option value="oldest">{t('sort_oldest') || 'Oldest Listings'}</option>
-                  <option value="lowest">{t('sort_lowest_price') || 'Lowest Price'}</option>
-                  <option value="highest">{t('sort_highest_price') || 'Highest Price'}</option>
-                  <option value="popular">{t('sort_most_popular') || 'Most Popular'}</option>
-                  <option value="rated">{t('sort_highly_rated') || 'Highly Rated'}</option>
-                </select>
-              </div>
-
-              {/* View Mode Toggle */}
-              <div className="h-8 w-[1px] bg-white/10" />
-              <div className="flex items-center bg-[#12121a] p-1 rounded-xl border border-white/5">
-                <button
-                  onClick={() => setViewMode('grid')}
-                  className={`p-1.5 rounded-lg transition cursor-pointer ${viewMode === 'grid' ? 'bg-white text-black' : 'text-white/50 hover:text-white'}`}
-                  title={t('grid_view') || 'Grid View'}
-                >
-                  <Grid className="w-4 h-4" />
-                </button>
-                <button
-                  onClick={() => setViewMode('list')}
-                  className={`p-1.5 rounded-lg transition cursor-pointer ${viewMode === 'list' ? 'bg-white text-black' : 'text-white/50 hover:text-white'}`}
-                  title={t('list_view') || 'List View'}
-                >
-                  <List className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* Matches List */}
-          {finalFilteredProperties.length === 0 ? (
-            <div className="bg-[#0d0d12]/60 rounded-3xl border border-white/5 p-16 text-center shadow-lg mb-12 flex flex-col items-center justify-center">
-              <div className="p-4 bg-white/5 rounded-full mb-4 text-white/30 border border-white/5">
-                <AlertCircle className="w-10 h-10" />
-              </div>
-              <h4 className="text-lg font-serif text-white font-semibold">{t('no_listings_fit_filters') || 'No listings fit your filters'}</h4>
-              <p className="text-white/40 text-xs mt-2 max-w-sm leading-relaxed">
-                {t('no_listings_fit_filters_desc') || 'Try resetting filters or expanding search words to find similar listings within this marketplace.'}
-              </p>
-              <button
-                onClick={clearAllCatFilters}
-                className="mt-6 bg-gradient-to-r from-amber-400 to-amber-600 text-black font-bold uppercase tracking-widest text-[10px] px-6 py-3 rounded-full hover:opacity-90 transition-all duration-300 shadow-md cursor-pointer"
-              >
-                {t('clear_all_filters') || 'Clear All Filters'}
-              </button>
-            </div>
-          ) : (
-            <div className="mb-12">
-              <div className={viewMode === 'grid' ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8' : 'grid grid-cols-1 gap-6'}>
-                {finalFilteredProperties.slice(0, visibleCount).map(prop => (
-                  <ListingCard
-                    key={prop.id}
-                    property={prop}
-                    onSelect={onSelectProperty}
-                    favorites={favorites}
-                    onToggleFav={toggleFavorite}
-                    onReport={() => onOpenReportModal('property', prop.id, prop.title)}
-                    t={t}
-                    currentLanguage={currentLanguage}
-                    viewMode={viewMode}
-                  />
-                ))}
-              </div>
-
-              {/* Load More Button */}
-              {visibleCount < finalFilteredProperties.length && (
-                <div className="mt-10 text-center">
-                  <button
-                    onClick={() => setVisibleCount(prev => prev + 6)}
-                    className="inline-flex items-center gap-2.5 bg-gradient-to-r from-amber-400 to-amber-600 hover:from-amber-300 hover:to-amber-500 text-black font-extrabold uppercase tracking-widest px-8 py-4 rounded-2xl text-xs transition duration-300 hover:opacity-95 cursor-pointer shadow-lg shadow-amber-500/10 hover:scale-[1.01]"
-                  >
-                    {t('load_more_items') || 'Load More Items'} <ArrowRight className="w-4 h-4 text-black animate-pulse" />
-                  </button>
-                </div>
-              )}
-            </div>
-          )}
         </div>
-      ) : (
-        <div className="animate-fade-in text-left">
 
-          {/* Recently Searched strip */}
-          {recentlySearchedQueries.length > 0 && (
-            <div className="mb-8 text-left">
-              <div className="bg-[#0c0c11]/50 border border-white/5 rounded-3xl p-5">
-                <h4 className="text-[10px] font-bold text-white/30 uppercase tracking-widest mb-3 flex items-center gap-1.5">
-                  <Search className="w-3.5 h-3.5 text-amber-500" /> {t('recently_searched_keywords') || 'RECENTLY SEARCHED KEYWORDS'}
-                </h4>
-                <div className="flex flex-wrap gap-2">
-                  {recentlySearchedQueries.map((query, i) => (
-                    <button
-                      key={i}
-                      onClick={() => { setSearchQuery(query); setCatSearchQuery(query); }}
-                      className="px-3 py-1.5 bg-[#12121a] hover:bg-zinc-800 border border-white/5 text-xs text-white/70 rounded-xl transition-all cursor-pointer"
-                    >
-                      "{query}"
-                    </button>
-                  ))}
-                </div>
-              </div>
+        {/* 3. SEARCH BAR & LOCATION SELECTOR */}
+        <div className="bg-[#0e0e13]/90 rounded-3xl border border-white/5 p-6 md:p-8 mb-8 text-left backdrop-blur-xl relative shadow-xl">
+          <div className="flex flex-col md:flex-row gap-3 items-stretch">
+            {/* Location Selector */}
+            <div className="shrink-0">
+              <LocationSelectorModal
+                selectedLocation={selectedLocation}
+                onSelectLocation={loc => {
+                  setSelectedLocation(loc);
+                  localStorage.setItem('sof_umer_selected_location', loc);
+                }}
+                currentLanguage={currentLanguage}
+              />
             </div>
-          )}
 
-          {/* Search bar and default advanced drawer */}
-          <div className="bg-[#0e0e13]/90 rounded-3xl border border-white/5 p-6 md:p-8 mb-10 text-left backdrop-blur-xl relative shadow-xl">
-            <div className="flex flex-col md:flex-row gap-3 items-stretch">
-              {/* Jiji-Style Location Selector before main search field */}
-              <div className="shrink-0">
-                <LocationSelectorModal
-                  selectedLocation={selectedLocation}
-                  onSelectLocation={loc => {
-                    setSelectedLocation(loc);
-                    localStorage.setItem('sof_umer_selected_location', loc);
-                  }}
-                  currentLanguage={currentLanguage}
-                />
-              </div>
+            {/* Search Input */}
+            <div className="relative flex-1">
+              <Search className="absolute left-4 top-4 w-4 h-4 text-white/30" />
+              <input
+                type="text"
+                value={selectedRedesignedCategory ? catSearchQuery : searchQuery}
+                onChange={e => {
+                  if (selectedRedesignedCategory) {
+                    setCatSearchQuery(e.target.value);
+                  } else {
+                    setSearchQuery(e.target.value);
+                  }
+                }}
+                placeholder={
+                  selectedRedesignedCategory
+                    ? (t('search_inside_category', { category: currentLanguage === 'am' ? (selectedRedesignedCategory.translations?.am || selectedRedesignedCategory.name) : currentLanguage === 'om' ? (selectedRedesignedCategory.translations?.om || selectedRedesignedCategory.name) : selectedRedesignedCategory.name }) || `Search inside ${selectedRedesignedCategory.name}...`)
+                    : (t('search_placeholder') || 'Search properties, vehicles, electronics, listings...')
+                }
+                className="w-full pl-12 pr-4 py-3.5 bg-[#12121a] border border-white/5 focus:border-amber-500/50 focus:outline-none rounded-2xl text-[#F5F5F4] text-sm transition font-sans"
+              />
+            </div>
 
-              <div className="relative flex-1">
-                <Search className="absolute left-4 top-4 w-4 h-4 text-white/30" />
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={e => setSearchQuery(e.target.value)}
-                  placeholder={t('search_placeholder') || 'Search properties, offices, listings...'}
-                  className="w-full pl-12 pr-4 py-3.5 bg-[#12121a] border border-white/5 focus:border-amber-500/50 focus:outline-none rounded-2xl text-[#F5F5F4] text-sm transition font-sans"
-                />
-              </div>
+            {/* Filters & Reset Buttons */}
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={() => setShowFilters(!showFilters)}
+                className={`px-5 py-3.5 rounded-2xl border font-bold text-xs uppercase tracking-wider flex items-center gap-2 transition-all duration-300 cursor-pointer ${
+                  showFilters
+                    ? 'bg-white text-[#050505] border-white shadow-lg'
+                    : 'bg-[#12121a] border-white/5 text-[#F5F5F4]/80 hover:bg-[#161622] hover:text-white'
+                }`}
+              >
+                <SlidersHorizontal className="w-4 h-4" />
+                <span>{t('filters_btn')}</span>
+              </button>
 
-              <div className="flex gap-3">
-                <button
-                  onClick={() => setShowFilters(!showFilters)}
-                  className={`px-5 py-3.5 rounded-2xl border font-bold text-xs uppercase tracking-wider flex items-center gap-2 transition-all duration-300 cursor-pointer ${
-                    showFilters
-                      ? 'bg-white text-[#050505] border-white shadow-lg'
-                      : 'bg-[#12121a] border-white/5 text-[#F5F5F4]/80 hover:bg-[#161622] hover:text-white'
-                  }`}
-                >
-                  <SlidersHorizontal className="w-4 h-4" />
-                  <span>{t('filters_btn')}</span>
-                </button>
-
-                <button
-                  onClick={() => {
+              <button
+                type="button"
+                onClick={() => {
+                  if (selectedRedesignedCategory) {
+                    clearAllCatFilters();
+                  } else {
                     setSearchQuery('');
                     setSelectedType('All');
                     setSelectedCategory('All');
@@ -1705,497 +1164,283 @@ export default function Marketplace({
                     setBedsMin('');
                     setBathsMin('');
                     setAreaMin('');
-                  }}
-                  className="px-5 py-3.5 rounded-2xl bg-white/5 text-[#F5F5F4]/70 hover:bg-white/10 font-bold text-xs uppercase tracking-wider transition cursor-pointer border border-white/5"
-                >
-                  {t('reset_btn')}
-                </button>
-              </div>
-            </div>
-
-            {/* Expandable Advanced Filters Drawer */}
-            <AnimatePresence>
-              {showFilters && (
-                <motion.div
-                  initial={{ height: 0, opacity: 0 }}
-                  animate={{ height: 'auto', opacity: 1 }}
-                  exit={{ height: 0, opacity: 0 }}
-                  className="overflow-hidden"
-                >
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-5 mt-6 pt-6 border-t border-white/5">
-                    {/* Category Buy/Rent */}
-                    <div>
-                      <label className="block text-[10px] font-bold text-white/40 uppercase tracking-widest mb-2">
-                        {t('filter_category')}
-                      </label>
-                      <select
-                        value={selectedCategory}
-                        onChange={e => setSelectedCategory(e.target.value)}
-                        className="w-full p-3 bg-[#12121a] border border-white/5 rounded-2xl text-xs text-white/80 focus:outline-none focus:border-amber-500/50 transition cursor-pointer"
-                      >
-                        {transactionCategories.map(c => (
-                          <option key={c} value={c} className="bg-[#0c0c0c]">
-                            {c === 'All' ? t('all_transactions') : c === 'Buy' ? t('cat_buy') : c === 'Rent' ? t('cat_rent') : c}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
-                    {/* Property Type */}
-                    <div>
-                      <label className="block text-[10px] font-bold text-white/40 uppercase tracking-widest mb-2">
-                        {t('filter_type')}
-                      </label>
-                      <select
-                        value={selectedType}
-                        onChange={e => setSelectedType(e.target.value)}
-                        className="w-full p-3 bg-[#12121a] border border-white/5 rounded-2xl text-xs text-white/80 focus:outline-none focus:border-amber-500/50 transition cursor-pointer"
-                      >
-                        {propertyTypes.map(pt => (
-                          <option key={pt} value={pt} className="bg-[#0c0c0c]">
-                            {pt === 'All' ? t('all_types') : t(`cat_${(pt || '').toLowerCase()}`) || pt}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
-                    {/* Location filter */}
-                    <div>
-                      <label className="block text-[10px] font-bold text-white/40 uppercase tracking-widest mb-2">
-                        {t('filter_location')}
-                      </label>
-                      <select
-                        value={selectedLocation}
-                        onChange={e => {
-                          setSelectedLocation(e.target.value);
-                          localStorage.setItem('sof_umer_selected_location', e.target.value);
-                        }}
-                        className="w-full p-3 bg-[#12121a] border border-white/5 rounded-2xl text-xs text-white/80 focus:outline-none focus:border-amber-500/50 transition cursor-pointer"
-                      >
-                        <option value="All" className="bg-[#0c0c0c]">{t('all_locations')}</option>
-                        {locations.map(loc => (
-                          <option key={loc} value={loc} className="bg-[#0c0c0c]">
-                            {loc}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
-                    {/* Currency Filter */}
-                    <div>
-                      <label className="block text-[10px] font-bold text-white/40 uppercase tracking-widest mb-2">
-                        {t('currency_status')}
-                      </label>
-                      <select
-                        value={selectedCurrency}
-                        onChange={e => setSelectedCurrency(e.target.value)}
-                        className="w-full p-3 bg-[#12121a] border border-white/5 rounded-2xl text-xs text-white/80 focus:outline-none focus:border-amber-500/50 transition cursor-pointer"
-                      >
-                        <option value="All" className="bg-[#0c0c0c]">{t('all_currencies')}</option>
-                        <option value="ETB" className="bg-[#0c0c0c]">ETB (Ethiopian Birr)</option>
-                        <option value="USD" className="bg-[#0c0c0c]">USD (US Dollar)</option>
-                        <option value="SAR" className="bg-[#0c0c0c]">SAR (Saudi Riyal)</option>
-                        <option value="EUR" className="bg-[#0c0c0c]">EUR (Euro)</option>
-                        <option value="AED" className="bg-[#0c0c0c]">AED (UAE Dirham)</option>
-                      </select>
-                    </div>
-
-                    {/* Price Min/Max */}
-                    <div>
-                      <label className="block text-[10px] font-bold text-white/40 uppercase tracking-widest mb-2">
-                        {t('min_price')}
-                      </label>
-                      <input
-                        type="text"
-                        inputMode="text"
-                        value={priceMin}
-                        onChange={e => setPriceMin(e.target.value === '' ? '' : (isNaN(Number(e.target.value)) ? e.target.value as any : Number(e.target.value)))}
-                        placeholder={t('any_value')}
-                        className="w-full p-3 bg-[#12121a] border border-white/5 rounded-2xl text-xs text-[#F5F5F4] placeholder-white/20 focus:outline-none focus:border-amber-500/50 transition"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-[10px] font-bold text-white/40 uppercase tracking-widest mb-2">
-                        {t('max_price')}
-                      </label>
-                      <input
-                        type="text"
-                        inputMode="text"
-                        value={priceMax}
-                        onChange={e => setPriceMax(e.target.value === '' ? '' : (isNaN(Number(e.target.value)) ? e.target.value as any : Number(e.target.value)))}
-                        placeholder={t('any_value')}
-                        className="w-full p-3 bg-[#12121a] border border-white/5 rounded-2xl text-xs text-[#F5F5F4] placeholder-white/20 focus:outline-none focus:border-amber-500/50 transition"
-                      />
-                    </div>
-
-                    {/* Rooms & Area */}
-                    <div>
-                      <label className="block text-[10px] font-bold text-white/40 uppercase tracking-widest mb-2">
-                        {t('min_bedrooms')}
-                      </label>
-                      <input
-                        type="text"
-                        inputMode="text"
-                        value={bedsMin}
-                        onChange={e => setBedsMin(e.target.value === '' ? '' : (isNaN(Number(e.target.value)) ? e.target.value as any : Number(e.target.value)))}
-                        placeholder={t('any_value')}
-                        className="w-full p-3 bg-[#12121a] border border-white/5 rounded-2xl text-xs text-[#F5F5F4] placeholder-white/20 focus:outline-none focus:border-amber-500/50 transition"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-[10px] font-bold text-white/40 uppercase tracking-widest mb-2">
-                        {t('min_area')}
-                      </label>
-                      <input
-                        type="text"
-                        inputMode="text"
-                        value={areaMin}
-                        onChange={e => setAreaMin(e.target.value === '' ? '' : (isNaN(Number(e.target.value)) ? e.target.value as any : Number(e.target.value)))}
-                        placeholder={t('any_value')}
-                        className="w-full p-3 bg-[#12121a] border border-white/5 rounded-2xl text-xs text-[#F5F5F4] placeholder-white/20 focus:outline-none focus:border-amber-500/50 transition"
-                      />
-                    </div>
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
-
-          {/* 2. CATEGORIES VISUAL ENTRY POINTS */}
-          <div className="mb-14 text-left">
-            <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
-              <div>
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="w-2 h-2 rounded-full bg-amber-400" />
-                  <span className="text-[10px] font-black uppercase tracking-widest text-amber-400 font-mono">
-                    {t('explore_marketplace') || 'EXPLORE MARKETPLACE'}
-                  </span>
-                </div>
-                <h3 className="text-xl sm:text-2xl font-serif text-white font-bold tracking-tight">
-                  {t('browse_categories') || 'Browse by Category'}
-                </h3>
-              </div>
-
-              {/* ALL CATEGORIES Overlay Trigger */}
-              <button
-                id="view-all-categories-link"
-                onClick={() => setIsAllCategoriesOpen(true)}
-                className="inline-flex items-center gap-2 px-4 py-2 sm:px-5 sm:py-2.5 bg-white/5 hover:bg-amber-500 text-white/90 hover:text-black border border-white/10 hover:border-amber-400 font-bold text-xs sm:text-sm rounded-2xl transition duration-200 cursor-pointer shadow-sm group"
+                  }
+                }}
+                className="px-5 py-3.5 rounded-2xl bg-white/5 text-[#F5F5F4]/70 hover:bg-white/10 font-bold text-xs uppercase tracking-wider transition cursor-pointer border border-white/5"
               >
-                <span>{t('view_all_categories') || 'View All Categories'}</span>
-                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                {t('reset_btn')}
               </button>
             </div>
-
-            {/* Visual Category Cards Grid: 6 Primary Categories Only */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
-              {PRIMARY_CATEGORIES.map(cat => {
-                const count = calcCategoryCount(cat, properties);
-                const catName = currentLanguage === 'am' 
-                  ? (cat.translations?.am || cat.name) 
-                  : currentLanguage === 'om' 
-                  ? (cat.translations?.om || cat.name) 
-                  : cat.name;
-
-                return (
-                  <button
-                    key={cat.id}
-                    id={`primary-category-card-${cat.id}`}
-                    onClick={() => handleSelectRedesignedCategory(cat)}
-                    className="group text-left p-4 rounded-2xl bg-[#0e0e15] hover:bg-[#151522] border border-white/5 hover:border-amber-500/40 transition-all duration-300 cursor-pointer flex flex-col justify-between min-h-[118px] shadow-sm hover:shadow-xl hover:-translate-y-0.5"
-                  >
-                    <div className="flex items-center justify-between w-full mb-3">
-                      <span className="text-2xl sm:text-3xl group-hover:scale-110 transition-transform duration-300">
-                        {cat.emoji}
-                      </span>
-                      <span className="text-[10px] font-mono font-semibold text-white/40 group-hover:text-amber-400 bg-white/5 px-2 py-0.5 rounded-full transition-colors">
-                        {count}
-                      </span>
-                    </div>
-                    <div>
-                      <h4 className="text-xs sm:text-sm font-bold text-white group-hover:text-amber-400 transition-colors line-clamp-1 leading-snug">
-                        {catName}
-                      </h4>
-                      <span className="text-[10px] text-white/40 block mt-0.5 group-hover:text-white/60 transition-colors font-mono">
-                        {count} {count === 1 ? (t('listing_singular') || 'listing') : (t('listings_plural') || 'listings')}
-                      </span>
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-
-            {/* RECENTLY VIEWED CATEGORIES (only when real browsing history exists) */}
-            {recentlyViewedIds.length > 0 && (
-              <div className="mt-4 flex flex-wrap items-center gap-2 pt-3 border-t border-white/5">
-                <span className="text-[10px] font-bold text-white/40 uppercase tracking-widest flex items-center gap-1.5 mr-1">
-                  <Clock className="w-3.5 h-3.5 text-amber-500" />
-                  {t('recently_viewed_categories') || 'RECENTLY VIEWED'}
-                </span>
-                <div className="flex flex-wrap gap-2">
-                  {recentlyViewedIds.map(id => {
-                    const matched = [...PRIMARY_CATEGORIES, ...REDESIGNED_CATEGORIES].find(c => c.id === id);
-                    if (!matched) return null;
-                    const catName = currentLanguage === 'am' ? (matched.translations?.am || matched.name) : currentLanguage === 'om' ? (matched.translations?.om || matched.name) : matched.name;
-                    return (
-                      <button
-                        key={id}
-                        onClick={() => handleSelectRedesignedCategory(matched)}
-                        className="px-3 py-1 bg-[#12121a] hover:bg-amber-500 hover:text-black border border-white/5 hover:border-amber-500/30 text-xs text-white/80 rounded-xl transition-all duration-200 cursor-pointer flex items-center gap-1.5"
-                      >
-                        <span>{matched.emoji}</span>
-                        <span>{catName}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
           </div>
 
-          {/* Main Grid Content: Listings & Sidebar */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 text-left mb-16">
-            {/* Left Side: Listings */}
-            <div className={`${sidebarAds.length > 0 ? 'lg:col-span-9' : 'lg:col-span-12'} space-y-16 animate-fade-in`}>
-              {filteredProperties.length === 0 ? (
-                <div className="bg-[#0d0d12]/60 rounded-3xl border border-white/5 p-16 text-center shadow-lg">
-                  <Building className="w-12 h-12 text-white/20 mx-auto mb-4" />
-                  <h4 className="text-lg font-serif text-white font-semibold">{t('no_listings_found')}</h4>
-                  <p className="text-white/40 text-sm mt-1.5 font-light">{t('no_listings_found_desc')}</p>
+          {/* Expandable Advanced Filters Drawer */}
+          <AnimatePresence>
+            {showFilters && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                className="overflow-hidden"
+              >
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-5 mt-6 pt-6 border-t border-white/5">
+                  {/* Category Buy/Rent */}
+                  <div>
+                    <label className="block text-[10px] font-bold text-white/40 uppercase tracking-widest mb-2">
+                      {t('filter_category')}
+                    </label>
+                    <select
+                      value={selectedCategory}
+                      onChange={e => setSelectedCategory(e.target.value)}
+                      className="w-full p-3 bg-[#12121a] border border-white/5 rounded-2xl text-xs text-white/80 focus:outline-none focus:border-amber-500/50 transition cursor-pointer"
+                    >
+                      {transactionCategories.map(c => (
+                        <option key={c} value={c} className="bg-[#0c0c0c]">
+                          {c === 'All' ? t('all_transactions') : c === 'Buy' ? t('cat_buy') : c === 'Rent' ? t('cat_rent') : c}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Property Type */}
+                  <div>
+                    <label className="block text-[10px] font-bold text-white/40 uppercase tracking-widest mb-2">
+                      {t('filter_type')}
+                    </label>
+                    <select
+                      value={selectedType}
+                      onChange={e => setSelectedType(e.target.value)}
+                      className="w-full p-3 bg-[#12121a] border border-white/5 rounded-2xl text-xs text-white/80 focus:outline-none focus:border-amber-500/50 transition cursor-pointer"
+                    >
+                      {propertyTypes.map(pt => (
+                        <option key={pt} value={pt} className="bg-[#0c0c0c]">
+                          {pt === 'All' ? t('all_types') : t(`cat_${(pt || '').toLowerCase()}`) || pt}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Location filter */}
+                  <div>
+                    <label className="block text-[10px] font-bold text-white/40 uppercase tracking-widest mb-2">
+                      {t('filter_location')}
+                    </label>
+                    <select
+                      value={selectedLocation}
+                      onChange={e => {
+                        setSelectedLocation(e.target.value);
+                        localStorage.setItem('sof_umer_selected_location', e.target.value);
+                      }}
+                      className="w-full p-3 bg-[#12121a] border border-white/5 rounded-2xl text-xs text-white/80 focus:outline-none focus:border-amber-500/50 transition cursor-pointer"
+                    >
+                      <option value="All" className="bg-[#0c0c0c]">{t('all_locations')}</option>
+                      {locations.map(loc => (
+                        <option key={loc} value={loc} className="bg-[#0c0c0c]">
+                          {loc}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Currency Filter */}
+                  <div>
+                    <label className="block text-[10px] font-bold text-white/40 uppercase tracking-widest mb-2">
+                      {t('currency_status')}
+                    </label>
+                    <select
+                      value={selectedCurrency}
+                      onChange={e => setSelectedCurrency(e.target.value)}
+                      className="w-full p-3 bg-[#12121a] border border-white/5 rounded-2xl text-xs text-white/80 focus:outline-none focus:border-amber-500/50 transition cursor-pointer"
+                    >
+                      <option value="All" className="bg-[#0c0c0c]">{t('all_currencies')}</option>
+                      <option value="ETB" className="bg-[#0c0c0c]">ETB (Ethiopian Birr)</option>
+                      <option value="USD" className="bg-[#0c0c0c]">USD (US Dollar)</option>
+                      <option value="SAR" className="bg-[#0c0c0c]">SAR (Saudi Riyal)</option>
+                      <option value="EUR" className="bg-[#0c0c0c]">EUR (Euro)</option>
+                      <option value="AED" className="bg-[#0c0c0c]">AED (UAE Dirham)</option>
+                    </select>
+                  </div>
+
+                  {/* Price Min/Max */}
+                  <div>
+                    <label className="block text-[10px] font-bold text-white/40 uppercase tracking-widest mb-2">
+                      {t('min_price')}
+                    </label>
+                    <input
+                      type="text"
+                      inputMode="text"
+                      value={priceMin}
+                      onChange={e => setPriceMin(e.target.value === '' ? '' : (isNaN(Number(e.target.value)) ? e.target.value as any : Number(e.target.value)))}
+                      placeholder={t('any_value')}
+                      className="w-full p-3 bg-[#12121a] border border-white/5 rounded-2xl text-xs text-[#F5F5F4] placeholder-white/20 focus:outline-none focus:border-amber-500/50 transition"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] font-bold text-white/40 uppercase tracking-widest mb-2">
+                      {t('max_price')}
+                    </label>
+                    <input
+                      type="text"
+                      inputMode="text"
+                      value={priceMax}
+                      onChange={e => setPriceMax(e.target.value === '' ? '' : (isNaN(Number(e.target.value)) ? e.target.value as any : Number(e.target.value)))}
+                      placeholder={t('any_value')}
+                      className="w-full p-3 bg-[#12121a] border border-white/5 rounded-2xl text-xs text-[#F5F5F4] placeholder-white/20 focus:outline-none focus:border-amber-500/50 transition"
+                    />
+                  </div>
+
+                  {/* Rooms & Area */}
+                  <div>
+                    <label className="block text-[10px] font-bold text-white/40 uppercase tracking-widest mb-2">
+                      {t('min_bedrooms')}
+                    </label>
+                    <input
+                      type="text"
+                      inputMode="text"
+                      value={bedsMin}
+                      onChange={e => setBedsMin(e.target.value === '' ? '' : (isNaN(Number(e.target.value)) ? e.target.value as any : Number(e.target.value)))}
+                      placeholder={t('any_value')}
+                      className="w-full p-3 bg-[#12121a] border border-white/5 rounded-2xl text-xs text-[#F5F5F4] placeholder-white/20 focus:outline-none focus:border-amber-500/50 transition"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] font-bold text-white/40 uppercase tracking-widest mb-2">
+                      {t('min_area')}
+                    </label>
+                    <input
+                      type="text"
+                      inputMode="text"
+                      value={areaMin}
+                      onChange={e => setAreaMin(e.target.value === '' ? '' : (isNaN(Number(e.target.value)) ? e.target.value as any : Number(e.target.value)))}
+                      placeholder={t('any_value')}
+                      className="w-full p-3 bg-[#12121a] border border-white/5 rounded-2xl text-xs text-[#F5F5F4] placeholder-white/20 focus:outline-none focus:border-amber-500/50 transition"
+                    />
+                  </div>
                 </div>
-              ) : (
-                <>
-                  {/* 1. FEATURED LISTINGS */}
-                  {featuredProperties.length > 0 && (
-                    <div>
-                      <h3 className="text-2xl font-serif text-white mb-8 border-b border-white/5 pb-4 flex items-center justify-between">
-                        <span className="flex items-center gap-2"><Sparkles className="w-5 h-5 text-amber-500" /> {
-                          (selectedMajorCategory && selectedMajorCategory.toLowerCase().includes('propert')) || (selectedRedesignedCategory?.name && selectedRedesignedCategory.name.toLowerCase().includes('propert'))
-                            ? (t('featured_properties') || 'Featured Properties')
-                            : (t('featured_listings') || 'Featured Listings')
-                        }</span>
-                        <span className="text-[9px] uppercase font-bold tracking-[0.25em] text-white/30">{t('verified_select_picks')}</span>
-                      </h3>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
-                        {featuredProperties.map(prop => (
-                          <ListingCard
-                            key={prop.id}
-                            property={prop}
-                            onSelect={onSelectProperty}
-                            favorites={favorites}
-                            onToggleFav={toggleFavorite}
-                            onReport={() => onOpenReportModal('property', prop.id, prop.title)}
-                            t={t} currentLanguage={currentLanguage}
-                            viewMode="grid"
-                          />
-                        ))}
-                      </div>
-                    </div>
-                  )}
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
 
-                  {/* 2. POPULAR LISTINGS */}
-                  {popularProperties.length > 0 && (
-                    <div>
-                      <h3 className="text-2xl font-serif text-white mb-8 border-b border-white/5 pb-4 flex items-center justify-between">
-                        <span className="flex items-center gap-2"><TrendingUp className="w-5 h-5 text-amber-500" /> {t('popular_listings') || 'Popular Listings'}</span>
-                        <span className="text-[9px] uppercase font-bold tracking-[0.25em] text-white/30">{t('most_viewed_picks') || 'BASED ON VIEWS & INTEREST'}</span>
-                      </h3>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
-                        {popularProperties.map(prop => (
-                          <ListingCard
-                            key={prop.id}
-                            property={prop}
-                            onSelect={onSelectProperty}
-                            favorites={favorites}
-                            onToggleFav={toggleFavorite}
-                            onReport={() => onOpenReportModal('property', prop.id, prop.title)}
-                            t={t} currentLanguage={currentLanguage}
-                            viewMode="grid"
-                          />
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* 3. LATEST LISTINGS */}
-                  {latestProperties.length > 0 && (
-                    <div>
-                      <h3 className="text-2xl font-serif text-white mb-8 border-b border-white/5 pb-4 flex items-center justify-between">
-                        <span className="flex items-center gap-2"><Clock className="w-5 h-5 text-amber-500" /> {
-                          (selectedMajorCategory && selectedMajorCategory.toLowerCase().includes('propert')) || (selectedRedesignedCategory?.name && selectedRedesignedCategory.name.toLowerCase().includes('propert'))
-                            ? (t('latest_properties') || 'Latest Properties')
-                            : (t('latest_listings') || 'Latest Listings')
-                        }</span>
-                        <span className="text-[9px] uppercase font-bold tracking-[0.25em] text-white/30">{t('recent_offers')}</span>
-                      </h3>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
-                        {latestProperties.map(prop => (
-                          <ListingCard
-                            key={prop.id}
-                            property={prop}
-                            onSelect={onSelectProperty}
-                            favorites={favorites}
-                            onToggleFav={toggleFavorite}
-                            onReport={() => onOpenReportModal('property', prop.id, prop.title)}
-                            t={t} currentLanguage={currentLanguage}
-                            viewMode="grid"
-                          />
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* 4. CATEGORY-SPECIFIC SECTIONS (Only when on home view and enough real listings exist >= 2) */}
-                  {!selectedRedesignedCategory && (
-                    <>
-                      {/* Properties Section */}
-                      {propertiesListings.length >= 2 && (
-                        <div>
-                          <div className="flex items-center justify-between mb-8 border-b border-white/5 pb-4">
-                            <h3 className="text-2xl font-serif text-white flex items-center gap-2">
-                              <span>🏠</span> {t('properties_in_ethiopia') || 'Properties in Ethiopia'}
-                            </h3>
-                            <button
-                              onClick={() => {
-                                const propCat = PRIMARY_CATEGORIES.find(c => c.id === 'properties');
-                                if (propCat) handleSelectRedesignedCategory(propCat);
-                              }}
-                              className="text-xs font-bold text-amber-400 hover:text-amber-300 flex items-center gap-1 group cursor-pointer"
-                            >
-                              <span>{t('view_all_in_properties') || 'View all in Properties'}</span>
-                              <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
-                            </button>
-                          </div>
-                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
-                            {propertiesListings.map(prop => (
-                              <ListingCard
-                                key={prop.id}
-                                property={prop}
-                                onSelect={onSelectProperty}
-                                favorites={favorites}
-                                onToggleFav={toggleFavorite}
-                                onReport={() => onOpenReportModal('property', prop.id, prop.title)}
-                                t={t} currentLanguage={currentLanguage}
-                                viewMode="grid"
-                              />
-                            ))}
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Vehicles Section */}
-                      {vehiclesListings.length >= 2 && (
-                        <div>
-                          <div className="flex items-center justify-between mb-8 border-b border-white/5 pb-4">
-                            <h3 className="text-2xl font-serif text-white flex items-center gap-2">
-                              <span>🚗</span> {t('vehicles_in_ethiopia') || 'Vehicles in Ethiopia'}
-                            </h3>
-                            <button
-                              onClick={() => {
-                                const vehCat = PRIMARY_CATEGORIES.find(c => c.id === 'vehicles');
-                                if (vehCat) handleSelectRedesignedCategory(vehCat);
-                              }}
-                              className="text-xs font-bold text-amber-400 hover:text-amber-300 flex items-center gap-1 group cursor-pointer"
-                            >
-                              <span>{t('view_all_in_vehicles') || 'View all in Vehicles'}</span>
-                              <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
-                            </button>
-                          </div>
-                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
-                            {vehiclesListings.map(prop => (
-                              <ListingCard
-                                key={prop.id}
-                                property={prop}
-                                onSelect={onSelectProperty}
-                                favorites={favorites}
-                                onToggleFav={toggleFavorite}
-                                onReport={() => onOpenReportModal('property', prop.id, prop.title)}
-                                t={t} currentLanguage={currentLanguage}
-                                viewMode="grid"
-                              />
-                            ))}
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Products Section */}
-                      {productsListings.length >= 2 && (
-                        <div>
-                          <div className="flex items-center justify-between mb-8 border-b border-white/5 pb-4">
-                            <h3 className="text-2xl font-serif text-white flex items-center gap-2">
-                              <span>📦</span> {t('products_in_ethiopia') || 'Products & Marketplace'}
-                            </h3>
-                            <button
-                              onClick={() => {
-                                const prodCat = PRIMARY_CATEGORIES.find(c => c.id === 'products');
-                                if (prodCat) handleSelectRedesignedCategory(prodCat);
-                              }}
-                              className="text-xs font-bold text-amber-400 hover:text-amber-300 flex items-center gap-1 group cursor-pointer"
-                            >
-                              <span>{t('view_all_in_products') || 'View all in Products'}</span>
-                              <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
-                            </button>
-                          </div>
-                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
-                            {productsListings.map(prop => (
-                              <ListingCard
-                                key={prop.id}
-                                property={prop}
-                                onSelect={onSelectProperty}
-                                favorites={favorites}
-                                onToggleFav={toggleFavorite}
-                                onReport={() => onOpenReportModal('property', prop.id, prop.title)}
-                                t={t} currentLanguage={currentLanguage}
-                                viewMode="grid"
-                              />
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                    </>
-                  )}
-                </>
+        {/* 4. RESULTS TOOLBAR WITH SORT & VIEW TOGGLE */}
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-8 bg-[#0d0d12]/30 p-4 rounded-2xl border border-white/5">
+          <div className="text-left w-full sm:w-auto">
+            <p className="text-xs text-white/50">
+              {t('showing_results', { current: Math.min(visibleCount, finalFilteredProperties.length), total: finalFilteredProperties.length }) || (
+                <>Showing <span className="text-white font-bold">{Math.min(visibleCount, finalFilteredProperties.length)}</span> of <span className="text-amber-400 font-black">{finalFilteredProperties.length}</span> verified results</>
               )}
+            </p>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto justify-end">
+            {/* Selling Type Quick Filter */}
+            <div className="flex items-center bg-[#12121a] p-1 rounded-xl border border-white/5">
+              {(['All', 'Retail', 'Wholesale'] as const).map(st => (
+                <button
+                  key={st}
+                  onClick={() => setFilterSellingType(st)}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
+                    filterSellingType === st
+                      ? 'bg-amber-500 text-black font-bold shadow'
+                      : 'text-white/60 hover:text-white'
+                  }`}
+                >
+                  {st === 'All' ? (t('wholesale.all_types') || 'All Types') : st === 'Retail' ? (t('wholesale.retail') || 'Retail') : (t('wholesale.wholesale') || 'Wholesale')}
+                </button>
+              ))}
             </div>
 
-            {/* Right Side: Sidebar Adverts */}
-            {sidebarAds.length > 0 && (
-              <div className="lg:col-span-3 space-y-8">
-                {sidebarAds.map(ad => (
-                  <div
-                    key={ad.id}
-                    className="bg-[#0d0d12]/80 rounded-3xl overflow-hidden border border-white/5 shadow-2xl text-white relative group"
-                  >
-                    <div className="h-48 overflow-hidden relative">
-                      <img
-                        src={ad.imageUrl}
-                        alt={ad.title}
-                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                        referrerPolicy="no-referrer"
-                      />
-                      <span className="absolute top-4 right-4 bg-black/70 backdrop-blur-md text-[#F5F5F4] font-black uppercase tracking-widest text-[8px] px-2.5 py-1.5 rounded-full border border-white/10">
-                        {t('sponsored')}
-                      </span>
-                    </div>
-                    <div className="p-6 text-left">
-                      <h4 className="font-serif text-base text-white mb-1.5 font-semibold">{ad.title}</h4>
-                      <p className="text-xs text-[#F5F5F4]/60 leading-relaxed mb-5 font-light">{ad.description}</p>
-                      <a
-                        href={ad.linkUrl}
-                        className="block text-center bg-white/5 hover:bg-white/10 text-white border border-white/10 rounded-xl py-3 text-[10px] font-bold uppercase tracking-widest transition duration-300 hover:scale-[1.01]"
-                      >
-                        {t('visit_offer')}
-                      </a>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
+            {/* Sort selector */}
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] font-bold text-white/30 uppercase tracking-widest hidden md:inline">{t('sort_by') || 'Sort By'}</span>
+              <select
+                value={sortBy}
+                onChange={e => setSortBy(e.target.value)}
+                className="bg-[#12121a] border border-white/5 p-2 px-3 rounded-xl text-xs text-white/80 focus:outline-none focus:border-amber-500/30 cursor-pointer"
+              >
+                <option value="newest">{t('sort_newest') || 'Latest Uploads'}</option>
+                <option value="oldest">{t('sort_oldest') || 'Oldest Listings'}</option>
+                <option value="lowest">{t('sort_lowest_price') || 'Lowest Price'}</option>
+                <option value="highest">{t('sort_highest_price') || 'Highest Price'}</option>
+                <option value="popular">{t('sort_most_popular') || 'Most Popular'}</option>
+                <option value="rated">{t('sort_highly_rated') || 'Highly Rated'}</option>
+              </select>
+            </div>
+
+            {/* View Mode Toggle */}
+            <div className="h-8 w-[1px] bg-white/10" />
+            <div className="flex items-center bg-[#12121a] p-1 rounded-xl border border-white/5">
+              <button
+                onClick={() => setViewMode('grid')}
+                className={`p-1.5 rounded-lg transition cursor-pointer ${viewMode === 'grid' ? 'bg-white text-black' : 'text-white/50 hover:text-white'}`}
+                title={t('grid_view') || 'Grid View'}
+              >
+                <Grid className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => setViewMode('list')}
+                className={`p-1.5 rounded-lg transition cursor-pointer ${viewMode === 'list' ? 'bg-white text-black' : 'text-white/50 hover:text-white'}`}
+                title={t('list_view') || 'List View'}
+              >
+                <List className="w-4 h-4" />
+              </button>
+            </div>
           </div>
         </div>
-      )}
+
+        {/* 5. MATCHES / LISTINGS GRID */}
+        {finalFilteredProperties.length === 0 ? (
+          <div className="bg-[#0d0d12]/60 rounded-3xl border border-white/5 p-16 text-center shadow-lg mb-12 flex flex-col items-center justify-center">
+            <div className="p-4 bg-white/5 rounded-full mb-4 text-white/30 border border-white/5">
+              <AlertCircle className="w-10 h-10" />
+            </div>
+            <h4 className="text-lg font-serif text-white font-semibold">{t('no_listings_fit_filters') || 'No listings fit your filters'}</h4>
+            <p className="text-white/40 text-xs mt-2 max-w-sm leading-relaxed">
+              {t('no_listings_fit_filters_desc') || 'Try resetting filters or expanding search words to find similar listings within this marketplace.'}
+            </p>
+            <button
+              onClick={() => {
+                clearAllCatFilters();
+                setSearchQuery('');
+              }}
+              className="mt-6 bg-gradient-to-r from-amber-400 to-amber-600 text-black font-bold uppercase tracking-widest text-[10px] px-6 py-3 rounded-full hover:opacity-90 transition-all duration-300 shadow-md cursor-pointer"
+            >
+              {t('clear_all_filters') || 'Clear All Filters'}
+            </button>
+          </div>
+        ) : (
+          <div className="mb-12">
+            <div className={viewMode === 'grid' ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8' : 'grid grid-cols-1 gap-6'}>
+              {finalFilteredProperties.slice(0, visibleCount).map(prop => (
+                <ListingCard
+                  key={prop.id}
+                  property={prop}
+                  onSelect={onSelectProperty}
+                  favorites={favorites}
+                  onToggleFav={toggleFavorite}
+                  onReport={() => onOpenReportModal('property', prop.id, prop.title)}
+                  t={t}
+                  currentLanguage={currentLanguage}
+                  viewMode={viewMode}
+                />
+              ))}
+            </div>
+
+            {/* Load More Button */}
+            {visibleCount < finalFilteredProperties.length && (
+              <div className="mt-10 text-center">
+                <button
+                  onClick={() => setVisibleCount(prev => prev + 6)}
+                  className="inline-flex items-center gap-2.5 bg-gradient-to-r from-amber-400 to-amber-600 hover:from-amber-300 hover:to-amber-500 text-black font-extrabold uppercase tracking-widest px-8 py-4 rounded-2xl text-xs transition duration-300 hover:opacity-95 cursor-pointer shadow-lg shadow-amber-500/10 hover:scale-[1.01]"
+                >
+                  {t('load_more_items') || 'Load More Items'} <ArrowRight className="w-4 h-4 text-black animate-pulse" />
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
 
       {/* ALL CATEGORIES Overlay Modal */}
       <AllCategoriesModal
