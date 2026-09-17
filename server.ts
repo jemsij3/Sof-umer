@@ -3566,7 +3566,52 @@ async function startServer() {
     if (ownerId) {
       list = list.filter(p => p.ownerId === ownerId || (p as any).createdBy === ownerId);
     }
-    res.json(list);
+
+    // Resolve requester auth if token provided
+    let authUser: ServerUser | undefined = undefined;
+    const authHeader = req.headers.authorization;
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      const token = authHeader.substring(7);
+      try {
+        const decoded = jwt.verify(token, JWT_SECRET) as any;
+        const targetUserId = decoded ? (decoded.userId || decoded.id) : undefined;
+        if (targetUserId) {
+          authUser = localDb.users.find(u => u.id === targetUserId);
+        }
+      } catch (e) {}
+    }
+
+    // If admin, return all properties for moderation and management
+    if (authUser && isUserAdmin(authUser)) {
+      return res.json(list);
+    }
+
+    // Filter out unapproved/pending listings for public visitors while allowing owners to see their own pending listings
+    const filtered = list.filter(p => {
+      const isOwner = authUser && (
+        p.ownerId === authUser.id || 
+        (p as any).createdBy === authUser.id ||
+        (authUser.email && (
+          (p.contactEmail && p.contactEmail.toLowerCase() === authUser.email.toLowerCase()) || 
+          ((p as any).ownerEmail && (p as any).ownerEmail.toLowerCase() === authUser.email.toLowerCase())
+        ))
+      );
+      if (isOwner) return true;
+
+      // Must be approved by Admin
+      if (p.approvalStatus === 'pending' || p.approvalStatus === 'rejected') return false;
+      if (p.verificationStatus === 'pending' || p.verificationStatus === 'rejected') return false;
+      const isApproved = p.approvalStatus === 'approved' || p.verificationStatus === 'verified' || p.isVerifiedListing === true;
+      if (!isApproved) return false;
+
+      const status = ((p as any).status || '').toLowerCase();
+      if (['sold', 'rented', 'unavailable', 'expired', 'deleted', 'rejected', 'pending'].includes(status)) {
+        return false;
+      }
+      return true;
+    });
+
+    res.json(filtered);
   });
 
   app.get(['/api/properties/my-listings', '/api/listings/my-listings'], requireAuth, async (req, res) => {
@@ -3587,6 +3632,41 @@ async function startServer() {
   app.get(['/api/properties/:id', '/api/listings/:id'], async (req, res) => {
     const prop = (localDb.properties || []).find(p => p.id === req.params.id);
     if (!prop) return res.status(404).json({ error: 'Listing not found' });
+
+    // Check if listing is pending admin approval
+    const isPending = prop.approvalStatus === 'pending' || prop.verificationStatus === 'pending' || prop.approvalStatus === 'rejected';
+    if (isPending) {
+      let authUser: ServerUser | undefined = undefined;
+      const authHeader = req.headers.authorization;
+      if (authHeader && authHeader.startsWith('Bearer ')) {
+        const token = authHeader.substring(7);
+        try {
+          const decoded = jwt.verify(token, JWT_SECRET) as any;
+          const targetUserId = decoded ? (decoded.userId || decoded.id) : undefined;
+          if (targetUserId) {
+            authUser = localDb.users.find(u => u.id === targetUserId);
+          }
+        } catch (e) {}
+      }
+
+      const isOwnerOrAdmin = authUser && (
+        isUserAdmin(authUser) ||
+        prop.ownerId === authUser.id ||
+        (prop as any).createdBy === authUser.id ||
+        (authUser.email && (
+          (prop.contactEmail && prop.contactEmail.toLowerCase() === authUser.email.toLowerCase()) ||
+          ((prop as any).ownerEmail && (prop as any).ownerEmail.toLowerCase() === authUser.email.toLowerCase())
+        ))
+      );
+
+      if (!isOwnerOrAdmin) {
+        return res.status(403).json({ 
+          error: 'This listing is pending admin approval and is not yet publicly visible.',
+          isPendingApproval: true 
+        });
+      }
+    }
+
     res.json(prop);
   });
 

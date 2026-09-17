@@ -12,7 +12,8 @@ import {
   getTranslatedCondition,
   getTranslatedPropertyType,
   extractString,
-  getTranslatedLocation
+  getTranslatedLocation,
+  isListingActiveAndPublished
 } from '../lib/categoriesData';
 import { formatListingAge } from '../lib/utils';
 import SellerProfileModal from './SellerProfileModal';
@@ -349,10 +350,11 @@ export default function PropertyDetails({
     return offers.find(o => o.propertyId === property.id && o.buyerId === currentUser.id);
   }, [offers, property.id, currentUser]);
 
-  // Compute Similar Properties
+  // Compute Similar Properties (only approved, verified & active listings)
   const similarProperties = useMemo(() => {
     return properties
       .filter(p => p.id !== property.id)
+      .filter(p => isListingActiveAndPublished(p))
       .filter(p => 
         p.majorCategory === property.majorCategory || 
         p.propertyType === property.propertyType ||
@@ -763,9 +765,58 @@ export default function PropertyDetails({
     }
   };
 
+  const isOwner = currentUser && (
+    currentUser.id === property.ownerId || 
+    currentUser.id === (property as any).createdBy ||
+    (currentUser.email && (
+      (property.contactEmail && currentUser.email.toLowerCase() === property.contactEmail.toLowerCase()) || 
+      ((property as any).ownerEmail && currentUser.email.toLowerCase() === (property as any).ownerEmail.toLowerCase())
+    ))
+  );
+  const isAdmin = currentUser && (currentUser.role === 'admin' || currentUser.isAdmin === true);
+  const isPendingApproval = property.approvalStatus === 'pending' || property.verificationStatus === 'pending';
+  const isRejected = property.approvalStatus === 'rejected' || property.verificationStatus === 'rejected';
+
+  // Guard unauthorized visitors from viewing pending or unapproved listings directly
+  if ((isPendingApproval || isRejected) && !isOwner && !isAdmin) {
+    return (
+      <div className="max-w-2xl mx-auto px-4 py-20 text-center animate-fade-in">
+        <div className="p-4 bg-amber-500/10 rounded-full w-fit mx-auto mb-4 border border-amber-500/20 text-amber-400">
+          <Clock className="w-12 h-12" />
+        </div>
+        <h2 className="text-2xl font-serif font-bold text-white mb-2">Listing Under Review</h2>
+        <p className="text-white/60 text-sm mb-6 leading-relaxed">
+          This listing is currently pending Admin authorization and verification. It will become publicly visible across the marketplace as soon as an administrator approves it.
+        </p>
+        <button
+          onClick={onBack}
+          className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-bold uppercase tracking-wider text-xs transition cursor-pointer shadow-lg shadow-amber-500/20"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          <span>{t('back_to_marketplace') || 'Back to Marketplace'}</span>
+        </button>
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 text-left details-view animate-fade-in font-sans">
       
+      {/* Pending Admin Authorization Notice for Owner & Admin */}
+      {isPendingApproval && (
+        <div className="mb-6 p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-start gap-3">
+          <Clock className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
+          <div>
+            <span className="text-xs font-bold text-amber-400 uppercase tracking-wider block font-mono">
+              {isAdmin ? 'Admin Moderation Preview' : 'Owner Preview — Pending Admin Authorization'}
+            </span>
+            <p className="text-xs text-white/70 mt-0.5">
+              This listing has not yet been approved by an administrator and is hidden from public marketplace searches and feeds until authorized.
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Top Back & Share/Fav Row */}
       <div className="flex justify-between items-center mb-6">
         <button

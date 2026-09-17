@@ -48,11 +48,11 @@ export const DEFAULT_SYSTEM_AD_PACKAGES: AdPackage[] = [
 
 export function getEffectiveAdPackages(systemSettings?: any): AdPackage[] {
   if (systemSettings?.adPackages && Array.isArray(systemSettings.adPackages) && systemSettings.adPackages.length > 0) {
-    const filtered = systemSettings.adPackages.filter((p: any) => 
-      p && p.name && p.name !== 'New Custom Promotion Package' && !p.name.includes('Custom')
+    const activeOnly = systemSettings.adPackages.filter((p: any) => 
+      p && p.name && p.isActive !== false
     );
-    if (filtered.length > 0) {
-      return filtered.map((p: any, idx: number) => ({
+    if (activeOnly.length > 0) {
+      return activeOnly.map((p: any, idx: number) => ({
         id: p.id || (idx === 0 ? 'starter' : idx === 1 ? 'premium' : 'vip'),
         name: p.name || `Boost Package ${idx + 1}`,
         price: Number(p.price) >= 0 ? Number(p.price) : (idx === 0 ? 50 : idx === 1 ? 150 : 399),
