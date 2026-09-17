@@ -21,7 +21,7 @@ interface WizardStep4ReviewProps {
   isFeaturedAddon: boolean;
   setIsFeaturedAddon: (val: boolean) => void;
   submitting: boolean;
-  onPublish: () => void;
+  onPublish: (selectedPkg?: any) => void;
   onBackToPricing: () => void;
   paymentMethods: any[];
   selectedDirectMethodId: string;
@@ -89,7 +89,7 @@ export const WizardStep4Review: React.FC<WizardStep4ReviewProps> = ({
   const promotionPackages = rawPackages.map((pkg: any, idx: number) => ({
     id: pkg.id || (idx === 0 ? 'starter' : idx === 1 ? 'premium' : 'vip'),
     name: pkg.name || `Boost Package ${idx + 1}`,
-    price: Number(pkg.price) >= 0 ? Number(pkg.price) : (idx === 0 ? 50 : idx === 1 ? 150 : 399),
+    price: Number.isFinite(Number(pkg.price)) && Number(pkg.price) >= 0 ? Number(pkg.price) : (idx === 0 ? 49 : idx === 1 ? 149 : 399),
     currency: pkg.currency || 'ETB',
     duration: pkg.duration || (idx === 0 ? '3 days' : idx === 1 ? '7 days' : '30 days'),
     badge: pkg.badge || (idx === 0 ? 'STARTER' : idx === 1 ? 'PREMIUM' : 'VIP ELITE'),
@@ -131,7 +131,7 @@ export const WizardStep4Review: React.FC<WizardStep4ReviewProps> = ({
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
   const handleDirectPublish = () => {
-    onPublish();
+    onPublish(selectedPackage);
   };
 
   const handleManualPaymentSubmit = () => {
@@ -144,7 +144,7 @@ export const WizardStep4Review: React.FC<WizardStep4ReviewProps> = ({
       return;
     }
     setPaymentError('');
-    onPublish();
+    onPublish(selectedPackage);
   };
 
   const handleCopyAccount = (accountNum: string, id: string) => {

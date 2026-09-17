@@ -14,7 +14,7 @@ export const DEFAULT_SYSTEM_AD_PACKAGES: AdPackage[] = [
   {
     id: 'starter',
     name: 'Basic Boost',
-    price: 50,
+    price: 49,
     currency: 'ETB',
     duration: '3 days',
     daysCount: 3,
@@ -25,7 +25,7 @@ export const DEFAULT_SYSTEM_AD_PACKAGES: AdPackage[] = [
   {
     id: 'premium',
     name: 'Premium Boost',
-    price: 150,
+    price: 149,
     currency: 'ETB',
     duration: '7 days',
     daysCount: 7,
@@ -55,7 +55,7 @@ export function getEffectiveAdPackages(systemSettings?: any): AdPackage[] {
       return activeOnly.map((p: any, idx: number) => ({
         id: p.id || (idx === 0 ? 'starter' : idx === 1 ? 'premium' : 'vip'),
         name: p.name || `Boost Package ${idx + 1}`,
-        price: Number(p.price) >= 0 ? Number(p.price) : (idx === 0 ? 50 : idx === 1 ? 150 : 399),
+        price: Number.isFinite(Number(p.price)) && Number(p.price) >= 0 ? Number(p.price) : (idx === 0 ? 49 : idx === 1 ? 149 : 399),
         currency: p.currency || 'ETB',
         duration: p.duration || (idx === 0 ? '3 days' : idx === 1 ? '7 days' : '30 days'),
         daysCount: p.daysCount || (p.duration?.includes('30') ? 30 : p.duration?.includes('7') ? 7 : 3),

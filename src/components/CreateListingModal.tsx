@@ -493,7 +493,7 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
   const [mediaUrlInput, setMediaUrlInput] = useState('');
 
   // Plan & Monetization State
-  const [selectedPlan, setSelectedPlan] = useState<'free' | 'basic' | 'premium' | 'vip'>('free');
+  const [selectedPlan, setSelectedPlan] = useState<string>('free');
   const [isTopAdAddon, setIsTopAdAddon] = useState(false);
   const [isFeaturedAddon, setIsFeaturedAddon] = useState(false);
   const [selectedDirectMethodId, setSelectedDirectMethodId] = useState('');
@@ -1052,7 +1052,7 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
     };
 
   // Final submission of listing and promotion purchase
-  const handleFinalPublish = async () => {
+  const handleFinalPublish = async (packageOverride?: any) => {
     if (!currentUser) return;
     setError('');
     setSubmitting(true);
@@ -1091,7 +1091,15 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
         amenities: finalAmenities
       });
 
-      const days = selectedPlan === 'basic' ? 3 : selectedPlan === 'premium' ? 7 : selectedPlan === 'vip' ? 30 : 0;
+      const chosenPackage = packageOverride || selectedPlanObj;
+      const chosenPackageId = packageOverride?.id || selectedPlanObj?.id || selectedPlan;
+      const chosenCost = typeof packageOverride?.price === 'number'
+        ? packageOverride.price
+        : (typeof packageOverride?.cost === 'number' ? packageOverride.cost : totalCost);
+      const chosenPackageName = packageOverride?.name || selectedPlanObj?.name || (chosenPackageId === 'vip' ? 'VIP Elite Boost' : chosenPackageId === 'premium' ? 'Premium Boost' : 'Basic Boost');
+      const chosenPackageDuration = packageOverride?.duration || packageOverride?.days || selectedPlanObj?.days || '7 Days';
+      const durationStr = String(chosenPackageDuration || '').toLowerCase();
+      const days = chosenPackage?.daysCount || (durationStr.includes('30') ? 30 : durationStr.includes('7') ? 7 : durationStr.includes('3') ? 3 : 0);
       const expiresAt = days > 0 ? new Date(Date.now() + days * 24 * 60 * 60 * 1000).toISOString() : undefined;
 
       const isPropertyCategory = dbMajorCategory === 'Properties' || majorCategory === 'Properties';
@@ -1150,9 +1158,9 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
         ownerBusinessName: fieldsState.ownerBusinessName || '',
         ownerAvatar: fieldsState.ownerAvatar || '',
         postedOnBehalf: currentUser.role === 'admin',
-        boostPlan: selectedPlan,
-        isTopAd: isTopAdAddon,
-        isFeatured: isFeaturedAddon || selectedPlan === 'vip',
+        boostPlan: chosenPackageId,
+        isTopAd: chosenPackageId === 'vip' || chosenPackageId === 'starter' || chosenPackageId === 'basic' || isTopAdAddon,
+        isFeatured: chosenPackageId === 'vip' || chosenPackageId === 'premium' || isFeaturedAddon,
         promotionExpiresAt: expiresAt,
         approvalStatus: currentUser?.role === 'admin' ? 'approved' : 'pending',
         verificationStatus: currentUser?.role === 'admin' ? 'verified' : 'pending',
@@ -1205,8 +1213,8 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
         throw new Error('Listing was created but server returned empty response data.');
       }
 
-      // Handle monetization payment if totalCost > 0
-      if (totalCost > 0) {
+      // Handle monetization payment if chosenCost > 0
+      if (chosenCost > 0) {
         const directMethod = paymentMethods.find(m => m.id === selectedDirectMethodId);
         const accountInfo = directMethod
           ? (directMethod.accountNumber ? `${directMethod.accountNumber}${directMethod.accountName ? ` (${directMethod.accountName})` : ''}` : directMethod.phoneNumber)
@@ -1219,14 +1227,14 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
             userId: currentUser.id,
             userEmail: currentUser.email,
             userName: currentUser.fullName,
-            amount: totalCost,
+            amount: chosenCost,
             paymentMethodId: selectedDirectMethodId || 'direct-transfer',
             paymentMethodName: directMethod?.name || 'Direct Bank / Telebirr',
             paymentMethodAccount: accountInfo,
-            packageId: selectedPlanObj?.id || selectedPlan,
-            packageName: selectedPlanObj?.name || (selectedPlan === 'vip' ? 'VIP Elite Boost' : selectedPlan === 'premium' ? 'Premium Boost' : 'Basic Boost'),
-            packageDuration: selectedPlanObj?.days || '7 Days',
-            packagePrice: totalCost,
+            packageId: chosenPackageId,
+            packageName: chosenPackageName,
+            packageDuration: chosenPackageDuration,
+            packagePrice: chosenCost,
             relatedPropertyId: createdProp.id,
             relatedPropertyTitle: createdProp.title,
             referenceNumber: receiptRefNumber.trim() || undefined,
@@ -1394,14 +1402,16 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
                   setIsTopAdAddon(false);
                 } else {
                   setIsFeaturedAddon(true);
-                  if (val === 'vip') setIsTopAdAddon(true);
+                  setIsTopAdAddon(val === 'vip');
                 }
               }}
               isFeaturedAddon={isFeaturedAddon}
               setIsFeaturedAddon={(val) => {
                 setIsFeaturedAddon(val);
-                setIsTopAdAddon(val);
-                setSelectedPlan(val ? 'vip' : 'free');
+                if (!val) {
+                  setIsTopAdAddon(false);
+                  setSelectedPlan('free');
+                }
               }}
               submitting={submitting}
               onPublish={handleFinalPublish}

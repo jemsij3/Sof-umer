@@ -4874,6 +4874,24 @@ async function startServer() {
     res.status(404).json({ error: 'Receipt not found' });
   });
 
+  app.delete('/api/receipts/:id', async (req, res) => {
+    const { id } = req.params;
+    const idx = localDb.receipts.findIndex(r => r.id === id);
+    if (idx !== -1) {
+      localDb.receipts.splice(idx, 1);
+      if (isMongoConnected) {
+        try {
+          await ReceiptModel.deleteOne({ id });
+        } catch (e) {
+          console.error('[Receipts] Mongo delete failed:', e);
+        }
+      }
+      await saveDb();
+      return res.json({ success: true });
+    }
+    res.status(404).json({ error: 'Receipt not found' });
+  });
+
   // Batch approve pending receipts
   app.post('/api/receipts/approve-all', requireAdmin, async (req, res) => {
     let count = 0;
@@ -5180,7 +5198,7 @@ async function startServer() {
         {
           id: 'starter',
           name: 'Basic Boost',
-          price: 50,
+          price: 49,
           currency: 'ETB',
           duration: '3 days',
           daysCount: 3,
@@ -5191,7 +5209,7 @@ async function startServer() {
         {
           id: 'premium',
           name: 'Premium Boost',
-          price: 150,
+          price: 149,
           currency: 'ETB',
           duration: '7 days',
           daysCount: 7,
@@ -5202,7 +5220,7 @@ async function startServer() {
         {
           id: 'vip',
           name: 'VIP Elite Boost',
-          price: 500,
+          price: 399,
           currency: 'ETB',
           duration: '30 days',
           daysCount: 30,
@@ -5224,6 +5242,15 @@ async function startServer() {
         ? (localDb as any).appSettings.adPackages
         : defaults.adPackages
     };
+
+    // Normalize legacy 50/150/500 placeholder defaults to 49/149/399
+    if (Array.isArray((localDb as any).appSettings.adPackages)) {
+      (localDb as any).appSettings.adPackages.forEach((pkg: any) => {
+        if (pkg.id === 'starter' && pkg.price === 50) pkg.price = 49;
+        if (pkg.id === 'premium' && pkg.price === 150) pkg.price = 149;
+        if (pkg.id === 'vip' && pkg.price === 500) pkg.price = 399;
+      });
+    }
 
     // Ensure siteStatus defaults to Online if invalid or empty
     if (!(localDb as any).appSettings.siteStatus) {
