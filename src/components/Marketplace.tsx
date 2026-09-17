@@ -1105,69 +1105,63 @@ export default function Marketplace({
       </div>
 
       {/* ======================================================== */}
-      {/* 2. SUBCATEGORIES — BELOW THE SELECTED CATEGORY             */}
+      {/* 2. SUBCATEGORIES — HORIZONTAL SCROLLABLE ROW              */}
       {/* ======================================================== */}
       {selectedRedesignedCategory && (
-        <div className="mb-6 text-left animate-in fade-in duration-200">
-          <div className="bg-[#0e0e15]/90 border border-white/10 rounded-2xl p-3 sm:p-4 backdrop-blur-md shadow-lg">
-            <div className="flex items-center justify-between gap-2 mb-2.5 pb-2 border-b border-white/5">
-              <span className="text-[10px] font-bold text-amber-400 uppercase tracking-widest font-mono flex items-center gap-1.5">
-                <span>{selectedRedesignedCategory.emoji}</span>
-                <span>{currentLanguage === 'am' ? (selectedRedesignedCategory.translations?.am || selectedRedesignedCategory.name) : currentLanguage === 'om' ? (selectedRedesignedCategory.translations?.om || selectedRedesignedCategory.name) : selectedRedesignedCategory.name}</span>
-                <span className="text-white/40 font-normal">› Subcategories</span>
-              </span>
-              <button
-                onClick={handleGoBackToAllCategories}
-                className="text-[11px] text-white/40 hover:text-amber-400 transition cursor-pointer font-mono"
-              >
-                Reset to ALL
-              </button>
-            </div>
-            <div className="flex flex-wrap items-center gap-2">
-              {/* "All [Category Name]" pill */}
-              <button
-                onClick={() => setSelectedSubcategory(null)}
-                className={`px-3.5 py-2 rounded-xl text-xs font-semibold transition cursor-pointer border ${
-                  !selectedSubcategory
-                    ? 'bg-amber-500 text-black border-amber-400 font-bold shadow-sm'
-                    : 'bg-[#14141d] hover:bg-[#1a1a24] text-white/80 border-white/10'
-                }`}
-              >
+        <div className="mb-4 text-left animate-in fade-in duration-200">
+          <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-1.5 px-1 scroll-smooth">
+            {/* "All [Category Name]" chip */}
+            <button
+              id="subcategory-all"
+              onClick={() => setSelectedSubcategory(null)}
+              className={`shrink-0 px-3.5 py-2 rounded-full text-xs font-bold transition-all duration-200 cursor-pointer flex items-center gap-1.5 border whitespace-nowrap ${
+                !selectedSubcategory
+                  ? 'bg-amber-500 text-black border-amber-400 shadow-md shadow-amber-500/20'
+                  : 'bg-[#12121a] hover:bg-[#1b1b26] text-white/80 hover:text-white border-white/10'
+              }`}
+            >
+              <span>
                 {t('all_items_in_category', { category: currentLanguage === 'am' ? (selectedRedesignedCategory.translations?.am || selectedRedesignedCategory.name) : currentLanguage === 'om' ? (selectedRedesignedCategory.translations?.om || selectedRedesignedCategory.name) : selectedRedesignedCategory.name }) || `All ${selectedRedesignedCategory.name}`}
-              </button>
+              </span>
+              <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono font-semibold ${
+                !selectedSubcategory ? 'bg-black/20 text-black' : 'bg-white/10 text-white/60'
+              }`}>
+                {calcCategoryCount(selectedRedesignedCategory, properties)}
+              </span>
+            </button>
 
-              {/* Subcategory pills */}
-              {selectedRedesignedCategory.subcategories.map((sub) => {
-                const isSubSelected = selectedSubcategory?.id === sub.id;
-                const subCount = getSubcategoryListingCount(sub, selectedRedesignedCategory);
-                const subName = currentLanguage === 'am' 
-                  ? (sub.translations?.am || sub.name) 
-                  : currentLanguage === 'om' 
-                  ? (sub.translations?.om || sub.name) 
-                  : sub.name;
-                const subVisual = getSubcategoryVisual(sub.id, selectedRedesignedCategory.emoji);
+            {/* Subcategory chips */}
+            {selectedRedesignedCategory.subcategories.map((sub) => {
+              const isSubSelected = selectedSubcategory?.id === sub.id;
+              const subCount = getSubcategoryListingCount(sub, selectedRedesignedCategory);
+              const subName = currentLanguage === 'am' 
+                ? (sub.translations?.am || sub.name) 
+                : currentLanguage === 'om' 
+                ? (sub.translations?.om || sub.name) 
+                : sub.name;
+              const subVisual = getSubcategoryVisual(sub.id, selectedRedesignedCategory.emoji);
 
-                return (
-                  <button
-                    key={sub.id}
-                    onClick={() => handleSelectRedesignedCategory(selectedRedesignedCategory, isSubSelected ? null : sub)}
-                    className={`px-3.5 py-2 rounded-xl text-xs font-semibold transition cursor-pointer flex items-center gap-2 border ${
-                      isSubSelected
-                        ? 'bg-white text-black border-white font-bold shadow-md'
-                        : 'bg-[#14141d] hover:bg-[#1a1a24] text-white/80 border-white/10 hover:text-white'
-                    }`}
-                  >
-                    <span>{subVisual}</span>
-                    <span className="whitespace-nowrap">{subName}</span>
-                    <span className={`text-[10px] px-1.5 py-0.2 rounded-md font-mono ${
-                      isSubSelected ? 'bg-black/20 text-black font-bold' : 'bg-white/10 text-white/50'
-                    }`}>
-                      {subCount}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
+              return (
+                <button
+                  key={sub.id}
+                  id={`subcategory-${sub.id}`}
+                  onClick={() => handleSelectRedesignedCategory(selectedRedesignedCategory, isSubSelected ? null : sub)}
+                  className={`shrink-0 px-3.5 py-2 rounded-full text-xs font-semibold transition-all duration-200 cursor-pointer flex items-center gap-2 border whitespace-nowrap ${
+                    isSubSelected
+                      ? 'bg-amber-500 text-black border-amber-400 font-bold shadow-md shadow-amber-500/20'
+                      : 'bg-[#12121a] hover:bg-[#1b1b26] text-white/80 hover:text-white border-white/10'
+                  }`}
+                >
+                  <span className="text-sm leading-none">{subVisual}</span>
+                  <span>{subName}</span>
+                  <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono font-semibold ${
+                    isSubSelected ? 'bg-black/20 text-black' : 'bg-white/10 text-white/60'
+                  }`}>
+                    {subCount}
+                  </span>
+                </button>
+              );
+            })}
           </div>
         </div>
       )}
