@@ -1,4 +1,6 @@
-import React, { useState, useEffect, useRef } from 'react';
+const fs = require('fs');
+
+const code = `import React, { useState, useEffect, useRef } from 'react';
 import { Keyboard as KeyboardIcon, X, Delete, CornerDownLeft } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -54,7 +56,7 @@ const englishRows = [
 const numberRows = [
   ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'],
   ['@', '#', '$', '%', '&', '-', '+', '(', ')'],
-  ['=', '*', '"', "\'", ':', ';', '!', '?', ',']
+  ['=', '*', '"', "\\'", ':', ';', '!', '?', ',']
 ];
 
 export function AmharicKeyboard() {
@@ -64,7 +66,6 @@ export function AmharicKeyboard() {
 
   // Track active input element
   const [activeInput, setActiveInput] = useState<HTMLInputElement | HTMLTextAreaElement | null>(null);
-  const [isInputFocused, setIsInputFocused] = useState(false);
 
   useEffect(() => {
     const handleFocus = (e: FocusEvent) => {
@@ -76,7 +77,6 @@ export function AmharicKeyboard() {
         const type = (target as HTMLInputElement).type;
         if (!['button', 'submit', 'reset', 'radio', 'checkbox', 'file', 'color', 'date', 'time', 'range'].includes(type)) {
           setActiveInput(target as HTMLInputElement | HTMLTextAreaElement);
-          setIsInputFocused(true);
 
           if (isOpen) {
             if (!target.hasAttribute('data-orig-inputmode')) {
@@ -88,32 +88,9 @@ export function AmharicKeyboard() {
       }
     };
 
-    const handleBlur = (e: FocusEvent) => {
-      setTimeout(() => {
-        if (!document.activeElement || (document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA')) {
-          setIsInputFocused(false);
-          // We DO NOT setIsOpen(false) here because clicking a keyboard key causes blur.
-        }
-      }, 150);
-    };
-
-    const handleDocumentClick = (e: MouseEvent | TouchEvent) => {
-      const target = e.target as HTMLElement;
-      // If we clicked outside the keyboard and outside any valid input, close it.
-      if (isOpen && !target.closest('.amharic-keyboard-container') && target.tagName !== 'INPUT' && target.tagName !== 'TEXTAREA') {
-        setIsOpen(false);
-      }
-    };
-
     document.addEventListener('focusin', handleFocus);
-    document.addEventListener('focusout', handleBlur);
-    document.addEventListener('mousedown', handleDocumentClick);
-    document.addEventListener('touchstart', handleDocumentClick);
     return () => {
       document.removeEventListener('focusin', handleFocus);
-      document.removeEventListener('focusout', handleBlur);
-      document.removeEventListener('mousedown', handleDocumentClick);
-      document.removeEventListener('touchstart', handleDocumentClick);
     };
   }, [isOpen]);
 
@@ -274,7 +251,7 @@ export function AmharicKeyboard() {
     if (!targetInput) return;
 
     if (targetInput.tagName === 'TEXTAREA') {
-        insertTextAtCursor("\n");
+        insertTextAtCursor("\\n");
     } else {
         // Trigger enter keydown event for form submission or next input logic
         targetInput.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', code: 'Enter', keyCode: 13, bubbles: true }));
@@ -301,23 +278,20 @@ export function AmharicKeyboard() {
     setSelectedBaseChar(null);
   };
 
-  const renderToggleButton = () => {
-    if (!isOpen && !isInputFocused) return null;
-    return (
-      <button
-        onClick={(e) => {
-          e.preventDefault();
-          setIsOpen(!isOpen);
-        }}
-        onPointerDown={(e) => e.preventDefault()}
-        onMouseDown={(e) => e.preventDefault()}
-        className="amharic-keyboard-container fixed bottom-4 right-4 z-[9999] bg-amber-500 hover:bg-amber-400 text-black p-3 rounded-full shadow-lg shadow-black/50 transition-transform active:scale-95 flex items-center justify-center border-2 border-[#07070a]"
-        aria-label="Toggle Keyboard"
-      >
-        {isOpen ? <X className="w-6 h-6" /> : <KeyboardIcon className="w-6 h-6" />}
-      </button>
-    );
-  };
+  const renderToggleButton = () => (
+    <button
+      onClick={(e) => {
+        e.preventDefault();
+        setIsOpen(!isOpen);
+      }}
+      onPointerDown={(e) => e.preventDefault()}
+      onMouseDown={(e) => e.preventDefault()}
+      className="fixed bottom-4 right-4 z-[9999] bg-amber-500 hover:bg-amber-400 text-black p-3 rounded-full shadow-lg shadow-black/50 transition-transform active:scale-95 flex items-center justify-center border-2 border-[#07070a]"
+      aria-label="Toggle Keyboard"
+    >
+      {isOpen ? <X className="w-6 h-6" /> : <KeyboardIcon className="w-6 h-6" />}
+    </button>
+  );
 
   return (
     <>
@@ -330,7 +304,7 @@ export function AmharicKeyboard() {
             animate={{ y: 0 }}
             exit={{ y: '100%' }}
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="amharic-keyboard-container fixed bottom-0 left-0 right-0 z-[60] bg-[#1a1a1f] border-t border-white/10 shadow-2xl p-2 pb-6 max-h-[50vh] overflow-y-auto overscroll-contain"
+            className="fixed bottom-0 left-0 right-0 z-[60] bg-[#1a1a1f] border-t border-white/10 shadow-2xl p-2 pb-6 max-h-[50vh] overflow-y-auto overscroll-contain"
             onPointerDown={(e) => {
               // Only prevent default on the container itself to avoid blurring the input,
               // but don't prevent on the keys to allow their pointer events to work normally
@@ -346,19 +320,19 @@ export function AmharicKeyboard() {
                 <div className="flex bg-[#2a2a30] rounded-lg p-1 gap-1">
                   <button
                     onPointerDown={(e) => handleActionPress(e, () => { setLayoutMode('amharic'); setSelectedBaseChar(null); })}
-                    className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${layoutMode === 'amharic' ? 'bg-amber-500 text-black' : 'text-white/70 hover:text-white'}`}
+                    className={\`px-3 py-1.5 rounded-md text-sm font-medium transition-colors \${layoutMode === 'amharic' ? 'bg-amber-500 text-black' : 'text-white/70 hover:text-white'}\`}
                   >
                     አማርኛ
                   </button>
                   <button
                     onPointerDown={(e) => handleActionPress(e, () => { setLayoutMode('english'); setSelectedBaseChar(null); })}
-                    className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${layoutMode === 'english' ? 'bg-amber-500 text-black' : 'text-white/70 hover:text-white'}`}
+                    className={\`px-3 py-1.5 rounded-md text-sm font-medium transition-colors \${layoutMode === 'english' ? 'bg-amber-500 text-black' : 'text-white/70 hover:text-white'}\`}
                   >
                     EN
                   </button>
                   <button
                     onPointerDown={(e) => handleActionPress(e, () => { setLayoutMode('numbers'); setSelectedBaseChar(null); })}
-                    className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${layoutMode === 'numbers' ? 'bg-amber-500 text-black' : 'text-white/70 hover:text-white'}`}
+                    className={\`px-3 py-1.5 rounded-md text-sm font-medium transition-colors \${layoutMode === 'numbers' ? 'bg-amber-500 text-black' : 'text-white/70 hover:text-white'}\`}
                   >
                     123
                   </button>
@@ -403,7 +377,7 @@ export function AmharicKeyboard() {
 
                 {/* Main Keys */}
                 {!selectedBaseChar && layoutMode === 'amharic' && amharicBaseChars.map((row, rowIndex) => (
-                  <div key={`amh-row-${rowIndex}`} className="flex justify-center gap-1">
+                  <div key={\`amh-row-\${rowIndex}\`} className="flex justify-center gap-1">
                     {row.map((char, charIndex) => (
                       <button
                         key={charIndex}
@@ -425,7 +399,7 @@ export function AmharicKeyboard() {
                 ))}
 
                 {layoutMode === 'english' && englishRows.map((row, rowIndex) => (
-                  <div key={`eng-row-${rowIndex}`} className="flex justify-center gap-1">
+                  <div key={\`eng-row-\${rowIndex}\`} className="flex justify-center gap-1">
                     {row.map((char, charIndex) => (
                       <button
                         key={charIndex}
@@ -447,7 +421,7 @@ export function AmharicKeyboard() {
                 ))}
 
                 {layoutMode === 'numbers' && numberRows.map((row, rowIndex) => (
-                  <div key={`num-row-${rowIndex}`} className="flex justify-center gap-1">
+                  <div key={\`num-row-\${rowIndex}\`} className="flex justify-center gap-1">
                     {row.map((char, charIndex) => (
                       <button
                         key={charIndex}
@@ -507,3 +481,7 @@ export function AmharicKeyboard() {
     </>
   );
 }
+`;
+
+fs.writeFileSync('src/components/keyboard/AmharicKeyboard.tsx', code);
+console.log("Success");
