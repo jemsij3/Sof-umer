@@ -5878,26 +5878,7 @@ async function startServer() {
     }
   });
 
-  // PWA Manifest explicitly disabled
-  app.get('/manifest.json', (req, res) => {
-    res.status(404).json({ error: 'PWA manifest is disabled.' });
-  });
 
-  // Service Worker Endpoint (serves self-unregistering script)
-  app.get('/sw.js', (req, res) => {
-    res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
-    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-    const unregisterScript = `
-self.addEventListener('install', () => self.skipWaiting());
-self.addEventListener('activate', (e) => {
-  e.waitUntil(
-    caches.keys().then((keys) => Promise.all(keys.map((k) => caches.delete(k))))
-      .then(() => self.registration.unregister())
-  );
-});
-`;
-    res.send(unregisterScript);
-  });
 
   // Vite Integration for Front-end serving
   if (process.env.NODE_ENV !== 'production') {
