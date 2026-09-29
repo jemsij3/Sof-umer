@@ -218,7 +218,7 @@ export const staticTranslations: TranslationKey[] = [
   { key: "logout", en: "Logout", om: "Ba'i", am: "ውጡ", category: "General" },
   { key: "email", en: "Email Address", om: "Teessoo Imeelii", am: "የኢሜል አድራሻ", category: "General" },
   { key: "password", en: "Password", om: "Jecha Icchitii", am: "የይለፍ ቃል", category: "General" },
-  { key: "login_title", en: "Sign In to Sof Umer", om: "Sof Umeritti Seeni", am: "ወደ ሶፍ ኡመር ይግቡ", category: "Auth" },
+  { key: "login_title", en: "Sign In to SOF-UMER", om: "SOF-UMERitti Seeni", am: "ወደ ሶፍ ኡመር ይግቡ", category: "Auth" },
   { key: "login_subtitle", en: "Enter your credentials to access the premier real estate marketplace.", om: "Gabaa qabeenyaa olaanaa argachuuf ragaalee kee galchi.", am: "የሪል እስቴት ገበያውን ለመጠቀም መለያዎን ያስገቡ።", category: "Auth" },
   { key: "sign_in", en: "Sign In", om: "Seeni", am: "ይግቡ", category: "Auth" },
   { key: "dont_have_account", en: "Don't have an account?", om: "Mila/akawuntii hin qabduu?", am: "መለያ የለዎትም?", category: "Auth" },

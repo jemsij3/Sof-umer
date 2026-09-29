@@ -35,9 +35,6 @@ function MainAppLayout() {
 
   const [view, setView] = useState<'marketplace' | 'profile' | 'messages' | 'favorites' | 'notifications' | 'payments' | 'settings' | 'admin' | 'info-page'>('marketplace');
   const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
-  
-  // State for guest profile welcome screen (Welcome to SOF-UMER -> Login / Register)
-  const [guestProfileMode, setGuestProfileMode] = useState<'welcome' | 'login' | 'signup'>('welcome');
 
   // State to allow administrator login override when site is in maintenance or offline
   const [showAdminLogin, setShowAdminLogin] = useState(false);
@@ -82,9 +79,38 @@ function MainAppLayout() {
   // Create Modal state
   const [createModalOpen, setCreateModalOpen] = useState(false);
 
-  // Authentication mode switcher inside AuthScreen
+  // Unified Authentication state & destination tracking
   const [authScreenOpen, setAuthScreenOpen] = useState(false);
   const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
+  const [authDestination, setAuthDestination] = useState<'profile' | 'messages' | 'favorites' | 'create' | null>(null);
+
+  const handleOpenAuth = (mode: 'login' | 'signup' = 'login', destination: 'profile' | 'messages' | 'favorites' | 'create' | null = null) => {
+    setAuthMode(mode);
+    setAuthDestination(destination);
+    setAuthScreenOpen(true);
+  };
+
+  const handleCloseAuth = () => {
+    setAuthScreenOpen(false);
+    setAuthDestination(null);
+    if (!currentUser && (view === 'profile' || view === 'messages' || view === 'favorites')) {
+      setView('marketplace');
+    }
+  };
+
+  // When user successfully authenticates, navigate to their intended destination
+  React.useEffect(() => {
+    if (currentUser && authScreenOpen) {
+      setAuthScreenOpen(false);
+      if (authDestination === 'create') {
+        setCreateModalOpen(true);
+        setAuthDestination(null);
+      } else if (authDestination) {
+        setView(authDestination);
+        setAuthDestination(null);
+      }
+    }
+  }, [currentUser, authScreenOpen, authDestination]);
 
   // Report modal states
   const [reportModalOpen, setReportModalOpen] = useState(false);
@@ -246,12 +272,9 @@ function MainAppLayout() {
           if (v === 'admin' || v === 'profile' || v === 'messages' || v === 'favorites' || v === 'notifications' || v === 'payments' || v === 'settings') {
             if (!currentUser) {
               if (v === 'profile' || v === 'messages' || v === 'favorites') {
-                if (v === 'profile') setGuestProfileMode('welcome');
-                setView(v as any);
-                setSelectedProperty(null);
+                handleOpenAuth('login', v as any);
               } else {
-                setAuthMode('login');
-                setAuthScreenOpen(true);
+                handleOpenAuth('login', null);
               }
             } else {
               setView(v as any);
@@ -263,15 +286,13 @@ function MainAppLayout() {
         }}
         onOpenCreateModal={() => {
           if (!currentUser) {
-            setAuthMode('login');
-            setAuthScreenOpen(true);
+            handleOpenAuth('login', 'create');
           } else {
             setCreateModalOpen(true);
           }
         }}
         onOpenAuthModal={(mode) => {
-          setAuthMode(mode);
-          setAuthScreenOpen(true);
+          handleOpenAuth(mode, null);
         }}
       />
 
@@ -291,6 +312,7 @@ function MainAppLayout() {
                 property={selectedProperty}
                 onBack={() => setSelectedProperty(null)}
                 onOpenReportModal={handleOpenReportModal}
+                onNavigateToAuth={() => handleOpenAuth('login', null)}
               />
             </motion.div>
           ) : view === 'marketplace' ? (
@@ -354,8 +376,7 @@ function MainAppLayout() {
                 initialTab={view as any}
                 onNavigate={(v) => {
                   if (v === 'profile') {
-                    setAuthMode('login');
-                    setAuthScreenOpen(true);
+                    handleOpenAuth('login', 'profile');
                   } else {
                     handleNavigate('marketplace');
                   }
@@ -365,59 +386,10 @@ function MainAppLayout() {
                 onSelectProperty={(prop) => setSelectedProperty(prop)}
               />
             </motion.div>
-          ) : view === 'favorites' && !currentUser ? (
-            /* VISITOR FAVORITES VIEW - Real saved properties or clean empty state */
+          ) : !currentUser ? (
+            /* UNIFIED AUTHENTICATION FOR ALL PROTECTED TABS */
             <motion.div
-              key="guest-favorites"
-              initial={{ opacity: 0, y: 15 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -15 }}
-              className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 w-full"
-            >
-              <div className="flex items-center justify-between border-b border-white/5 pb-4 mb-8">
-                <div>
-                  <h2 className="text-2xl font-serif font-bold text-white">{t('favorites') || 'Favorites'}</h2>
-                  <p className="text-xs text-white/50 mt-1">{t('saved_items_subtitle') || 'Your saved properties and listings'}</p>
-                </div>
-                {favorites && favorites.length > 0 && (
-                  <span className="text-xs font-mono text-amber-400 bg-amber-400/10 px-3 py-1 rounded-full border border-amber-400/20">
-                    {favorites.length} {t('saved_count') || 'Saved'}
-                  </span>
-                )}
-              </div>
-
-              {(!favorites || favorites.length === 0 || properties.filter(p => favorites.includes(p.id)).length === 0) ? (
-                <div className="text-center py-16 px-4 bg-black/20 rounded-3xl border border-white/5 max-w-md mx-auto my-6">
-                  <Heart className="w-12 h-12 text-white/20 mx-auto mb-4" />
-                  <h3 className="text-base font-bold text-white mb-1">{t('no_saved') || 'No favorites yet.'}</h3>
-                  <p className="text-xs text-white/40 mb-6 max-w-xs mx-auto">
-                    {t('no_favorites_desc') || 'Browse listings and tap the heart icon to save your favorite items.'}
-                  </p>
-                  <button
-                    onClick={() => setView('marketplace')}
-                    className="px-6 py-3 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black font-bold text-xs rounded-xl shadow-lg shadow-amber-500/20 transition cursor-pointer"
-                  >
-                    {t('explore_marketplace') || 'Explore Marketplace'}
-                  </button>
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                  {properties.filter(p => favorites.includes(p.id)).map(p => (
-                    <ListingCard
-                      key={p.id}
-                      property={p}
-                      onSelect={(prop) => setSelectedProperty(prop)}
-                      favorites={favorites}
-                      onToggleFav={(id) => toggleFavorite(id)}
-                    />
-                  ))}
-                </div>
-              )}
-            </motion.div>
-          ) : view === 'messages' && !currentUser ? (
-            /* Logged-out user clicked Messages -> Immediately show the proper SOF-UMER Login page */
-            <motion.div
-              key="auth-messages-login"
+              key="auth-view"
               initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -15 }}
@@ -425,101 +397,21 @@ function MainAppLayout() {
             >
               <div className="w-full max-w-md">
                 <AuthScreen
-                  initialMode="login"
+                  initialMode={authMode}
                   onClose={() => setView('marketplace')}
+                  onSuccess={() => {
+                    if (authDestination === 'create') {
+                      setCreateModalOpen(true);
+                      setAuthDestination(null);
+                    } else if (authDestination) {
+                      setView(authDestination);
+                      setAuthDestination(null);
+                    }
+                  }}
                 />
               </div>
             </motion.div>
-          ) : guestProfileMode === 'welcome' ? (
-            /* Visitor Profile Welcome Screen: Clean presentation with Login and Register options */
-            <motion.div
-              key="guest-profile-welcome"
-              initial={{ opacity: 0, y: 15 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -15 }}
-              className="py-12 sm:py-20 px-4 flex justify-center items-center min-h-[60vh]"
-            >
-              <div className="w-full max-w-md bg-[#0c0c12] border border-white/10 rounded-3xl p-8 sm:p-10 shadow-2xl relative overflow-hidden text-center">
-                {/* Subtle ambient gold glow */}
-                <div className="absolute top-0 right-0 w-48 h-48 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
-
-                {/* Profile icon badge */}
-                <div className="w-20 h-20 rounded-3xl bg-gradient-to-tr from-amber-500/20 to-amber-600/10 border border-amber-500/30 flex items-center justify-center mx-auto mb-6 shadow-xl relative z-10">
-                  <UserIcon className="w-10 h-10 text-amber-400" />
-                </div>
-
-                <h2 className="text-2xl sm:text-3xl font-serif font-bold text-white mb-2 relative z-10">
-                  {t('welcome_to_sof_umer') || 'Welcome to SOF-UMER'}
-                </h2>
-                <p className="text-sm text-white/60 font-light mb-8 max-w-sm mx-auto leading-relaxed relative z-10">
-                  {t('auth_profile_prompt') || 'Sign in or create an account to manage your listings, chat with buyers, save favorites, and customize your profile.'}
-                </p>
-
-                {/* Login and Register Buttons */}
-                <div className="space-y-3 relative z-10">
-                  <button
-                    onClick={() => {
-                      setAuthMode('login');
-                      setGuestProfileMode('login');
-                    }}
-                    className="w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black font-extrabold py-3.5 px-6 rounded-2xl shadow-lg shadow-amber-500/20 transition-all text-center text-sm uppercase tracking-wider cursor-pointer active:scale-[0.99]"
-                  >
-                    {t('login') || 'Login'}
-                  </button>
-
-                  <button
-                    onClick={() => {
-                      setAuthMode('signup');
-                      setGuestProfileMode('signup');
-                    }}
-                    className="w-full bg-[#14141e] hover:bg-[#1a1a28] text-white font-bold py-3.5 px-6 rounded-2xl border border-white/10 hover:border-amber-500/40 transition-all text-center text-sm uppercase tracking-wider cursor-pointer active:scale-[0.99]"
-                  >
-                    {t('auth_register_label') || 'Register'}
-                  </button>
-                </div>
-
-                {/* Account Features Overview */}
-                <div className="mt-8 pt-6 border-t border-white/5 space-y-2.5 text-left relative z-10">
-                  <div className="flex items-center gap-2.5 text-xs text-white/70">
-                    <div className="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0" />
-                    <span>{t('perk_post_free') || 'Post and manage your property listings'}</span>
-                  </div>
-                  <div className="flex items-center gap-2.5 text-xs text-white/70">
-                    <div className="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0" />
-                    <span>{t('perk_direct_chat') || 'Direct in-app messaging with buyers and sellers'}</span>
-                  </div>
-                  <div className="flex items-center gap-2.5 text-xs text-white/70">
-                    <div className="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0" />
-                    <span>{t('perk_sync_favorites') || 'Keep your saved properties organized'}</span>
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-          ) : (
-            /* Visitor Profile Auth Form (Login or Register) with clean return to Profile overview */
-            <motion.div
-              key="auth-view"
-              initial={{ opacity: 0, y: 15 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -15 }}
-              className="py-12 px-4 flex justify-center items-center"
-            >
-              <div className="w-full max-w-md">
-                <div className="mb-4">
-                  <button
-                    onClick={() => setGuestProfileMode('welcome')}
-                    className="text-xs text-white/60 hover:text-amber-400 transition flex items-center gap-1.5 cursor-pointer px-2 py-1 rounded-lg hover:bg-white/5"
-                  >
-                    ← {t('back_to_profile') || 'Back to Profile'}
-                  </button>
-                </div>
-                <AuthScreen
-                  initialMode={guestProfileMode}
-                  onClose={() => setGuestProfileMode('welcome')}
-                />
-              </div>
-            </motion.div>
-          )}
+          ) : null}
 
         </AnimatePresence>
       </main>
@@ -549,7 +441,11 @@ function MainAppLayout() {
         <button
           onClick={() => {
             setSelectedProperty(null);
-            setView('messages');
+            if (!currentUser) {
+              handleOpenAuth('login', 'messages');
+            } else {
+              setView('messages');
+            }
           }}
           className={`flex-1 flex flex-col items-center justify-center gap-1 py-1 px-1 rounded-xl transition cursor-pointer min-w-0 ${
             view === 'messages' ? 'text-amber-400 font-bold' : 'text-white/60 hover:text-white'
@@ -567,8 +463,7 @@ function MainAppLayout() {
             if (currentUser) {
               setCreateModalOpen(true);
             } else {
-              setAuthMode('login');
-              setAuthScreenOpen(true);
+              handleOpenAuth('login', 'create');
             }
           }}
           className="flex flex-col items-center -mt-5 bg-gradient-to-tr from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black p-3.5 rounded-full shadow-lg shadow-amber-500/25 transition-transform active:scale-95 cursor-pointer border-2 border-[#07070a] shrink-0 mx-1"
@@ -582,7 +477,11 @@ function MainAppLayout() {
         <button
           onClick={() => {
             setSelectedProperty(null);
-            setView('favorites');
+            if (!currentUser) {
+              handleOpenAuth('login', 'favorites');
+            } else {
+              setView('favorites');
+            }
           }}
           className={`flex-1 flex flex-col items-center justify-center gap-1 py-1 px-1 rounded-xl transition cursor-pointer min-w-0 ${
             view === 'favorites' ? 'text-amber-400 font-bold' : 'text-white/60 hover:text-white'
@@ -598,8 +497,11 @@ function MainAppLayout() {
         <button
           onClick={() => {
             setSelectedProperty(null);
-            setGuestProfileMode('welcome');
-            setView('profile');
+            if (!currentUser) {
+              handleOpenAuth('login', 'profile');
+            } else {
+              setView('profile');
+            }
           }}
           className={`flex-1 flex flex-col items-center justify-center gap-1 py-1 px-1 rounded-xl transition cursor-pointer min-w-0 ${
             view === 'profile' || view === 'admin' || (currentUser && (view === 'settings' || view === 'payments' || view === 'notifications')) ? 'text-amber-400 font-bold' : 'text-white/60 hover:text-white'
@@ -612,21 +514,41 @@ function MainAppLayout() {
         </button>
       </nav>
 
-      {/* AUTH SCREEN MODAL OVERLAY (When triggered from guest actions) */}
+      {/* UNIFIED AUTH SCREEN MODAL OVERLAY */}
       <AnimatePresence>
         {authScreenOpen && !currentUser && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto"
+            className="fixed inset-0 z-50 bg-[#07070a]/90 backdrop-blur-md flex items-center justify-center p-4 sm:p-6 overflow-y-auto"
+            onClick={(e) => {
+              if (e.target === e.currentTarget) {
+                handleCloseAuth();
+              }
+            }}
           >
-            <div className="w-full max-w-md my-auto">
+            <motion.div
+              initial={{ scale: 0.96, opacity: 0, y: 10 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.96, opacity: 0, y: 10 }}
+              transition={{ duration: 0.2 }}
+              className="w-full max-w-md my-auto"
+            >
               <AuthScreen
                 initialMode={authMode}
-                onClose={() => setAuthScreenOpen(false)}
+                onClose={handleCloseAuth}
+                onSuccess={() => {
+                  if (authDestination === 'create') {
+                    setCreateModalOpen(true);
+                    setAuthDestination(null);
+                  } else if (authDestination) {
+                    setView(authDestination);
+                    setAuthDestination(null);
+                  }
+                }}
               />
-            </div>
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
