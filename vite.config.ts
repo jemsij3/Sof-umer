@@ -9,36 +9,52 @@ export default defineConfig(() => {
     plugins: [react(), tailwindcss(), VitePWA({
       registerType: 'autoUpdate',
       injectRegister: 'auto',
+      includeAssets: ['favicon.svg', 'apple-touch-icon.png', 'pwa-192x192.png', 'pwa-512x512.png', 'pwa-maskable-512x512.png'],
       manifest: {
+        id: '/',
         name: 'SOF-UMER',
         short_name: 'SOF-UMER',
         description: 'Ethiopia\'s premier real estate & property marketplace.',
-        theme_color: '#0D0D12',
-        background_color: '#0D0D12',
+        theme_color: '#0d0d12',
+        background_color: '#0d0d12',
         display: 'standalone',
+        orientation: 'portrait-primary',
         start_url: '/',
+        scope: '/',
         icons: [
           {
-            src: 'pwa-192x192.png',
+            src: '/pwa-192x192.png',
             sizes: '192x192',
-            type: 'image/png'
+            type: 'image/png',
+            purpose: 'any'
           },
           {
-            src: 'pwa-512x512.png',
+            src: '/pwa-512x512.png',
             sizes: '512x512',
-            type: 'image/png'
+            type: 'image/png',
+            purpose: 'any'
+          },
+          {
+            src: '/pwa-maskable-512x512.png',
+            sizes: '512x512',
+            type: 'image/png',
+            purpose: 'maskable'
           }
         ]
       },
       workbox: {
-        navigateFallbackDenylist: [/\/api\/.*/],
+        navigateFallbackDenylist: [/^\/api\/.*/],
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff,woff2,ttf,eot}'],
         runtimeCaching: [
           {
-            urlPattern: /\/api\/.*/,
+            urlPattern: /^\/api\/.*/,
             handler: 'NetworkOnly'
           }
         ]
+      },
+      devOptions: {
+        enabled: true,
+        type: 'module'
       }
     })],
     resolve: {

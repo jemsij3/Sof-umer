@@ -19,7 +19,7 @@ import { Property } from './types';
 import { ShieldAlert, X, Send, Compass, Heart, Plus, Search, User as UserIcon, Home, MessageSquare } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { getThemeCSS } from './lib/themes';
-import { AmharicKeyboard } from './components/keyboard/AmharicKeyboard';
+import { PWAInstallPrompt } from './components/PWAInstallPrompt';
 
 function MainAppLayout() {
   const {
@@ -651,8 +651,8 @@ function MainAppLayout() {
         </div>
       )}
 
-      {/* Safety / Complaint report modal overlay */}
-      <AmharicKeyboard />
+      {/* In-App PWA Install Banner */}
+      <PWAInstallPrompt />
 
     </div>
   );

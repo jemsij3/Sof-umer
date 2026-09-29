@@ -17,9 +17,10 @@ import {
   ChevronRight, UploadCloud, HelpCircle, FileText, AlertTriangle, Send, 
   ShieldCheck, Camera, Heart, Eye, Trash2, Edit2, Play, Pause, TrendingUp, 
   Info, List, Clock, Zap, DollarSign, Languages, Smartphone, Globe, ShieldAlert, Check, Plus, Lock, EyeOff, CheckSquare,
-  ChevronDown, Search, ArrowRight, ArrowLeft, Mail, Shield, ToggleLeft, ToggleRight, X, Folder, FolderOpen, Building, Gift, Briefcase, Save
+  ChevronDown, Search, ArrowRight, ArrowLeft, Mail, Shield, ToggleLeft, ToggleRight, X, Folder, FolderOpen, Building, Gift, Briefcase, Save, Download
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { usePWAInstall } from '../lib/usePWAInstall';
 
 // Expandable Accordion Item for FAQ Section
 function AccordionItem({ title, content, isOpen, onToggle }: { title: string; content: string; isOpen: boolean; onToggle: () => void; key?: React.Key }) {
@@ -104,6 +105,9 @@ export default function UserDashboard({
     if (initialTab === 'edit-profile') return 'edit-profile';
     return 'profile';
   });
+
+  const { isInstallable, isInstalled, isIOS, install: installPWA } = usePWAInstall();
+  const [showIOSPWAModal, setShowIOSPWAModal] = useState(false);
 
   // Helper to extract localized text from FAQ items (handles both string and object forms)
   const getFaqText = (val: any, targetLang: string) => {
@@ -2326,6 +2330,60 @@ export default function UserDashboard({
                       onUserUpdated={(updatedUser) => setCurrentUser(updatedUser)} 
                       minimal={true}
                     />
+                  </div>
+
+                  {/* 3. APPLICATION INSTALLATION (PWA) */}
+                  <div className="space-y-4 pt-6 border-t border-white/5">
+                    <h4 className="text-xs font-black uppercase text-white/70 tracking-wider font-mono">
+                      {t('pwa_install_app') || 'APPLICATION INSTALLATION (PWA)'}
+                    </h4>
+
+                    <div className="p-4 rounded-2xl bg-white/[0.03] border border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                      <div className="flex items-center gap-3">
+                        <img 
+                          src={systemSettings?.logoUrl || '/pwa-192x192.png'} 
+                          alt="App Logo" 
+                          className="w-12 h-12 rounded-xl object-cover border border-amber-500/30 flex-shrink-0"
+                        />
+                        <div>
+                          <p className="text-sm font-bold text-white tracking-wide font-serif">{systemSettings?.appName || 'SOF-UMER'}</p>
+                          <p className="text-xs text-white/50 mt-0.5">
+                            {isInstalled 
+                              ? (t('pwa_installed_badge') || 'Installed and running as application.')
+                              : (t('pwa_install_desc') || 'Install SOF-UMER on your home screen for quick access and offline caching.')}
+                          </p>
+                        </div>
+                      </div>
+
+                      {!isInstalled && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (isIOS) {
+                              setShowIOSPWAModal(true);
+                            } else {
+                              installPWA();
+                            }
+                          }}
+                          className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer shadow-md shadow-amber-500/20 active:scale-95 flex-shrink-0"
+                        >
+                          <Download className="w-4 h-4 text-black" />
+                          <span>{t('pwa_install_app') || 'Install App'}</span>
+                        </button>
+                      )}
+                    </div>
+
+                    {showIOSPWAModal && (
+                      <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-white text-xs space-y-2">
+                        <div className="flex items-center justify-between font-bold text-amber-400">
+                          <span>{t('pwa_ios_title') || 'Install on iPhone / iPad'}</span>
+                          <button type="button" onClick={() => setShowIOSPWAModal(false)} className="text-white/60 hover:text-white">✕</button>
+                        </div>
+                        <p className="text-white/80 leading-relaxed">
+                          {t('pwa_ios_instructions') || "Tap Safari's Share button at the bottom of your screen, then select 'Add to Home Screen'."}
+                        </p>
+                      </div>
+                    )}
                   </div>
                 </div>
               )}

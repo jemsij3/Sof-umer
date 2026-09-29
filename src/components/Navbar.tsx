@@ -3,6 +3,7 @@ import { useApp } from '../lib/AppContext';
 import { formatTimeAgo } from '../lib/utils';
 import { Bell, Languages, User, LogOut, MessageSquare, Settings, Shield, Plus, Building, Heart, CheckCircle2, Wallet, CreditCard, Download } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
+import { PWAInstallHeaderButton } from './PWAInstallPrompt';
 
 interface NavbarProps {
   onNavigate: (view: 'marketplace' | 'profile' | 'messages' | 'favorites' | 'notifications' | 'payments' | 'settings' | 'admin' | 'mylistings') => void;
@@ -180,6 +181,9 @@ export default function Navbar({ onNavigate, activeView, onOpenCreateModal, onOp
               <Plus className="w-4 h-4 text-black" />
               <span>{t('list_property') || 'Post Listing'}</span>
             </button>
+
+            {/* In-App PWA Install Quick Action */}
+            <PWAInstallHeaderButton />
 
             {/* Language Selector */}
             <div className="relative">

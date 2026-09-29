@@ -1266,11 +1266,20 @@ const applyDataSanityAndMigrations = () => {
       (t): t is TranslationKey => Boolean(t && typeof t === 'object' && typeof t.key === 'string' && t.key.trim().length > 0)
     );
 
-    const existingKeys = new Set(localDb.translations.map(t => t.key));
+    const transMap = new Map<string, TranslationKey>(localDb.translations.map(t => [t.key, t]));
     for (const t of validDefaultTranslations) {
-      if (t && t.key && !existingKeys.has(t.key)) {
+      if (!t || !t.key) continue;
+      const existing = transMap.get(t.key);
+      if (!existing) {
         localDb.translations.push(t);
-        existingKeys.add(t.key);
+        transMap.set(t.key, t);
+      } else {
+        if ((!existing.om || existing.om === existing.en) && t.om && t.om !== t.en) {
+          existing.om = t.om;
+        }
+        if ((!existing.am || existing.am === existing.en) && t.am && t.am !== t.en) {
+          existing.am = t.am;
+        }
       }
     }
   }
