@@ -5887,25 +5887,24 @@ async function startServer() {
     }
   });
 
-  // PWA Manifest explicitly disabled
-  app.get('/manifest.json', (req, res) => {
-    res.status(404).json({ error: 'PWA manifest is disabled.' });
+  // PWA Service Worker & Manifest Endpoints
+  app.get('/sw.js', (req, res, next) => {
+    const distSw = path.join(process.cwd(), 'dist', 'sw.js');
+    if (fsSync.existsSync(distSw)) {
+      res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
+      res.setHeader('Cache-Control', 'no-cache');
+      return res.sendFile(distSw);
+    }
+    next();
   });
 
-  // Service Worker Endpoint (serves self-unregistering script)
-  app.get('/sw.js', (req, res) => {
-    res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
-    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-    const unregisterScript = `
-self.addEventListener('install', () => self.skipWaiting());
-self.addEventListener('activate', (e) => {
-  e.waitUntil(
-    caches.keys().then((keys) => Promise.all(keys.map((k) => caches.delete(k))))
-      .then(() => self.registration.unregister())
-  );
-});
-`;
-    res.send(unregisterScript);
+  app.get(['/manifest.webmanifest', '/manifest.json'], (req, res, next) => {
+    const distManifest = path.join(process.cwd(), 'dist', 'manifest.webmanifest');
+    if (fsSync.existsSync(distManifest)) {
+      res.setHeader('Content-Type', 'application/manifest+json; charset=utf-8');
+      return res.sendFile(distManifest);
+    }
+    next();
   });
 
   // Vite Integration for Front-end serving
