@@ -188,60 +188,60 @@ export default function HelpCenter() {
                     </h3>
                   </div>
 
-                  <span className="text-[10px] text-white/30 font-mono shrink-0 uppercase">
-                    {isExpanded ? 'Collapse' : ''}
-                  </span>
-                </button>
+                    <span className="text-[10px] text-white/30 font-mono shrink-0 uppercase">
+                      {isExpanded ? (currentLanguage === 'om' ? 'Dachaasi' : currentLanguage === 'am' ? 'አጣጥፍ' : 'Collapse') : ''}
+                    </span>
+                  </button>
 
-                {/* Answer Content - Revealed strictly on click */}
-                <AnimatePresence initial={false}>
-                  {isExpanded && (
-                    <motion.div
-                      id={`faq-answer-${item.id}`}
-                      initial={{ height: 0, opacity: 0 }}
-                      animate={{ height: 'auto', opacity: 1 }}
-                      exit={{ height: 0, opacity: 0 }}
-                      transition={{ duration: 0.2, ease: 'easeInOut' }}
-                      className="overflow-hidden"
-                    >
-                      <div className="px-5 pb-5 pt-2 border-t border-white/5">
-                        <p className="text-xs md:text-sm text-white/70 font-light leading-relaxed whitespace-pre-line pl-7">
-                          {answer || 'No answer provided yet.'}
-                        </p>
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-            );
-          })
-        ) : (
-          <div className="text-center py-12 bg-black/20 border border-white/5 rounded-2xl space-y-2">
-            <HelpCircle className="w-8 h-8 text-white/20 mx-auto" />
-            <p className="text-xs text-white/50">
-              {searchQuery
-                ? currentLanguage === 'om'
-                  ? 'Gaaffiin barbaadame hin argamne.'
+                  {/* Answer Content - Revealed strictly on click */}
+                  <AnimatePresence initial={false}>
+                    {isExpanded && (
+                      <motion.div
+                        id={`faq-answer-${item.id}`}
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.2, ease: 'easeInOut' }}
+                        className="overflow-hidden"
+                      >
+                        <div className="px-5 pb-5 pt-2 border-t border-white/5">
+                          <p className="text-xs md:text-sm text-white/70 font-light leading-relaxed whitespace-pre-line pl-7">
+                            {answer || (currentLanguage === 'om' ? 'Deebiin ammatti hin qophoofne.' : currentLanguage === 'am' ? 'እስካሁን ምንም መልስ አልተሰጠም።' : 'No answer provided yet.')}
+                          </p>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              );
+            })
+          ) : (
+            <div className="text-center py-12 bg-black/20 border border-white/5 rounded-2xl space-y-2">
+              <HelpCircle className="w-8 h-8 text-white/20 mx-auto" />
+              <p className="text-xs text-white/50">
+                {searchQuery
+                  ? currentLanguage === 'om'
+                    ? 'Gaaffiin barbaadame hin argamne.'
+                    : currentLanguage === 'am'
+                    ? 'የሚዛመዱ ጥያቄዎች አልተገኙም።'
+                    : 'No matching questions found.'
+                  : currentLanguage === 'om'
+                  ? 'Gaaffileen ammatti hin jiran.'
                   : currentLanguage === 'am'
-                  ? 'የሚዛመዱ ጥያቄዎች አልተገኙም።'
-                  : 'No matching questions found.'
-                : currentLanguage === 'om'
-                ? 'Gaaffileen ammatti hin jiran.'
-                : currentLanguage === 'am'
-                ? 'በአሁኑ ጊዜ የቀረቡ ጥያቄዎች የሉም።'
-                : 'No frequently asked questions available at this time.'}
-            </p>
-            {searchQuery && (
-              <button
-                type="button"
-                onClick={() => setSearchQuery('')}
-                className="text-xs text-amber-400 hover:underline pt-1 cursor-pointer"
-              >
-                Clear Search
-              </button>
-            )}
-          </div>
-        )}
+                  ? 'በአሁኑ ጊዜ የቀረቡ ጥያቄዎች የሉም።'
+                  : 'No frequently asked questions available at this time.'}
+              </p>
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={() => setSearchQuery('')}
+                  className="text-xs text-amber-400 hover:underline pt-1 cursor-pointer"
+                >
+                  {currentLanguage === 'om' ? 'Barbaacha Haqii' : currentLanguage === 'am' ? 'ፍለጋን አጽዳ' : 'Clear Search'}
+                </button>
+              )}
+            </div>
+          )}
       </div>
     </div>
   );

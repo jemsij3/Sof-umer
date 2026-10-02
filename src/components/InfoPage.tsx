@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   ArrowLeft, Shield, CheckCircle2, UserCheck, AlertTriangle, LifeBuoy, 
-  FileText, Briefcase, Mail, MapPin, Send, HelpCircle, Eye, Globe, ChevronRight
+  FileText, Briefcase, Mail, MapPin, Send, HelpCircle, Eye, Globe, ChevronRight, Phone
 } from 'lucide-react';
 import { useApp } from '../lib/AppContext';
 import HelpCenter from './HelpCenter';
@@ -10,10 +10,11 @@ import HelpCenter from './HelpCenter';
 interface InfoPageProps {
   pageId: string;
   onBack: () => void;
+  returnView?: string;
   onOpenReportModalFromInfo?: () => void;
 }
 
-export default function InfoPage({ pageId, onBack, onOpenReportModalFromInfo }: InfoPageProps) {
+export default function InfoPage({ pageId, onBack, returnView, onOpenReportModalFromInfo }: InfoPageProps) {
   const { currentLanguage, appFeatures, jobOpenings, systemSettings, properties, users, t } = useApp();
   const [activeTab, setActiveTab] = useState<string>(pageId);
 
@@ -45,33 +46,32 @@ export default function InfoPage({ pageId, onBack, onOpenReportModalFromInfo }: 
     return `${count}+`;
   };
 
-  const defaultContactUs = {
-    title: 'Contact Us',
-    subtitle: 'Have questions or feedback? Send us an inquiry directly.',
-    hqTitle: 'Sof Umer Headquarters',
-    hqAddress: '6th Floor, Premium Plaza Building, Churchill Road, Addis Ababa, Ethiopia.',
-    location: 'Churchill Road, Addis Ababa',
-    email: 'info@sofumer.com',
-    phone: '+251 911 000 000',
-    fullNameLabel: 'Full Name *',
-    fullNamePlaceholder: 'e.g. Jemal Jimma',
-    emailLabel: 'Email Address *',
-    emailPlaceholder: 'e.g. jemal@sofumer.com',
-    messageLabel: 'Message / Inquiry *',
-    messagePlaceholder: 'Describe your inquiry, error or collaboration suggestion here...',
-    submitBtnText: 'Send Message'
-  };
-
-  const activeContactUs = systemSettings?.contactUsSettings !== undefined
+  // Admin-controlled Contact Us data source:
+  // ONLY use admin-configured settings. Do NOT invent placeholders if admin has not configured them.
+  const adminContactSettings = systemSettings?.contactUsSettings !== undefined
     ? systemSettings.contactUsSettings
     : (() => {
         try {
           const saved = localStorage.getItem('sof_umer_contact_us_settings');
-          return saved ? JSON.parse(saved) : defaultContactUs;
+          return saved ? JSON.parse(saved) : null;
         } catch {
-          return defaultContactUs;
+          return null;
         }
       })();
+
+  const contactEmailVal = adminContactSettings?.email || systemSettings?.supportEmail || '';
+  const contactPhoneVal = adminContactSettings?.phone || systemSettings?.supportPhone || '';
+  const contactLocationVal = adminContactSettings?.location || '';
+  const contactHqTitleVal = adminContactSettings?.hqTitle || '';
+  const contactHqAddressVal = adminContactSettings?.hqAddress || '';
+
+  const hasAnyContactMethod = Boolean(
+    contactEmailVal ||
+    contactPhoneVal ||
+    contactLocationVal ||
+    contactHqAddressVal ||
+    contactHqTitleVal
+  );
 
   const safetyIds = ['marketplace-rules', 'verify-ownership', 'safety-tips', 'report-listing', 'help-center', 'terms-of-service', 'privacy-policy'];
   const safetyFeatures = appFeatures.filter(f => safetyIds.includes(f.id));
@@ -531,27 +531,53 @@ export default function InfoPage({ pageId, onBack, onOpenReportModalFromInfo }: 
 
             {systemSettings?.termsAndPrivacy && (
               <div className="bg-amber-500/10 border border-amber-500/20 p-4 rounded-xl text-xs text-amber-200 leading-relaxed font-medium">
-                <span className="font-bold uppercase tracking-wider text-amber-400 block mb-1">Platform Policy & Legal Notice:</span>
+                <span className="font-bold uppercase tracking-wider text-amber-400 block mb-1">
+                  {currentLanguage === 'om' ? 'Seera Sagantaa & Hubachiisa Seeraa:' : currentLanguage === 'am' ? 'የመድረክ ፖሊሲ እና ህጋዊ ማስታወቂያ፡' : 'Platform Policy & Legal Notice:'}
+                </span>
                 {systemSettings.termsAndPrivacy}
               </div>
             )}
 
             <div className="bg-[#0c0c10]/60 p-6 rounded-2xl border border-white/5 text-xs text-white/70 space-y-4 max-h-[400px] overflow-y-auto leading-relaxed scrollbar-thin">
-              <h3 className="font-serif text-sm text-white font-bold">1. Agreement to Terms</h3>
+              <h3 className="font-serif text-sm text-white font-bold">
+                {currentLanguage === 'om' ? '1. Waliigaltee Ulaagaalee' : currentLanguage === 'am' ? '1. የውሎች ስምምነት' : '1. Agreement to Terms'}
+              </h3>
               <p>
-                By creating an account on Sof Umer, listing any products, real estate, vehicles, or services, or interacting with any advertisers, you unconditionally agree to be bound by these legal Terms of Service and all regional laws of the Federal Democratic Republic of Ethiopia.
+                {currentLanguage === 'om'
+                  ? "Herrega Sof Umer irratti banachuun, oomisha, lafa, konkolaataa ykn tajaajila kamuu beeksisuun, ykn beeksisoota wajjin walqunnamuun, Waliigaltee Tajaajilaa kanaafi seerota mootummaa Itoophiyaa kabajuuf haalduree tokko malee walii galtu."
+                  : currentLanguage === 'am'
+                  ? "በሶፍ ኡመር ላይ አካውንት በመክፈት፣ ማንኛውንም ምርት፣ ንብረት፣ ተሽከርካሪ ወይም አገልግሎት በማስታወቅ፣ ወይም ከሻጮች ጋር በመገናኘት፣ እነዚህን የአጠቃቀም ደንቦች እና የኢትዮጵያን ህጎች ለማክበር ያለምንም ቅድመ ሁኔታ ተስማምተዋል።"
+                  : "By creating an account on Sof Umer, listing any products, real estate, vehicles, or services, or interacting with any advertisers, you unconditionally agree to be bound by these legal Terms of Service and all regional laws of the Federal Democratic Republic of Ethiopia."}
               </p>
-              <h3 className="font-serif text-sm text-white font-bold">2. User Account Security</h3>
+              <h3 className="font-serif text-sm text-white font-bold">
+                {currentLanguage === 'om' ? '2. Nageenya Herrega Fayyadamaa' : currentLanguage === 'am' ? '2. የተጠቃሚ መለያ ደህንነት' : '2. User Account Security'}
+              </h3>
               <p>
-                You are solely responsible for maintaining the password and credentials of your account. Any activities performed through your account will be attributed to you. If you suspect any breach of security, you must notify our help desk immediately.
+                {currentLanguage === 'om'
+                  ? "Jecha icciitii fi odeeffannoo eenyummaa herrega keessanii eeguuf itti gaafatamummaa guutuu qabdu. Sochii herrega keessaniin raawwatamu hundaaf isintu itti gaafatama."
+                  : currentLanguage === 'am'
+                  ? "የመለያዎን የይለፍ ቃል እና መረጃ ደህንነት የመጠበቅ ሙሉ ኃላፊነት አለብዎት። በመለያዎ በኩል ለሚከናወኑ ማናቸውም እንቅስቃሴዎች እርስዎ ተጠያቂ ይሆናሉ።"
+                  : "You are solely responsible for maintaining the password and credentials of your account. Any activities performed through your account will be attributed to you. If you suspect any breach of security, you must notify our help desk immediately."}
               </p>
-              <h3 className="font-serif text-sm text-white font-bold">3. Listing Ownership and Licensing</h3>
+              <h3 className="font-serif text-sm text-white font-bold">
+                {currentLanguage === 'om' ? '3. Abbummaa Beeksisaafi Hayyama' : currentLanguage === 'am' ? '3. የማስታወቂያ ባለቤትነት እና ፈቃድ' : '3. Listing Ownership and Licensing'}
+              </h3>
               <p>
-                When you publish a listing, you guarantee that you own the intellectual and material property rights of that asset or possess legal power of attorney to advertise it. Sof Umer reserves the right to strip badges or delete listings that are contested by third-party owners.
+                {currentLanguage === 'om'
+                  ? "Beeksisa yeroo maxxansitan, mirga qabeenyichaa kan qabdan ta'uu ykn beeksisuuf bakka-bu'ummaa seeraa qabaachuu keessan mirkaneessitu."
+                  : currentLanguage === 'am'
+                  ? "ማስታወቂያ በሚለጥፉበት ጊዜ፣ የንብረቱ ህጋዊ ባለቤት መሆንዎን ወይም የማስተዋወቅ ህጋዊ ውክልና እንዳለዎት ያረጋግጣሉ።"
+                  : "When you publish a listing, you guarantee that you own the intellectual and material property rights of that asset or possess legal power of attorney to advertise it. Sof Umer reserves the right to strip badges or delete listings that are contested by third-party owners."}
               </p>
-              <h3 className="font-serif text-sm text-white font-bold">4. Limitation of Liability</h3>
+              <h3 className="font-serif text-sm text-white font-bold">
+                {currentLanguage === 'om' ? '4. Daangaa Itti-gaafatamummaa' : currentLanguage === 'am' ? '4. የተጠያቂነት ገደብ' : '4. Limitation of Liability'}
+              </h3>
               <p>
-                Sof Umer is an open-market peer-to-peer advertising utility. We do not own, inspect, guarantee, or manage the real properties, products, or vehicles listed by users. Transactions are finalized directly between the transacting parties, and Sof Umer shall not be liable for any losses, fraudulent deals, or damages arising from physical meets or legal disputes.
+                {currentLanguage === 'om'
+                  ? "Sof Umer walqunnamsiisaa gabaa bilisaati. Qabeenya, oomisha ykn konkolaattota beeksisaman abbummaadhaan hin to'atu. Daldalli kallattiin bittaafi gurgurtaa gidduutti xumurama."
+                  : currentLanguage === 'am'
+                  ? "ሶፍ ኡመር ገዢዎችን እና ሻጮችን የሚያገናኝ ክፍት የገበያ መድረክ ነው። በተጠቃሚዎች የተዘረዘሩትን ንብረቶች፣ ምርቶች ወይም ተሽከርካሪዎች ባለቤት አይደለም። ግብይቶች በቀጥታ በተዋዋይ ወገኖች መካከል ይከናወናሉ።"
+                  : "Sof Umer is an open-market peer-to-peer advertising utility. We do not own, inspect, guarantee, or manage the real properties, products, or vehicles listed by users. Transactions are finalized directly between the transacting parties, and Sof Umer shall not be liable for any losses, fraudulent deals, or damages arising from physical meets or legal disputes."}
               </p>
             </div>
           </div>
@@ -573,21 +599,45 @@ export default function InfoPage({ pageId, onBack, onOpenReportModalFromInfo }: 
             </div>
 
             <div className="bg-[#0c0c10]/60 p-6 rounded-2xl border border-white/5 text-xs text-white/70 space-y-4 max-h-[400px] overflow-y-auto leading-relaxed scrollbar-thin">
-              <h3 className="font-serif text-sm text-white font-bold">1. Information We Collect</h3>
+              <h3 className="font-serif text-sm text-white font-bold">
+                {currentLanguage === 'om' ? '1. Odeeffannoo Nuti Walitti Qabnu' : currentLanguage === 'am' ? '1. የምንሰበስበው መረጃ' : '1. Information We Collect'}
+              </h3>
               <p>
-                We collect your full name, email address, phone number, location, profile credentials, and listing content (images, title, description, pricing) during account registration and listing creation to provide the marketplace services.
+                {currentLanguage === 'om'
+                  ? "Tajaajila gabaa kennuuf maqaa guutuu, teessoo imeelii, lakkoofsa bilbilaa, bakka jireenyaa fi qabiyyee beeksisa keessanii walitti qabna."
+                  : currentLanguage === 'am'
+                  ? "የገበያ ቦታ አገልግሎቶችን ለመስጠት ሙሉ ስምዎን፣ የኢሜል አድራሻዎን፣ የስልክ ቁጥርዎን፣ አካባቢዎን እና የማስታወቂያ ይዘትን እንሰበስባለን።"
+                  : "We collect your full name, email address, phone number, location, profile credentials, and listing content (images, title, description, pricing) during account registration and listing creation to provide the marketplace services."}
               </p>
-              <h3 className="font-serif text-sm text-white font-bold">2. Sharing of Contact Information</h3>
+              <h3 className="font-serif text-sm text-white font-bold">
+                {currentLanguage === 'om' ? '2. Odeeffannoo Qunnamtii Qooduu' : currentLanguage === 'am' ? '2. የእውቂያ መረጃን ማጋራት' : '2. Sharing of Contact Information'}
+              </h3>
               <p>
-                Your phone number and email address are explicitly shared with other registered users on listing details pages to facilitate sales inquiries, bookings, and negotiations. If you do not wish to share your phone, you may toggle off listings or use our internal inquiry chat system.
+                {currentLanguage === 'om'
+                  ? "Bittaa fi gurgurtaa mijeessuuf lakkoofsi bilbilaa fi teessoon imeelii keessan fuula bal'ina beeksisaa irratti fayyadamtootaaf ni mul'ata."
+                  : currentLanguage === 'am'
+                  ? "የሽያጭ ጥያቄዎችን እና ድርድሮችን ለማመቻቸት የስልክ ቁጥርዎ እና የኢሜይል አድራሻዎ በማስታወቂያ ዝርዝር ገጾች ላይ ለተመዘገቡ ተጠቃሚዎች ይታያሉ።"
+                  : "Your phone number and email address are explicitly shared with other registered users on listing details pages to facilitate sales inquiries, bookings, and negotiations. If you do not wish to share your phone, you may toggle off listings or use our internal inquiry chat system."}
               </p>
-              <h3 className="font-serif text-sm text-white font-bold">3. Cookies and Storage</h3>
+              <h3 className="font-serif text-sm text-white font-bold">
+                {currentLanguage === 'om' ? '3. Kuusaa fi Kuukiiwwan' : currentLanguage === 'am' ? '3. ኩኪዎች እና ማከማቻ' : '3. Cookies and Storage'}
+              </h3>
               <p>
-                We use local storage (localStorage) to persist your active user session, selected language preferences, and favorite property bookmarks. This data is stored locally on your browser device and can be cleared at any time by logging out or wiping browser cookies.
+                {currentLanguage === 'om'
+                  ? "Seensa keessan, afaan filatameefi beeksisa jaallataman tursiisuuf kuusaa naannoo (localStorage) fayyadamna."
+                  : currentLanguage === 'am'
+                  ? "የተጠቃሚ ክፍለ ጊዜዎን፣ የተመረጠውን የቋንቋ ምርጫ እና ተወዳጅ ምልክቶችን ለማስቀመጥ የአካባቢ ማከማቻ (localStorage) እንጠቀማለን።"
+                  : "We use local storage (localStorage) to persist your active user session, selected language preferences, and favorite property bookmarks. This data is stored locally on your browser device and can be cleared at any time by logging out or wiping browser cookies."}
               </p>
-              <h3 className="font-serif text-sm text-white font-bold">4. Data Security</h3>
+              <h3 className="font-serif text-sm text-white font-bold">
+                {currentLanguage === 'om' ? '4. Nageenya Deetaa' : currentLanguage === 'am' ? '4. የውሂብ ደህንነት' : '4. Data Security'}
+              </h3>
               <p>
-                We employ standard hashing algorithms to encrypt passwords and secure database backends on our Cloud infrastructure. While we strive to maintain top-tier cybersecurity shields, no digital transmission is 100% secure, and users are encouraged to choose highly robust password parameters.
+                {currentLanguage === 'om'
+                  ? "Jecha icciitii fi kuusaa deetaa keenya eeguuf koodii ammayyaatti fayyadamna. Nageenya deetaa keessaniif of-eeggannoo guddaa goona."
+                  : currentLanguage === 'am'
+                  ? "የይለፍ ቃላትን እና የመረጃ ቋቶችን ደህንነት ለመጠበቅ ደረጃቸውን የጠበቁ ስልቶችን እንጠቀማለን። ለደህንነትዎ ከፍተኛ ጥንቃቄ እናደርጋለን።"
+                  : "We employ standard hashing algorithms to encrypt passwords and secure database backends on our Cloud infrastructure. While we strive to maintain top-tier cybersecurity shields, no digital transmission is 100% secure, and users are encouraged to choose highly robust password parameters."}
               </p>
             </div>
           </div>
@@ -690,17 +740,22 @@ export default function InfoPage({ pageId, onBack, onOpenReportModalFromInfo }: 
         );
 
       case 'contact-us':
-        if (!activeContactUs) {
+        if (!hasAnyContactMethod && (!adminContactSettings || !adminContactSettings.title)) {
           return (
             <div className="p-10 text-center bg-[#0c0c10]/60 border border-white/5 rounded-2xl space-y-3">
               <Mail className="w-10 h-10 text-white/30 mx-auto" />
-              <h3 className="text-lg font-serif text-white font-bold">Contact Channel Unavailable</h3>
+              <h3 className="text-lg font-serif text-white font-bold">
+                {t('contact_channel_unavailable') || (currentLanguage === 'om' ? 'Kallattiin Qunnamtii Hin Jiru' : currentLanguage === 'am' ? 'የእውቂያ መስመር አይገኝም' : 'Contact Channel Unavailable')}
+              </h3>
               <p className="text-xs text-white/50 max-w-sm mx-auto">
-                The administrator has temporarily hidden the contact card or configured offline support. Please check back later.
+                {t('contact_channel_unavailable_desc') || (currentLanguage === 'om' ? 'Bulchaan yeroodhaaf kaardii qunnamtii dhokseera ykn tajaajila sarara ala godheera. Maaloo booda deebi’aa ilaalaa.' : currentLanguage === 'am' ? 'አስተዳዳሪው የእውቂያ ካርዱን ለጊዜው ደብቆታል ወይም ከመስመር ውጭ ድጋፍን አዘጋጅቷል። እባክዎ ትንሽ ቆይተው እንደገና ይሞክሩ።' : 'The administrator has temporarily hidden the contact card or configured offline support. Please check back later.')}
               </p>
             </div>
           );
         }
+
+        const contactTitle = adminContactSettings?.title || t('contact_us') || (currentLanguage === 'om' ? 'Nu Quunnamaa' : currentLanguage === 'am' ? 'ያግኙን' : 'Contact Us');
+        const contactSubtitle = adminContactSettings?.subtitle || t('contact_us_subtitle') || (currentLanguage === 'om' ? 'Gaaffii ykn yaada qabdan nuuf ergaa.' : currentLanguage === 'am' ? 'ለማንኛውም ጥያቄዎች ወይም አስተያየቶች ከዚህ በታች ያለውን ቅጽ በመጠቀም ይላኩልን።' : 'Have questions or feedback? Send us an inquiry directly.');
 
         return (
           <div className="space-y-6">
@@ -708,48 +763,60 @@ export default function InfoPage({ pageId, onBack, onOpenReportModalFromInfo }: 
               <Mail className="w-8 h-8 text-emerald-400" />
               <div>
                 <h2 className="text-2xl font-serif text-white font-bold">
-                  {activeContactUs.title || (currentLanguage === 'om' ? 'Nu Quunnamaa' : currentLanguage === 'am' ? 'እኛን ያግኙን' : 'Contact Us')}
+                  {contactTitle}
                 </h2>
                 <p className="text-xs text-white/40">
-                  {activeContactUs.subtitle || (currentLanguage === 'om' ? 'Gaaffii ykn yaada qabdan nuuf ergaa' : currentLanguage === 'am' ? 'ለማንኛውም ጥያቄዎች ወይም አስተያየቶች ከዚህ በታች ያለውን ቅጽ በመጠቀም ይላኩልን' : 'Have questions or feedback? Send us an inquiry directly.')}
+                  {contactSubtitle}
                 </p>
               </div>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-              {/* Contact Info */}
-              <div className="lg:col-span-5 bg-[#0c0c10]/60 p-6 rounded-2xl border border-white/5 space-y-6 text-left">
-                <div className="space-y-2">
-                  <h3 className="font-serif text-base text-white">{activeContactUs.hqTitle || 'Sof Umer Headquarters'}</h3>
-                  <p className="text-xs text-white/50 leading-relaxed">
-                    {activeContactUs.hqAddress || '6th Floor, Premium Plaza Building, Churchill Road, Addis Ababa, Ethiopia.'}
-                  </p>
-                </div>
+            <div className={`grid grid-cols-1 ${hasAnyContactMethod ? 'lg:grid-cols-12' : ''} gap-6`}>
+              {/* Contact Info (Only if admin configured details) */}
+              {hasAnyContactMethod && (
+                <div className="lg:col-span-5 bg-[#0c0c10]/60 p-6 rounded-2xl border border-white/5 space-y-6 text-left">
+                  {(contactHqTitleVal || contactHqAddressVal) && (
+                    <div className="space-y-2">
+                      {contactHqTitleVal && (
+                        <h3 className="font-serif text-base text-white">{contactHqTitleVal}</h3>
+                      )}
+                      {contactHqAddressVal && (
+                        <p className="text-xs text-white/50 leading-relaxed">
+                          {contactHqAddressVal}
+                        </p>
+                      )}
+                    </div>
+                  )}
 
-                <div className="space-y-4 border-t border-white/5 pt-4">
-                  {activeContactUs.location && (
-                    <div className="flex items-center gap-3 text-xs text-white/70">
-                      <MapPin className="w-4 h-4 text-emerald-400 shrink-0" />
-                      <span>{activeContactUs.location}</span>
-                    </div>
-                  )}
-                  {activeContactUs.email && (
-                    <div className="flex items-center gap-3 text-xs text-white/70">
-                      <Mail className="w-4 h-4 text-amber-500 shrink-0" />
-                      <span>{activeContactUs.email}</span>
-                    </div>
-                  )}
-                  {activeContactUs.phone && (
-                    <div className="flex items-center gap-3 text-xs text-white/70">
-                      <HelpCircle className="w-4 h-4 text-emerald-400 shrink-0" />
-                      <span>{activeContactUs.phone}</span>
-                    </div>
-                  )}
+                  <div className="space-y-4 border-t border-white/5 pt-4">
+                    {contactLocationVal && (
+                      <div className="flex items-center gap-3 text-xs text-white/70">
+                        <MapPin className="w-4 h-4 text-emerald-400 shrink-0" />
+                        <span>{contactLocationVal}</span>
+                      </div>
+                    )}
+                    {contactEmailVal && (
+                      <div className="flex items-center gap-3 text-xs text-white/70">
+                        <Mail className="w-4 h-4 text-amber-500 shrink-0" />
+                        <a href={`mailto:${contactEmailVal}`} className="hover:underline hover:text-white transition">
+                          {contactEmailVal}
+                        </a>
+                      </div>
+                    )}
+                    {contactPhoneVal && (
+                      <div className="flex items-center gap-3 text-xs text-white/70">
+                        <Phone className="w-4 h-4 text-emerald-400 shrink-0" />
+                        <a href={`tel:${contactPhoneVal}`} className="hover:underline hover:text-white transition">
+                          {contactPhoneVal}
+                        </a>
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
+              )}
 
               {/* Contact Form */}
-              <div className="lg:col-span-7 bg-[#0c0c10]/60 p-6 rounded-2xl border border-white/5">
+              <div className={`${hasAnyContactMethod ? 'lg:col-span-7' : 'max-w-2xl mx-auto w-full'} bg-[#0c0c10]/60 p-6 rounded-2xl border border-white/5`}>
                 <AnimatePresence mode="wait">
                   {contactSuccess ? (
                     <motion.div 
@@ -775,42 +842,42 @@ export default function InfoPage({ pageId, onBack, onOpenReportModalFromInfo }: 
                     >
                       <div>
                         <label className="block text-[9px] font-bold text-white/50 uppercase tracking-widest mb-1.5">
-                          {activeContactUs.fullNameLabel || 'Full Name *'}
+                          {adminContactSettings?.fullNameLabel || (currentLanguage === 'om' ? 'Maqaa Guutuu *' : currentLanguage === 'am' ? 'ሙሉ ስም *' : 'Full Name *')}
                         </label>
                         <input 
                           type="text" 
                           required 
                           value={contactName} 
                           onChange={e => setContactName(e.target.value)} 
-                          placeholder={activeContactUs.fullNamePlaceholder || 'e.g. Jemal Jimma'} 
+                          placeholder={adminContactSettings?.fullNamePlaceholder || (currentLanguage === 'om' ? 'fkn. Jemal Jimma' : currentLanguage === 'am' ? 'ምሳሌ፡ ጀማል ጅማ' : 'e.g. Jemal Jimma')} 
                           className="w-full p-2.5 bg-black border border-white/10 rounded-xl text-xs text-white focus:outline-none focus:border-emerald-400 placeholder-white/20"
                         />
                       </div>
 
                       <div>
                         <label className="block text-[9px] font-bold text-white/50 uppercase tracking-widest mb-1.5">
-                          {activeContactUs.emailLabel || 'Email Address *'}
+                          {adminContactSettings?.emailLabel || (currentLanguage === 'om' ? 'Teessoo Imeelii *' : currentLanguage === 'am' ? 'የኢሜል አድራሻ *' : 'Email Address *')}
                         </label>
                         <input 
                           type="email" 
                           required 
                           value={contactEmail} 
                           onChange={e => setContactEmail(e.target.value)} 
-                          placeholder={activeContactUs.emailPlaceholder || 'e.g. jemal@sofumer.com'} 
+                          placeholder={adminContactSettings?.emailPlaceholder || (contactEmailVal ? `e.g. ${contactEmailVal}` : 'e.g. user@sofumer.com')} 
                           className="w-full p-2.5 bg-black border border-white/10 rounded-xl text-xs text-white focus:outline-none focus:border-emerald-400 placeholder-white/20"
                         />
                       </div>
 
                       <div>
                         <label className="block text-[9px] font-bold text-white/50 uppercase tracking-widest mb-1.5">
-                          {activeContactUs.messageLabel || 'Message / Inquiry *'}
+                          {adminContactSettings?.messageLabel || (currentLanguage === 'om' ? 'Ergaa / Gaaffii *' : currentLanguage === 'am' ? 'መልእክት / ጥያቄ *' : 'Message / Inquiry *')}
                         </label>
                         <textarea 
                           required 
                           rows={4} 
                           value={contactMessage} 
                           onChange={e => setContactMessage(e.target.value)} 
-                          placeholder={activeContactUs.messagePlaceholder || 'Describe your inquiry, error or collaboration suggestion here...'} 
+                          placeholder={adminContactSettings?.messagePlaceholder || (currentLanguage === 'om' ? 'Gaaffii ykn yaada qabdan asitti ibsaa...' : currentLanguage === 'am' ? 'ጥያቄዎን ወይም አስተያየትዎን እዚህ ይግለጹ...' : 'Describe your inquiry, error or collaboration suggestion here...')} 
                           className="w-full p-2.5 bg-black border border-white/10 rounded-xl text-xs text-white focus:outline-none focus:border-emerald-400 placeholder-white/20"
                         />
                       </div>
@@ -821,7 +888,11 @@ export default function InfoPage({ pageId, onBack, onOpenReportModalFromInfo }: 
                         className="w-full py-3 bg-emerald-500 hover:bg-emerald-600 text-black text-xs font-bold uppercase rounded-xl transition flex items-center justify-center gap-2 cursor-pointer mt-2"
                       >
                         <Send className="w-3.5 h-3.5" />
-                        <span>{contactSubmitting ? 'Sending...' : (activeContactUs.submitBtnText || 'Send Message')}</span>
+                        <span>
+                          {contactSubmitting 
+                            ? (currentLanguage === 'om' ? 'Ergaa jira...' : currentLanguage === 'am' ? 'በመላክ ላይ...' : 'Sending...') 
+                            : (adminContactSettings?.submitBtnText || (currentLanguage === 'om' ? 'Ergaa Ergi' : currentLanguage === 'am' ? 'መልእክት ላክ' : 'Send Message'))}
+                        </span>
                       </button>
                     </motion.form>
                   )}
@@ -1022,20 +1093,26 @@ export default function InfoPage({ pageId, onBack, onOpenReportModalFromInfo }: 
           className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 hover:border-white/10 text-xs font-bold uppercase tracking-wider text-white/80 transition-all duration-300 hover:translate-x-[-2px] cursor-pointer"
         >
           <ArrowLeft className="w-4 h-4" />
-          <span>{getTranslation(tInfo.backToMarketplace)}</span>
+          <span>
+            {returnView === 'profile' || returnView === 'dashboard'
+              ? (currentLanguage === 'om' ? "Gara Piroofayiliitti Deebi'i" : currentLanguage === 'am' ? "ወደ መለያ ይመለሱ" : "Back to Profile")
+              : getTranslation(tInfo.backToMarketplace)}
+          </span>
         </button>
 
         <span className="text-[10px] uppercase font-black tracking-widest text-[#10b981]/60">
           {['terms-of-service', 'privacy-policy'].includes(activeTab)
-            ? 'SOF-UMER • Legal Terms & Privacy'
+            ? (currentLanguage === 'om' ? 'SOF-UMER • Seera & Ibsa Iccitii' : currentLanguage === 'am' ? 'SOF-UMER • ህጋዊ ውሎች እና ግላዊነት' : 'SOF-UMER • Legal Terms & Privacy')
+            : activeTab === 'contact-us'
+            ? (currentLanguage === 'om' ? 'SOF-UMER • Nu Quunnamaa' : currentLanguage === 'am' ? 'SOF-UMER • ያግኙን' : 'SOF-UMER • Contact Us')
             : ['help-center', 'marketplace-rules', 'safety-tips', 'careers'].includes(activeTab) 
-            ? 'SOF-UMER • Support, Rules & Safety Guide' 
-            : 'SOF-UMER • About'}
+            ? (currentLanguage === 'om' ? 'SOF-UMER • Qajeelfama Deggarsaa & Nageenyaa' : currentLanguage === 'am' ? 'SOF-UMER • ድጋፍ እና የደህንነት መመሪያ' : 'SOF-UMER • Support, Rules & Safety Guide') 
+            : (currentLanguage === 'om' ? "SOF-UMER • Waa'ee Keenya" : currentLanguage === 'am' ? 'SOF-UMER • ስለ እኛ' : 'SOF-UMER • About')}
         </span>
       </div>
 
-      {['terms-of-service', 'privacy-policy'].includes(activeTab) ? (
-        /* Standalone Legal page - ONLY existing Terms of Service / Privacy Policy content, NO ABOUT SOF-UMER section */
+      {['terms-of-service', 'privacy-policy', 'contact-us'].includes(activeTab) ? (
+        /* Standalone page - ONLY existing content, NO ABOUT SOF-UMER section */
         <div className="max-w-4xl mx-auto bg-[#0e0e13]/90 rounded-3xl border border-[#10b981]/15 p-6 md:p-8 backdrop-blur-xl shadow-xl">
           <AnimatePresence mode="wait">
             <motion.div
@@ -1085,7 +1162,7 @@ export default function InfoPage({ pageId, onBack, onOpenReportModalFromInfo }: 
                 </div>
               </div>
             ) : (
-              /* ABOUT SOF-UMER Section - 3 items */
+              /* ABOUT SOF-UMER Section - 2 items (Contact Us is standalone) */
               <div className="bg-[#0c0c10]/60 p-4 rounded-2xl border border-white/5 space-y-4">
                 <h3 className="text-[10px] font-bold text-amber-400 uppercase tracking-widest border-b border-white/5 pb-2">
                   {currentLanguage === 'om' ? "Waa'ee SOF-UMER" : currentLanguage === 'am' ? 'ስለ SOF-UMER' : 'About SOF-UMER'}
@@ -1093,8 +1170,7 @@ export default function InfoPage({ pageId, onBack, onOpenReportModalFromInfo }: 
                 <div className="flex flex-col gap-1.5">
                   {[
                     { id: 'about-us', titleEn: 'About SOF-UMER', titleOm: "Waa'ee SOF-UMER", titleAm: 'ስለ SOF-UMER' },
-                    { id: 'how-it-works', titleEn: 'How It Works', titleOm: 'Inni Akkamitti Hojjata', titleAm: 'እንዴት እንደሚሰራ' },
-                    { id: 'contact-us', titleEn: 'Contact Us', titleOm: 'Nu Quunnamaa', titleAm: 'ያግኙን' }
+                    { id: 'how-it-works', titleEn: 'How It Works', titleOm: 'Inni Akkamitti Hojjata', titleAm: 'እንዴት እንደሚሰራ' }
                   ].map(feat => {
                     const title = currentLanguage === 'om' ? feat.titleOm : currentLanguage === 'am' ? feat.titleAm : feat.titleEn;
                     return (

@@ -796,7 +796,7 @@ export default function UserDashboard({
       <div className="max-w-xl mx-auto px-4 py-8 font-sans text-[#F5F5F4] text-left">
         {/* PROFILE TITLE */}
         <h1 className="text-2xl sm:text-3xl font-serif font-bold text-white mb-6 text-center tracking-tight">
-          PROFILE
+          {t('profile') || (lang === 'om' ? 'PROFAAYILII' : lang === 'am' ? 'መገለጫ' : 'PROFILE')}
         </h1>
 
         {/* PROFILE HEADER */}
@@ -828,22 +828,22 @@ export default function UserDashboard({
             {currentUser.isVerified || currentUser.verificationStatus === 'verified' ? (
               <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-xs font-semibold">
                 <ShieldCheck className="w-3.5 h-3.5" />
-                <span>Verified</span>
+                <span>{t('verified') || (lang === 'om' ? "Mirkanaa'aa" : lang === 'am' ? 'የተረጋገጠ' : 'Verified')}</span>
               </div>
             ) : currentUser.verificationStatus === 'pending' ? (
               <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20 text-xs font-semibold">
                 <Clock className="w-3.5 h-3.5" />
-                <span>Pending Verification</span>
+                <span>{t('pending_verification') || (lang === 'om' ? 'Mirkaneessaan Kan Eegamu' : lang === 'am' ? 'በመጠባበቅ ላይ ያለ' : 'Pending Verification')}</span>
               </div>
             ) : currentUser.verificationStatus === 'rejected' ? (
               <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-500/10 text-rose-400 border border-rose-500/20 text-xs font-semibold">
                 <ShieldAlert className="w-3.5 h-3.5" />
-                <span>Verification Rejected</span>
+                <span>{t('verification_rejected') || (lang === 'om' ? 'Mirkaneessi Kuffifameera' : lang === 'am' ? 'ማረጋገጫው ተቀባይነት አላገኘም' : 'Verification Rejected')}</span>
               </div>
             ) : (
               <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/5 text-white/50 border border-white/10 text-xs font-semibold">
                 <ShieldAlert className="w-3.5 h-3.5" />
-                <span>Unverified</span>
+                <span>{t('unverified') || (lang === 'om' ? 'Hin Mirkanoofne' : lang === 'am' ? 'ያልተረጋገጠ' : 'Unverified')}</span>
               </div>
             )}
           </div>
@@ -852,7 +852,7 @@ export default function UserDashboard({
         {/* SECTION: MY ACTIVITY */}
         <div className="border-t border-white/10 pt-6 pb-2">
           <h3 className="text-[11px] font-black uppercase text-white/40 tracking-wider mb-2.5 px-2 font-mono">
-            MY ACTIVITY
+            {t('my_activity') || (lang === 'om' ? 'SOCHII KOO' : lang === 'am' ? 'የእኔ እንቅስቃሴ' : 'MY ACTIVITY')}
           </h3>
           <div className="bg-[#0d0d12]/95 border border-white/5 rounded-2xl overflow-hidden divide-y divide-white/5 shadow-xl">
             <button
@@ -901,7 +901,7 @@ export default function UserDashboard({
         {/* SECTION: ACCOUNT & SECURITY */}
         <div className="border-t border-white/10 pt-6 pb-2">
           <h3 className="text-[11px] font-black uppercase text-white/40 tracking-wider mb-2.5 px-2 font-mono">
-            {t('account_security') || 'ACCOUNT & SECURITY'}
+            {t('account_security') || (lang === 'om' ? 'HERREGA & NAGEENYA' : lang === 'am' ? 'መለያ እና ደህንነት' : 'ACCOUNT & SECURITY')}
           </h3>
           <div className="bg-[#0d0d12]/95 border border-white/5 rounded-2xl overflow-hidden divide-y divide-white/5 shadow-xl">
             <button
@@ -914,7 +914,7 @@ export default function UserDashboard({
                   <User className="w-4 h-4" />
                 </div>
                 <span className="text-sm font-semibold text-white group-hover:text-amber-400 transition-colors">
-                  {t('edit_profile') || 'Edit Profile'}
+                  {t('edit_profile') || (lang === 'om' ? 'Profaayilii Gulaali' : lang === 'am' ? 'መገለጫ ያስተካክሉ' : 'Edit Profile')}
                 </span>
               </div>
               <div className="flex items-center gap-2">
@@ -935,7 +935,7 @@ export default function UserDashboard({
                   <Lock className="w-4 h-4" />
                 </div>
                 <span className="text-sm font-semibold text-white group-hover:text-amber-400 transition-colors">
-                  {t('security') || 'Security'}
+                  {t('security') || (lang === 'om' ? 'Nageenya' : lang === 'am' ? 'ደህንነት' : 'Security')}
                 </span>
               </div>
               <div className="flex items-center gap-2">
@@ -948,7 +948,7 @@ export default function UserDashboard({
         {/* SECTION: HELP & SUPPORT */}
         <div className="border-t border-white/10 pt-6 pb-2">
           <h3 className="text-[11px] font-black uppercase text-white/40 tracking-wider mb-2.5 px-2 font-mono">
-            HELP & SUPPORT
+            {t('help_support') || (lang === 'om' ? 'DEGGARSA & GARGAARSA' : lang === 'am' ? 'እርዳታ እና ድጋፍ' : 'HELP & SUPPORT')}
           </h3>
           <div className="bg-[#0d0d12]/95 border border-white/5 rounded-2xl overflow-hidden divide-y divide-white/5 shadow-xl">
             {/* 1. Contact Us */}
@@ -962,7 +962,7 @@ export default function UserDashboard({
                   <Mail className="w-4 h-4" />
                 </div>
                 <span className="text-sm font-semibold text-white group-hover:text-amber-400 transition-colors">
-                  {currentLanguage === 'om' ? 'Nu Quunnamaa' : currentLanguage === 'am' ? 'ያግኙን' : 'Contact Us'}
+                  {t('contact_us') || (currentLanguage === 'om' ? 'Nu Quunnamaa' : currentLanguage === 'am' ? 'ያግኙን' : 'Contact Us')}
                 </span>
               </div>
               <div className="flex items-center gap-2">
@@ -981,7 +981,7 @@ export default function UserDashboard({
                   <FileText className="w-4 h-4" />
                 </div>
                 <span className="text-sm font-semibold text-white group-hover:text-amber-400 transition-colors">
-                  {currentLanguage === 'om' ? 'Waliigaltee Tajaajilaa' : currentLanguage === 'am' ? 'የአጠቃቀም ስምምነት' : 'Terms of Service'}
+                  {t('terms_of_service') || (currentLanguage === 'om' ? 'Waliigaltee Tajaajilaa' : currentLanguage === 'am' ? 'የአጠቃቀም ስምምነት' : 'Terms of Service')}
                 </span>
               </div>
               <div className="flex items-center gap-2">
@@ -1000,7 +1000,7 @@ export default function UserDashboard({
                   <Shield className="w-4 h-4" />
                 </div>
                 <span className="text-sm font-semibold text-white group-hover:text-amber-400 transition-colors">
-                  {currentLanguage === 'om' ? 'Ibsa Iccitii' : currentLanguage === 'am' ? 'የግላዊነት ፖሊሲ' : 'Privacy Policy'}
+                  {t('privacy_policy') || (currentLanguage === 'om' ? 'Ibsa Iccitii' : currentLanguage === 'am' ? 'የግላዊነት ፖሊሲ' : 'Privacy Policy')}
                 </span>
               </div>
               <div className="flex items-center gap-2">
@@ -1019,7 +1019,7 @@ export default function UserDashboard({
                   <HelpCircle className="w-4 h-4" />
                 </div>
                 <span className="text-sm font-semibold text-white group-hover:text-amber-400 transition-colors">
-                  FAQ
+                  {t('faq') || (currentLanguage === 'om' ? 'Gaaffilee Yeroo Baay’ee (FAQ)' : currentLanguage === 'am' ? 'ተደጋጋሚ ጥያቄዎች (FAQ)' : 'FAQ')}
                 </span>
               </div>
               <div className="flex items-center gap-2">
@@ -1040,7 +1040,7 @@ export default function UserDashboard({
             className="w-full flex items-center justify-center gap-2 p-3.5 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 hover:text-rose-300 border border-rose-500/20 rounded-2xl text-xs font-bold uppercase tracking-wider transition cursor-pointer"
           >
             <LogOut className="w-4 h-4 text-rose-400" />
-            <span>Log Out</span>
+            <span>{t('logout') || (lang === 'om' ? "Ba'i" : lang === 'am' ? 'ውጣ' : 'Log Out')}</span>
           </button>
         </div>
       </div>
@@ -1056,7 +1056,7 @@ export default function UserDashboard({
         className="inline-flex items-center gap-2 text-xs font-bold text-amber-400 hover:text-amber-300 mb-6 px-3.5 py-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 transition cursor-pointer group"
       >
         <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-        <span>Back to Profile</span>
+        <span>{t('back_to_profile') || (lang === 'om' ? "Gara Piroofayiliitti Deebi'i" : lang === 'am' ? "ወደ መለያ ይመለሱ" : "Back to Profile")}</span>
       </button>
 
       <div className="bg-[#0d0d12]/95 border border-white/5 rounded-3xl p-6 md:p-8 shadow-2xl">
@@ -1093,7 +1093,7 @@ export default function UserDashboard({
                   {/* Profile Photo */}
                   <div>
                     <label className="block text-xs font-bold text-white/70 uppercase mb-2 font-mono">
-                      Profile Photo
+                      {t('profile_photo') || (lang === 'om' ? 'Suuraa Profaayilii' : lang === 'am' ? 'የመገለጫ ፎቶ' : 'Profile Photo')}
                     </label>
 
                     <div className="w-48 sm:w-56 p-6 rounded-2xl bg-black/40 border border-white/10 flex flex-col items-center justify-center text-center gap-4 shadow-xl">
@@ -1125,7 +1125,7 @@ export default function UserDashboard({
                         disabled={uploadingAvatar}
                         className="px-4 py-2 bg-white/5 hover:bg-white/10 text-amber-400 hover:text-amber-300 border border-white/10 font-bold text-xs rounded-xl transition cursor-pointer disabled:opacity-50"
                       >
-                        {uploadingAvatar ? 'Uploading...' : 'Change Photo'}
+                        {uploadingAvatar ? (lang === 'om' ? "Fe'aa Jira..." : lang === 'am' ? "በመጫን ላይ..." : "Uploading...") : (t('change_photo') || (lang === 'om' ? 'Suuraa Jijjiiri' : lang === 'am' ? 'ፎቶ ቀይር' : 'Change Photo'))}
                       </button>
                     </div>
                   </div>
@@ -1133,14 +1133,14 @@ export default function UserDashboard({
                   {/* Full Name */}
                   <div>
                     <label className="block text-xs font-bold text-white/70 uppercase mb-1.5 font-mono">
-                      Full Name
+                      {t('full_name') || (lang === 'om' ? 'Maqaa Guutuu' : lang === 'am' ? 'ሙሉ ስም' : 'Full Name')}
                     </label>
                     <input 
                       type="text" 
                       required 
                       value={fullName} 
                       onChange={e => setFullName(e.target.value)} 
-                      placeholder="Full Name"
+                      placeholder={t('full_name') || (lang === 'om' ? 'Maqaa Guutuu' : lang === 'am' ? 'ሙሉ ስም' : 'Full Name')}
                       className="w-full p-3.5 bg-black border border-white/10 focus:border-amber-500/50 text-sm text-white rounded-xl focus:outline-none focus:ring-1 focus:ring-amber-500/30 transition" 
                     />
                   </div>
@@ -1148,13 +1148,13 @@ export default function UserDashboard({
                   {/* Phone Number */}
                   <div>
                     <label className="block text-xs font-bold text-white/70 uppercase mb-1.5 font-mono">
-                      Phone Number
+                      {t('phone_number') || (lang === 'om' ? 'Lakkoofsa Bilbilaa' : lang === 'am' ? 'ስልክ ቁጥር' : 'Phone Number')}
                     </label>
                     <input 
                       type="text" 
                       value={profilePhone} 
                       onChange={e => setProfilePhone(e.target.value)} 
-                      placeholder="Phone Number"
+                      placeholder={t('phone_number') || (lang === 'om' ? 'Lakkoofsa Bilbilaa' : lang === 'am' ? 'ስልክ ቁጥር' : 'Phone Number')}
                       className="w-full p-3.5 bg-black border border-white/10 focus:border-amber-500/50 text-sm text-white rounded-xl focus:outline-none focus:ring-1 focus:ring-amber-500/30 transition" 
                     />
                   </div>
@@ -1162,8 +1162,8 @@ export default function UserDashboard({
                   {/* Email Address (Read-only) */}
                   <div>
                     <label className="block text-xs font-bold text-white/40 uppercase mb-1.5 font-mono flex items-center justify-between">
-                      <span>Email Address</span>
-                      <span className="text-[10px] text-white/30 uppercase font-mono tracking-wider">Read-only</span>
+                      <span>{t('email_address') || (lang === 'om' ? 'Teessoo Imeelii' : lang === 'am' ? 'የኢሜል አድራሻ' : 'Email Address')}</span>
+                      <span className="text-[10px] text-white/30 uppercase font-mono tracking-wider">{t('read_only') || (lang === 'om' ? 'Dubbisuuf qofa' : lang === 'am' ? 'ለንባብ ብቻ' : 'Read-only')}</span>
                     </label>
                     <input 
                       type="email" 
@@ -1172,7 +1172,7 @@ export default function UserDashboard({
                       disabled
                       className="w-full p-3.5 bg-black/50 border border-white/5 text-white/50 rounded-xl cursor-not-allowed text-xs font-mono select-none" 
                     />
-                    <span className="text-[11px] text-white/30 font-mono mt-1 block">Read-only</span>
+                    <span className="text-[11px] text-white/30 font-mono mt-1 block">{t('read_only') || (lang === 'om' ? 'Dubbisuuf qofa' : lang === 'am' ? 'ለንባብ ብቻ' : 'Read-only')}</span>
                   </div>
 
                   {/* Action Buttons: Cancel and Save */}
@@ -1189,13 +1189,13 @@ export default function UserDashboard({
                       }}
                       className="flex-1 py-3.5 px-6 bg-white/5 hover:bg-white/10 text-white font-bold text-xs uppercase tracking-wider rounded-xl border border-white/10 transition cursor-pointer text-center"
                     >
-                      Cancel
+                      {t('cancel') || (lang === 'om' ? 'Dhiisi' : lang === 'am' ? 'ይቅር' : 'Cancel')}
                     </button>
                     <button 
                       type="submit" 
                       className="flex-1 py-3.5 px-6 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black font-extrabold text-xs uppercase tracking-wider rounded-xl transition shadow-lg shadow-amber-500/10 cursor-pointer text-center"
                     >
-                      Save
+                      {t('save') || (lang === 'om' ? "Olkaa'i" : lang === 'am' ? 'አስቀምጥ' : 'Save')}
                     </button>
                   </div>
                 </form>
@@ -1208,7 +1208,12 @@ export default function UserDashboard({
                   <div className="border-b border-white/5 pb-4">
                     <h3 className="text-xl font-bold text-white tracking-tight">{t('my_listings') || 'My Listings'}</h3>
                     <p className="text-xs text-white/40 mt-1">
-                      {myListings.length} {myListings.length === 1 ? 'property listing' : 'property listings'} in your account
+                      {myListings.length}{' '}
+                      {lang === 'om'
+                        ? 'beeksisa qabeenyaa herrega keessan keessaa'
+                        : lang === 'am'
+                        ? 'የንብረት ማስታወቂያዎች በመለያዎ ውስጥ'
+                        : myListings.length === 1 ? 'property listing in your account' : 'property listings in your account'}
                     </p>
                   </div>
 
@@ -2251,7 +2256,7 @@ export default function UserDashboard({
                   {/* 1. PASSWORD & SECURITY */}
                   <div className="space-y-4">
                     <h4 className="text-xs font-black uppercase text-white/70 tracking-wider font-mono">
-                      PASSWORD & SECURITY
+                      {t('password_and_security') || (lang === 'om' ? 'Jecha Darbii & Nageenya' : lang === 'am' ? 'የይለፍ ቃል እና ደህንነት' : 'PASSWORD & SECURITY')}
                     </h4>
 
                     {passSuccess && (
@@ -2268,42 +2273,42 @@ export default function UserDashboard({
                     <form onSubmit={handleChangePassword} className="space-y-4">
                       <div>
                         <label className="block text-xs font-bold text-white/70 uppercase mb-1.5 font-mono">
-                          Current Password
+                          {t('current_password') || (lang === 'om' ? 'Jecha Icchitii Ammaa' : lang === 'am' ? 'የአሁኑ የይለፍ ቃል' : 'Current Password')}
                         </label>
                         <input 
                           type="password" 
                           required 
                           value={currPassword} 
                           onChange={e => setCurrPassword(e.target.value)} 
-                          placeholder="Current Password"
+                          placeholder={t('current_password') || (lang === 'om' ? 'Jecha Icchitii Ammaa' : lang === 'am' ? 'የአሁኑ የይለፍ ቃል' : 'Current Password')}
                           className="w-full p-3.5 bg-black border border-white/10 focus:border-amber-500/50 text-sm text-white rounded-xl focus:outline-none focus:ring-1 focus:ring-amber-500/30 transition" 
                         />
                       </div>
 
                       <div>
                         <label className="block text-xs font-bold text-white/70 uppercase mb-1.5 font-mono">
-                          New Password
+                          {t('new_password') || (lang === 'om' ? 'Jecha Icchitii Haaraa' : lang === 'am' ? 'አዲስ የይለፍ ቃል' : 'New Password')}
                         </label>
                         <input 
                           type="password" 
                           required 
                           value={newPassword} 
                           onChange={e => setNewPassword(e.target.value)} 
-                          placeholder="New Password"
+                          placeholder={t('new_password') || (lang === 'om' ? 'Jecha Icchitii Haaraa' : lang === 'am' ? 'አዲስ የይለፍ ቃል' : 'New Password')}
                           className="w-full p-3.5 bg-black border border-white/10 focus:border-amber-500/50 text-sm text-white rounded-xl focus:outline-none focus:ring-1 focus:ring-amber-500/30 transition" 
                         />
                       </div>
 
                       <div>
                         <label className="block text-xs font-bold text-white/70 uppercase mb-1.5 font-mono">
-                          Confirm Password
+                          {t('confirm_password') || (lang === 'om' ? 'Jecha Icchitii Mirkaneessi' : lang === 'am' ? 'የይለፍ ቃል ያረጋግጡ' : 'Confirm Password')}
                         </label>
                         <input 
                           type="password" 
                           required 
                           value={confirmPassword} 
                           onChange={e => setConfirmPassword(e.target.value)} 
-                          placeholder="Confirm Password"
+                          placeholder={t('confirm_password') || (lang === 'om' ? 'Jecha Icchitii Mirkaneessi' : lang === 'am' ? 'የይለፍ ቃል ያረጋግጡ' : 'Confirm Password')}
                           className="w-full p-3.5 bg-black border border-white/10 focus:border-amber-500/50 text-sm text-white rounded-xl focus:outline-none focus:ring-1 focus:ring-amber-500/30 transition" 
                         />
                       </div>
@@ -2313,7 +2318,7 @@ export default function UserDashboard({
                           type="submit" 
                           className="py-3.5 px-6 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black font-extrabold text-xs uppercase tracking-wider rounded-xl transition shadow-lg shadow-amber-500/10 cursor-pointer"
                         >
-                          Change Security Password
+                          {t('change_password_btn') || (lang === 'om' ? 'Jecha Darbii Jijjiiri' : lang === 'am' ? 'የይለፍ ቃል ቀይር' : 'Change Security Password')}
                         </button>
                       </div>
                     </form>
@@ -2322,7 +2327,7 @@ export default function UserDashboard({
                   {/* 2. TWO-FACTOR AUTHENTICATION */}
                   <div className="space-y-4 pt-6 border-t border-white/5">
                     <h4 className="text-xs font-black uppercase text-white/70 tracking-wider font-mono">
-                      TWO-FACTOR AUTHENTICATION
+                      {t('two_factor_auth') || (lang === 'om' ? 'MIRKANEESSA MADAALLII LAMA' : lang === 'am' ? 'ባለ ሁለት ደረጃ ማረጋገጫ' : 'TWO-FACTOR AUTHENTICATION')}
                     </h4>
 
                     <TwoFactorSecurityModule 

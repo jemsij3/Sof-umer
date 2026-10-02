@@ -343,6 +343,7 @@ function MainAppLayout() {
             >
               <InfoPage
                 pageId={activeInfoPageId}
+                returnView={returnViewFromInfo}
                 onBack={() => setView((returnViewFromInfo as any) || 'marketplace')}
                 onOpenReportModalFromInfo={() => {
                   handleOpenReportModal('property', 'info-contact', 'Report Department / User Support');
