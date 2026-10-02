@@ -221,6 +221,7 @@ export const staticTranslations: TranslationKey[] = [
   { key: "login_title", en: "Welcome to Sof Umer", om: "Baga gara Sof Umer dhuftan", am: "እንኳን ወደ ሶፍ ኡመር በደህና መጡ", category: "Auth" },
   { key: "login_subtitle", en: "Buy, sell, rent, hire, and connect with confidence through verified listings, trusted businesses, and secure services—all in one modern marketplace.", om: "Bitaa, gurguraa, kireeffadhaa, qaxaraa, akkasumas amantummaadhaan beeksisa mirkanaa'e, daldala amansiisaa fi tajaajila nageenya qabuun walqunnamaa—hunda gabaa ammayyaa tokko keessatti.", am: "በተረጋገጡ ማስታወቂያዎች፣ ታማኝ ንግዶች እና ደህንነታቸው በተጠበቁ አገልግሎቶች በልበ ሙሉነት ይግዙ፣ ይሽጡ፣ ይከራዩ፣ ይቀጥሩ እና ይገናኙ—ሁሉም በአንድ ዘመናዊ ገበያ ውስጥ።", category: "Auth" },
   { key: "sign_in", en: "Sign In", om: "Seeni", am: "ይግቡ", category: "Auth" },
+  { key: "or", en: "OR", om: "YKN", am: "ወይም", category: "Auth" },
   { key: "dont_have_account", en: "Don't have an account?", om: "Mila/akawuntii hin qabduu?", am: "መለያ የለዎትም?", category: "Auth" },
   { key: "register_now", en: "Register Now", om: "Amma Galmee", am: "አሁን ይመዝገቡ", category: "Auth" },
   { key: "already_have_account", en: "Already have an account?", om: "Duraan akawuntii qabduu?", am: "በፊት መለያ አለዎት?", category: "Auth" },
