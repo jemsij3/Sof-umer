@@ -1274,11 +1274,17 @@ const applyDataSanityAndMigrations = () => {
         localDb.translations.push(t);
         transMap.set(t.key, t);
       } else {
-        if ((!existing.om || existing.om === existing.en) && t.om && t.om !== t.en) {
+        if (t.key === 'login_title' || t.key === 'login_subtitle') {
+          existing.en = t.en;
           existing.om = t.om;
-        }
-        if ((!existing.am || existing.am === existing.en) && t.am && t.am !== t.en) {
           existing.am = t.am;
+        } else {
+          if ((!existing.om || existing.om === existing.en) && t.om && t.om !== t.en) {
+            existing.om = t.om;
+          }
+          if ((!existing.am || existing.am === existing.en) && t.am && t.am !== t.en) {
+            existing.am = t.am;
+          }
         }
       }
     }

@@ -609,7 +609,7 @@ export default function AuthScreen({ initialMode = 'login', onClose, onSuccess }
 
             <h2 className="text-2xl sm:text-3xl font-serif text-white tracking-tight font-bold">
               {mode === 'login'
-                ? (t('login_title') || 'Sign In to SOF-UMER')
+                ? (t('login_title') || 'Welcome to Sof Umer')
                 : mode === 'signup'
                   ? (t('auth_create_account_title') || 'Create your Account')
                   : mode === 'verify'
@@ -623,7 +623,7 @@ export default function AuthScreen({ initialMode = 'login', onClose, onSuccess }
 
             <p className="mt-1.5 text-xs text-white/50 font-light max-w-sm mx-auto">
               {mode === 'login'
-                ? (t('login_subtitle') || 'Enter your credentials to access the premier marketplace.')
+                ? (t('login_subtitle') || 'Buy, sell, rent, hire, and connect with confidence through verified listings, trusted businesses, and secure services—all in one modern marketplace.')
                 : mode === 'signup'
                   ? (t('auth_join_desc') || 'Join SOF-UMER regional digital marketplace.')
                   : mode === 'verify'
@@ -634,7 +634,7 @@ export default function AuthScreen({ initialMode = 'login', onClose, onSuccess }
             </p>
 
             {/* Integrated Welcome Bullets (from Screen 1) */}
-            {(mode === 'login' || mode === 'signup') && (
+            {mode === 'signup' && (
               <div className="flex flex-wrap items-center justify-center gap-x-3.5 gap-y-1 mt-3 pt-3 border-t border-white/5 text-[11px] text-white/60">
                 <span className="inline-flex items-center gap-1.5">
                   <span className="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0" />
