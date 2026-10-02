@@ -1274,7 +1274,7 @@ const applyDataSanityAndMigrations = () => {
         localDb.translations.push(t);
         transMap.set(t.key, t);
       } else {
-        if (t.key === 'login_title' || t.key === 'login_subtitle') {
+        if (t.key === 'login_title' || t.key === 'login_subtitle' || t.key === 'my_listings' || t.key === 'account_security' || t.key === 'edit_profile' || t.key === 'security' || t.key === 'notifications') {
           existing.en = t.en;
           existing.om = t.om;
           existing.am = t.am;

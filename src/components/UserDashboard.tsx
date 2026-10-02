@@ -865,7 +865,7 @@ export default function UserDashboard({
                   <List className="w-4 h-4" />
                 </div>
                 <span className="text-sm font-semibold text-white group-hover:text-amber-400 transition-colors">
-                  My Listings
+                  {t('my_listings') || 'My Listings'}
                 </span>
               </div>
               <div className="flex items-center gap-2">
@@ -883,7 +883,7 @@ export default function UserDashboard({
                   <Bell className="w-4 h-4" />
                 </div>
                 <span className="text-sm font-semibold text-white group-hover:text-amber-400 transition-colors">
-                  Notifications
+                  {t('notifications') || 'Notifications'}
                 </span>
               </div>
               <div className="flex items-center gap-2.5">
@@ -901,7 +901,7 @@ export default function UserDashboard({
         {/* SECTION: ACCOUNT & SECURITY */}
         <div className="border-t border-white/10 pt-6 pb-2">
           <h3 className="text-[11px] font-black uppercase text-white/40 tracking-wider mb-2.5 px-2 font-mono">
-            ACCOUNT & SECURITY
+            {t('account_security') || 'ACCOUNT & SECURITY'}
           </h3>
           <div className="bg-[#0d0d12]/95 border border-white/5 rounded-2xl overflow-hidden divide-y divide-white/5 shadow-xl">
             <button
@@ -914,7 +914,7 @@ export default function UserDashboard({
                   <User className="w-4 h-4" />
                 </div>
                 <span className="text-sm font-semibold text-white group-hover:text-amber-400 transition-colors">
-                  Edit Profile
+                  {t('edit_profile') || 'Edit Profile'}
                 </span>
               </div>
               <div className="flex items-center gap-2">
@@ -935,7 +935,7 @@ export default function UserDashboard({
                   <Lock className="w-4 h-4" />
                 </div>
                 <span className="text-sm font-semibold text-white group-hover:text-amber-400 transition-colors">
-                  Security
+                  {t('security') || 'Security'}
                 </span>
               </div>
               <div className="flex items-center gap-2">
@@ -1073,7 +1073,7 @@ export default function UserDashboard({
             {activeTab === 'edit-profile' && (
               <div className="space-y-6 max-w-lg">
                 <div className="border-b border-white/5 pb-4">
-                  <h3 className="text-xl font-bold text-white tracking-tight uppercase">EDIT PROFILE</h3>
+                  <h3 className="text-xl font-bold text-white tracking-tight uppercase">{t('edit_profile') || 'EDIT PROFILE'}</h3>
                 </div>
 
                 {profileSuccess && (
@@ -1206,7 +1206,7 @@ export default function UserDashboard({
               {activeTab === 'mylistings' && (
                 <div className="space-y-6">
                   <div className="border-b border-white/5 pb-4">
-                    <h3 className="text-xl font-bold text-white tracking-tight">My Listings</h3>
+                    <h3 className="text-xl font-bold text-white tracking-tight">{t('my_listings') || 'My Listings'}</h3>
                     <p className="text-xs text-white/40 mt-1">
                       {myListings.length} {myListings.length === 1 ? 'property listing' : 'property listings'} in your account
                     </p>
@@ -2245,7 +2245,7 @@ export default function UserDashboard({
                 <div className="space-y-8 max-w-lg">
                   {/* Header */}
                   <div className="border-b border-white/5 pb-4">
-                    <h3 className="text-xl font-bold text-white tracking-tight uppercase">SECURITY</h3>
+                    <h3 className="text-xl font-bold text-white tracking-tight uppercase">{t('security') || 'SECURITY'}</h3>
                   </div>
 
                   {/* 1. PASSWORD & SECURITY */}
