@@ -482,6 +482,7 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
   const [subcategory, setSubcategory] = useState('Electronics');
   
   const [submitting, setSubmitting] = useState(false);
+  const [successState, setSuccessState] = useState(false);
   const [error, setError] = useState('');
   const [imageInput, setImageInput] = useState('');
   const [imagesList, setImagesList] = useState<string[]>([]);
@@ -1054,6 +1055,7 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
 
   // Final submission of listing and promotion purchase
   const handleFinalPublish = async (packageOverride?: any) => {
+    if (submitting) return;
     if (!currentUser) return;
     setError('');
     setSubmitting(true);
@@ -1248,10 +1250,10 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
       }
 
       await refreshData();
-      onClose();
+      setSubmitting(false);
+      setSuccessState(true);
     } catch (err: any) {
       setError(err.message || t('server_error_retry') || 'Connection error. Please try again.');
-    } finally {
       setSubmitting(false);
     }
   };
@@ -1305,6 +1307,28 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
       });
     }
   };
+
+  if (successState) {
+    return (
+      <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex justify-center items-center p-0 sm:p-4">
+        <div className="bg-[#0c0c0c] w-full h-[100dvh] sm:h-auto sm:max-h-[92vh] sm:max-w-3xl sm:rounded-2xl overflow-hidden border-0 sm:border sm:border-white/10 shadow-2xl animate-in fade-in zoom-in-95 duration-200 text-[#F5F5F4] flex flex-col items-center justify-center p-8 sm:p-12 text-center">
+          <div className="w-20 h-20 bg-emerald-500/20 rounded-full flex items-center justify-center mb-6 shadow-lg shadow-emerald-500/10">
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-10 h-10 text-emerald-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+          </div>
+          <h2 className="text-2xl sm:text-3xl font-extrabold text-white mb-4 uppercase tracking-wider">Listing Submitted</h2>
+          <p className="text-white/70 max-w-md mx-auto mb-8 leading-relaxed text-sm sm:text-base">
+            Your listing has been successfully submitted and is awaiting admin authorization. It will become publicly visible once approved.
+          </p>
+          <button
+            onClick={onClose}
+            className="px-8 py-3.5 bg-emerald-500 hover:bg-emerald-400 text-black font-extrabold rounded-xl uppercase tracking-wider transition shadow-lg shadow-emerald-500/20"
+          >
+            Done
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex justify-center items-center p-0 sm:p-4">

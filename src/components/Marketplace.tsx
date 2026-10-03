@@ -422,7 +422,7 @@ export default function Marketplace({
       const matchesFeaturedOnly = !featuredOnlyFilter || isPropertyActivelyFeatured(prop);
 
       // Only display approved/verified properties to the public
-      const isApproved = prop.verificationStatus === 'verified' || prop.isVerifiedListing === true;
+      const isApproved = prop.verificationStatus === 'verified' || prop.isVerifiedListing === true || prop.approvalStatus === 'approved';
 
       return (
         isApproved &&
@@ -511,7 +511,7 @@ export default function Marketplace({
     return properties.filter(p => {
       if ((p as any).isArchived) return false;
       if (p.approvalStatus === 'rejected' || p.approvalStatus === 'pending' || p.verificationStatus === 'pending') return false;
-      const isApproved = p.verificationStatus === 'verified' || p.isVerifiedListing === true;
+      const isApproved = p.verificationStatus === 'verified' || p.isVerifiedListing === true || p.approvalStatus === 'approved';
       if (!isApproved) return false;
 
       const effMajor = getEffectiveMajorCategory(p);

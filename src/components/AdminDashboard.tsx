@@ -4213,7 +4213,9 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
 
                           <div className="flex flex-wrap items-center gap-2 justify-end shrink-0">
                             <button
-                              onClick={() => {
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
                                 setEditingProp(p);
                                 setPropForm({
                                   title: extractString(p.title),
@@ -4266,7 +4268,7 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
                             </button>
 
                             <button
-                              onClick={() => handleTogglePropertyFeatured(p)}
+                              onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleTogglePropertyFeatured(p); }}
                               className={`text-[10px] font-extrabold px-3 py-2 rounded-xl border transition cursor-pointer ${p.isFeatured ? 'bg-amber-500 text-black border-amber-600' : 'bg-white/5 text-white/50 border-white/10'}`}
                             >
                               {p.isFeatured ? 'Promoted' : 'Promote'}
@@ -4275,13 +4277,13 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
                             {(!p.verificationStatus || p.verificationStatus === 'pending') ? (
                               <>
                                 <button
-                                  onClick={() => handleVerifyProperty(p.id, 'verified')}
+                                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleVerifyProperty(p.id, 'verified'); }}
                                   className="px-3 py-2 bg-emerald-500 hover:bg-emerald-600 text-black font-extrabold text-[10px] uppercase rounded-xl cursor-pointer"
                                 >
                                   Approve
                                 </button>
                                 <button
-                                  onClick={() => handleVerifyProperty(p.id, 'rejected')}
+                                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleVerifyProperty(p.id, 'rejected'); }}
                                   className="px-3 py-2 bg-rose-500 hover:bg-rose-600 text-white font-extrabold text-[10px] uppercase rounded-xl cursor-pointer"
                                 >
                                   Reject
@@ -4289,7 +4291,7 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
                               </>
                             ) : (
                               <button
-                                onClick={() => handleVerifyProperty(p.id, 'pending')}
+                                onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleVerifyProperty(p.id, 'pending'); }}
                                 className={`text-[9px] uppercase font-bold px-2.5 py-1 rounded border cursor-pointer hover:bg-white/5 transition duration-200 active:scale-95 ${p.verificationStatus === 'verified' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/10 hover:border-emerald-500/30' : 'bg-rose-500/10 text-rose-400 border-rose-500/10 hover:border-rose-500/30'}`}
                                 title="Click to change verification status"
                               >
@@ -4298,7 +4300,7 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
                             )}
 
                             <button
-                              onClick={() => handleDeleteProperty(p.id)}
+                              onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleDeleteProperty(p.id); }}
                               className="p-2 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 rounded-xl transition cursor-pointer"
                               title="Delete Listing"
                             >
