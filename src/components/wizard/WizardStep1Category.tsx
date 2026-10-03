@@ -5,6 +5,7 @@ import {
 import { NormalizedSellingType } from '../../utils/wholesalePricing';
 import { getTranslatedCategoryName, getTranslatedSubcategoryName } from '../../lib/categoriesData';
 import { SUBCATEGORIES } from '../CreateListingModal';
+import { useApp } from '../../lib/AppContext';
 
 export const CATEGORY_ITEMS = [
   { id: 'Properties', name: 'Real Estate / Properties', icon: Building },
@@ -34,6 +35,7 @@ export const WizardStep1Category: React.FC<WizardStep1CategoryProps> = ({
   onSelectSellingType,
   currentLanguage
 }) => {
+  const { t } = useApp();
   const currentSubs = SUBCATEGORIES[majorCategory as keyof typeof SUBCATEGORIES] || [];
 
   return (
@@ -42,9 +44,11 @@ export const WizardStep1Category: React.FC<WizardStep1CategoryProps> = ({
       <div className="space-y-2">
         <div className="flex items-center justify-between">
           <label className="block text-xs font-bold text-amber-500 uppercase tracking-widest">
-            1. Select Main Category *
+            {t('select_main_category') || '1. Select Main Category *'}
           </label>
-          <span className="text-[11px] text-white/50">{majorCategory}</span>
+          <span className="text-[11px] text-white/50">
+            {getTranslatedCategoryName(majorCategory, currentLanguage)}
+          </span>
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2.5">
@@ -82,7 +86,7 @@ export const WizardStep1Category: React.FC<WizardStep1CategoryProps> = ({
       {currentSubs.length > 0 && (
         <div className="space-y-2 pt-2 border-t border-white/5">
           <label className="block text-xs font-bold text-white/80 uppercase tracking-wider">
-            Subcategory ({majorCategory}) *
+            {t('wizard.step_subcategory') || 'Subcategory'} ({getTranslatedCategoryName(majorCategory, currentLanguage)}) *
           </label>
           <select
             value={subcategory}
@@ -103,32 +107,32 @@ export const WizardStep1Category: React.FC<WizardStep1CategoryProps> = ({
         <div className="space-y-3 pt-2 border-t border-white/5">
           <div className="flex items-center justify-between">
             <label className="block text-xs font-bold text-amber-400 uppercase tracking-wider font-mono">
-              2. Selling Intent / Mode *
+              2. {t('selling_type_intent_label') || 'Selling Intent / Mode *'}
             </label>
-            <span className="text-[10px] text-white/40">Select how you want to sell</span>
+            <span className="text-[10px] text-white/40">{t('selling_type_prompt') || 'Select how you want to sell'}</span>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             {[
               {
                 type: 'Retail' as const,
-                title: 'Option A: Single Units (Retail)',
-                badge: 'Retail Buyers',
-                subtitle: 'Sell individual pieces directly to consumers at a standard fixed unit retail price.',
+                title: t('selling_type_opt_a') || 'Option A: Single Units (Retail)',
+                badge: t('retail_buyers_badge') || 'Retail Buyers',
+                subtitle: t('selling_type_retail_desc') || 'Sell individual pieces directly to consumers at a standard fixed unit retail price.',
                 icon: Tag
               },
               {
                 type: 'Wholesale' as const,
-                title: 'Option B: Bulk Only (Wholesale / MOQ)',
-                badge: 'B2B Wholesale',
-                subtitle: 'B2B bulk orders with minimum order quantities (MOQ >= 10) and tiered volume discounts.',
+                title: t('selling_type_opt_b') || 'Option B: Bulk Only (Wholesale / MOQ)',
+                badge: t('b2b_wholesale_badge') || 'B2B Wholesale',
+                subtitle: t('selling_type_wholesale_desc') || 'B2B bulk orders with minimum order quantities (MOQ >= 10) and tiered volume discounts.',
                 icon: Package
               },
               {
                 type: 'Retail + Wholesale' as const,
-                title: 'Option C: Dual Pricing (Retail & Wholesale)',
-                badge: 'Highest Reach',
-                subtitle: 'Sell single units to retail buyers AND offer tiered bulk discounts to wholesale buyers.',
+                title: t('selling_type_opt_c') || 'Option C: Dual Pricing (Retail & Wholesale)',
+                badge: t('highest_reach_badge') || 'Highest Reach',
+                subtitle: t('selling_type_dual_desc') || 'Sell single units to retail buyers AND offer tiered bulk discounts to wholesale buyers.',
                 icon: Layers
               }
             ].map(opt => {

@@ -1,8 +1,10 @@
 import React from 'react';
 import { Tag, Package, Truck } from 'lucide-react';
-import { NormalizedSellingType, STANDARD_UNITS } from '../../utils/wholesalePricing';
+import { NormalizedSellingType, STANDARD_UNITS, getLocalizedUnit } from '../../utils/wholesalePricing';
 import { WholesalePricingTiersEditor } from '../WholesalePricingTiersEditor';
 import { WholesalePriceTier } from '../../types';
+import { useApp } from '../../lib/AppContext';
+import { getTranslatedFurnished, getTranslatedCondition } from '../../lib/categoriesData';
 
 interface WizardStep3PricingProps {
   majorCategory: string;
@@ -25,6 +27,7 @@ export const WizardStep3Pricing: React.FC<WizardStep3PricingProps> = ({
   wholesaleTiers,
   setWholesaleTiers
 }) => {
+  const { t, currentLanguage } = useApp();
   const currentDelivery = Array.isArray(fieldsState.deliveryOptions) ? fieldsState.deliveryOptions : [];
 
   const isRealEstate = 
@@ -44,25 +47,25 @@ export const WizardStep3Pricing: React.FC<WizardStep3PricingProps> = ({
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div>
           <label className="block text-xs font-bold text-white/80 uppercase mb-1">
-            Currency *
+            {t('wizard.currency_label') || 'Currency'} *
           </label>
           <select
             value={currency}
             onChange={e => setCurrency(e.target.value)}
             className="w-full p-3 bg-zinc-900 border border-white/10 focus:border-[#F5A623] rounded-xl text-xs text-white focus:outline-none transition"
           >
-            <option value="ETB" className="bg-[#0c0c0c]">ETB (Ethiopian Birr)</option>
+            <option value="ETB" className="bg-[#0c0c0c]">ETB ({t('ethiopian_birr_unit') || 'Ethiopian Birr'})</option>
             <option value="USD" className="bg-[#0c0c0c]">USD ($)</option>
-            <option value="SAR" className="bg-[#0c0c0c]">SAR (Saudi Riyal)</option>
+            <option value="SAR" className="bg-[#0c0c0c]">SAR ({t('saudi_riyal_unit') || 'Saudi Riyal'})</option>
             <option value="EUR" className="bg-[#0c0c0c]">EUR (€)</option>
-            <option value="AED" className="bg-[#0c0c0c]">AED (UAE Dirham)</option>
+            <option value="AED" className="bg-[#0c0c0c]">AED ({t('uae_dirham_unit') || 'UAE Dirham'})</option>
           </select>
         </div>
 
         {formData.category !== 'properties' && (
           <div>
             <label className="block text-xs font-bold text-white/80 uppercase mb-1">
-              Pricing Unit *
+              {t('pricing_unit_label') || 'Pricing Unit *'}
             </label>
             <select
               value={fieldsState.unit || fieldsState.wholesaleUnit || 'Piece'}
@@ -73,7 +76,9 @@ export const WizardStep3Pricing: React.FC<WizardStep3PricingProps> = ({
               className="w-full p-3 bg-zinc-900 border border-white/10 focus:border-[#F5A623] rounded-xl text-xs text-white focus:outline-none transition"
             >
               {STANDARD_UNITS.map(u => (
-                <option key={u} value={u} className="bg-[#0c0c0c]">{u}</option>
+                <option key={u} value={u} className="bg-[#0c0c0c]">
+                  {getLocalizedUnit(u, currentLanguage, 1)}
+                </option>
               ))}
             </select>
           </div>
@@ -84,12 +89,12 @@ export const WizardStep3Pricing: React.FC<WizardStep3PricingProps> = ({
       {formData.category === 'properties' && (
         <div className="p-4 rounded-2xl bg-[#141418] border border-white/10 space-y-4">
           <h4 className="text-xs font-bold text-[#F5A623] uppercase tracking-wider">
-            Property Pricing & Details
+            {t('property_pricing_details_title') || 'Property Pricing & Details'}
           </h4>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="block text-xs font-bold text-white/80 uppercase mb-1">
-                Property Price ({currency}) *
+                {t('priceLabel') || 'Property Price'} ({currency}) *
               </label>
               <input
                 type="number"
@@ -102,15 +107,15 @@ export const WizardStep3Pricing: React.FC<WizardStep3PricingProps> = ({
             </div>
             <div>
               <label className="block text-xs font-bold text-white/80 uppercase mb-1">
-                Negotiable?
+                {t('negotiable_label') || 'Negotiable?'}
               </label>
               <select
                 value={fieldsState.negotiable || 'No'}
                 onChange={e => handleFieldChange('negotiable', e.target.value)}
                 className="w-full p-3 bg-[#0A0A0C] border border-white/10 focus:border-[#F5A623] rounded-xl text-xs text-white"
               >
-                <option value="No" className="bg-[#0A0A0C]">Fixed Price (Non-negotiable)</option>
-                <option value="Yes" className="bg-[#0A0A0C]">Negotiable</option>
+                <option value="No" className="bg-[#0A0A0C]">{t('fixed_price_option') || 'Fixed Price (Non-negotiable)'}</option>
+                <option value="Yes" className="bg-[#0A0A0C]">{t('negotiable_option') || 'Negotiable'}</option>
               </select>
             </div>
           </div>
@@ -118,19 +123,19 @@ export const WizardStep3Pricing: React.FC<WizardStep3PricingProps> = ({
           {/* Property Condition / Status Dropdown (Real Estate Only) */}
           <div>
             <label className="block text-xs font-bold text-white/80 uppercase mb-1">
-              Property Condition / Status *
+              {t('property_condition_status_label') || 'Property Condition / Status *'}
             </label>
             <select
               value={formData.condition || ''}
               onChange={e => handleFieldChange('condition', e.target.value)}
               className="w-full p-3 bg-[#0A0A0C] border border-white/10 focus:border-[#F5A623] rounded-xl text-xs text-white focus:outline-none transition"
             >
-              <option value="" disabled className="bg-[#0A0A0C] text-white/40">Select Property Condition / Status...</option>
-              <option value="Furnished" className="bg-[#0A0A0C]">Furnished</option>
-              <option value="Unfurnished" className="bg-[#0A0A0C]">Unfurnished</option>
-              <option value="Semi-Furnished" className="bg-[#0A0A0C]">Semi-Furnished</option>
-              <option value="Under Construction" className="bg-[#0A0A0C]">Under Construction</option>
-              <option value="Brand New / Newly Built" className="bg-[#0A0A0C]">Brand New / Newly Built</option>
+              <option value="" disabled className="bg-[#0A0A0C] text-white/40">{t('select_property_condition') || 'Select Property Condition / Status...'}</option>
+              <option value="Furnished" className="bg-[#0A0A0C]">{getTranslatedFurnished('Furnished', currentLanguage)}</option>
+              <option value="Unfurnished" className="bg-[#0A0A0C]">{getTranslatedFurnished('Unfurnished', currentLanguage)}</option>
+              <option value="Semi-Furnished" className="bg-[#0A0A0C]">{getTranslatedFurnished('Semi-Furnished', currentLanguage)}</option>
+              <option value="Under Construction" className="bg-[#0A0A0C]">{getTranslatedCondition('Under Construction', currentLanguage)}</option>
+              <option value="Brand New / Newly Built" className="bg-[#0A0A0C]">{getTranslatedCondition('Brand New / Newly Built', currentLanguage)}</option>
             </select>
           </div>
         </div>
@@ -142,13 +147,13 @@ export const WizardStep3Pricing: React.FC<WizardStep3PricingProps> = ({
           <div className="flex items-center gap-2">
             <Tag className="w-4 h-4 text-amber-400" />
             <h4 className="text-xs font-bold text-amber-400 uppercase tracking-wider">
-              Retail Pricing (Single Units)
+              {t('retail_pricing_header') || 'Retail Pricing (Single Units)'}
             </h4>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div>
               <label className="block text-xs font-bold text-white/80 uppercase mb-1">
-                Retail Price (per {fieldsState.unit || 'piece'}) *
+                {t('retail_price_label') || 'Retail Price'} ({t('per_unit', { unit: getLocalizedUnit(fieldsState.unit || 'piece', currentLanguage, 1) }) || 'per ' + (fieldsState.unit || 'piece')}) *
               </label>
               <input
                 type="number"
@@ -164,7 +169,7 @@ export const WizardStep3Pricing: React.FC<WizardStep3PricingProps> = ({
             </div>
             <div>
               <label className="block text-xs font-bold text-white/80 uppercase mb-1">
-                Available Stock Qty *
+                {t('available_stock_qty_label') || 'Available Stock Qty *'}
               </label>
               <input
                 type="number"
@@ -180,15 +185,15 @@ export const WizardStep3Pricing: React.FC<WizardStep3PricingProps> = ({
             </div>
             <div>
               <label className="block text-xs font-bold text-white/80 uppercase mb-1">
-                Price Negotiable?
+                {t('price_negotiable_label') || 'Price Negotiable?'}
               </label>
               <select
                 value={fieldsState.negotiable || 'No'}
                 onChange={e => handleFieldChange('negotiable', e.target.value)}
                 className="w-full p-3 bg-black/50 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white"
               >
-                <option value="No">Fixed (No)</option>
-                <option value="Yes">Negotiable (Yes)</option>
+                <option value="No">{t('fixed_no') || 'Fixed (No)'}</option>
+                <option value="Yes">{t('negotiable_yes') || 'Negotiable (Yes)'}</option>
               </select>
             </div>
           </div>
@@ -202,13 +207,13 @@ export const WizardStep3Pricing: React.FC<WizardStep3PricingProps> = ({
             <div className="flex items-center gap-2">
               <Package className="w-4 h-4 text-amber-400" />
               <h4 className="text-xs font-bold text-amber-400 uppercase tracking-wider">
-                Wholesale Settings & Minimum Order
+                {t('wholesale_settings_header') || 'Wholesale Settings & Minimum Order'}
               </h4>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div>
                 <label className="block text-xs font-bold text-white/80 uppercase mb-1">
-                  Minimum Order Qty (MOQ &ge; 10) *
+                  {t('wholesale_moq_label') || 'Minimum Order Qty (MOQ ≥ 10) *'}
                 </label>
                 <input
                   type="number"
@@ -225,7 +230,7 @@ export const WizardStep3Pricing: React.FC<WizardStep3PricingProps> = ({
               </div>
               <div>
                 <label className="block text-xs font-bold text-white/80 uppercase mb-1">
-                  Available Bulk Stock
+                  {t('available_bulk_stock_label') || 'Available Bulk Stock'}
                 </label>
                 <input
                   type="number"
@@ -237,17 +242,17 @@ export const WizardStep3Pricing: React.FC<WizardStep3PricingProps> = ({
               </div>
               <div>
                 <label className="block text-xs font-bold text-white/80 uppercase mb-1">
-                  Supplier Business Type
+                  {t('supplier_business_type_label') || 'Supplier Business Type'}
                 </label>
                 <select
                   value={fieldsState.businessType || 'Wholesaler'}
                   onChange={e => handleFieldChange('businessType', e.target.value)}
                   className="w-full p-3 bg-black/50 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white"
                 >
-                  <option value="Wholesaler">Wholesaler</option>
-                  <option value="Manufacturer">Manufacturer</option>
-                  <option value="Distributor">Distributor</option>
-                  <option value="Importer">Importer</option>
+                  <option value="Wholesaler">{t('biz_wholesaler') || 'Wholesaler'}</option>
+                  <option value="Manufacturer">{t('biz_manufacturer') || 'Manufacturer'}</option>
+                  <option value="Distributor">{t('biz_distributor') || 'Distributor'}</option>
+                  <option value="Importer">{t('biz_importer') || 'Importer'}</option>
                 </select>
               </div>
             </div>
@@ -273,13 +278,13 @@ export const WizardStep3Pricing: React.FC<WizardStep3PricingProps> = ({
             <div className="flex items-center gap-2">
               <Tag className="w-4 h-4 text-amber-400" />
               <h4 className="text-xs font-bold text-amber-400 uppercase tracking-wider">
-                🛍️ Retail Pricing (Single Units)
+                🛍️ {t('retail_pricing_header') || 'Retail Pricing (Single Units)'}
               </h4>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div>
                 <label className="block text-xs font-bold text-white/80 uppercase mb-1">
-                  Retail Price (per {fieldsState.unit || 'piece'}) *
+                  {t('retail_price_label') || 'Retail Price'} ({t('per_unit', { unit: getLocalizedUnit(fieldsState.unit || 'piece', currentLanguage, 1) }) || 'per ' + (fieldsState.unit || 'piece')}) *
                 </label>
                 <input
                   type="number"
@@ -295,7 +300,7 @@ export const WizardStep3Pricing: React.FC<WizardStep3PricingProps> = ({
               </div>
               <div>
                 <label className="block text-xs font-bold text-white/80 uppercase mb-1">
-                  Available Stock Qty *
+                  {t('available_stock_qty_label') || 'Available Stock Qty *'}
                 </label>
                 <input
                   type="number"
@@ -311,15 +316,15 @@ export const WizardStep3Pricing: React.FC<WizardStep3PricingProps> = ({
               </div>
               <div>
                 <label className="block text-xs font-bold text-white/80 uppercase mb-1">
-                  Price Negotiable?
+                  {t('price_negotiable_label') || 'Price Negotiable?'}
                 </label>
                 <select
                   value={fieldsState.negotiable || 'No'}
                   onChange={e => handleFieldChange('negotiable', e.target.value)}
                   className="w-full p-3 bg-black/50 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white"
                 >
-                  <option value="No">Fixed (No)</option>
-                  <option value="Yes">Negotiable (Yes)</option>
+                  <option value="No">{t('fixed_no') || 'Fixed (No)'}</option>
+                  <option value="Yes">{t('negotiable_yes') || 'Negotiable (Yes)'}</option>
                 </select>
               </div>
             </div>
@@ -330,13 +335,13 @@ export const WizardStep3Pricing: React.FC<WizardStep3PricingProps> = ({
             <div className="flex items-center gap-2">
               <Package className="w-4 h-4 text-amber-400" />
               <h4 className="text-xs font-bold text-amber-400 uppercase tracking-wider">
-                📦 Wholesale & Volume Pricing Tiers
+                📦 {t('wholesale_volume_tiers_header') || 'Wholesale & Volume Pricing Tiers'}
               </h4>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label className="block text-xs font-bold text-white/80 uppercase mb-1">
-                  Minimum Order Qty (MOQ &ge; 10) *
+                  {t('wholesale_moq_label') || 'Minimum Order Qty (MOQ ≥ 10) *'}
                 </label>
                 <input
                   type="number"
@@ -353,17 +358,17 @@ export const WizardStep3Pricing: React.FC<WizardStep3PricingProps> = ({
               </div>
               <div>
                 <label className="block text-xs font-bold text-white/80 uppercase mb-1">
-                  Supplier Business Type
+                  {t('supplier_business_type_label') || 'Supplier Business Type'}
                 </label>
                 <select
                   value={fieldsState.businessType || 'Wholesaler'}
                   onChange={e => handleFieldChange('businessType', e.target.value)}
                   className="w-full p-3 bg-black/50 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white"
                 >
-                  <option value="Wholesaler">Wholesaler</option>
-                  <option value="Manufacturer">Manufacturer</option>
-                  <option value="Distributor">Distributor</option>
-                  <option value="Importer">Importer</option>
+                  <option value="Wholesaler">{t('biz_wholesaler') || 'Wholesaler'}</option>
+                  <option value="Manufacturer">{t('biz_manufacturer') || 'Manufacturer'}</option>
+                  <option value="Distributor">{t('biz_distributor') || 'Distributor'}</option>
+                  <option value="Importer">{t('biz_importer') || 'Importer'}</option>
                 </select>
               </div>
             </div>
@@ -387,16 +392,16 @@ export const WizardStep3Pricing: React.FC<WizardStep3PricingProps> = ({
           <div className="flex items-center gap-2">
             <Truck className="w-4 h-4 text-[#F5A623]" />
             <h4 className="text-xs font-bold text-white uppercase tracking-wider">
-              Delivery & Logistics Options
+              {t('wholesale.delivery_options') || 'Delivery & Logistics Options'}
             </h4>
           </div>
-          <p className="text-[11px] text-white/50">Select all fulfillment methods you provide to buyers:</p>
+          <p className="text-[11px] text-white/50">{t('delivery_logistics_subtext') || 'Select all fulfillment methods you provide to buyers:'}</p>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-1">
             {[
-              { id: 'Store/Warehouse Pickup', title: 'Store/Warehouse Pickup', desc: 'Buyer picks up at your location' },
-              { id: 'Local City Delivery', title: 'Local City Delivery', desc: 'Direct courier within the same city' },
-              { id: 'Freight Shipping', title: 'Freight Shipping', desc: 'Nationwide truck/cargo shipping' }
+              { id: 'Store/Warehouse Pickup', title: t('del_store_pickup') || 'Store / Warehouse Pickup', desc: t('delivery_pickup_desc') || 'Buyer picks up at your location' },
+              { id: 'Local City Delivery', title: t('del_local_delivery') || 'Local City Delivery', desc: t('delivery_local_desc') || 'Direct courier within the same city' },
+              { id: 'Freight Shipping', title: t('del_nationwide_freight') || 'Freight Shipping', desc: t('delivery_freight_desc') || 'Nationwide truck/cargo shipping' }
             ].map(delOpt => {
               const isChecked = currentDelivery.includes(delOpt.id);
               return (
@@ -432,3 +437,4 @@ export const WizardStep3Pricing: React.FC<WizardStep3PricingProps> = ({
     </div>
   );
 };
+

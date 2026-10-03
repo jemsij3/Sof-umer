@@ -698,7 +698,7 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
       setImagesList(prev => [...prev, ...validCompressed].slice(0, maxPhotos));
     } catch (err) {
       console.error('Error compressing photos:', err);
-      setPhotoError('Failed to process one or more photo files.');
+      setPhotoError(t('photo_process_error') || 'Failed to process one or more photo files.');
     } finally {
       setIsCompressingPhotos(false);
     }
@@ -783,7 +783,7 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
       reader.readAsDataURL(file);
     } catch (err: any) {
       setIsVideoUploading(false);
-      setVideoError(err.message || 'Error processing video file.');
+      setVideoError(err.message || t('video_process_error') || 'Error processing video file.');
     }
   };
 
@@ -942,29 +942,29 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
     const handleContinueToStep3 = () => {
       setError('');
       if (!fieldsState.title || String(fieldsState.title).trim() === '') {
-        setError('Please enter a product/listing title.');
+        setError(t('titleVal') || 'Please enter a product/listing title.');
         return;
       }
       if (!fieldsState.location || String(fieldsState.location).trim() === '') {
-        setError('Please enter a location.');
+        setError(t('locVal') || 'Please enter a location.');
         return;
       }
       if (!fieldsState.description || String(fieldsState.description).trim() === '') {
-        setError('Please provide a description.');
+        setError(t('descVal') || 'Please provide a description.');
         return;
       }
       if (currentUser?.role === 'admin' && st !== 'Wholesale') {
         if (!fieldsState.ownerName || String(fieldsState.ownerName).trim() === '') {
-          setError(d.ownerNameVal || 'Please enter owner name.');
+          setError(d.ownerNameVal || t('ownerNameVal') || 'Please enter owner name.');
           return;
         }
         if (!fieldsState.contactPhone || String(fieldsState.contactPhone).trim() === '') {
-          setError(d.ownerPhoneVal || 'Please enter contact phone.');
+          setError(d.ownerPhoneVal || t('ownerPhoneVal') || 'Please enter contact phone.');
           return;
         }
       }
       if (!imagesList || imagesList.length === 0) {
-        setError('Please upload or add at least one photo for your listing.');
+        setError(t('at_least_one_photo_val') || 'Please upload or add at least one photo for your listing.');
         return;
       }
       setCurrentStep(3);
@@ -977,24 +977,24 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
       if (majorCategory === 'Properties') {
         const propPrice = Number(fieldsState.price || fieldsState.retailPrice || 0);
         if (!propPrice || propPrice <= 0) {
-          setError('Please enter a valid Property Price greater than 0.');
+          setError(t('valid_property_price_val') || 'Please enter a valid Property Price greater than 0.');
           return;
         }
       } else if (st === 'Retail') {
         const retPrice = Number(fieldsState.retailPrice || fieldsState.price || 0);
         if (!retPrice || retPrice <= 0) {
-          setError('Please enter a valid Retail Price greater than 0.');
+          setError(t('valid_retail_price_val') || 'Please enter a valid Retail Price greater than 0.');
           return;
         }
         const qty = Number(fieldsState.quantity || fieldsState.availableQuantity || 0);
         if (!qty || qty <= 0) {
-          setError('Please enter a valid Available Quantity / Stock.');
+          setError(t('valid_stock_qty_val') || 'Please enter a valid Available Quantity / Stock.');
           return;
         }
       } else if (st === 'Wholesale') {
         const moq = Number(fieldsState.minimumOrderQuantity || wholesaleTiers[0]?.minimumQuantity || 10);
         if (!moq || moq < 1) {
-          setError('Minimum Order Quantity (MOQ) must be at least 1 (default is 10+).');
+          setError(t('moq_at_least_one_val') || 'Minimum Order Quantity (MOQ) must be at least 1 (default is 10+).');
           return;
         }
         const wholesaleValidation = validateWholesaleConfig(moq, wholesaleTiers);
@@ -1004,22 +1004,22 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
         }
         const tier1Price = Number(wholesaleTiers[0]?.pricePerUnit || fieldsState.wholesalePrice || 0);
         if (!tier1Price || tier1Price <= 0) {
-          setError('Please enter a valid Unit Price for Wholesale Tier 1.');
+          setError(t('valid_tier1_price_val') || 'Please enter a valid Unit Price for Wholesale Tier 1.');
           return;
         }
         if (!fieldsState.contactPhone || String(fieldsState.contactPhone).trim() === '') {
-          setError('Please enter a Contact Phone Number for supplier inquiries.');
+          setError(t('phoneVal') || 'Please enter a Contact Phone Number for supplier inquiries.');
           return;
         }
       } else if (st === 'Retail + Wholesale' || (st as string) === 'Retail & Wholesale') {
         const retPrice = Number(fieldsState.retailPrice || fieldsState.price || 0);
         if (!retPrice || retPrice <= 0) {
-          setError('Please enter a valid Retail Price greater than 0.');
+          setError(t('valid_retail_price_val') || 'Please enter a valid Retail Price greater than 0.');
           return;
         }
         const moq = Number(fieldsState.minimumOrderQuantity || wholesaleTiers[0]?.minimumQuantity || 10);
         if (!moq || moq < 1) {
-          setError('Minimum Order Quantity (MOQ) must be at least 1.');
+          setError(t('moq_at_least_one_val') || 'Minimum Order Quantity (MOQ) must be at least 1.');
           return;
         }
         const wholesaleValidation = validateWholesaleConfig(moq, wholesaleTiers);
@@ -1029,16 +1029,17 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
         }
         const tier1Price = Number(wholesaleTiers[0]?.pricePerUnit || fieldsState.wholesalePrice || 0);
         if (!tier1Price || tier1Price <= 0) {
-          setError('Please enter a valid Unit Price for Wholesale Tier 1.');
+          setError(t('valid_tier1_price_val') || 'Please enter a valid Unit Price for Wholesale Tier 1.');
           return;
         }
         // Validation rule: Wholesale Tier 1 Unit Price must be strictly lower than Retail Price!
         if (tier1Price >= retPrice) {
-          setError(`Wholesale Tier 1 Unit Price (${tier1Price} ${currency}) must be strictly lower than Retail Price (${retPrice} ${currency}) to offer a wholesale discount.`);
+          const discountTemplate = t('wholesale_tier1_lower_than_retail_val') || 'Wholesale Tier 1 Unit Price ({tier1Price} {currency}) must be strictly lower than Retail Price ({retPrice} {currency}) to offer a wholesale discount.';
+          setError(discountTemplate.replace('{tier1Price}', String(tier1Price)).replace('{currency}', currency).replace('{retPrice}', String(retPrice)));
           return;
         }
         if (!fieldsState.contactPhone || String(fieldsState.contactPhone).trim() === '') {
-          setError('Please enter a Contact Phone Number.');
+          setError(t('phoneVal') || 'Please enter a Contact Phone Number.');
           return;
         }
       }
@@ -1249,7 +1250,7 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
       await refreshData();
       onClose();
     } catch (err: any) {
-      setError(err.message || 'Connection error. Please try again.');
+      setError(err.message || t('server_error_retry') || 'Connection error. Please try again.');
     } finally {
       setSubmitting(false);
     }
@@ -1440,7 +1441,7 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
                   className="px-4 py-2.5 rounded-xl border border-white/10 hover:bg-white/5 text-white/70 hover:text-white text-xs font-bold transition duration-200 cursor-pointer inline-flex items-center gap-1.5"
                 >
                   <ArrowLeft className="w-3.5 h-3.5" />
-                  <span>[🡠 Back]</span>
+                  <span>{t('back') || 'Back'}</span>
                 </button>
               ) : (
                 <button
@@ -1448,7 +1449,7 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
                   onClick={onClose}
                   className="px-4 py-2.5 rounded-xl border border-white/5 hover:bg-white/5 text-white/50 hover:text-white text-xs font-bold transition duration-200 cursor-pointer"
                 >
-                  Cancel
+                  {t('cancel') || 'Cancel'}
                 </button>
               )}
             </div>
@@ -1460,7 +1461,7 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
                   onClick={handleContinueToStep2}
                   className="px-5 py-2.5 bg-amber-500 text-black font-extrabold text-xs rounded-xl hover:bg-amber-400 transition duration-200 cursor-pointer inline-flex items-center gap-1.5"
                 >
-                  <span>[ Continue to Basic Info ➔ ]</span>
+                  <span>{t('continue_to_details_btn') || 'Continue to Basic Info ➔'}</span>
                 </button>
               )}
 
@@ -1470,7 +1471,7 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
                   onClick={handleContinueToStep3}
                   className="px-5 py-2.5 bg-amber-500 text-black font-extrabold text-xs rounded-xl hover:bg-amber-400 transition duration-200 cursor-pointer inline-flex items-center gap-1.5"
                 >
-                  <span>[ Continue to Pricing ➔ ]</span>
+                  <span>{t('continue_to_pricing_btn') || 'Continue to Pricing ➔'}</span>
                 </button>
               )}
 
@@ -1480,7 +1481,7 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
                   onClick={handleContinueToStep4}
                   className="px-5 py-2.5 bg-amber-500 text-black font-extrabold text-xs rounded-xl hover:bg-amber-400 transition duration-200 cursor-pointer inline-flex items-center gap-1.5"
                 >
-                  <span>[ Review Listing ➔ ]</span>
+                  <span>{t('continue_to_review_btn') || 'Review Listing ➔'}</span>
                 </button>
               )}
             </div>

@@ -67,7 +67,7 @@ export const ListingWizard: React.FC<ListingWizardProps> = ({ currentStep, onSte
                 <span className={`text-[10px] sm:text-xs font-bold truncate ${
                   isActive ? 'text-amber-400' : isCompleted ? 'text-white/80' : 'text-white/40'
                 }`}>
-                  <span className="hidden sm:inline">Step {s.step}: </span>
+                  <span className="hidden sm:inline">{t('wizard.step_label') || 'Step'} {s.step}: </span>
                   {s.label}
                 </span>
               </div>

@@ -339,11 +339,11 @@ export const WholesalePricingTiersEditor: React.FC<WholesalePricingTiersEditorPr
                 <div className="flex items-center justify-between pb-2.5 mb-2.5 border-b border-white/5">
                   <div className="flex items-center gap-2">
                     <span className="font-mono text-xs font-bold text-amber-400">
-                      {isFirst ? `Tier 1 (Base MOQ)` : `Tier ${idx + 1}`}
+                      {isFirst ? `${t('wholesale.tier') || 'Tier'} 1 (${t('lock_base_moq') || 'Base MOQ'})` : `${t('wholesale.tier') || 'Tier'} ${idx + 1}`}
                     </span>
                     {isFirst && (
                       <span className="text-[9px] bg-amber-500/20 text-amber-300 border border-amber-500/30 px-2 py-0.5 rounded font-mono font-bold flex items-center gap-1">
-                        <Lock className="w-2.5 h-2.5" /> Base MOQ
+                        <Lock className="w-2.5 h-2.5" /> {t('lock_base_moq') || 'Base MOQ'}
                       </span>
                     )}
                   </div>
@@ -357,7 +357,7 @@ export const WholesalePricingTiersEditor: React.FC<WholesalePricingTiersEditorPr
                         type="button"
                         onClick={() => handleRemoveTier(idx)}
                         className="text-white/40 hover:text-rose-400 p-1.5 rounded-lg hover:bg-white/5 transition cursor-pointer"
-                        title="Delete Tier"
+                        title={t('common.delete') || 'Delete Tier'}
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
@@ -374,7 +374,7 @@ export const WholesalePricingTiersEditor: React.FC<WholesalePricingTiersEditorPr
                   {/* Quantity Range */}
                   <div>
                     <label className="block text-[10px] uppercase font-bold text-white/60 mb-1">
-                      {isFirst ? 'Minimum Order Quantity' : 'Starting Quantity Threshold'}
+                      {isFirst ? (t('wholesale.minimum_order_quantity') || 'Minimum Order Quantity') : (t('starting_qty_threshold') || 'Starting Quantity Threshold')}
                     </label>
                     {isFirst ? (
                       <div className="flex items-center gap-2 bg-black/40 border border-white/10 rounded-xl px-3 py-2 text-xs font-mono text-amber-400 font-bold">
@@ -399,7 +399,10 @@ export const WholesalePricingTiersEditor: React.FC<WholesalePricingTiersEditorPr
                         </div>
                         {hasOrderError && (
                           <span className="text-[10px] text-rose-400 font-medium block">
-                            Must be &gt; {idx === 1 ? `MOQ (${currentMoqNum})` : `Tier #${idx} (${prevQty})`}
+                            {(t('must_be_greater_than_hint') || 'Must be > {target}').replace(
+                              '{target}',
+                              idx === 1 ? `MOQ (${currentMoqNum})` : `${t('wholesale.tier') || 'Tier'} #${idx} (${prevQty})`
+                            )}
                           </span>
                         )}
                       </div>
@@ -409,7 +412,7 @@ export const WholesalePricingTiersEditor: React.FC<WholesalePricingTiersEditorPr
                   {/* Unit Price */}
                   <div>
                     <label className="block text-[10px] uppercase font-bold text-white/60 mb-1">
-                      Unit Price ({currency}) *
+                      {t('unit_price') || 'Unit Price'} ({currency}) *
                     </label>
                     <div className="relative">
                       <input
@@ -439,7 +442,7 @@ export const WholesalePricingTiersEditor: React.FC<WholesalePricingTiersEditorPr
           className="w-full py-3 bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-dashed border-amber-500/40 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer mt-2"
         >
           <Plus className="w-4 h-4" />
-          <span>+ Add Another Price Tier</span>
+          <span>{t('add_another_tier_btn') || '+ Add Another Price Tier'}</span>
         </button>
 
         {/* Validation error display */}
@@ -453,7 +456,7 @@ export const WholesalePricingTiersEditor: React.FC<WholesalePricingTiersEditorPr
         <div className="text-[10px] text-white/40 flex items-center gap-1.5 pt-1">
           <HelpCircle className="w-3 h-3 text-amber-400 shrink-0" />
           <span>
-            Example: 10 to 49 {unitPlural} = 1,200 {currency}, 50 to 99 {unitPlural} = 1,050 {currency}, 100+ {unitPlural} = 950 {currency}.
+            {t('wholesale_tier_example_text') || `Example: 10 to 49 ${unitPlural} = 1,200 ${currency}, 50 to 99 ${unitPlural} = 1,050 ${currency}, 100+ ${unitPlural} = 950 ${currency}.`}
           </span>
         </div>
       </div>

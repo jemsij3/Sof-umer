@@ -1358,7 +1358,13 @@ export function getTranslatedCategoryName(catOrName: any, lang: string = 'en', d
     'commercial-equipment': { en: 'Commercial Equipment', om: 'Meeshaalee Daldalaa', am: 'የንግድ እቃዎች' },
     'community': { en: 'Community', om: 'Hawaasa', am: 'ማህበረሰብ' },
     'local businesses': { en: 'Local Businesses', om: 'Daldala Naannoo', am: 'የአካባቢ ንግዶች' },
-    'local-businesses': { en: 'Local Businesses', om: 'Daldala Naannoo', am: 'የአካባቢ ንግዶች' }
+    'local-businesses': { en: 'Local Businesses', om: 'Daldala Naannoo', am: 'የአካባቢ ንግዶች' },
+    'real estate / properties': { en: 'Real Estate / Properties', om: 'Qabeenya Lafaa / Manneen', am: 'ቤትና ቦታዎች (ሪል እስቴት)' },
+    'vehicles & motors': { en: 'Vehicles & Motors', om: 'Konkolaattota & Motora', am: 'ተሽከርካሪዎች እና ሞተሮች' },
+    'products & goods': { en: 'Products & Goods', om: 'Oomishaalee & Meeshaalee', am: 'ምርቶችና ሸቀጦች' },
+    'services & trades': { en: 'Services & Trades', om: 'Tajaajiloota & Ogummaa', am: 'አገልግሎቶችና ሙያዎች' },
+    'jobs & hiring': { en: 'Jobs & Hiring', om: 'Hojiiwwan & Qaxara', am: 'የሥራ እድሎችና ቅጥር' },
+    'local business': { en: 'Local Business', om: 'Daldala Naannoo', am: 'የአካባቢ ንግድ' }
   };
 
   const key = strName.toLowerCase();
@@ -1417,6 +1423,66 @@ export function getTranslatedSubcategoryName(subOrName: any, lang: string = 'en'
     }
   }
 
+  // Check property type map
+  const propTrans = getTranslatedPropertyType(strName, lang);
+  if (propTrans && propTrans.toLowerCase() !== strName.toLowerCase()) {
+    return propTrans;
+  }
+
+  const subMap: Record<string, { en: string; om: string; am: string }> = {
+    'electronics & gadgets': { en: 'Electronics & Gadgets', om: 'Ilektirooniksii & Meeshaalee', am: 'ኤሌክትሮኒክስ እና መግብሪያዎች' },
+    'phones & tablets': { en: 'Phones & Tablets', om: 'Bilbiloota & Taableetii', am: 'ስልኮች እና ታብሌቶች' },
+    'computers & laptops': { en: 'Computers & Laptops', om: 'Kompitaroota & Laaptooppota', am: 'ኮምፒውተሮች እና ላፕቶፖች' },
+    'furniture & home': { en: 'Furniture & Home', om: 'Mi\'a Manaa', am: 'ፈርኒቸር እና የቤት እቃዎች' },
+    'clothing & fashion': { en: 'Clothing & Fashion', om: 'Uffata & Faashinii', am: 'ልብስ እና ፋሽን' },
+    'babies & kids': { en: 'Babies & Kids', om: 'Daa\'imman & Ijoollee', am: 'የህጻናት እና ልጆች' },
+    'health & beauty': { en: 'Health & Beauty', om: 'Fayyaa & Miidhagina', am: 'ጤና እና ውበት' },
+    'agriculture & food': { en: 'Agriculture & Food', om: 'Qonnaa & Nyaata', am: 'እርሻ እና ምግብ' },
+    'animals & pets': { en: 'Animals & Pets', om: 'Beeyladaa & Horii', am: 'እንስሳት እና የቤት እንስሳት' },
+    'sports & outdoors': { en: 'Sports & Outdoors', om: 'Ispoortii & Ala', am: 'ስፖርት እና የውጪ' },
+    'commercial equipment': { en: 'Commercial Equipment', om: 'Meeshaalee Daldalaa', am: 'የንግድ እቃዎች' },
+    'other products': { en: 'Other Products', om: 'Oomishaalee Biroo', am: 'ሌሎች ምርቶች' },
+    'buses': { en: 'Buses', om: 'Baasiiwwan', am: 'አውቶቡሶች' },
+    'heavy equipment': { en: 'Heavy Equipment', om: 'Meeshaalee Gurguddoo', am: 'ከባድ ማሽነሪዎች' },
+    'vehicle parts': { en: 'Vehicle Parts', om: 'Kutaalee Konkolaataa', am: 'የተሽከርካሪ መለዋወጫዎች' },
+    'vehicle accessories': { en: 'Vehicle Accessories', om: 'Mi\'a Konkolaataa Dabalataa', am: 'የተሽከርካሪ ተጨማሪ እቃዎች' },
+    'full-time jobs': { en: 'Full-time Jobs', om: 'Hojii Yeroo Guutuu', am: 'ሙሉ ጊዜ ሥራ' },
+    'part-time jobs': { en: 'Part-time Jobs', om: 'Hojii Yeroo Murtaa’aa', am: 'የትርፍ ጊዜ ሥራ' },
+    'freelance / contract': { en: 'Freelance / Contract', om: 'Hojii Dhuunfaa / Kontiraata', am: 'ፍሪላንስ / ኮንትራት' },
+    'remote jobs': { en: 'Remote Jobs', om: 'Hojii Fagoo Irraa', am: 'የርቀት ሥራ' },
+    'construction jobs': { en: 'Construction Jobs', om: 'Hojii Ijaarsaa', am: 'የግንባታ ሥራ' },
+    'driver jobs': { en: 'Driver Jobs', om: 'Hojii Konkolaachisaa', am: 'የሹፌር ሥራ' },
+    'office jobs': { en: 'Office Jobs', om: 'Hojii Biiroo', am: 'የቢሮ ሥራ' },
+    'teaching jobs': { en: 'Teaching Jobs', om: 'Hojii Barsiisummaa', am: 'የመምህርነት ሥራ' },
+    'healthcare jobs': { en: 'Healthcare Jobs', om: 'Hojii Fayyaa', am: 'የጤና ጥበቃ ሥራ' },
+    'internships': { en: 'Internships', om: 'Shaakala Hojii', am: 'የሥራ ልምምድ' },
+    'repair & maintenance': { en: 'Repair & Maintenance', om: 'Suphaa & Haromsa', am: 'ጥገናና ዕድሳት' },
+    'cleaning services': { en: 'Cleaning Services', om: 'Tajaajila Qulqullinaa', am: 'የጽዳት አገልግሎት' },
+    'construction & renovation': { en: 'Construction & Renovation', om: 'Ijaarsa & Haaromsa', am: 'ግንባታና እድሳት' },
+    'transport & moving': { en: 'Transport & Moving', om: 'Geejjiba & Meeshaa Geessuu', am: 'የትራንስፖርትና እቃ ማጓጓዝ' },
+    'it & software services': { en: 'IT & Software Services', om: 'Tajaajila IT & Sooftiweerii', am: 'የአይቲ እና ሶፍትዌር አገልግሎት' },
+    'design & marketing': { en: 'Design & Marketing', om: 'Dizaayinii & Beeksisa', am: 'ዲዛይን እና ማርኬቲንግ' },
+    'photography & media': { en: 'Photography & Media', om: 'Suuraa & Miidiyaa', am: 'ፎቶግራፍ እና ሚዲያ' },
+    'event services': { en: 'Event Services', om: 'Tajaajila Qophii', am: 'የዝግጅት አገልግሎቶች' },
+    'education & tutoring': { en: 'Education & Tutoring', om: 'Barnoota & Leenjisa', am: 'ትምህርትና ማጠናከሪያ' },
+    'restaurants & cafes': { en: 'Restaurants & Cafes', om: 'Manni Nyaataa & Kaaffee', am: 'ምግብ ቤቶች እና ካፌዎች' },
+    'shops & supermarkets': { en: 'Shops & Supermarkets', om: 'Suuqota & Suupparmaarkeetii', am: 'ሱቆች እና ሱፐርማርኬቶች' },
+    'salons & beauty shops': { en: 'Salons & Beauty Shops', om: 'Saaloonii & Miidhagina', am: 'ሳሎኖች እና የውበት ሳሎኖች' },
+    'auto repair & garage': { en: 'Auto Repair & Garage', om: 'Garaajii & Suphaa Konkolaataa', am: 'ጋራዥ እና የመኪና ጥገና' },
+    'pharmacies & clinics': { en: 'Pharmacies & Clinics', om: 'Faarmaasii & Kiliiniika', am: 'ፋርማሲዎች እና ክሊኒኮች' },
+    'agencies & consultancy': { en: 'Agencies & Consultancy', om: 'Ejensii & Gorsa', am: 'ኤጀንሲዎች እና የማማከር አገልግሎት' },
+    'hotels & guest houses': { en: 'Hotels & Guest Houses', om: 'Hoteelota & Manneen Keessummaa', am: 'ሆቴሎች እና የእንግዳ ማረፊያዎች' },
+    'events & gathering': { en: 'Events & Gathering', om: 'Qophiiwwan & Walga\'ii', am: 'ዝግጅቶች እና ስብሰባዎች' },
+    'announcements': { en: 'Announcements', om: 'Beeksisa', am: 'ማስታወቂያዎች' },
+    'lost and found': { en: 'Lost and Found', om: 'Badaa & Argamaa', am: 'የጠፋና የተገኘ' },
+    'charity & volunteering': { en: 'Charity & Volunteering', om: 'Gargaarsa & Tola Ooltummaa', am: 'የበጎ አድራጎት እና በጎ ፈቃደኝነት' }
+  };
+
+  const key = strName.toLowerCase();
+  if (subMap[key]) {
+    return subMap[key][langKey];
+  }
+
   return strName;
 }
 
@@ -1439,16 +1505,19 @@ export function getTranslatedPropertyType(type: string, lang: string = 'en'): st
     'modern_villa': { en: 'Modern Villa', om: 'Viillaa Ammayyaa', am: 'ዘመናዊ ቪላ' },
     'land': { en: 'Land & Plot', om: 'Lafa', am: 'መሬት' },
     'land & plot': { en: 'Land & Plot', om: 'Lafa', am: 'መሬት' },
+    'land & plots': { en: 'Land & Plots', om: 'Lafa', am: 'መሬት' },
     'plot': { en: 'Plot', om: 'Lafa Ijaarsaa', am: 'የቦታ መሬት' },
     'office': { en: 'Office', om: 'Biiroo', am: 'ቢሮ' },
     'offices': { en: 'Offices', om: 'Biiroowwan', am: 'ቢሮዎች' },
     'shop': { en: 'Shop', om: 'Suuqii', am: 'ሱቅ' },
     'shops': { en: 'Shops', om: 'Suuqota', am: 'ሱቆች' },
     'warehouse': { en: 'Warehouse', om: 'Goofta', am: 'መጋዘን' },
+    'warehouses': { en: 'Warehouses', om: 'Gooftawwan', am: 'መጋዘኖች' },
     'hotel': { en: 'Hotel / Resort', om: 'Hoteela', am: 'ሆቴል' },
     'farm': { en: 'Farm / Land', om: 'Farmaa', am: 'እርሻ' },
     'commercial': { en: 'Commercial Building', om: 'Gamoo Daldalaa', am: 'የንግድ ህንፃ' },
     'commercial building': { en: 'Commercial Building', om: 'Gamoo Daldalaa', am: 'የንግድ ህንፃ' },
+    'commercial buildings': { en: 'Commercial Buildings', om: 'Gamoo Daldalaa', am: 'የንግድ ህንፃዎች' },
     'residential': { en: 'Residential', om: 'Jireenyaa', am: 'መኖሪያ' }
   };
 
@@ -1520,6 +1589,9 @@ export function getTranslatedCondition(cond: string, lang: string = 'en'): strin
     'excellent condition': { en: 'Excellent', om: 'Baay\'ee Gaarii', am: 'በጣም ጥሩ' },
     'for parts': { en: 'For Parts / Not Working', om: 'Qo\'iyyaaf / Hin Hojjetu', am: 'ለመለዋወጫ / የማይሰራ' },
     'for parts or not working': { en: 'For Parts / Not Working', om: 'Qo\'iyyaaf / Hin Hojjetu', am: 'ለመለዋወጫ / የማይሰራ' },
+    'under construction': { en: 'Under Construction', om: 'Ijaarsarra Kan Jiru', am: 'በግንባታ ላይ ያለ' },
+    'brand new / newly built': { en: 'Brand New / Newly Built', om: 'Haaraa / Dhiyootti Kan Ijaarame', am: 'አዲስ / አዲስ የተገነባ' },
+    'classic': { en: 'Classic', om: 'Bara Dheeraa (Kilaasikii)', am: 'ክላሲክ' },
     'any condition': { en: 'Any Condition', om: 'Haala Kamiinuu', am: 'ማንኛውም ሁኔታ' }
   };
 

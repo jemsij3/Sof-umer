@@ -3,6 +3,11 @@ import {
   Camera, ArrowLeft, ArrowRight, Trash2, Film, AlertCircle, Loader2 
 } from 'lucide-react';
 import { useApp } from '../../lib/AppContext';
+import { 
+  getTranslatedCategoryName, 
+  getTranslatedFurnished, 
+  getTranslatedCondition 
+} from '../../lib/categoriesData';
 
 interface WizardStep2DetailsProps {
   majorCategory: string;
@@ -37,7 +42,7 @@ export const WizardStep2Details: React.FC<WizardStep2DetailsProps> = ({
   videoError,
   currentUser
 }) => {
-  const { currentUser: contextUser } = useApp();
+  const { currentUser: contextUser, t, currentLanguage } = useApp();
   const user = currentUser || contextUser;
 
   const formData = fieldsState;
@@ -76,20 +81,20 @@ export const WizardStep2Details: React.FC<WizardStep2DetailsProps> = ({
         <div className="space-y-4">
           <div className="border-l-2 border-amber-500 pl-3">
             <h4 className="text-xs font-bold text-white tracking-wider uppercase">
-              Product Specifications
+              {t('product_details_pricing') || 'Product Specifications'}
             </h4>
-            <p className="text-[10px] text-white/40">Enter accurate specifications for your product</p>
+            <p className="text-[10px] text-white/40">{t('specSubtext') || 'Enter accurate specifications for your product'}</p>
           </div>
 
           <div>
             <label className="block text-xs font-bold text-white/80 uppercase mb-1">
-              Product Title *
+              {t('titleLabel') || 'Product Title'} *
             </label>
             <input
               type="text"
               required
               value={fieldsState.title || ''}
-              placeholder="e.g., iPhone 15 Pro Max 256GB Natural Titanium"
+              placeholder={t('product_title_placeholder') || 'e.g., iPhone 15 Pro Max 256GB Natural Titanium'}
               onChange={e => handleFieldChange('title', e.target.value)}
               className="w-full p-3 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white focus:outline-none transition"
             />
@@ -98,7 +103,7 @@ export const WizardStep2Details: React.FC<WizardStep2DetailsProps> = ({
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div>
               <label className="block text-xs font-bold text-white/80 uppercase mb-1">
-                Brand
+                {t('brand') || 'Brand'}
               </label>
               <input
                 type="text"
@@ -110,7 +115,7 @@ export const WizardStep2Details: React.FC<WizardStep2DetailsProps> = ({
             </div>
             <div>
               <label className="block text-xs font-bold text-white/80 uppercase mb-1">
-                Model
+                {t('model') || 'Model'}
               </label>
               <input
                 type="text"
@@ -122,12 +127,12 @@ export const WizardStep2Details: React.FC<WizardStep2DetailsProps> = ({
             </div>
             <div>
               <label className="block text-xs font-bold text-white/80 uppercase mb-1">
-                Specs / Storage
+                {t('specs_storage_label') || 'Specs / Storage'}
               </label>
               <input
                 type="text"
                 value={fieldsState.storageSpec || ''}
-                placeholder="e.g. 256GB SSD, 16GB RAM, 100% Cotton"
+                placeholder={t('specs_storage_placeholder') || 'e.g. 256GB SSD, 16GB RAM, 100% Cotton'}
                 onChange={e => handleFieldChange('storageSpec', e.target.value)}
                 className="w-full p-3 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white focus:outline-none transition"
               />
@@ -137,30 +142,30 @@ export const WizardStep2Details: React.FC<WizardStep2DetailsProps> = ({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="block text-xs font-bold text-white/80 uppercase mb-1">
-                Condition *
+                {t('condition') || 'Condition'} *
               </label>
               <select
                 value={fieldsState.condition || 'New'}
                 onChange={e => handleFieldChange('condition', e.target.value)}
                 className="w-full p-3 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white focus:outline-none transition"
               >
-                <option value="New" className="bg-[#0c0c0c]">New (Brand new sealed in box)</option>
-                <option value="Refurbished" className="bg-[#0c0c0c]">Refurbished (Tested & certified)</option>
-                <option value="Used - Like New" className="bg-[#0c0c0c]">Used - Like New (Mint condition)</option>
-                <option value="Used - Good" className="bg-[#0c0c0c]">Used - Good (Normal signs of wear)</option>
-                <option value="For Parts / Not Working" className="bg-[#0c0c0c]">For Parts / Not Working</option>
+                <option value="New" className="bg-[#0c0c0c]">{getTranslatedCondition('New', currentLanguage)}</option>
+                <option value="Refurbished" className="bg-[#0c0c0c]">{getTranslatedCondition('Refurbished', currentLanguage)}</option>
+                <option value="Used - Like New" className="bg-[#0c0c0c]">{getTranslatedCondition('Used - Like New', currentLanguage)}</option>
+                <option value="Used - Good" className="bg-[#0c0c0c]">{getTranslatedCondition('Used - Good', currentLanguage)}</option>
+                <option value="For Parts / Not Working" className="bg-[#0c0c0c]">{getTranslatedCondition('For Parts / Not Working', currentLanguage)}</option>
               </select>
             </div>
 
             <div>
               <label className="block text-xs font-bold text-white/80 uppercase mb-1">
-                Location *
+                {t('locLabel') || 'Location'} *
               </label>
               <input
                 type="text"
                 required
                 value={fieldsState.location || ''}
-                placeholder="e.g. Bole Medhanialem, Addis Ababa"
+                placeholder={t('locPlaceholder') || 'e.g. Bole Medhanialem, Addis Ababa'}
                 onChange={e => handleFieldChange('location', e.target.value)}
                 className="w-full p-3 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white focus:outline-none transition"
               />
@@ -169,13 +174,13 @@ export const WizardStep2Details: React.FC<WizardStep2DetailsProps> = ({
 
           <div>
             <label className="block text-xs font-bold text-white/80 uppercase mb-1">
-              Product Description *
+              {t('descLabel') || 'Product Description'} *
             </label>
             <textarea
               required
               rows={3}
               value={fieldsState.description || ''}
-              placeholder="Describe your item, key features, warranty terms, and packaging..."
+              placeholder={t('descPlaceholder') || 'Describe your item, key features, warranty terms, and packaging...'}
               onChange={e => handleFieldChange('description', e.target.value)}
               className="w-full p-3 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white focus:outline-none transition"
             />
@@ -183,7 +188,7 @@ export const WizardStep2Details: React.FC<WizardStep2DetailsProps> = ({
 
           <div>
             <label className="block text-xs font-bold text-white/80 uppercase mb-1">
-              Contact Phone Number *
+              {t('ownerPhoneLabel') || 'Contact Phone Number'} *
             </label>
             <input
               type="text"
@@ -200,22 +205,22 @@ export const WizardStep2Details: React.FC<WizardStep2DetailsProps> = ({
             <div className="flex flex-col gap-2 my-4 p-4 bg-[#141418] border border-[#F5A623]/30 rounded-xl">
               <div className="flex items-center gap-2">
                 <span className="text-xs bg-[#F5A623] text-black font-bold px-2 py-0.5 rounded uppercase">
-                  Admin Only
+                  {t('admin_only_badge') || 'Admin Only'}
                 </span>
                 <label className="text-sm font-medium text-[#F5A623] tracking-wider">
-                  Property / Item Owner Name *
+                  {t('ownerNameLabel') || 'Property / Item Owner Name'} *
                 </label>
               </div>
               <input
                 type="text"
-                placeholder="e.g., Abebe Kebede (Client Name)"
+                placeholder={t('ownerNamePlaceholder') || 'e.g., Abebe Kebede (Client Name)'}
                 value={formData.ownerName || ''}
                 onChange={(e) => setFormData({ ...formData, ownerName: e.target.value })}
                 className="w-full bg-[#1A1B22] text-white border border-[#22242E] rounded-lg p-3 focus:border-[#F5A623] outline-none text-sm placeholder:text-gray-500"
                 required={(user?.role === 'admin' || user?.isAdmin)}
               />
               <p className="text-xs text-gray-400">
-                Enter the full name of the owner you are listing on behalf of.
+                {t('ownerNameDesc') || 'Enter the full name of the owner you are listing on behalf of.'}
               </p>
             </div>
           )}
@@ -224,20 +229,22 @@ export const WizardStep2Details: React.FC<WizardStep2DetailsProps> = ({
         <div className="space-y-4">
           <div className="border-l-2 border-amber-500 pl-3">
             <h4 className="text-xs font-bold text-white tracking-wider uppercase">
-              {majorCategory} Details
+              {getTranslatedCategoryName(majorCategory, currentLanguage)} {t('property_details') || 'Details'}
             </h4>
-            <p className="text-[10px] text-white/40">Provide accurate information for {majorCategory}</p>
+            <p className="text-[10px] text-white/40">
+              {getTranslatedCategoryName(majorCategory, currentLanguage)}
+            </p>
           </div>
 
           <div>
             <label className="block text-xs font-bold text-white/80 uppercase mb-1">
-              Listing Title *
+              {t('titleLabel') || 'Listing Title'} *
             </label>
             <input
               type="text"
               required
               value={fieldsState.title || ''}
-              placeholder={`e.g. ${majorCategory === 'Properties' ? 'Modern 3 Bedroom Apartment in Bole' : majorCategory === 'Vehicles' ? 'Toyota RAV4 2022 Hybrid' : 'Professional Listing'}`}
+              placeholder={majorCategory === 'Properties' ? (t('property_title_placeholder') || 'e.g. Modern 3 Bedroom Apartment in Bole') : majorCategory === 'Vehicles' ? (t('vehicle_title_placeholder') || 'e.g. Toyota RAV4 2022 Hybrid') : (t('titlePlaceholder') || 'Professional Listing')}
               onChange={e => handleFieldChange('title', e.target.value)}
               className="w-full p-3 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white focus:outline-none transition"
             />
@@ -247,18 +254,18 @@ export const WizardStep2Details: React.FC<WizardStep2DetailsProps> = ({
             <div className="space-y-3">
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 <div>
-                  <label className="block text-xs font-bold text-white/80 uppercase mb-1">Purpose *</label>
+                  <label className="block text-xs font-bold text-white/80 uppercase mb-1">{t('purposeLabel') || 'Purpose'} *</label>
                   <select
                     value={fieldsState.purpose || 'Sale'}
                     onChange={e => handleFieldChange('purpose', e.target.value)}
                     className="w-full p-2.5 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white"
                   >
-                    <option value="Sale">For Sale</option>
-                    <option value="Rent">For Rent</option>
+                    <option value="Sale">{t('forSale') || 'For Sale'}</option>
+                    <option value="Rent">{t('forRent') || 'For Rent'}</option>
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-white/80 uppercase mb-1">Bedrooms</label>
+                  <label className="block text-xs font-bold text-white/80 uppercase mb-1">{t('bedrooms') || 'Bedrooms'}</label>
                   <input
                     type="number"
                     value={fieldsState.bedrooms || ''}
@@ -268,7 +275,7 @@ export const WizardStep2Details: React.FC<WizardStep2DetailsProps> = ({
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-white/80 uppercase mb-1">Bathrooms</label>
+                  <label className="block text-xs font-bold text-white/80 uppercase mb-1">{t('bathrooms') || 'Bathrooms'}</label>
                   <input
                     type="number"
                     value={fieldsState.bathrooms || ''}
@@ -278,7 +285,7 @@ export const WizardStep2Details: React.FC<WizardStep2DetailsProps> = ({
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-white/80 uppercase mb-1">Area (m²)</label>
+                  <label className="block text-xs font-bold text-white/80 uppercase mb-1">{t('area') || 'Area (m²)'}</label>
                   <input
                     type="number"
                     value={fieldsState.area || ''}
@@ -291,19 +298,19 @@ export const WizardStep2Details: React.FC<WizardStep2DetailsProps> = ({
 
               <div>
                 <label className="block text-xs font-bold text-white/80 uppercase mb-1">
-                  Property Condition / Status
+                  {t('property_condition_status_label') || 'Property Condition / Status'}
                 </label>
                 <select
                   value={fieldsState.condition || ''}
                   onChange={e => handleFieldChange('condition', e.target.value)}
                   className="w-full p-3 bg-[#0A0A0C] border border-white/10 focus:border-[#F5A623] rounded-xl text-xs text-white focus:outline-none transition"
                 >
-                  <option value="" disabled className="bg-[#0A0A0C] text-white/40">Select Property Condition / Status...</option>
-                  <option value="Furnished" className="bg-[#0A0A0C]">Furnished</option>
-                  <option value="Unfurnished" className="bg-[#0A0A0C]">Unfurnished</option>
-                  <option value="Semi-Furnished" className="bg-[#0A0A0C]">Semi-Furnished</option>
-                  <option value="Under Construction" className="bg-[#0A0A0C]">Under Construction</option>
-                  <option value="Brand New / Newly Built" className="bg-[#0A0A0C]">Brand New / Newly Built</option>
+                  <option value="" disabled className="bg-[#0A0A0C] text-white/40">{t('select_property_condition') || 'Select Property Condition / Status...'}</option>
+                  <option value="Furnished" className="bg-[#0A0A0C]">{getTranslatedFurnished('Furnished', currentLanguage)}</option>
+                  <option value="Unfurnished" className="bg-[#0A0A0C]">{getTranslatedFurnished('Unfurnished', currentLanguage)}</option>
+                  <option value="Semi-Furnished" className="bg-[#0A0A0C]">{getTranslatedFurnished('Semi-Furnished', currentLanguage)}</option>
+                  <option value="Under Construction" className="bg-[#0A0A0C]">{getTranslatedCondition('Under Construction', currentLanguage)}</option>
+                  <option value="Brand New / Newly Built" className="bg-[#0A0A0C]">{getTranslatedCondition('Brand New / Newly Built', currentLanguage)}</option>
                 </select>
               </div>
             </div>
@@ -312,7 +319,7 @@ export const WizardStep2Details: React.FC<WizardStep2DetailsProps> = ({
           {majorCategory === 'Vehicles' && (
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               <div>
-                <label className="block text-xs font-bold text-white/80 uppercase mb-1">Make / Brand</label>
+                <label className="block text-xs font-bold text-white/80 uppercase mb-1">{t('brand') || 'Make / Brand'}</label>
                 <input
                   type="text"
                   value={fieldsState.brand || ''}
@@ -322,7 +329,7 @@ export const WizardStep2Details: React.FC<WizardStep2DetailsProps> = ({
                 />
               </div>
               <div>
-                <label className="block text-xs font-bold text-white/80 uppercase mb-1">Model</label>
+                <label className="block text-xs font-bold text-white/80 uppercase mb-1">{t('model') || 'Model'}</label>
                 <input
                   type="text"
                   value={fieldsState.model || ''}
@@ -332,7 +339,7 @@ export const WizardStep2Details: React.FC<WizardStep2DetailsProps> = ({
                 />
               </div>
               <div>
-                <label className="block text-xs font-bold text-white/80 uppercase mb-1">Year</label>
+                <label className="block text-xs font-bold text-white/80 uppercase mb-1">{t('year') || 'Year'}</label>
                 <input
                   type="number"
                   value={fieldsState.year || ''}
@@ -342,15 +349,15 @@ export const WizardStep2Details: React.FC<WizardStep2DetailsProps> = ({
                 />
               </div>
               <div>
-                <label className="block text-xs font-bold text-white/80 uppercase mb-1">Condition</label>
+                <label className="block text-xs font-bold text-white/80 uppercase mb-1">{t('condition') || 'Condition'}</label>
                 <select
                   value={fieldsState.condition || 'Used'}
                   onChange={e => handleFieldChange('condition', e.target.value)}
                   className="w-full p-2.5 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white"
                 >
-                  <option value="New">Brand New</option>
-                  <option value="Used">Used</option>
-                  <option value="Classic">Classic</option>
+                  <option value="New">{getTranslatedCondition('Brand New', currentLanguage)}</option>
+                  <option value="Used">{getTranslatedCondition('Used', currentLanguage)}</option>
+                  <option value="Classic">{getTranslatedCondition('Classic', currentLanguage)}</option>
                 </select>
               </div>
             </div>
@@ -358,18 +365,18 @@ export const WizardStep2Details: React.FC<WizardStep2DetailsProps> = ({
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-bold text-white/80 uppercase mb-1">Location *</label>
+              <label className="block text-xs font-bold text-white/80 uppercase mb-1">{t('locLabel') || 'Location'} *</label>
               <input
                 type="text"
                 required
                 value={fieldsState.location || ''}
-                placeholder="e.g. Bole, Addis Ababa"
+                placeholder={t('locPlaceholder') || 'e.g. Bole, Addis Ababa'}
                 onChange={e => handleFieldChange('location', e.target.value)}
                 className="w-full p-3 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white focus:outline-none transition"
               />
             </div>
             <div>
-              <label className="block text-xs font-bold text-white/80 uppercase mb-1">Contact Phone *</label>
+              <label className="block text-xs font-bold text-white/80 uppercase mb-1">{t('ownerPhoneLabel') || 'Contact Phone'} *</label>
               <input
                 type="text"
                 required
@@ -382,12 +389,12 @@ export const WizardStep2Details: React.FC<WizardStep2DetailsProps> = ({
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-white/80 uppercase mb-1">Description *</label>
+            <label className="block text-xs font-bold text-white/80 uppercase mb-1">{t('descLabel') || 'Description'} *</label>
             <textarea
               required
               rows={3}
               value={fieldsState.description || ''}
-              placeholder="Detailed description of your listing..."
+              placeholder={t('descPlaceholder') || 'Detailed description of your listing...'}
               onChange={e => handleFieldChange('description', e.target.value)}
               className="w-full p-3 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white focus:outline-none transition"
             />
@@ -398,22 +405,22 @@ export const WizardStep2Details: React.FC<WizardStep2DetailsProps> = ({
             <div className="flex flex-col gap-2 my-4 p-4 bg-[#141418] border border-[#F5A623]/30 rounded-xl">
               <div className="flex items-center gap-2">
                 <span className="text-xs bg-[#F5A623] text-black font-bold px-2 py-0.5 rounded uppercase">
-                  Admin Only
+                  {t('admin_only_badge') || 'Admin Only'}
                 </span>
                 <label className="text-sm font-medium text-[#F5A623] tracking-wider">
-                  Property / Item Owner Name *
+                  {t('ownerNameLabel') || 'Property / Item Owner Name'} *
                 </label>
               </div>
               <input
                 type="text"
-                placeholder="e.g., Abebe Kebede (Client Name)"
+                placeholder={t('ownerNamePlaceholder') || 'e.g., Abebe Kebede (Client Name)'}
                 value={formData.ownerName || ''}
                 onChange={(e) => setFormData({ ...formData, ownerName: e.target.value })}
                 className="w-full bg-[#1A1B22] text-white border border-[#22242E] rounded-lg p-3 focus:border-[#F5A623] outline-none text-sm placeholder:text-gray-500"
                 required={(user?.role === 'admin' || user?.isAdmin)}
               />
               <p className="text-xs text-gray-400">
-                Enter the full name of the owner you are listing on behalf of.
+                {t('ownerNameDesc') || 'Enter the full name of the owner you are listing on behalf of.'}
               </p>
             </div>
           )}
@@ -424,10 +431,10 @@ export const WizardStep2Details: React.FC<WizardStep2DetailsProps> = ({
       <div className="space-y-3 pt-3 border-t border-white/5">
         <div className="flex items-center justify-between">
           <label className="block text-xs font-bold text-amber-500 uppercase tracking-widest">
-            Media Upload (Photos & Video) *
+            {t('media_upload_title') || 'Media Upload (Photos & Video) *'}
           </label>
           <span className="text-[11px] font-mono text-white/50">
-            {imagesList.length} / 10 photos
+            {imagesList.length} / 10 {t('photosCount') || 'photos'}
           </span>
         </div>
 
@@ -474,23 +481,23 @@ export const WizardStep2Details: React.FC<WizardStep2DetailsProps> = ({
               {isCompressingPhotos ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin" />
-                  <span>Compressing Photos...</span>
+                  <span>{t('compressing_photos') || 'Compressing Photos...'}</span>
                 </>
               ) : isVideoUploading ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin" />
-                  <span>Processing Video...</span>
+                  <span>{t('processing_video') || 'Processing Video...'}</span>
                 </>
               ) : (
                 <>
                   <Camera className="w-4 h-4 stroke-[2.5]" />
-                  <span>[📷 Upload Photos/Video]</span>
+                  <span>📷 {t('upload_photos_video_btn') || 'Upload Photos/Video'}</span>
                 </>
               )}
             </button>
 
             <p className="text-[11px] text-white/40 mt-1">
-              Drag & drop photos or short video (JPG, PNG, WebP up to 10MB; MP4/MOV up to 50MB)
+              {t('media_upload_instructions') || 'Drag & drop photos or short video (JPG, PNG, WebP up to 10MB; MP4/MOV up to 50MB)'}
             </p>
 
             <button
@@ -498,7 +505,7 @@ export const WizardStep2Details: React.FC<WizardStep2DetailsProps> = ({
               onClick={() => setShowUrlInput(!showUrlInput)}
               className="text-[11px] text-amber-400 hover:text-amber-300 underline underline-offset-4 font-medium transition cursor-pointer mt-1"
             >
-              {showUrlInput ? 'Hide URL paste input' : 'or paste image/video URL'}
+              {showUrlInput ? (t('hide_url_input') || 'Hide URL paste input') : (t('or_paste_media_url') || 'or paste image/video URL')}
             </button>
           </div>
 
@@ -508,7 +515,7 @@ export const WizardStep2Details: React.FC<WizardStep2DetailsProps> = ({
                 type="url"
                 value={mediaUrlInput}
                 onChange={(e) => setMediaUrlInput(e.target.value)}
-                placeholder="https://example.com/photo.jpg or video link"
+                placeholder={t('media_url_placeholder') || 'https://example.com/photo.jpg or video link'}
                 className="flex-1 bg-black/60 border border-white/15 focus:border-amber-500 text-white rounded-xl px-3 py-2 text-xs focus:outline-none"
               />
               <button
@@ -516,7 +523,7 @@ export const WizardStep2Details: React.FC<WizardStep2DetailsProps> = ({
                 onClick={handleAddMediaUrl}
                 className="px-4 py-2 bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 text-xs font-bold rounded-xl transition cursor-pointer whitespace-nowrap border border-amber-500/30"
               >
-                Add URL
+                {t('common.confirm') || 'Add URL'}
               </button>
             </div>
           )}
@@ -540,7 +547,7 @@ export const WizardStep2Details: React.FC<WizardStep2DetailsProps> = ({
         {imagesList.length > 0 && (
           <div className="space-y-2 pt-2">
             <span className="text-[11px] text-white/60 font-medium">
-              Uploaded Photos ({imagesList.length}) &bull; First photo is Cover Photo
+              {t('uploaded_photos_info', { count: imagesList.length }) || 'Uploaded Photos (' + imagesList.length + ') • First photo is Cover Photo'}
             </span>
             <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 gap-2.5">
               {imagesList.map((img, idx) => (
@@ -548,7 +555,7 @@ export const WizardStep2Details: React.FC<WizardStep2DetailsProps> = ({
                   <img src={img} alt={`Upload ${idx + 1}`} className="w-full h-full object-cover" />
                   {idx === 0 && (
                     <span className="absolute top-1.5 left-1.5 bg-amber-500 text-black text-[9px] font-black px-1.5 py-0.5 rounded shadow">
-                      ⭐ Cover Photo
+                      {t('cover_photo_badge') || '⭐ Cover Photo'}
                     </span>
                   )}
                   <div className="absolute inset-0 bg-black/70 opacity-0 group-hover:opacity-100 transition flex items-center justify-center gap-1.5 p-1">
@@ -557,9 +564,9 @@ export const WizardStep2Details: React.FC<WizardStep2DetailsProps> = ({
                         type="button"
                         onClick={() => handleSetCoverPhoto(idx)}
                         className="bg-amber-500 text-black text-[9px] font-bold px-2 py-1 rounded hover:bg-amber-400 transition"
-                        title="Make Cover"
+                        title={t('make_cover_btn') || 'Cover'}
                       >
-                        Cover
+                        {t('make_cover_btn') || 'Cover'}
                       </button>
                     )}
                     {idx > 0 && (
@@ -567,7 +574,7 @@ export const WizardStep2Details: React.FC<WizardStep2DetailsProps> = ({
                         type="button"
                         onClick={() => handleMovePhoto(idx, 'left')}
                         className="p-1 bg-white/20 hover:bg-white/30 rounded text-white text-[10px]"
-                        title="Move Left"
+                        title={t('move_left_btn') || 'Move Left'}
                       >
                         <ArrowLeft className="w-3 h-3" />
                       </button>
@@ -577,7 +584,7 @@ export const WizardStep2Details: React.FC<WizardStep2DetailsProps> = ({
                         type="button"
                         onClick={() => handleMovePhoto(idx, 'right')}
                         className="p-1 bg-white/20 hover:bg-white/30 rounded text-white text-[10px]"
-                        title="Move Right"
+                        title={t('move_right_btn') || 'Move Right'}
                       >
                         <ArrowRight className="w-3 h-3" />
                       </button>
@@ -586,7 +593,7 @@ export const WizardStep2Details: React.FC<WizardStep2DetailsProps> = ({
                       type="button"
                       onClick={() => setImagesList(prev => prev.filter((_, i) => i !== idx))}
                       className="p-1 bg-rose-500/80 hover:bg-rose-500 rounded text-white text-[10px]"
-                      title="Delete Photo"
+                      title={t('delete_photo_btn') || 'Delete Photo'}
                     >
                       <Trash2 className="w-3 h-3" />
                     </button>
@@ -601,14 +608,14 @@ export const WizardStep2Details: React.FC<WizardStep2DetailsProps> = ({
           <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl flex items-center justify-between">
             <div className="flex items-center gap-2 text-xs text-amber-300 font-medium truncate">
               <Film className="w-4 h-4 text-amber-400 shrink-0" />
-              <span className="truncate">Video attached: {fieldsState.video.slice(0, 40)}...</span>
+              <span className="truncate">{t('video_attached') || 'Video attached:'} {fieldsState.video.slice(0, 40)}...</span>
             </div>
             <button
               type="button"
               onClick={handleRemoveVideo}
               className="text-xs text-rose-400 hover:text-rose-300 hover:underline cursor-pointer shrink-0 ml-2"
             >
-              Remove
+              {t('remove_video_btn') || 'Remove'}
             </button>
           </div>
         )}

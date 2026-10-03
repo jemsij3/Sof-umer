@@ -3,8 +3,13 @@ import {
   Camera, MapPin, Phone, User as UserIcon, Sparkles, Loader2,
   BedDouble, Bath, Maximize, Truck, ShieldCheck, Tag, Zap, Check, Copy, AlertCircle, CreditCard
 } from 'lucide-react';
-import { NormalizedSellingType, getPluralizedUnit } from '../../utils/wholesalePricing';
-import { getTranslatedCategoryName, getTranslatedSubcategoryName } from '../../lib/categoriesData';
+import { NormalizedSellingType, getPluralizedUnit, getLocalizedUnit } from '../../utils/wholesalePricing';
+import { 
+  getTranslatedCategoryName, 
+  getTranslatedSubcategoryName, 
+  getTranslatedFurnished, 
+  getTranslatedCondition 
+} from '../../lib/categoriesData';
 import { WholesalePriceTier } from '../../types';
 import { ReceiptUploadInput } from '../ReceiptUploadInput';
 import { useApp } from '../../lib/AppContext';
@@ -63,7 +68,7 @@ export const WizardStep4Review: React.FC<WizardStep4ReviewProps> = ({
   setSelectedPlan,
   adminPromotionPackages: propAdminPackages
 }) => {
-  const { systemSettings } = useApp();
+  const { systemSettings, t } = useApp();
 
   const adminSettings = (systemSettings as any) || {};
   const rawFreeCampaign = adminSettings.freeListingCampaign || adminSettings.freeListingSettings;
@@ -136,11 +141,11 @@ export const WizardStep4Review: React.FC<WizardStep4ReviewProps> = ({
 
   const handleManualPaymentSubmit = () => {
     if (!selectedDirectMethodId) {
-      setPaymentError('Please select the payment method/account you transferred funds to (e.g. CBE, Telebirr, or Awash Bank).');
+      setPaymentError(t('select_payment_account_error') || 'Please select the payment method/account you transferred funds to (e.g. CBE, Telebirr, or Awash Bank).');
       return;
     }
     if (!receiptRefNumber.trim() && !receiptFileData?.url) {
-      setPaymentError('Please provide a transfer reference number or upload your payment receipt screenshot before submitting.');
+      setPaymentError(t('provide_ref_or_receipt_error') || 'Please provide a transfer reference number or upload your payment receipt screenshot before submitting.');
       return;
     }
     setPaymentError('');
@@ -250,7 +255,7 @@ export const WizardStep4Review: React.FC<WizardStep4ReviewProps> = ({
           {imagesList.length > 1 && (
             <div className="absolute bottom-3 right-3 bg-black/80 px-2.5 py-1 rounded-md text-[10px] font-bold text-white flex items-center gap-1">
               <Camera className="w-3 h-3 text-[#F5A623]" />
-              <span>{imagesList.length} photos</span>
+              <span>{imagesList.length} {t('photosCount') || 'photos'}</span>
             </div>
           )}
         </div>
@@ -259,42 +264,42 @@ export const WizardStep4Review: React.FC<WizardStep4ReviewProps> = ({
           <div className="flex justify-between items-start gap-4">
             <div>
               <h3 className="font-serif text-lg font-bold text-white line-clamp-1">
-                {fieldsState.title || 'Untitled Listing'}
+                {fieldsState.title || t('untitled') || 'Untitled Listing'}
               </h3>
               <div className="text-xs text-white/70 flex items-start gap-1.5 mt-1.5 leading-relaxed bg-white/5 p-2 rounded-xl border border-white/5">
                 <MapPin className="w-3.5 h-3.5 text-[#F5A623] shrink-0 mt-0.5" />
                 <span className="whitespace-pre-wrap break-words flex-1 text-white/90 leading-snug">
-                  {fieldsState.location || 'Location not specified'}
+                  {fieldsState.location || t('noLocation') || 'Location not specified'}
                 </span>
               </div>
             </div>
             <div className="text-right shrink-0">
               {isRealEstate ? (
                 <span className="text-lg font-extrabold text-[#F5A623] font-mono block">
-                  {fieldsState.price ? `${Number(fieldsState.price).toLocaleString()} ${currency}` : 'Contact for Price'}
+                  {fieldsState.price ? `${Number(fieldsState.price).toLocaleString()} ${currency}` : (t('contactPrice') || 'Contact for Price')}
                 </span>
               ) : sellingType === 'Wholesale' ? (
                 <>
                   <span className="text-lg font-extrabold text-[#F5A623] font-mono block">
-                    {wholesaleTiers[0]?.pricePerUnit ? `${Number(wholesaleTiers[0]?.pricePerUnit).toLocaleString()} ${currency}` : (fieldsState.wholesalePrice ? `${Number(fieldsState.wholesalePrice).toLocaleString()} ${currency}` : 'Contact for Price')}
-                    <span className="text-xs font-normal text-amber-300/80 ml-1">/ {fieldsState.unit || 'Piece'}</span>
+                    {wholesaleTiers[0]?.pricePerUnit ? `${Number(wholesaleTiers[0]?.pricePerUnit).toLocaleString()} ${currency}` : (fieldsState.wholesalePrice ? `${Number(fieldsState.wholesalePrice).toLocaleString()} ${currency}` : (t('contactPrice') || 'Contact for Price'))}
+                    <span className="text-xs font-normal text-amber-300/80 ml-1">/ {getLocalizedUnit(fieldsState.unit || 'Piece', currentLanguage, 1)}</span>
                   </span>
                   <span className="text-[10px] text-amber-300/90 font-bold block mt-0.5">
-                    MOQ: {fieldsState.minimumOrderQuantity || wholesaleTiers[0]?.minimumQuantity || 10} {getPluralizedUnit(Number(fieldsState.minimumOrderQuantity || 10), fieldsState.unit || 'Piece')}
+                    {t('wholesale_moq_label') || 'MOQ'}: {fieldsState.minimumOrderQuantity || wholesaleTiers[0]?.minimumQuantity || 10} {getPluralizedUnit(Number(fieldsState.minimumOrderQuantity || 10), fieldsState.unit || 'Piece')}
                   </span>
                 </>
               ) : sellingType === 'Retail + Wholesale' || (sellingType as string) === 'Retail & Wholesale' ? (
                 <>
                   <span className="text-lg font-extrabold text-[#F5A623] font-mono block">
-                    {fieldsState.retailPrice || fieldsState.price ? `${Number(fieldsState.retailPrice || fieldsState.price).toLocaleString()} ${currency}` : 'Contact for Price'}
+                    {fieldsState.retailPrice || fieldsState.price ? `${Number(fieldsState.retailPrice || fieldsState.price).toLocaleString()} ${currency}` : (t('contactPrice') || 'Contact for Price')}
                   </span>
                   <span className="text-[10px] text-amber-300 font-bold block mt-0.5">
-                    Bulk: {wholesaleTiers[0]?.pricePerUnit ? `${Number(wholesaleTiers[0]?.pricePerUnit).toLocaleString()} ${currency}` : 'Tiered'} (MOQ: {fieldsState.minimumOrderQuantity || wholesaleTiers[0]?.minimumQuantity || 10})
+                    {t('wholesale.tier') || 'Bulk'}: {wholesaleTiers[0]?.pricePerUnit ? `${Number(wholesaleTiers[0]?.pricePerUnit).toLocaleString()} ${currency}` : (t('pricing_strategy') || 'Tiered')} ({t('wholesale_moq_label') || 'MOQ'}: {fieldsState.minimumOrderQuantity || wholesaleTiers[0]?.minimumQuantity || 10})
                   </span>
                 </>
               ) : (
                 <span className="text-lg font-extrabold text-[#F5A623] font-mono block">
-                  {fieldsState.retailPrice || fieldsState.price ? `${Number(fieldsState.retailPrice || fieldsState.price).toLocaleString()} ${currency}` : 'Contact for Price'}
+                  {fieldsState.retailPrice || fieldsState.price ? `${Number(fieldsState.retailPrice || fieldsState.price).toLocaleString()} ${currency}` : (t('contactPrice') || 'Contact for Price')}
                 </span>
               )}
             </div>
@@ -309,7 +314,7 @@ export const WizardStep4Review: React.FC<WizardStep4ReviewProps> = ({
                   <BedDouble className="w-4 h-4 text-[#F5A623] mx-auto mb-1" />
                   <span className="text-sm font-bold text-white block">{bedroomsNum}</span>
                   <span className="text-[9px] font-bold text-[#F5A623] uppercase tracking-wider">
-                    BEDROOMS
+                    {t('bedrooms') || 'BEDROOMS'}
                   </span>
                 </div>
               )}
@@ -318,7 +323,7 @@ export const WizardStep4Review: React.FC<WizardStep4ReviewProps> = ({
                   <Bath className="w-4 h-4 text-[#F5A623] mx-auto mb-1" />
                   <span className="text-sm font-bold text-white block">{bathroomsNum}</span>
                   <span className="text-[9px] font-bold text-[#F5A623] uppercase tracking-wider">
-                    BATHROOMS
+                    {t('bathrooms') || 'BATHROOMS'}
                   </span>
                 </div>
               )}
@@ -327,7 +332,7 @@ export const WizardStep4Review: React.FC<WizardStep4ReviewProps> = ({
                   <Maximize className="w-4 h-4 text-[#F5A623] mx-auto mb-1" />
                   <span className="text-sm font-bold text-white block">{areaNum} m²</span>
                   <span className="text-[9px] font-bold text-[#F5A623] uppercase tracking-wider">
-                    TOTAL AREA
+                    {t('area') || 'TOTAL AREA'}
                   </span>
                 </div>
               )}
@@ -340,10 +345,10 @@ export const WizardStep4Review: React.FC<WizardStep4ReviewProps> = ({
             {fieldsState.condition && (
               <div className="bg-[#1A1B22] p-2.5 rounded-xl border border-[#22242E]">
                 <span className="text-[#F5A623] text-[10px] font-semibold uppercase block mb-0.5 tracking-wider">
-                  {isRealEstate ? 'Condition / Furnishing' : 'Condition'}
+                  {isRealEstate ? (t('property_condition_status_label') || 'Condition / Furnishing') : (t('condition') || 'Condition')}
                 </span>
                 <span className="text-white text-xs font-medium truncate block">
-                  {fieldsState.condition}
+                  {getTranslatedFurnished(fieldsState.condition, currentLanguage) || getTranslatedCondition(fieldsState.condition, currentLanguage) || fieldsState.condition}
                 </span>
               </div>
             )}
@@ -352,7 +357,7 @@ export const WizardStep4Review: React.FC<WizardStep4ReviewProps> = ({
             {subcategory && (
               <div className="bg-[#1A1B22] p-2.5 rounded-xl border border-[#22242E]">
                 <span className="text-[#F5A623] text-[10px] font-semibold uppercase block mb-0.5 tracking-wider">
-                  Subcategory
+                  {t('wizard.step_subcategory') || 'Subcategory'}
                 </span>
                 <span className="text-white text-xs font-medium truncate block">
                   {getTranslatedSubcategoryName(subcategory, currentLanguage)}
@@ -364,10 +369,10 @@ export const WizardStep4Review: React.FC<WizardStep4ReviewProps> = ({
             {isRealEstate && fieldsState.purpose && (
               <div className="bg-[#1A1B22] p-2.5 rounded-xl border border-[#22242E]">
                 <span className="text-[#F5A623] text-[10px] font-semibold uppercase block mb-0.5 tracking-wider">
-                  Purpose
+                  {t('purposeLabel') || 'Purpose'}
                 </span>
                 <span className="text-white text-xs font-medium truncate block">
-                  {fieldsState.purpose === 'Rent' ? 'For Rent' : 'For Sale'}
+                  {fieldsState.purpose === 'Rent' ? (t('forRent') || 'For Rent') : (t('forSale') || 'For Sale')}
                 </span>
               </div>
             )}
@@ -376,7 +381,7 @@ export const WizardStep4Review: React.FC<WizardStep4ReviewProps> = ({
             {fieldsState.brand && (
               <div className="bg-[#1A1B22] p-2.5 rounded-xl border border-[#22242E]">
                 <span className="text-[#F5A623] text-[10px] font-semibold uppercase block mb-0.5 tracking-wider">
-                  Brand
+                  {t('brand') || 'Brand'}
                 </span>
                 <span className="text-white text-xs font-medium truncate block">
                   {fieldsState.brand}
@@ -388,7 +393,7 @@ export const WizardStep4Review: React.FC<WizardStep4ReviewProps> = ({
             {fieldsState.model && (
               <div className="bg-[#1A1B22] p-2.5 rounded-xl border border-[#22242E]">
                 <span className="text-[#F5A623] text-[10px] font-semibold uppercase block mb-0.5 tracking-wider">
-                  Model
+                  {t('model') || 'Model'}
                 </span>
                 <span className="text-white text-xs font-medium truncate block">
                   {fieldsState.model}
@@ -400,7 +405,7 @@ export const WizardStep4Review: React.FC<WizardStep4ReviewProps> = ({
             {fieldsState.year && (
               <div className="bg-[#1A1B22] p-2.5 rounded-xl border border-[#22242E]">
                 <span className="text-[#F5A623] text-[10px] font-semibold uppercase block mb-0.5 tracking-wider">
-                  Year
+                  {t('year') || 'Year'}
                 </span>
                 <span className="text-white text-xs font-medium truncate block">
                   {fieldsState.year}
@@ -412,7 +417,7 @@ export const WizardStep4Review: React.FC<WizardStep4ReviewProps> = ({
             {fieldsState.storageSpec && (
               <div className="bg-[#1A1B22] p-2.5 rounded-xl border border-[#22242E]">
                 <span className="text-[#F5A623] text-[10px] font-semibold uppercase block mb-0.5 tracking-wider">
-                  Specs
+                  {t('specs_storage_label') || 'Specs'}
                 </span>
                 <span className="text-white text-xs font-medium truncate block">
                   {fieldsState.storageSpec}
@@ -424,12 +429,12 @@ export const WizardStep4Review: React.FC<WizardStep4ReviewProps> = ({
             {!isRealEstate && (sellingType || fieldsState.sellingMode) && (
               <div className="bg-[#1A1B22] p-2.5 rounded-xl border border-[#22242E]">
                 <span className="text-[#F5A623] text-[10px] font-semibold uppercase block mb-0.5 tracking-wider">
-                  Selling Mode
+                  {t('selling_type_intent_label') || 'Selling Mode'}
                 </span>
                 <span className="text-white text-xs font-medium truncate block">
-                  {sellingType === 'Retail' ? 'Single Units (Retail)' : 
-                   sellingType === 'Wholesale' ? 'Bulk Only (Wholesale)' : 
-                   sellingType === 'Retail + Wholesale' || (sellingType as string) === 'Retail & Wholesale' ? 'Dual Pricing (Retail + Bulk)' :
+                  {sellingType === 'Retail' ? (t('selling_type_opt_a') || 'Single Units (Retail)') : 
+                   sellingType === 'Wholesale' ? (t('selling_type_opt_b') || 'Bulk Only (Wholesale)') : 
+                   sellingType === 'Retail + Wholesale' || (sellingType as string) === 'Retail & Wholesale' ? (t('selling_type_opt_c') || 'Dual Pricing (Retail + Bulk)') :
                    fieldsState.sellingMode || sellingType}
                 </span>
               </div>
@@ -439,10 +444,10 @@ export const WizardStep4Review: React.FC<WizardStep4ReviewProps> = ({
             {!isRealEstate && fieldsState.stockQuantity !== undefined && fieldsState.stockQuantity !== '' && (
               <div className="bg-[#1A1B22] p-2.5 rounded-xl border border-[#22242E]">
                 <span className="text-[#F5A623] text-[10px] font-semibold uppercase block mb-0.5 tracking-wider">
-                  Available Stock
+                  {t('available_stock_qty_label') || 'Available Stock'}
                 </span>
                 <span className="text-white text-xs font-medium truncate block">
-                  {fieldsState.stockQuantity} {fieldsState.unit || 'Units'}
+                  {fieldsState.stockQuantity} {getLocalizedUnit(fieldsState.unit || 'Units', currentLanguage, Number(fieldsState.stockQuantity) || 1)}
                 </span>
               </div>
             )}
@@ -451,7 +456,7 @@ export const WizardStep4Review: React.FC<WizardStep4ReviewProps> = ({
             {!isRealEstate && (sellingType === 'Wholesale' || sellingType === 'Retail + Wholesale' || fieldsState.minimumOrderQuantity) && (
               <div className="bg-[#1A1B22] p-2.5 rounded-xl border border-[#22242E]">
                 <span className="text-[#F5A623] text-[10px] font-semibold uppercase block mb-0.5 tracking-wider">
-                  Min. Order (MOQ)
+                  {t('wholesale_moq_label') || 'Min. Order (MOQ)'}
                 </span>
                 <span className="text-white text-xs font-medium truncate block">
                   {fieldsState.minimumOrderQuantity || wholesaleTiers[0]?.minimumQuantity || 10} {getPluralizedUnit(Number(fieldsState.minimumOrderQuantity || 10), fieldsState.unit || 'Piece')}
@@ -465,15 +470,24 @@ export const WizardStep4Review: React.FC<WizardStep4ReviewProps> = ({
           {!isRealEstate && deliveryOptions.length > 0 && (
             <div className="pt-2 border-t border-[#22242E]">
               <span className="text-[10px] font-semibold text-[#F5A623] uppercase tracking-wider block mb-1.5">
-                Delivery & Logistics Options
+                {t('wholesale.delivery_options') || 'Delivery & Logistics Options'}
               </span>
               <div className="flex flex-wrap gap-1.5">
-                {deliveryOptions.map((opt: string) => (
-                  <span key={opt} className="bg-[#F5A623]/10 border border-[#F5A623]/20 text-[#F5A623] px-2.5 py-1 rounded-lg text-xs font-medium flex items-center gap-1">
-                    <Truck className="w-3 h-3" />
-                    <span>{opt}</span>
-                  </span>
-                ))}
+                {deliveryOptions.map((opt: string) => {
+                  const localizedDelTitle = opt === 'Store/Warehouse Pickup' 
+                    ? (t('del_store_pickup') || opt)
+                    : opt === 'Local City Delivery'
+                    ? (t('del_local_delivery') || opt)
+                    : opt === 'Freight Shipping'
+                    ? (t('del_nationwide_freight') || opt)
+                    : opt;
+                  return (
+                    <span key={opt} className="bg-[#F5A623]/10 border border-[#F5A623]/20 text-[#F5A623] px-2.5 py-1 rounded-lg text-xs font-medium flex items-center gap-1">
+                      <Truck className="w-3 h-3" />
+                      <span>{localizedDelTitle}</span>
+                    </span>
+                  );
+                })}
               </div>
             </div>
           )}
@@ -481,10 +495,10 @@ export const WizardStep4Review: React.FC<WizardStep4ReviewProps> = ({
           {/* Full Description text */}
           <div className="pt-2 border-t border-[#22242E]">
             <span className="text-[10px] font-semibold text-[#F5A623] uppercase tracking-wider block mb-1">
-              Description
+              {t('descLabel') || 'Description'}
             </span>
             <p className="text-xs text-white/70 whitespace-pre-line leading-relaxed bg-[#0A0A0C]/40 p-3 rounded-xl border border-[#22242E]/60 max-h-36 overflow-y-auto">
-              {fieldsState.description || 'No description provided'}
+              {fieldsState.description || t('noDesc') || 'No description provided'}
             </p>
           </div>
 
@@ -492,7 +506,7 @@ export const WizardStep4Review: React.FC<WizardStep4ReviewProps> = ({
           <div className="bg-[#1A1B22] p-3 rounded-xl border border-[#22242E] flex items-center justify-between text-xs">
             <div className="flex items-center gap-2">
               <UserIcon className="w-4 h-4 text-[#F5A623]" />
-              <span className="text-white/80 font-medium">{fieldsState.ownerName || currentUser?.fullName || 'Seller'}</span>
+              <span className="text-white/80 font-medium">{fieldsState.ownerName || currentUser?.fullName || t('seller') || 'Seller'}</span>
             </div>
             <div className="flex items-center gap-1.5 text-[#F5A623] font-mono font-medium">
               <Phone className="w-3.5 h-3.5" />
@@ -508,33 +522,37 @@ export const WizardStep4Review: React.FC<WizardStep4ReviewProps> = ({
         <div className="flex items-center justify-between">
           <span className="text-xs font-bold text-[#F5A623] uppercase tracking-wider flex items-center gap-1.5 font-mono">
             <Sparkles className="w-3.5 h-3.5 text-[#F5A623]" />
-            Promotion & Visibility Packages
+            {t('promotion_packages_title') || 'Promotion & Visibility Packages'}
           </span>
           <span className="text-[11px] text-white/50 font-mono">
-            {selectedPackage?.price === 0 ? 'Standard Listing' : `${selectedPackage?.price} ETB Boost`}
+            {selectedPackage?.price === 0 ? (t('standard_listing_badge') || 'Standard Listing') : `${selectedPackage?.price} ETB Boost`}
           </span>
         </div>
         <p className="text-[11px] text-white/60 leading-relaxed -mt-1">
-          Spotlight your listing on top of searches and homepage feeds, or publish as a standard listing.
+          {t('promotion_packages_desc') || 'Spotlight your listing on top of searches and homepage feeds, or publish as a standard listing.'}
         </p>
 
         {/* 1. CONDITIONAL FREE LISTING CAMPAIGN CARD (HIDE WHEN ADMIN TOGGLE IS OFF) */}
         {safeAdminSettings?.freeListingCampaign?.enabled && (
           <div 
-            onClick={() => setSelectedPackage({ id: 'free', price: 0, name: 'Free Listing / Standard' })}
+            onClick={() => setSelectedPackage({ id: 'free', price: 0, name: t('free_listing_standard') || 'Free Listing / Standard' })}
             className={`p-4 rounded-xl border cursor-pointer mb-3 transition-all ${
               selectedPackage?.id === 'free' ? 'border-[#F5A623] bg-[#1A1B22]' : 'border-[#22242E] bg-[#141418]'
             }`}
           >
             <div className="flex justify-between items-center mb-1">
-              <span className="text-xs font-bold bg-[#F5A623]/20 text-[#F5A623] px-2 py-0.5 rounded">CAMPAIGN ACTIVE</span>
+              <span className="text-xs font-bold bg-[#F5A623]/20 text-[#F5A623] px-2 py-0.5 rounded">
+                {t('campaign_active_badge') || 'CAMPAIGN ACTIVE'}
+              </span>
               <span className="text-xs text-gray-400">
-                Ends: {safeAdminSettings.freeListingCampaign.endDate}
+                {(t('campaign_ends_at') || 'Ends: {date}').replace('{date}', safeAdminSettings.freeListingCampaign.endDate)}
               </span>
             </div>
-            <div className="text-white font-bold text-sm mt-1">Free Listing / Standard</div>
+            <div className="text-white font-bold text-sm mt-1">
+              {t('free_listing_standard') || 'Free Listing / Standard'}
+            </div>
             <p className="text-xs text-gray-400 mt-1">
-              Max free listings allowed per user: {safeAdminSettings.freeListingCampaign.maxListings || 30}
+              {(t('max_free_listings_allowed') || 'Max free listings allowed per user: {count}').replace('{count}', String(safeAdminSettings.freeListingCampaign.maxListings || 30))}
             </p>
           </div>
         )}
@@ -577,14 +595,14 @@ export const WizardStep4Review: React.FC<WizardStep4ReviewProps> = ({
                 <div>
                   <div className="flex items-center gap-2">
                     <span className="text-xs font-bold text-white uppercase tracking-wider block font-mono">
-                      Manual Payment Verification
+                      {t('manual_payment_verification_title') || 'Manual Payment Verification'}
                     </span>
                     <span className="px-2 py-0.5 text-[9px] font-bold uppercase rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
-                      Live Admin Methods
+                      {t('live_admin_methods_badge') || 'Live Admin Methods'}
                     </span>
                   </div>
                   <span className="text-[11px] text-white/60">
-                    Selected: <strong className="text-[#F5A623]">{selectedPackage.name}</strong> ({selectedPackage.duration})
+                    {(t('selected_package_summary') || 'Selected: {name} ({duration})').replace('{name}', selectedPackage.name).replace('{duration}', selectedPackage.duration)}
                   </span>
                 </div>
               </div>
@@ -592,12 +610,14 @@ export const WizardStep4Review: React.FC<WizardStep4ReviewProps> = ({
                 <span className="text-base font-black font-mono text-[#F5A623] bg-[#F5A623]/10 px-3 py-1 rounded-lg border border-[#F5A623]/20 block">
                   {selectedPackage.price} ETB
                 </span>
-                <span className="text-[10px] text-white/40 font-mono mt-0.5 block">Total Payable</span>
+                <span className="text-[10px] text-white/40 font-mono mt-0.5 block">
+                  {t('total_payable_label') || 'Total Payable'}
+                </span>
               </div>
             </div>
 
             <p className="text-xs text-white/80 leading-relaxed">
-              Transfer the exact package amount (<strong className="text-[#F5A623] font-mono">{selectedPackage.price} ETB</strong>) to any of our official admin-configured accounts below via Mobile Banking or Branch Deposit, then attach your transaction reference or receipt screenshot:
+              {(t('manual_payment_instruction_text') || 'Transfer the exact package amount ({price} ETB) to any of our official admin-configured accounts below via Mobile Banking or Branch Deposit, then attach your transaction reference or receipt screenshot:').replace('{price}', selectedPackage.price)}
             </p>
 
             {/* Official Accounts Cards */}
@@ -605,10 +625,10 @@ export const WizardStep4Review: React.FC<WizardStep4ReviewProps> = ({
               <div className="space-y-2.5">
                 <div className="flex items-center justify-between">
                   <span className="text-[10px] font-bold text-white/70 uppercase tracking-wider block font-mono">
-                    Select Transfer Account ({activeMethods.length} Active):
+                    {(t('select_transfer_account_label') || 'Select Transfer Account ({count} Active):').replace('{count}', String(activeMethods.length))}
                   </span>
                   <span className="text-[10px] text-white/40 font-mono">
-                    Click to select account
+                    {t('click_to_select_account_hint') || 'Click to select account'}
                   </span>
                 </div>
                 <div className="grid grid-cols-1 gap-2.5">
@@ -637,13 +657,15 @@ export const WizardStep4Review: React.FC<WizardStep4ReviewProps> = ({
                             <span className="font-bold text-white text-xs">{m.name}</span>
                           </div>
                           <span className="px-2 py-0.5 text-[9px] font-bold uppercase rounded-md bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-mono">
-                            Active
+                            {t('active') || 'Active'}
                           </span>
                         </div>
 
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 bg-black/40 p-2.5 rounded-lg border border-white/5">
                           <div>
-                            <span className="text-[10px] text-white/40 block font-mono">Account / Number:</span>
+                            <span className="text-[10px] text-white/40 block font-mono">
+                              {t('account_or_number_label') || 'Account / Number:'}
+                            </span>
                             <div className="flex items-center justify-between gap-1 mt-0.5">
                               <span className="font-mono text-xs font-bold text-[#F5A623] truncate">
                                 {m.accountNumber}
@@ -655,17 +677,17 @@ export const WizardStep4Review: React.FC<WizardStep4ReviewProps> = ({
                                   handleCopyAccount(m.accountNumber, m.id);
                                 }}
                                 className="px-2 py-0.5 bg-white/10 hover:bg-white/20 rounded text-white/70 hover:text-white transition cursor-pointer flex items-center gap-1 text-[10px] shrink-0 font-mono"
-                                title="Copy Account Number"
+                                title={t('copy') || 'Copy Account Number'}
                               >
                                 {copiedId === m.id ? (
                                   <>
                                     <Check className="w-3 h-3 text-emerald-400" />
-                                    <span className="text-emerald-400 font-bold">Copied</span>
+                                    <span className="text-emerald-400 font-bold">{t('copied') || 'Copied'}</span>
                                   </>
                                 ) : (
                                   <>
                                     <Copy className="w-3 h-3 text-[#F5A623]" />
-                                    <span>Copy</span>
+                                    <span>{t('copy') || 'Copy'}</span>
                                   </>
                                 )}
                               </button>
@@ -674,7 +696,9 @@ export const WizardStep4Review: React.FC<WizardStep4ReviewProps> = ({
 
                           {m.accountName && (
                             <div>
-                              <span className="text-[10px] text-white/40 block font-mono">Account Holder:</span>
+                              <span className="text-[10px] text-white/40 block font-mono">
+                                {t('account_holder_label') || 'Account Holder:'}
+                              </span>
                               <span className="text-xs text-white/80 font-medium truncate block mt-0.5">
                                 {m.accountName}
                               </span>
@@ -684,14 +708,16 @@ export const WizardStep4Review: React.FC<WizardStep4ReviewProps> = ({
                           {m.phoneNumber && (
                             <div className="sm:col-span-2 flex items-center gap-1.5 text-[11px] text-white/60 pt-0.5">
                               <Phone className="w-3.5 h-3.5 text-[#F5A623] shrink-0" />
-                              <span className="font-mono">Hotline / Support: <strong className="text-white">{m.phoneNumber}</strong></span>
+                              <span className="font-mono">{t('support_hotline_label') || 'Hotline / Support:'} <strong className="text-white">{m.phoneNumber}</strong></span>
                             </div>
                           )}
                         </div>
 
                         {m.instructions && (
                           <div className="text-[11px] text-white/70 bg-white/[0.02] p-2 rounded-lg border border-white/5 flex items-start gap-1.5 leading-relaxed">
-                            <span className="text-[#F5A623] font-bold shrink-0 font-mono text-[10px] uppercase">Instructions:</span>
+                            <span className="text-[#F5A623] font-bold shrink-0 font-mono text-[10px] uppercase">
+                              {t('payment_instructions_label') || 'Instructions:'}
+                            </span>
                             <span>{m.instructions}</span>
                           </div>
                         )}
@@ -702,14 +728,14 @@ export const WizardStep4Review: React.FC<WizardStep4ReviewProps> = ({
               </div>
             ) : (
               <div className="p-3 bg-amber-500/10 border border-amber-500/20 text-amber-300 text-xs rounded-xl">
-                No active manual payment methods found in admin configuration. Please contact admin.
+                {t('no_payment_methods') || 'No active manual payment methods found in admin configuration. Please contact admin.'}
               </div>
             )}
 
             {/* Receipt Reference and File Upload */}
             <div className="pt-2 border-t border-white/10">
               <span className="text-[10px] font-bold text-white/70 uppercase tracking-wider block font-mono mb-2">
-                Submit Payment Verification:
+                {t('submit_payment_verification_label') || 'Submit Payment Verification:'}
               </span>
               <ReceiptUploadInput
                 referenceNumber={receiptRefNumber}
@@ -753,14 +779,14 @@ export const WizardStep4Review: React.FC<WizardStep4ReviewProps> = ({
           {submitting ? (
             <>
               <Loader2 className="w-4 h-4 animate-spin" />
-              <span>Publishing Listing...</span>
+              <span>{t('publishing_progress') || 'Publishing Listing...'}</span>
             </>
           ) : (
             selectedPackage?.price > 0 
               ? (showManualPaymentModal
-                  ? `SUBMIT PAYMENT RECEIPT & PUBLISH (${selectedPackage.price} ETB)`
-                  : `PROCEED TO PAYMENT`)
-              : 'PUBLISH LISTING NOW'
+                  ? (t('submit_receipt_and_publish_btn') || 'SUBMIT PAYMENT RECEIPT & PUBLISH ({price} ETB)').replace('{price}', String(selectedPackage.price))
+                  : (t('proceed_to_payment_btn') || 'PROCEED TO PAYMENT'))
+              : (t('Publish Listing') || 'PUBLISH LISTING NOW')
           )}
         </button>
 
@@ -771,18 +797,18 @@ export const WizardStep4Review: React.FC<WizardStep4ReviewProps> = ({
               onClick={() => setShowManualPaymentModal(false)}
               className="text-white/60 hover:text-white cursor-pointer font-medium"
             >
-              🡠 Change Boost Package
+              {t('change_boost_package_btn') || '🡠 Change Boost Package'}
             </button>
             {safeAdminSettings?.freeListingCampaign?.enabled && (
               <button
                 type="button"
                 onClick={() => {
-                  setSelectedPackage({ id: 'free', price: 0, name: 'Free Listing / Standard' });
+                  setSelectedPackage({ id: 'free', price: 0, name: t('free_listing_standard') || 'Free Listing / Standard' });
                   setShowManualPaymentModal(false);
                 }}
                 className="text-[#F5A623] hover:underline cursor-pointer font-medium"
               >
-                Switch to Free Listing (0 ETB)
+                {t('switch_to_free_listing_btn') || 'Switch to Free Listing (0 ETB)'}
               </button>
             )}
           </div>
@@ -794,7 +820,7 @@ export const WizardStep4Review: React.FC<WizardStep4ReviewProps> = ({
             onClick={onBackToPricing}
             className="text-xs text-white/50 hover:text-white underline underline-offset-4 cursor-pointer transition font-medium"
           >
-            🡠 Back to Pricing
+            {t('back_to_pricing_btn') || '🡠 Back to Pricing'}
           </button>
         </div>
       </div>
