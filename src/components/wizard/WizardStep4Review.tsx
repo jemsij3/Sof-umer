@@ -8,7 +8,9 @@ import {
   getTranslatedCategoryName, 
   getTranslatedSubcategoryName, 
   getTranslatedFurnished, 
-  getTranslatedCondition 
+  getTranslatedCondition,
+  getTranslatedFieldLabel,
+  getTranslatedOption
 } from '../../lib/categoriesData';
 import { WholesalePriceTier } from '../../types';
 import { ReceiptUploadInput } from '../ReceiptUploadInput';
@@ -369,10 +371,12 @@ export const WizardStep4Review: React.FC<WizardStep4ReviewProps> = ({
             {isRealEstate && fieldsState.purpose && (
               <div className="bg-[#1A1B22] p-2.5 rounded-xl border border-[#22242E]">
                 <span className="text-[#F5A623] text-[10px] font-semibold uppercase block mb-0.5 tracking-wider">
-                  {t('purposeLabel') || 'Purpose'}
+                  {t('purpose') || getTranslatedFieldLabel('purpose', currentLanguage) || 'Purpose'}
                 </span>
                 <span className="text-white text-xs font-medium truncate block">
-                  {fieldsState.purpose === 'Rent' ? (t('forRent') || 'For Rent') : (t('forSale') || 'For Sale')}
+                  {fieldsState.purpose === 'Rent'
+                    ? (t('option_for_rent') || getTranslatedOption('Rent', currentLanguage) || 'For Rent')
+                    : (t('option_for_sale') || getTranslatedOption('Sale', currentLanguage) || 'For Sale')}
                 </span>
               </div>
             )}

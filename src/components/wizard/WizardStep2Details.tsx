@@ -6,7 +6,9 @@ import { useApp } from '../../lib/AppContext';
 import { 
   getTranslatedCategoryName, 
   getTranslatedFurnished, 
-  getTranslatedCondition 
+  getTranslatedCondition,
+  getTranslatedFieldLabel,
+  getTranslatedOption
 } from '../../lib/categoriesData';
 
 interface WizardStep2DetailsProps {
@@ -254,14 +256,16 @@ export const WizardStep2Details: React.FC<WizardStep2DetailsProps> = ({
             <div className="space-y-3">
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 <div>
-                  <label className="block text-xs font-bold text-white/80 uppercase mb-1">{t('purposeLabel') || 'Purpose'} *</label>
+                  <label className="block text-xs font-bold text-white/80 uppercase mb-1">
+                    {t('purpose') || getTranslatedFieldLabel('purpose', currentLanguage) || 'Purpose'} *
+                  </label>
                   <select
                     value={fieldsState.purpose || 'Sale'}
                     onChange={e => handleFieldChange('purpose', e.target.value)}
                     className="w-full p-2.5 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white"
                   >
-                    <option value="Sale">{t('forSale') || 'For Sale'}</option>
-                    <option value="Rent">{t('forRent') || 'For Rent'}</option>
+                    <option value="Sale">{t('option_for_sale') || getTranslatedOption('Sale', currentLanguage) || 'For Sale'}</option>
+                    <option value="Rent">{t('option_for_rent') || getTranslatedOption('Rent', currentLanguage) || 'For Rent'}</option>
                   </select>
                 </div>
                 <div>

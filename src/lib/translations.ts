@@ -1932,5 +1932,6 @@ export const staticTranslations: TranslationKey[] = [
   { key: "must_be_greater_than_hint", en: "Must be > {target}", om: "{target} caaluu qaba", am: "ከ{target} መብለጥ አለበት", category: "Wholesale" },
   { key: "add_another_tier_btn", en: "+ Add Another Price Tier", om: "+ Sadarkaa Gatii Dabalataa Dabali", am: "+ ሌላ የዋጋ ደረጃ ጨምር", category: "Wholesale" },
   { key: "photo_process_error", en: "Failed to process one or more photo files.", om: "Faayiloota suuraa tokko ykn isaa ol qindeessuun hin danda'amne.", am: "አንድ ወይም ከዚያ በላይ የፎቶ ፋይሎችን ማስተናገድ አልተቻለም።", category: "CreateListing" },
-  { key: "video_process_error", en: "Error processing video file.", om: "Faayila viidiyoo qindeessuu irratti dogoggorri uumameera.", am: "የቪዲዮ ፋይሉን በማዘጋጀት ላይ ስህተት ተከስቷል።", category: "CreateListing" }
+  { key: "video_process_error", en: "Error processing video file.", om: "Faayila viidiyoo qindeessuu irratti dogoggorri uumameera.", am: "የቪዲዮ ፋይሉን በማዘጋጀት ላይ ስህተት ተከስቷል።", category: "CreateListing" },
+  { key: "purpose", en: "Purpose", om: "Kaayyoo Daldalaa", am: "ዓላማ", category: "CreateListing" }
 ];
