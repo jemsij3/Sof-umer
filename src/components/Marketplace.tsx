@@ -1711,23 +1711,80 @@ export default function Marketplace({
                 {t('clear_all_filters') || 'Clear All Filters'}
               </button>
             </div>
-          ) : (
+          ) : (() => {
+            const visibleProperties = finalFilteredProperties.slice(0, visibleCount);
+            const featuredVisible = visibleProperties.filter(p => isPropertyActivelyFeatured(p));
+            const latestVisible = visibleProperties.filter(p => !isPropertyActivelyFeatured(p));
+
+            return (
             <div className="mb-12">
-              <div className={viewMode === 'grid' ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8' : 'grid grid-cols-1 gap-6'}>
-                {finalFilteredProperties.slice(0, visibleCount).map(prop => (
-                  <ListingCard
-                    key={prop.id}
-                    property={prop}
-                    onSelect={onSelectProperty}
-                    favorites={favorites}
-                    onToggleFav={toggleFavorite}
-                    onReport={() => onOpenReportModal('property', prop.id, prop.title)}
-                    t={t}
-                    currentLanguage={currentLanguage}
-                    viewMode={viewMode}
-                  />
-                ))}
-              </div>
+              {/* Featured Properties Section */}
+              {featuredVisible.length > 0 && (
+                <div className="mb-12">
+                  <h3 className="text-2xl font-serif text-white mb-8 border-b border-white/5 pb-4 flex items-center justify-between">
+                    <span className="flex items-center gap-2">
+                      <Sparkles className="w-5 h-5 text-amber-500" />
+                      {
+                        (selectedMajorCategory && selectedMajorCategory.toLowerCase().includes('propert')) || (selectedRedesignedCategory?.name && selectedRedesignedCategory.name.toLowerCase().includes('propert'))
+                          ? (t('featured_property') || t('featured_properties') || 'Featured Property')
+                          : (t('featured_listings') || 'Featured Listings')
+                      }
+                    </span>
+                    <span className="text-[9px] uppercase font-bold tracking-[0.25em] text-white/30">
+                      {t('verified_select_picks')}
+                    </span>
+                  </h3>
+                  <div className={viewMode === 'grid' ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8' : 'grid grid-cols-1 gap-6'}>
+                    {featuredVisible.map(prop => (
+                      <ListingCard
+                        key={prop.id}
+                        property={prop}
+                        onSelect={onSelectProperty}
+                        favorites={favorites}
+                        onToggleFav={toggleFavorite}
+                        onReport={() => onOpenReportModal('property', prop.id, prop.title)}
+                        t={t}
+                        currentLanguage={currentLanguage}
+                        viewMode={viewMode}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Latest/Unfeatured Properties Section */}
+              {latestVisible.length > 0 && (
+                <div className="mb-12">
+                  <h3 className="text-2xl font-serif text-white mb-8 border-b border-white/5 pb-4 flex items-center justify-between">
+                    <span className="flex items-center gap-2">
+                      <Clock className="w-5 h-5 text-amber-500" />
+                      {
+                        (selectedMajorCategory && selectedMajorCategory.toLowerCase().includes('propert')) || (selectedRedesignedCategory?.name && selectedRedesignedCategory.name.toLowerCase().includes('propert'))
+                          ? (t('latest_property') || t('latest_properties') || 'Latest Property')
+                          : (t('latest_listings') || 'Latest Listings')
+                      }
+                    </span>
+                    <span className="text-[9px] uppercase font-bold tracking-[0.25em] text-white/30">
+                      {t('recent_offers')}
+                    </span>
+                  </h3>
+                  <div className={viewMode === 'grid' ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8' : 'grid grid-cols-1 gap-6'}>
+                    {latestVisible.map(prop => (
+                      <ListingCard
+                        key={prop.id}
+                        property={prop}
+                        onSelect={onSelectProperty}
+                        favorites={favorites}
+                        onToggleFav={toggleFavorite}
+                        onReport={() => onOpenReportModal('property', prop.id, prop.title)}
+                        t={t}
+                        currentLanguage={currentLanguage}
+                        viewMode={viewMode}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {/* Load More Button */}
               {visibleCount < finalFilteredProperties.length && (
@@ -1741,7 +1798,9 @@ export default function Marketplace({
                 </div>
               )}
             </div>
-          )}
+            );
+          })()}
+
         </div>
       ) : (
         <div className="animate-fade-in text-left">
