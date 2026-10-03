@@ -19,6 +19,7 @@ import {
   getMatchingSubcategoryId, 
   getEffectiveMajorCategory, 
   isListingActiveAndPublished, 
+  isPropertyActivelyFeatured,
   getSubcategoryListingCount as calcSubCount, 
   getCategoryListingCount as calcCategoryCount, 
   getSubcategoryVisual,
@@ -418,7 +419,7 @@ export default function Marketplace({
       const matchesArea = areaMin === '' || prop.area >= areaMin;
 
       // Featured only filter from footer
-      const matchesFeaturedOnly = !featuredOnlyFilter || prop.isFeatured;
+      const matchesFeaturedOnly = !featuredOnlyFilter || isPropertyActivelyFeatured(prop);
 
       // Only display approved/verified properties to the public
       const isApproved = prop.verificationStatus === 'verified' || prop.isVerifiedListing === true;
@@ -457,39 +458,39 @@ export default function Marketplace({
 
   // Separate properties into sections
   const featuredProperties = useMemo(() => {
-    return filteredProperties.filter(p => p.isFeatured);
+    return filteredProperties.filter(p => isPropertyActivelyFeatured(p));
   }, [filteredProperties]);
 
   const recommendedProperties = useMemo(() => {
-    return filteredProperties.filter(p => p.isRecommended && !p.isFeatured);
+    return filteredProperties.filter(p => p.isRecommended && !isPropertyActivelyFeatured(p));
   }, [filteredProperties]);
 
   const latestProperties = useMemo(() => {
-    // Sort by date/id descending, excluding featured and recommended to avoid double displaying
+    // Public Properties: Sort by date/id descending, strictly excluding actively featured properties
     return [...filteredProperties]
-      .filter(p => !p.isFeatured && !p.isRecommended)
+      .filter(p => !isPropertyActivelyFeatured(p) && !p.isRecommended)
       .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
   }, [filteredProperties]);
 
   const popularProperties = useMemo(() => {
-    // Popular listings based on real views / interest only
+    // Popular listings based on real views / interest only, strictly excluding actively featured properties
     return [...filteredProperties]
-      .filter(p => (Number(p.viewsCount) || 0) > 0)
+      .filter(p => !isPropertyActivelyFeatured(p) && (Number(p.viewsCount) || 0) > 0)
       .sort((a, b) => (Number(b.viewsCount) || 0) - (Number(a.viewsCount) || 0))
       .slice(0, 6);
   }, [filteredProperties]);
 
-  // Category-specific listings for homepage (only shown when enough real listings exist, count >= 2)
+  // Category-specific listings for homepage (only shown when enough real listings exist, count >= 2, strictly excluding actively featured properties)
   const propertiesListings = useMemo(() => {
-    return properties.filter(p => isListingActiveAndPublished(p) && getEffectiveMajorCategory(p) === 'Properties').slice(0, 6);
+    return properties.filter(p => isListingActiveAndPublished(p) && !isPropertyActivelyFeatured(p) && getEffectiveMajorCategory(p) === 'Properties').slice(0, 6);
   }, [properties]);
 
   const vehiclesListings = useMemo(() => {
-    return properties.filter(p => isListingActiveAndPublished(p) && getEffectiveMajorCategory(p) === 'Vehicles').slice(0, 6);
+    return properties.filter(p => isListingActiveAndPublished(p) && !isPropertyActivelyFeatured(p) && getEffectiveMajorCategory(p) === 'Vehicles').slice(0, 6);
   }, [properties]);
 
   const productsListings = useMemo(() => {
-    return properties.filter(p => isListingActiveAndPublished(p) && getEffectiveMajorCategory(p) === 'Products').slice(0, 6);
+    return properties.filter(p => isListingActiveAndPublished(p) && !isPropertyActivelyFeatured(p) && getEffectiveMajorCategory(p) === 'Products').slice(0, 6);
   }, [properties]);
 
   // Helper to count listings matching our redesigned categories
@@ -611,7 +612,7 @@ export default function Marketplace({
 
     // 6. Featured only filter
     if (featuredOnlyFilter) {
-      list = list.filter(p => p.isFeatured);
+      list = list.filter(p => isPropertyActivelyFeatured(p));
     }
 
     // 7. Price min / max
@@ -745,13 +746,13 @@ export default function Marketplace({
         return b.price - a.price;
       }
       if (sortBy === 'popular') {
-        const valA = (a.isFeatured ? 2 : 0) + (a.isRecommended ? 1 : 0);
-        const valB = (b.isFeatured ? 2 : 0) + (b.isRecommended ? 1 : 0);
+        const valA = (isPropertyActivelyFeatured(a) ? 2 : 0) + (a.isRecommended ? 1 : 0);
+        const valB = (isPropertyActivelyFeatured(b) ? 2 : 0) + (isPropertyActivelyFeatured(b) ? 1 : 0);
         return valB - valA;
       }
       if (sortBy === 'rated') {
-        const valA = (a.isVerifiedListing ? 2 : 0) + (a.isFeatured ? 1 : 0);
-        const valB = (b.isVerifiedListing ? 2 : 0) + (b.isFeatured ? 1 : 0);
+        const valA = (a.isVerifiedListing ? 2 : 0) + (isPropertyActivelyFeatured(a) ? 1 : 0);
+        const valB = (b.isVerifiedListing ? 2 : 0) + (isPropertyActivelyFeatured(b) ? 1 : 0);
         return valB - valA;
       }
       return 0;
@@ -2074,7 +2075,7 @@ export default function Marketplace({
                       <h3 className="text-2xl font-serif text-white mb-8 border-b border-white/5 pb-4 flex items-center justify-between">
                         <span className="flex items-center gap-2"><Clock className="w-5 h-5 text-amber-500" /> {
                           (selectedMajorCategory && selectedMajorCategory.toLowerCase().includes('propert')) || (selectedRedesignedCategory?.name && selectedRedesignedCategory.name.toLowerCase().includes('propert'))
-                            ? (t('latest_properties') || 'Latest Properties')
+                            ? (t('public_properties') || t('latest_properties') || 'Public Properties')
                             : (t('latest_listings') || 'Latest Listings')
                         }</span>
                         <span className="text-[9px] uppercase font-bold tracking-[0.25em] text-white/30">{t('recent_offers')}</span>

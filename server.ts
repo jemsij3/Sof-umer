@@ -3576,6 +3576,24 @@ async function startServer() {
 
   // Properties & Listings Endpoints
   app.get(['/api/properties', '/api/listings'], async (req, res) => {
+    // Automatically transition expired promotions back to standard status
+    const now = Date.now();
+    for (const p of (localDb.properties || [])) {
+      const expiryRaw = p.promotionExpiresAt || p.promotedUntil;
+      if (expiryRaw) {
+        const expiryTime = new Date(expiryRaw).getTime();
+        if (!isNaN(expiryTime) && expiryTime <= now) {
+          if (p.isFeatured || p.boostPlan === 'vip' || p.boostPlan === 'premium' || p.boostPlan === 'featured') {
+            p.isFeatured = false;
+            p.isTopAd = false;
+            if (p.boostPlan === 'vip' || p.boostPlan === 'premium' || p.boostPlan === 'featured') {
+              p.boostPlan = 'free';
+            }
+          }
+        }
+      }
+    }
+
     const ownerId = req.query.ownerId as string;
     let list = localDb.properties || [];
     if (ownerId) {
@@ -3647,6 +3665,21 @@ async function startServer() {
   app.get(['/api/properties/:id', '/api/listings/:id'], async (req, res) => {
     const prop = (localDb.properties || []).find(p => p.id === req.params.id);
     if (!prop) return res.status(404).json({ error: 'Listing not found' });
+
+    // Transition expired promotion back to standard status
+    const expiryRaw = prop.promotionExpiresAt || prop.promotedUntil;
+    if (expiryRaw) {
+      const expiryTime = new Date(expiryRaw).getTime();
+      if (!isNaN(expiryTime) && expiryTime <= Date.now()) {
+        if (prop.isFeatured || prop.boostPlan === 'vip' || prop.boostPlan === 'premium' || prop.boostPlan === 'featured') {
+          prop.isFeatured = false;
+          prop.isTopAd = false;
+          if (prop.boostPlan === 'vip' || prop.boostPlan === 'premium' || prop.boostPlan === 'featured') {
+            prop.boostPlan = 'free';
+          }
+        }
+      }
+    }
 
     // Check if listing is pending admin approval
     const isPending = prop.approvalStatus === 'pending' || prop.verificationStatus === 'pending' || prop.approvalStatus === 'rejected';

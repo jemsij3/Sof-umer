@@ -15,7 +15,8 @@ import {
   getTranslatedCondition,
   getEffectiveMajorCategory,
   isPropertyListing,
-  getTranslatedLocation
+  getTranslatedLocation,
+  isPropertyActivelyFeatured
 } from '../lib/categoriesData';
 import { useApp } from '../lib/AppContext';
 import { getListingCustomerPricingDisplay } from '../utils/wholesalePricing';
@@ -53,7 +54,7 @@ export function ListingCard({
 
   const isFavorite = favorites.includes(property.id);
   const isVerifiedSupplier = property.verificationStatus === 'verified' || property.isVerifiedListing === true || property.ownerId === 'usr-admin';
-  const isFeatured = property.isFeatured || property.isRecommended || property.isTopAd || property.boostPlan === 'vip' || property.boostPlan === 'premium';
+  const isFeatured = isPropertyActivelyFeatured(property);
   const sellingType = (property as any).sellingType || 'Retail';
   const pricingInfo = useMemo(() => getListingCustomerPricingDisplay(property, currentLanguage), [property, currentLanguage]);
   const isNegotiable = (property as any).isNegotiable === true || 

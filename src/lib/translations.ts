@@ -1933,5 +1933,17 @@ export const staticTranslations: TranslationKey[] = [
   { key: "add_another_tier_btn", en: "+ Add Another Price Tier", om: "+ Sadarkaa Gatii Dabalataa Dabali", am: "+ ሌላ የዋጋ ደረጃ ጨምር", category: "Wholesale" },
   { key: "photo_process_error", en: "Failed to process one or more photo files.", om: "Faayiloota suuraa tokko ykn isaa ol qindeessuun hin danda'amne.", am: "አንድ ወይም ከዚያ በላይ የፎቶ ፋይሎችን ማስተናገድ አልተቻለም።", category: "CreateListing" },
   { key: "video_process_error", en: "Error processing video file.", om: "Faayila viidiyoo qindeessuu irratti dogoggorri uumameera.", am: "የቪዲዮ ፋይሉን በማዘጋጀት ላይ ስህተት ተከስቷል።", category: "CreateListing" },
-  { key: "purpose", en: "Purpose", om: "Kaayyoo Daldalaa", am: "ዓላማ", category: "CreateListing" }
+  { key: "purpose", en: "Purpose", om: "Kaayyoo Daldalaa", am: "ዓላማ", category: "CreateListing" },
+  { key: "public_properties", en: "Public Properties", om: "Qabeenya Uummataa", am: "የህዝብ ንብረቶች", category: "Marketplace" },
+  { key: "how_it_works.title", en: "How It Works", om: "Inni Akkamitti Hojjata", am: "እንዴት እንደሚሰራ", category: "About" },
+  { key: "how_it_works.subtitle", en: "A simple 3-step guide to buy, sell, rent, or trade.", om: "Adeemsa salphaa bittan, gurgurtan ykn kireeffattan.", am: "በሶፍ ኡመር ለመሸጥ፣ ለመግዛት፣ ለመከራየት የሚከተሉት 3 ቀላል መንገዶች።", category: "About" },
+  { key: "how_it_works.step1_badge", en: "Step 01", om: "Tarkaanfii 01", am: "ደረጃ 01", category: "About" },
+  { key: "how_it_works.step1_title", en: "Create an Account", om: "Herrega Banadhaa", am: "መለያ ይፍጠሩ", category: "About" },
+  { key: "how_it_works.step1_desc", en: "Sign up in seconds using your email address. Toggle your preferred language (English, Afaan Oromoo, Amharic) from the top language panel.", om: "Teessoo imeelii keessaniin sekondii muraasa keessatti galmaa'aa. Baafata afaanii gubbaarra jiru irraa afaan filattan (Ingiliffa, Afaan Oromoo, Amaara) filadhaa.", am: "የኢሜይል አድራሻዎን በመጠቀም በሰከንዶች ውስጥ ይመዝገቡ። ከላይ ካለው የቋንቋ ፓነል የሚመርጡትን ቋንቋ (እንግሊዝኛ፣ አፋን ኦሮሞ፣ አማርኛ) ይቀይሩ።", category: "About" },
+  { key: "how_it_works.step2_badge", en: "Step 02", om: "Tarkaanfii 02", am: "ደረጃ 02", category: "About" },
+  { key: "how_it_works.step2_title", en: "Publish or Explore", om: "Maxxansaa ykn Sakatta'aa", am: "ያትሙ ወይም ያስሱ", category: "About" },
+  { key: "how_it_works.step2_desc", en: "Post your property, vehicle, product, or job listing using our streamlined form with custom attributes and local coordinates. Or filter thousands of listings.", om: "Qabeenya, konkolaataa, oomisha ykn beeksisa hojii keessan unka salphaa amaloota fi teessoo qabuun maxxansaa. Yookiin beeksisa kumaatamaan lakkaa'aman sakatta'aa.", am: "ንብረትዎን፣ ተሽከርካሪዎን፣ ምርትዎን ወይም የስራ ማስታወቂያዎን ቀላል ቅጽ በመጠቀም ይለጥፉ። ወይም በሺዎች የሚቆጠሩ ማስታወቂያዎችን ያጣሩ።", category: "About" },
+  { key: "how_it_works.step3_badge", en: "Step 03", om: "Tarkaanfii 03", am: "ደረጃ 03", category: "About" },
+  { key: "how_it_works.step3_title", en: "Connect & Deal", om: "Walqunnamaa & Walii Galaa", am: "ይገናኙ እና ይገበያዩ", category: "About" },
+  { key: "how_it_works.step3_desc", en: "Use our live chat or contact the seller directly using verified phone numbers. Arrange safe physical inspections, secure legal deals, and trade with peace of mind.", om: "Tajaajila yaada qajeeltoo fayyadamaa ykn lakkoofsa bilbilaa mirkanaa'een kallattiin gurguraa qunnamaa. Bakka nagaa qabutti sakatta'iinsa taasisaa, waligaltee seera qabeessa raawwadhaa.", am: "የቀጥታ ውይይት ይጠቀሙ ወይም በተረጋገጡ የስልክ ቁጥሮች አማካኝነት ሻጩን በቀጥታ ያነጋግሩ። ደህንነቱ የተጠበቀ ምርመራ ያድርጉ፣ ህጋዊ ስምምነቶችን ያጠናቅቁ እና በሰላም ይገበያዩ።", category: "About" }
 ];

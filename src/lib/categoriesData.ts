@@ -658,6 +658,38 @@ export function isListingActiveAndPublished(p: any): boolean {
   return true;
 }
 
+/**
+ * Determines whether a listing is currently actively featured.
+ * A property is actively featured if:
+ * 1. It has the featured flag (isFeatured) OR a paid boost plan ('vip', 'premium', 'featured')
+ * 2. Its promotion/feature expiration date (promotionExpiresAt or promotedUntil) has NOT passed.
+ * Once the feature duration expires, it returns false automatically so the property
+ * smoothly transitions back to normal public listings without needing data duplication.
+ */
+export function isPropertyActivelyFeatured(p: any): boolean {
+  if (!p) return false;
+
+  const plan = (p.boostPlan || '').toLowerCase();
+  const hasFeatureFlag = Boolean(
+    p.isFeatured === true || 
+    plan === 'vip' || 
+    plan === 'premium' || 
+    plan === 'featured'
+  );
+
+  if (!hasFeatureFlag) return false;
+
+  const expiryRaw = p.promotionExpiresAt || p.promotedUntil;
+  if (expiryRaw) {
+    const expiryTime = new Date(expiryRaw).getTime();
+    if (!isNaN(expiryTime) && expiryTime <= Date.now()) {
+      return false; // Feature period has expired
+    }
+  }
+
+  return true;
+}
+
 export function getEffectiveMajorCategory(p: {
   majorCategory?: string;
   propertyType?: string;

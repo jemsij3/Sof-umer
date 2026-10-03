@@ -703,36 +703,60 @@ export default function InfoPage({ pageId, onBack, returnView, onOpenReportModal
               <HelpCircle className="w-8 h-8 text-amber-500" />
               <div>
                 <h2 className="text-2xl font-serif text-white font-bold">
-                  {currentLanguage === 'om' ? 'Inni Akkamitti Hojjata?' : currentLanguage === 'am' ? 'እንዴት እንደሚሰራ ያንብቡ' : 'How It Works'}
+                  {t('how_it_works.title') || (currentLanguage === 'om' ? 'Inni Akkamitti Hojjata' : currentLanguage === 'am' ? 'እንዴት እንደሚሰራ' : 'How It Works')}
                 </h2>
                 <p className="text-xs text-white/40">
-                  {currentLanguage === 'om' ? 'Adeemsa salphaa bittan, gurgurtan ykn kireeffattan' : currentLanguage === 'am' ? 'በሶፍ ኡመር ለመሸጥ፣ ለመግዛት፣ ለመከራየት የሚከተሉት ቀላል መንገዶች' : 'A simple 3-step guide to buy, sell, rent, or trade.'}
+                  {t('how_it_works.subtitle') || (currentLanguage === 'om' ? 'Adeemsa salphaa bittan, gurgurtan ykn kireeffattan.' : currentLanguage === 'am' ? 'በሶፍ ኡመር ለመሸጥ፣ ለመግዛት፣ ለመከራየት የሚከተሉት 3 ቀላል መንገዶች።' : 'A simple 3-step guide to buy, sell, rent, or trade.')}
                 </p>
               </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 relative">
               <div className="bg-[#0c0c10]/60 p-6 rounded-2xl border border-white/5 space-y-3 relative">
-                <span className="text-[10px] font-black text-emerald-400 uppercase tracking-widest">Step 01</span>
-                <h3 className="font-serif text-base text-white">Create an Account</h3>
+                <span className="text-[10px] font-black text-emerald-400 uppercase tracking-widest">
+                  {t('how_it_works.step1_badge') || (currentLanguage === 'om' ? 'Tarkaanfii 01' : currentLanguage === 'am' ? 'ደረጃ 01' : 'Step 01')}
+                </span>
+                <h3 className="font-serif text-base text-white">
+                  {t('how_it_works.step1_title') || (currentLanguage === 'om' ? 'Herrega Banadhaa' : currentLanguage === 'am' ? 'መለያ ይፍጠሩ' : 'Create an Account')}
+                </h3>
                 <p className="text-xs text-white/50 leading-relaxed">
-                  Sign up in seconds using your email address. Toggle your preferred language (English, Afaan Oromoo, Amharic) from the top language panel.
+                  {t('how_it_works.step1_desc') || (currentLanguage === 'om' 
+                    ? "Teessoo imeelii keessaniin sekondii muraasa keessatti galmaa'aa. Baafata afaanii gubbaarra jiru irraa afaan filattan (Ingiliffa, Afaan Oromoo, Amaara) filadhaa." 
+                    : currentLanguage === 'am' 
+                    ? 'የኢሜይል አድራሻዎን በመጠቀም በሰከንዶች ውስጥ ይመዝገቡ። ከላይ ካለው የቋንቋ ፓነል የሚመርጡትን ቋንቋ (እንግሊዝኛ፣ አፋን ኦሮሞ፣ አማርኛ) ይቀይሩ።' 
+                    : 'Sign up in seconds using your email address. Toggle your preferred language (English, Afaan Oromoo, Amharic) from the top language panel.')}
                 </p>
               </div>
 
               <div className="bg-[#0c0c10]/60 p-6 rounded-2xl border border-white/5 space-y-3 relative">
-                <span className="text-[10px] font-black text-amber-500 uppercase tracking-widest">Step 02</span>
-                <h3 className="font-serif text-base text-white">Publish or Explore</h3>
+                <span className="text-[10px] font-black text-amber-500 uppercase tracking-widest">
+                  {t('how_it_works.step2_badge') || (currentLanguage === 'om' ? 'Tarkaanfii 02' : currentLanguage === 'am' ? 'ደረጃ 02' : 'Step 02')}
+                </span>
+                <h3 className="font-serif text-base text-white">
+                  {t('how_it_works.step2_title') || (currentLanguage === 'om' ? "Maxxansaa ykn Sakatta'aa" : currentLanguage === 'am' ? 'ያትሙ ወይም ያስሱ' : 'Publish or Explore')}
+                </h3>
                 <p className="text-xs text-white/50 leading-relaxed">
-                  Post your property, vehicle, product, or job listing using our streamlined form with custom attributes and local coordinates. Or filter thousands of listings.
+                  {t('how_it_works.step2_desc') || (currentLanguage === 'om' 
+                    ? "Qabeenya, konkolaataa, oomisha ykn beeksisa hojii keessan unka salphaa amaloota fi teessoo qabuun maxxansaa. Yookiin beeksisa kumaatamaan lakkaa'aman sakatta'aa." 
+                    : currentLanguage === 'am' 
+                    ? 'ንብረትዎን፣ ተሽከርካሪዎን፣ ምርትዎን ወይም የስራ ማስታወቂያዎን ቀላል ቅጽ በመጠቀም ይለጥፉ። ወይም በሺዎች የሚቆጠሩ ማስታወቂያዎችን ያጣሩ።' 
+                    : 'Post your property, vehicle, product, or job listing using our streamlined form with custom attributes and local coordinates. Or filter thousands of listings.')}
                 </p>
               </div>
 
               <div className="bg-[#0c0c10]/60 p-6 rounded-2xl border border-white/5 space-y-3 relative">
-                <span className="text-[10px] font-black text-emerald-400 uppercase tracking-widest">Step 03</span>
-                <h3 className="font-serif text-base text-white">Connect & Deal</h3>
+                <span className="text-[10px] font-black text-emerald-400 uppercase tracking-widest">
+                  {t('how_it_works.step3_badge') || (currentLanguage === 'om' ? 'Tarkaanfii 03' : currentLanguage === 'am' ? 'ደረጃ 03' : 'Step 03')}
+                </span>
+                <h3 className="font-serif text-base text-white">
+                  {t('how_it_works.step3_title') || (currentLanguage === 'om' ? 'Walqunnamaa & Walii Galaa' : currentLanguage === 'am' ? 'ይገናኙ እና ይገበያዩ' : 'Connect & Deal')}
+                </h3>
                 <p className="text-xs text-white/50 leading-relaxed">
-                  Use our live chat or contact the seller directly using verified phone numbers. Arrange safe physical inspections, secure legal deals, and trade with peace of mind.
+                  {t('how_it_works.step3_desc') || (currentLanguage === 'om' 
+                    ? "Tajaajila yaada qajeeltoo fayyadamaa ykn lakkoofsa bilbilaa mirkanaa'een kallattiin gurguraa qunnamaa. Bakka nagaa qabutti sakatta'iinsa taasisaa, waligaltee seera qabeessa raawwadhaa." 
+                    : currentLanguage === 'am' 
+                    ? 'የቀጥታ ውይይት ይጠቀሙ ወይም በተረጋገጡ የስልክ ቁጥሮች አማካኝነት ሻጩን በቀጥታ ያነጋግሩ። ደህንነቱ የተጠበቀ ምርመራ ያድርጉ፣ ህጋዊ ስምምነቶችን ያጠናቅቁ እና በሰላም ይገበያዩ።' 
+                    : 'Use our live chat or contact the seller directly using verified phone numbers. Arrange safe physical inspections, secure legal deals, and trade with peace of mind.')}
                 </p>
               </div>
             </div>
