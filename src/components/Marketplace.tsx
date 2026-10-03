@@ -466,9 +466,9 @@ export default function Marketplace({
   }, [filteredProperties]);
 
   const latestProperties = useMemo(() => {
-    // Public Properties: Sort by date/id descending, strictly excluding actively featured properties
+    // Latest Property: Sort by date/id descending, strictly excluding actively featured properties
     return [...filteredProperties]
-      .filter(p => !isPropertyActivelyFeatured(p) && !p.isRecommended)
+      .filter(p => !isPropertyActivelyFeatured(p))
       .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
   }, [filteredProperties]);
 
@@ -2023,7 +2023,7 @@ export default function Marketplace({
                       <h3 className="text-2xl font-serif text-white mb-8 border-b border-white/5 pb-4 flex items-center justify-between">
                         <span className="flex items-center gap-2"><Sparkles className="w-5 h-5 text-amber-500" /> {
                           (selectedMajorCategory && selectedMajorCategory.toLowerCase().includes('propert')) || (selectedRedesignedCategory?.name && selectedRedesignedCategory.name.toLowerCase().includes('propert'))
-                            ? (t('featured_properties') || 'Featured Properties')
+                            ? (t('featured_property') || t('featured_properties') || 'Featured Property')
                             : (t('featured_listings') || 'Featured Listings')
                         }</span>
                         <span className="text-[9px] uppercase font-bold tracking-[0.25em] text-white/30">{t('verified_select_picks')}</span>
@@ -2075,7 +2075,7 @@ export default function Marketplace({
                       <h3 className="text-2xl font-serif text-white mb-8 border-b border-white/5 pb-4 flex items-center justify-between">
                         <span className="flex items-center gap-2"><Clock className="w-5 h-5 text-amber-500" /> {
                           (selectedMajorCategory && selectedMajorCategory.toLowerCase().includes('propert')) || (selectedRedesignedCategory?.name && selectedRedesignedCategory.name.toLowerCase().includes('propert'))
-                            ? (t('public_properties') || t('latest_properties') || 'Public Properties')
+                            ? (t('latest_property') || t('latest_properties') || 'Latest Property')
                             : (t('latest_listings') || 'Latest Listings')
                         }</span>
                         <span className="text-[9px] uppercase font-bold tracking-[0.25em] text-white/30">{t('recent_offers')}</span>

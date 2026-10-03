@@ -4190,6 +4190,24 @@ async function startServer() {
         updates.video = updates.videoUrl;
       }
 
+      if (updates.isFeatured !== undefined) {
+        if (updates.isFeatured) {
+          const existingExpiry = updates.promotionExpiresAt || property.promotionExpiresAt || updates.promotedUntil || property.promotedUntil;
+          const isExpired = !existingExpiry || new Date(existingExpiry).getTime() <= Date.now();
+          if (isExpired) {
+            const futureDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+            updates.promotionExpiresAt = futureDate;
+            updates.promotedUntil = futureDate;
+          }
+        } else {
+          updates.promotionExpiresAt = new Date(Date.now() - 1000).toISOString();
+          updates.promotedUntil = updates.promotionExpiresAt;
+          if (property.boostPlan === 'vip' || property.boostPlan === 'premium' || property.boostPlan === 'featured') {
+            updates.boostPlan = 'free';
+          }
+        }
+      }
+
       localDb.properties[idx] = { ...property, ...updates };
 
       // Notify listing owner if admin changed verification or approval status
