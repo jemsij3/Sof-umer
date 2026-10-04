@@ -430,7 +430,7 @@ export const WizardStep4Review: React.FC<WizardStep4ReviewProps> = ({
             )}
 
             {/* Selling Mode / Intent (Products & Non-Properties) */}
-            {!isRealEstate && (sellingType || fieldsState.sellingMode) && (
+            {!isRealEstate && !['Jobs', 'Vehicles', 'Services'].includes(majorCategory) && (sellingType || fieldsState.sellingMode) && (
               <div className="bg-[#1A1B22] p-2.5 rounded-xl border border-[#22242E]">
                 <span className="text-[#F5A623] text-[10px] font-semibold uppercase block mb-0.5 tracking-wider">
                   {t('selling_type_intent_label') || 'Selling Mode'}

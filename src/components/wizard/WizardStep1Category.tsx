@@ -65,6 +65,9 @@ export const WizardStep1Category: React.FC<WizardStep1CategoryProps> = ({
                   if (subs && subs.length > 0) {
                     setSubcategory(subs[0].id);
                   }
+                  if (['Properties', 'Jobs', 'Vehicles', 'Services'].includes(cat.id)) {
+                    onSelectSellingType('Retail');
+                  }
                 }}
                 className={`p-3.5 rounded-xl border flex flex-col items-center gap-2 transition duration-200 cursor-pointer ${
                   isActive
@@ -102,8 +105,8 @@ export const WizardStep1Category: React.FC<WizardStep1CategoryProps> = ({
         </div>
       )}
 
-      {/* 2. Selling Intent Radio Group (Hidden for Real Estate/Properties) */}
-      {majorCategory !== 'Properties' && (
+      {/* 2. Selling Intent Radio Group (Hidden for Real Estate, Jobs, Vehicles, Services) */}
+      {!['Properties', 'Jobs', 'Vehicles', 'Services'].includes(majorCategory) && (
         <div className="space-y-3 pt-2 border-t border-white/5">
           <div className="flex items-center justify-between">
             <label className="block text-xs font-bold text-amber-400 uppercase tracking-wider font-mono">

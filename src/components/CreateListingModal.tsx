@@ -927,7 +927,9 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
       if (!subcategory && subcats && subcats.length > 0) {
         setSubcategory(subcats[0].id);
       }
-      if (sellingType === 'Wholesale' || sellingType === 'Retail + Wholesale') {
+      if (['Properties', 'Jobs', 'Vehicles', 'Services'].includes(majorCategory)) {
+        setSellingType('Retail');
+      } else if (sellingType === 'Wholesale' || sellingType === 'Retail + Wholesale') {
         const curMoq = Number(fieldsState.minimumOrderQuantity || 1);
         const safeMoq = curMoq < 10 ? 10 : curMoq;
         handleFieldChange('minimumOrderQuantity', safeMoq);
