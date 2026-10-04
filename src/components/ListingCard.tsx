@@ -34,6 +34,7 @@ export interface ListingCardProps {
   viewMode?: 'grid' | 'list' | 'compact';
   showQuickActions?: boolean;
   onOpenSellerProfile?: (seller: any) => void;
+  showFeaturedBadge?: boolean;
 }
 
 export function ListingCard({
@@ -46,7 +47,8 @@ export function ListingCard({
   currentLanguage: propLang,
   viewMode = 'grid',
   showQuickActions = true,
-  onOpenSellerProfile
+  onOpenSellerProfile,
+  showFeaturedBadge = false
 }: ListingCardProps) {
   const appContext = useApp();
   const t = propT || appContext.t;
@@ -389,6 +391,16 @@ export function ListingCard({
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent pointer-events-none md:hidden" />
 
+          {/* Featured Badge (Top-Left: Featured Listings section only) */}
+          {showFeaturedBadge && (
+            <div className="absolute top-3 left-3 z-10 pointer-events-none">
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-gradient-to-r from-amber-500 to-amber-600 text-black font-extrabold text-[10px] uppercase tracking-wider shadow-lg shadow-black/40 border border-amber-300/30">
+                <Sparkles className="w-3 h-3 text-black fill-black/20 shrink-0" />
+                <span>{t('featured') || 'Featured'}</span>
+              </span>
+            </div>
+          )}
+
           {/* Image counter pill */}
           {allImages.length > 1 && (
             <div className="absolute bottom-3 left-3 z-10 bg-black/75 backdrop-blur-md px-2 py-1 rounded-lg text-[10px] font-medium text-white/90 border border-white/10 flex items-center gap-1">
@@ -578,6 +590,16 @@ export function ListingCard({
 
         {/* Subtle optical vignette */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/15 to-black/30 pointer-events-none" />
+
+        {/* Featured Badge (Top-Left: Featured Listings section only) */}
+        {showFeaturedBadge && (
+          <div className="absolute top-3.5 left-3.5 z-10 pointer-events-none">
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-gradient-to-r from-amber-500 to-amber-600 text-black font-extrabold text-[10px] uppercase tracking-wider shadow-lg shadow-black/40 border border-amber-300/30">
+              <Sparkles className="w-3 h-3 text-black fill-black/20 shrink-0" />
+              <span>{t('featured') || 'Featured'}</span>
+            </span>
+          </div>
+        )}
 
         {/* Floating Actions (Top-Right: Favorite & Share) */}
         <div className="absolute top-3.5 right-3.5 z-10 flex flex-col gap-1.5">

@@ -2098,6 +2098,7 @@ export default function Marketplace({
                             onReport={() => onOpenReportModal('property', prop.id, prop.title)}
                             t={t} currentLanguage={currentLanguage}
                             viewMode="grid"
+                            showFeaturedBadge={true}
                           />
                         ))}
                       </div>
