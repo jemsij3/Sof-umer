@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Camera, MapPin, Phone, User as UserIcon, Sparkles, Loader2,
-  BedDouble, Bath, Maximize, Truck, ShieldCheck, Tag, Zap, Check, Copy, AlertCircle, CreditCard
+  BedDouble, Bath, Maximize, Truck, ShieldCheck, Tag, Zap, Check, Copy, AlertCircle, CreditCard, Film
 } from 'lucide-react';
 import { NormalizedSellingType, getPluralizedUnit, getLocalizedUnit } from '../../utils/wholesalePricing';
 import { 
@@ -243,40 +243,58 @@ export const WizardStep4Review: React.FC<WizardStep4ReviewProps> = ({
     <div className="space-y-5 animate-in fade-in duration-300">
       {/* Preview Listing Card */}
       <div className="bg-[#141418] rounded-2xl border border-[#22242E] overflow-hidden shadow-xl max-w-xl mx-auto">
-        {/* 1. HEADER & MEDIA PREVIEW */}
-        <div className="relative h-56 bg-zinc-800">
-          <img
-            src={imagesList[0] || 'https://images.unsplash.com/photo-1613490493576-7fde63acd811?auto=format&fit=crop&w=1200&q=80'}
-            alt="Listing Cover Preview"
-            className="w-full h-full object-cover"
-            referrerPolicy="no-referrer"
-          />
-          <div className="absolute top-3 left-3 bg-black/75 backdrop-blur-md px-3 py-1 rounded-full text-[10px] font-bold text-[#F5A623] uppercase tracking-wider border border-white/10">
-            {getTranslatedCategoryName(majorCategory, currentLanguage)} &bull; {getTranslatedSubcategoryName(subcategory, currentLanguage)}
-          </div>
-          {imagesList.length > 1 && (
-            <div className="absolute bottom-3 right-3 bg-black/80 px-2.5 py-1 rounded-md text-[10px] font-bold text-white flex items-center gap-1">
-              <Camera className="w-3 h-3 text-[#F5A623]" />
-              <span>{imagesList.length} {t('photosCount') || 'photos'}</span>
+        {/* 1. HEADER & MEDIA PREVIEW (Non-Jobs only; Jobs displays Media at #11) */}
+        {majorCategory !== 'Jobs' && (
+          <div className="relative h-56 bg-zinc-800">
+            <img
+              src={imagesList[0] || 'https://images.unsplash.com/photo-1613490493576-7fde63acd811?auto=format&fit=crop&w=1200&q=80'}
+              alt="Listing Cover Preview"
+              className="w-full h-full object-cover"
+              referrerPolicy="no-referrer"
+            />
+            <div className="absolute top-3 left-3 bg-black/75 backdrop-blur-md px-3 py-1 rounded-full text-[10px] font-bold text-[#F5A623] uppercase tracking-wider border border-white/10">
+              {getTranslatedCategoryName(majorCategory, currentLanguage)} &bull; {getTranslatedSubcategoryName(subcategory, currentLanguage)}
             </div>
-          )}
-        </div>
+            {imagesList.length > 1 && (
+              <div className="absolute bottom-3 right-3 bg-black/80 px-2.5 py-1 rounded-md text-[10px] font-bold text-white flex items-center gap-1">
+                <Camera className="w-3 h-3 text-[#F5A623]" />
+                <span>{imagesList.length} {t('photosCount') || 'photos'}</span>
+              </div>
+            )}
+          </div>
+        )}
 
         <div className="p-5 space-y-4">
           <div className="flex justify-between items-start gap-4">
-            <div>
+            <div className="flex-1 min-w-0">
+              {majorCategory === 'Jobs' && (
+                <span className="text-[10px] font-bold text-[#F5A623] uppercase tracking-wider block mb-0.5">
+                  1. {t('job_title_label') || 'Job Title'}
+                </span>
+              )}
               <h3 className="font-serif text-lg font-bold text-white line-clamp-1">
                 {fieldsState.title || t('untitled') || 'Untitled Listing'}
               </h3>
               <div className="text-xs text-white/70 flex items-start gap-1.5 mt-1.5 leading-relaxed bg-white/5 p-2 rounded-xl border border-white/5">
                 <MapPin className="w-3.5 h-3.5 text-[#F5A623] shrink-0 mt-0.5" />
-                <span className="whitespace-pre-wrap break-words flex-1 text-white/90 leading-snug">
-                  {fieldsState.location || t('noLocation') || 'Location not specified'}
-                </span>
+                <div className="flex-1 min-w-0">
+                  {majorCategory === 'Jobs' && (
+                    <span className="text-[10px] font-bold text-[#F5A623] uppercase tracking-wider block mb-0.5">
+                      2. {t('locLabel') || 'Location'}
+                    </span>
+                  )}
+                  <span className="whitespace-pre-wrap break-words text-white/90 leading-snug">
+                    {fieldsState.location || t('noLocation') || 'Location not specified'}
+                  </span>
+                </div>
               </div>
             </div>
             <div className="text-right shrink-0">
-              {isRealEstate ? (
+              {majorCategory === 'Jobs' ? (
+                <span className="bg-[#F5A623]/10 text-[#F5A623] border border-[#F5A623]/20 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider block">
+                  {getTranslatedSubcategoryName(subcategory, currentLanguage)}
+                </span>
+              ) : isRealEstate ? (
                 <span className="text-lg font-extrabold text-[#F5A623] font-mono block">
                   {fieldsState.price ? `${Number(fieldsState.price).toLocaleString()} ${currency}` : (t('contactPrice') || 'Contact for Price')}
                 </span>
@@ -341,133 +359,263 @@ export const WizardStep4Review: React.FC<WizardStep4ReviewProps> = ({
             </div>
           )}
 
-          {/* Dynamic Specs & Condition Preview Grid (Deduped - No area/bedrooms/bathrooms repeated) */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 my-3">
-            {/* Condition / Furnishing */}
-            {fieldsState.condition && (
+          {/* Dynamic Specs & Condition Preview Grid */}
+          {majorCategory === 'Jobs' ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 my-3">
+              {/* 3. Employment Skill */}
               <div className="bg-[#1A1B22] p-2.5 rounded-xl border border-[#22242E]">
                 <span className="text-[#F5A623] text-[10px] font-semibold uppercase block mb-0.5 tracking-wider">
-                  {isRealEstate ? (t('property_condition_status_label') || 'Condition / Furnishing') : (t('condition') || 'Condition')}
+                  {t('employment_skill_label') || 'Employment Skill'}
                 </span>
                 <span className="text-white text-xs font-medium truncate block">
-                  {getTranslatedFurnished(fieldsState.condition, currentLanguage) || getTranslatedCondition(fieldsState.condition, currentLanguage) || fieldsState.condition}
+                  {fieldsState.employmentSkill || fieldsState.qualification || t('not_specified') || 'Not specified'}
                 </span>
               </div>
-            )}
 
-            {/* Subcategory */}
-            {subcategory && (
+              {/* 4. Work Arrangement */}
               <div className="bg-[#1A1B22] p-2.5 rounded-xl border border-[#22242E]">
                 <span className="text-[#F5A623] text-[10px] font-semibold uppercase block mb-0.5 tracking-wider">
-                  {t('wizard.step_subcategory') || 'Subcategory'}
+                  {t('work_arrangement_label') || 'Work Arrangement'}
                 </span>
                 <span className="text-white text-xs font-medium truncate block">
-                  {getTranslatedSubcategoryName(subcategory, currentLanguage)}
+                  {fieldsState.workArrangement || 'On-site'}
                 </span>
               </div>
-            )}
 
-            {/* Purpose (Real Estate) */}
-            {isRealEstate && fieldsState.purpose && (
+              {/* 5. Salary / Pay */}
               <div className="bg-[#1A1B22] p-2.5 rounded-xl border border-[#22242E]">
                 <span className="text-[#F5A623] text-[10px] font-semibold uppercase block mb-0.5 tracking-wider">
-                  {t('purpose') || getTranslatedFieldLabel('purpose', currentLanguage) || 'Purpose'}
+                  {t('salary_pay_label') || 'Salary / Pay'}
                 </span>
-                <span className="text-white text-xs font-medium truncate block">
-                  {fieldsState.purpose === 'Rent'
-                    ? (t('option_for_rent') || getTranslatedOption('Rent', currentLanguage) || 'For Rent')
-                    : (t('option_for_sale') || getTranslatedOption('Sale', currentLanguage) || 'For Sale')}
+                <span className="text-white text-xs font-medium truncate block font-mono text-[#F5A623]">
+                  {fieldsState.payType === 'Negotiable'
+                    ? (t('pay_type_negotiable') || 'Negotiable')
+                    : fieldsState.payType === 'Salary range' && (fieldsState.salaryMin || fieldsState.salaryMax)
+                    ? `${fieldsState.salaryMin ? Number(fieldsState.salaryMin).toLocaleString() : ''} - ${fieldsState.salaryMax ? Number(fieldsState.salaryMax).toLocaleString() : ''} ${currency}`
+                    : (fieldsState.salary || fieldsState.price)
+                    ? `${Number(fieldsState.salary || fieldsState.price).toLocaleString()} ${currency}`
+                    : (t('not_specified') || 'Not specified')}
                 </span>
               </div>
-            )}
 
-            {/* Brand (Vehicles & Goods) */}
-            {fieldsState.brand && (
+              {/* 6. Pay Type / Pay Period */}
               <div className="bg-[#1A1B22] p-2.5 rounded-xl border border-[#22242E]">
                 <span className="text-[#F5A623] text-[10px] font-semibold uppercase block mb-0.5 tracking-wider">
-                  {t('brand') || 'Brand'}
+                  {t('pay_type_period_label') || 'Pay Type / Pay Period'}
                 </span>
                 <span className="text-white text-xs font-medium truncate block">
-                  {fieldsState.brand}
+                  {(fieldsState.payType || 'Fixed amount')} &bull; {(fieldsState.payPeriod || 'Per month')}
                 </span>
               </div>
-            )}
 
-            {/* Model (Vehicles & Goods) */}
-            {fieldsState.model && (
-              <div className="bg-[#1A1B22] p-2.5 rounded-xl border border-[#22242E]">
-                <span className="text-[#F5A623] text-[10px] font-semibold uppercase block mb-0.5 tracking-wider">
-                  {t('model') || 'Model'}
+              {/* 7. Description */}
+              <div className="pt-2 border-t border-[#22242E] sm:col-span-2">
+                <span className="text-[10px] font-semibold text-[#F5A623] uppercase tracking-wider block mb-1">
+                  7. {t('descLabel') || 'Description'}
                 </span>
-                <span className="text-white text-xs font-medium truncate block">
-                  {fieldsState.model}
-                </span>
+                <p className="text-xs text-white/70 whitespace-pre-line leading-relaxed bg-[#0A0A0C]/40 p-3 rounded-xl border border-[#22242E]/60 max-h-40 overflow-y-auto">
+                  {fieldsState.description || t('noDesc') || 'No description provided'}
+                </p>
               </div>
-            )}
 
-            {/* Year (Vehicles) */}
-            {fieldsState.year && (
-              <div className="bg-[#1A1B22] p-2.5 rounded-xl border border-[#22242E]">
-                <span className="text-[#F5A623] text-[10px] font-semibold uppercase block mb-0.5 tracking-wider">
-                  {t('year') || 'Year'}
-                </span>
-                <span className="text-white text-xs font-medium truncate block">
-                  {fieldsState.year}
-                </span>
-              </div>
-            )}
+              {/* 8. Application Deadline */}
+              {(fieldsState.applicationDeadline || fieldsState.deadline) && (
+                <div className="bg-[#1A1B22] p-2.5 rounded-xl border border-[#22242E]">
+                  <span className="text-[#F5A623] text-[10px] font-semibold uppercase block mb-0.5 tracking-wider">
+                    {t('deadline') || 'Application Deadline'}
+                  </span>
+                  <span className="text-white text-xs font-medium truncate block">
+                    {fieldsState.applicationDeadline || fieldsState.deadline}
+                  </span>
+                </div>
+              )}
 
-            {/* Storage / Specs (Products) */}
-            {fieldsState.storageSpec && (
+              {/* 9. Application Method */}
               <div className="bg-[#1A1B22] p-2.5 rounded-xl border border-[#22242E]">
                 <span className="text-[#F5A623] text-[10px] font-semibold uppercase block mb-0.5 tracking-wider">
-                  {t('specs_storage_label') || 'Specs'}
+                  {t('application_method_label') || 'Application Method'}
                 </span>
                 <span className="text-white text-xs font-medium truncate block">
-                  {fieldsState.storageSpec}
+                  {fieldsState.applicationMethod || 'Apply through SOF-UMER'}
                 </span>
               </div>
-            )}
 
-            {/* Selling Mode / Intent (Products & Non-Properties) */}
-            {!isRealEstate && !['Jobs', 'Vehicles', 'Services'].includes(majorCategory) && (sellingType || fieldsState.sellingMode) && (
-              <div className="bg-[#1A1B22] p-2.5 rounded-xl border border-[#22242E]">
+              {/* 10. Application Contact */}
+              <div className="bg-[#1A1B22] p-2.5 rounded-xl border border-[#22242E] sm:col-span-2">
                 <span className="text-[#F5A623] text-[10px] font-semibold uppercase block mb-0.5 tracking-wider">
-                  {t('selling_type_intent_label') || 'Selling Mode'}
+                  10. {t('app_contact_label') || 'Application Contact'}
                 </span>
                 <span className="text-white text-xs font-medium truncate block">
-                  {sellingType === 'Retail' ? (t('selling_type_opt_a') || 'Single Units (Retail)') : 
-                   sellingType === 'Wholesale' ? (t('selling_type_opt_b') || 'Bulk Only (Wholesale)') : 
-                   sellingType === 'Retail + Wholesale' || (sellingType as string) === 'Retail & Wholesale' ? (t('selling_type_opt_c') || 'Dual Pricing (Retail + Bulk)') :
-                   fieldsState.sellingMode || sellingType}
+                  {fieldsState.applicationContact || (fieldsState.applicationMethod === 'Apply through SOF-UMER' ? (t('sofumer_app_contact') || 'Direct in-app application') : (fieldsState.contactPhone || t('not_specified') || 'Not specified'))}
                 </span>
               </div>
-            )}
 
-            {/* Available Stock */}
-            {!isRealEstate && !['Jobs', 'Vehicles', 'Services'].includes(majorCategory) && fieldsState.stockQuantity !== undefined && fieldsState.stockQuantity !== '' && (
-              <div className="bg-[#1A1B22] p-2.5 rounded-xl border border-[#22242E]">
-                <span className="text-[#F5A623] text-[10px] font-semibold uppercase block mb-0.5 tracking-wider">
-                  {t('available_stock_qty_label') || 'Available Stock'}
-                </span>
-                <span className="text-white text-xs font-medium truncate block">
-                  {fieldsState.stockQuantity} {getLocalizedUnit(fieldsState.unit || 'Units', currentLanguage, Number(fieldsState.stockQuantity) || 1)}
-                </span>
+              {/* 11. Media */}
+              <div className="pt-2 border-t border-[#22242E] space-y-2 sm:col-span-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-semibold text-[#F5A623] uppercase tracking-wider block">
+                    11. {t('media_label') || 'Media'}
+                  </span>
+                  <span className="text-[10px] text-white/40">
+                    {imagesList.length} {imagesList.length === 1 ? 'photo' : 'photos'}{fieldsState.video ? ' • 1 video' : ''}
+                  </span>
+                </div>
+                {imagesList.length > 0 ? (
+                  <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+                    {imagesList.map((img, i) => (
+                      <div key={i} className="relative aspect-video rounded-lg overflow-hidden border border-white/10 bg-zinc-800">
+                        <img src={img} alt={`Job preview ${i + 1}`} className="w-full h-full object-cover" />
+                        {i === 0 && (
+                          <span className="absolute bottom-1 left-1 bg-black/70 text-[#F5A623] text-[9px] px-1.5 py-0.5 rounded font-bold">
+                            Cover
+                          </span>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="p-3 bg-[#0A0A0C]/40 rounded-xl border border-[#22242E]/60 text-center">
+                    <p className="text-xs text-white/40 italic">
+                      {t('no_media_uploaded') || 'No photos or video uploaded (optional)'}
+                    </p>
+                  </div>
+                )}
+                {fieldsState.video && (
+                  <div className="p-2 bg-white/5 rounded-lg border border-white/10 flex items-center gap-2 text-xs text-white/80">
+                    <Film className="w-3.5 h-3.5 text-[#F5A623]" />
+                    <span className="truncate">{fieldsState.video}</span>
+                  </div>
+                )}
               </div>
-            )}
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 my-3">
+              {/* Condition / Furnishing */}
+              {fieldsState.condition && (
+                <div className="bg-[#1A1B22] p-2.5 rounded-xl border border-[#22242E]">
+                  <span className="text-[#F5A623] text-[10px] font-semibold uppercase block mb-0.5 tracking-wider">
+                    {isRealEstate ? (t('property_condition_status_label') || 'Condition / Furnishing') : (t('condition') || 'Condition')}
+                  </span>
+                  <span className="text-white text-xs font-medium truncate block">
+                    {getTranslatedFurnished(fieldsState.condition, currentLanguage) || getTranslatedCondition(fieldsState.condition, currentLanguage) || fieldsState.condition}
+                  </span>
+                </div>
+              )}
 
-            {/* Minimum Order Quantity (MOQ) */}
-            {!isRealEstate && !['Jobs', 'Vehicles', 'Services'].includes(majorCategory) && (sellingType === 'Wholesale' || sellingType === 'Retail + Wholesale' || fieldsState.minimumOrderQuantity) && (
-              <div className="bg-[#1A1B22] p-2.5 rounded-xl border border-[#22242E]">
-                <span className="text-[#F5A623] text-[10px] font-semibold uppercase block mb-0.5 tracking-wider">
-                  {t('wholesale_moq_label') || 'Min. Order (MOQ)'}
-                </span>
-                <span className="text-white text-xs font-medium truncate block">
-                  {fieldsState.minimumOrderQuantity || wholesaleTiers[0]?.minimumQuantity || 10} {getPluralizedUnit(Number(fieldsState.minimumOrderQuantity || 10), fieldsState.unit || 'Piece')}
-                </span>
-              </div>
-            )}
-          </div>
+              {/* Subcategory */}
+              {subcategory && (
+                <div className="bg-[#1A1B22] p-2.5 rounded-xl border border-[#22242E]">
+                  <span className="text-[#F5A623] text-[10px] font-semibold uppercase block mb-0.5 tracking-wider">
+                    {t('wizard.step_subcategory') || 'Subcategory'}
+                  </span>
+                  <span className="text-white text-xs font-medium truncate block">
+                    {getTranslatedSubcategoryName(subcategory, currentLanguage)}
+                  </span>
+                </div>
+              )}
+
+              {/* Purpose (Real Estate) */}
+              {isRealEstate && fieldsState.purpose && (
+                <div className="bg-[#1A1B22] p-2.5 rounded-xl border border-[#22242E]">
+                  <span className="text-[#F5A623] text-[10px] font-semibold uppercase block mb-0.5 tracking-wider">
+                    {t('purpose') || getTranslatedFieldLabel('purpose', currentLanguage) || 'Purpose'}
+                  </span>
+                  <span className="text-white text-xs font-medium truncate block">
+                    {fieldsState.purpose === 'Rent'
+                      ? (t('option_for_rent') || getTranslatedOption('Rent', currentLanguage) || 'For Rent')
+                      : (t('option_for_sale') || getTranslatedOption('Sale', currentLanguage) || 'For Sale')}
+                  </span>
+                </div>
+              )}
+
+              {/* Brand (Vehicles & Goods) */}
+              {fieldsState.brand && (
+                <div className="bg-[#1A1B22] p-2.5 rounded-xl border border-[#22242E]">
+                  <span className="text-[#F5A623] text-[10px] font-semibold uppercase block mb-0.5 tracking-wider">
+                    {t('brand') || 'Brand'}
+                  </span>
+                  <span className="text-white text-xs font-medium truncate block">
+                    {fieldsState.brand}
+                  </span>
+                </div>
+              )}
+
+              {/* Model (Vehicles & Goods) */}
+              {fieldsState.model && (
+                <div className="bg-[#1A1B22] p-2.5 rounded-xl border border-[#22242E]">
+                  <span className="text-[#F5A623] text-[10px] font-semibold uppercase block mb-0.5 tracking-wider">
+                    {t('model') || 'Model'}
+                  </span>
+                  <span className="text-white text-xs font-medium truncate block">
+                    {fieldsState.model}
+                  </span>
+                </div>
+              )}
+
+              {/* Year (Vehicles) */}
+              {fieldsState.year && (
+                <div className="bg-[#1A1B22] p-2.5 rounded-xl border border-[#22242E]">
+                  <span className="text-[#F5A623] text-[10px] font-semibold uppercase block mb-0.5 tracking-wider">
+                    {t('year') || 'Year'}
+                  </span>
+                  <span className="text-white text-xs font-medium truncate block">
+                    {fieldsState.year}
+                  </span>
+                </div>
+              )}
+
+              {/* Storage / Specs (Products) */}
+              {fieldsState.storageSpec && (
+                <div className="bg-[#1A1B22] p-2.5 rounded-xl border border-[#22242E]">
+                  <span className="text-[#F5A623] text-[10px] font-semibold uppercase block mb-0.5 tracking-wider">
+                    {t('specs_storage_label') || 'Specs'}
+                  </span>
+                  <span className="text-white text-xs font-medium truncate block">
+                    {fieldsState.storageSpec}
+                  </span>
+                </div>
+              )}
+
+              {/* Selling Mode / Intent (Products & Non-Properties) */}
+              {!isRealEstate && !['Jobs', 'Vehicles', 'Services'].includes(majorCategory) && (sellingType || fieldsState.sellingMode) && (
+                <div className="bg-[#1A1B22] p-2.5 rounded-xl border border-[#22242E]">
+                  <span className="text-[#F5A623] text-[10px] font-semibold uppercase block mb-0.5 tracking-wider">
+                    {t('selling_type_intent_label') || 'Selling Mode'}
+                  </span>
+                  <span className="text-white text-xs font-medium truncate block">
+                    {sellingType === 'Retail' ? (t('selling_type_opt_a') || 'Single Units (Retail)') : 
+                     sellingType === 'Wholesale' ? (t('selling_type_opt_b') || 'Bulk Only (Wholesale)') : 
+                     sellingType === 'Retail + Wholesale' || (sellingType as string) === 'Retail & Wholesale' ? (t('selling_type_opt_c') || 'Dual Pricing (Retail + Bulk)') :
+                     fieldsState.sellingMode || sellingType}
+                  </span>
+                </div>
+              )}
+
+              {/* Available Stock */}
+              {!isRealEstate && !['Jobs', 'Vehicles', 'Services'].includes(majorCategory) && fieldsState.stockQuantity !== undefined && fieldsState.stockQuantity !== '' && (
+                <div className="bg-[#1A1B22] p-2.5 rounded-xl border border-[#22242E]">
+                  <span className="text-[#F5A623] text-[10px] font-semibold uppercase block mb-0.5 tracking-wider">
+                    {t('available_stock_qty_label') || 'Available Stock'}
+                  </span>
+                  <span className="text-white text-xs font-medium truncate block">
+                    {fieldsState.stockQuantity} {getLocalizedUnit(fieldsState.unit || 'Units', currentLanguage, Number(fieldsState.stockQuantity) || 1)}
+                  </span>
+                </div>
+              )}
+
+              {/* Minimum Order Quantity (MOQ) */}
+              {!isRealEstate && !['Jobs', 'Vehicles', 'Services'].includes(majorCategory) && (sellingType === 'Wholesale' || sellingType === 'Retail + Wholesale' || fieldsState.minimumOrderQuantity) && (
+                <div className="bg-[#1A1B22] p-2.5 rounded-xl border border-[#22242E]">
+                  <span className="text-[#F5A623] text-[10px] font-semibold uppercase block mb-0.5 tracking-wider">
+                    {t('wholesale_moq_label') || 'Min. Order (MOQ)'}
+                  </span>
+                  <span className="text-white text-xs font-medium truncate block">
+                    {fieldsState.minimumOrderQuantity || wholesaleTiers[0]?.minimumQuantity || 10} {getPluralizedUnit(Number(fieldsState.minimumOrderQuantity || 10), fieldsState.unit || 'Piece')}
+                  </span>
+                </div>
+              )}
+            </div>
+          )}
 
           {/* 3. DESCRIPTION & LOGISTICS PREVIEW */}
           {/* Configured Delivery & Logistics Preferences (Non-Properties) */}
@@ -496,27 +644,38 @@ export const WizardStep4Review: React.FC<WizardStep4ReviewProps> = ({
             </div>
           )}
 
-          {/* Full Description text */}
-          <div className="pt-2 border-t border-[#22242E]">
-            <span className="text-[10px] font-semibold text-[#F5A623] uppercase tracking-wider block mb-1">
-              {t('descLabel') || 'Description'}
-            </span>
-            <p className="text-xs text-white/70 whitespace-pre-line leading-relaxed bg-[#0A0A0C]/40 p-3 rounded-xl border border-[#22242E]/60 max-h-36 overflow-y-auto">
-              {fieldsState.description || t('noDesc') || 'No description provided'}
-            </p>
-          </div>
+          {/* Full Description text (Non-Jobs only; Jobs displays Description at item #7) */}
+          {majorCategory !== 'Jobs' && (
+            <div className="pt-2 border-t border-[#22242E]">
+              <span className="text-[10px] font-semibold text-[#F5A623] uppercase tracking-wider block mb-1">
+                {t('descLabel') || 'Description'}
+              </span>
+              <p className="text-xs text-white/70 whitespace-pre-line leading-relaxed bg-[#0A0A0C]/40 p-3 rounded-xl border border-[#22242E]/60 max-h-36 overflow-y-auto">
+                {fieldsState.description || t('noDesc') || 'No description provided'}
+              </p>
+            </div>
+          )}
 
-          {/* Seller Info Badge */}
-          <div className="bg-[#1A1B22] p-3 rounded-xl border border-[#22242E] flex items-center justify-between text-xs">
-            <div className="flex items-center gap-2">
-              <UserIcon className="w-4 h-4 text-[#F5A623]" />
-              <span className="text-white/80 font-medium">{fieldsState.ownerName || currentUser?.fullName || t('seller') || 'Seller'}</span>
+          {/* Seller / Employer Info Badge */}
+          {majorCategory !== 'Jobs' ? (
+            <div className="bg-[#1A1B22] p-3 rounded-xl border border-[#22242E] flex items-center justify-between text-xs">
+              <div className="flex items-center gap-2">
+                <UserIcon className="w-4 h-4 text-[#F5A623]" />
+                <span className="text-white/80 font-medium">{fieldsState.ownerName || currentUser?.fullName || t('seller') || 'Seller'}</span>
+              </div>
+              <div className="flex items-center gap-1.5 text-[#F5A623] font-mono font-medium">
+                <Phone className="w-3.5 h-3.5" />
+                <span>{fieldsState.contactPhone || '+251 91 123 4567'}</span>
+              </div>
             </div>
-            <div className="flex items-center gap-1.5 text-[#F5A623] font-mono font-medium">
-              <Phone className="w-3.5 h-3.5" />
-              <span>{fieldsState.contactPhone || '+251 91 123 4567'}</span>
+          ) : (fieldsState.ownerName && (currentUser?.role === 'admin' || currentUser?.isAdmin)) ? (
+            <div className="bg-[#1A1B22] p-3 rounded-xl border border-[#22242E] flex items-center justify-between text-xs">
+              <div className="flex items-center gap-2">
+                <UserIcon className="w-4 h-4 text-[#F5A623]" />
+                <span className="text-white/80 font-medium">{t('employerNameLabel') || 'Employer'}: {fieldsState.ownerName}</span>
+              </div>
             </div>
-          </div>
+          ) : null}
         </div>
       </div>
 

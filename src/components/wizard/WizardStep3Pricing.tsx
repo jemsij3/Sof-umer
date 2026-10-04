@@ -1,5 +1,5 @@
 import React from 'react';
-import { Tag, Package, Truck } from 'lucide-react';
+import { Tag, Package, Truck, DollarSign, Briefcase, Calendar } from 'lucide-react';
 import { NormalizedSellingType, STANDARD_UNITS, getLocalizedUnit } from '../../utils/wholesalePricing';
 import { WholesalePricingTiersEditor } from '../WholesalePricingTiersEditor';
 import { WholesalePriceTier } from '../../types';
@@ -89,47 +89,49 @@ export const WizardStep3Pricing: React.FC<WizardStep3PricingProps> = ({
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
-      {/* Currency & Base Unit */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <div>
-          <label className="block text-xs font-bold text-white/80 uppercase mb-1">
-            {t('wizard.currency_label') || 'Currency'} *
-          </label>
-          <select
-            value={currency}
-            onChange={e => setCurrency(e.target.value)}
-            className="w-full p-3 bg-zinc-900 border border-white/10 focus:border-[#F5A623] rounded-xl text-xs text-white focus:outline-none transition"
-          >
-            <option value="ETB" className="bg-[#0c0c0c]">ETB ({t('ethiopian_birr_unit') || 'Ethiopian Birr'})</option>
-            <option value="USD" className="bg-[#0c0c0c]">USD ($)</option>
-            <option value="SAR" className="bg-[#0c0c0c]">SAR ({t('saudi_riyal_unit') || 'Saudi Riyal'})</option>
-            <option value="EUR" className="bg-[#0c0c0c]">EUR (€)</option>
-            <option value="AED" className="bg-[#0c0c0c]">AED ({t('uae_dirham_unit') || 'UAE Dirham'})</option>
-          </select>
-        </div>
-
-        {!isNoSellingMode && (
+      {/* Currency & Base Unit (Hidden for Jobs since Jobs has integrated salary currency) */}
+      {majorCategory !== 'Jobs' && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <label className="block text-xs font-bold text-white/80 uppercase mb-1">
-              {t('pricing_unit_label') || 'Pricing Unit *'}
+              {t('wizard.currency_label') || 'Currency'} *
             </label>
             <select
-              value={fieldsState.unit || fieldsState.wholesaleUnit || 'Piece'}
-              onChange={e => {
-                handleFieldChange('unit', e.target.value);
-                handleFieldChange('wholesaleUnit', e.target.value);
-              }}
+              value={currency}
+              onChange={e => setCurrency(e.target.value)}
               className="w-full p-3 bg-zinc-900 border border-white/10 focus:border-[#F5A623] rounded-xl text-xs text-white focus:outline-none transition"
             >
-              {STANDARD_UNITS.map(u => (
-                <option key={u} value={u} className="bg-[#0c0c0c]">
-                  {getLocalizedUnit(u, currentLanguage, 1)}
-                </option>
-              ))}
+              <option value="ETB" className="bg-[#0c0c0c]">ETB ({t('ethiopian_birr_unit') || 'Ethiopian Birr'})</option>
+              <option value="USD" className="bg-[#0c0c0c]">USD ($)</option>
+              <option value="SAR" className="bg-[#0c0c0c]">SAR ({t('saudi_riyal_unit') || 'Saudi Riyal'})</option>
+              <option value="EUR" className="bg-[#0c0c0c]">EUR (€)</option>
+              <option value="AED" className="bg-[#0c0c0c]">AED ({t('uae_dirham_unit') || 'UAE Dirham'})</option>
             </select>
           </div>
-        )}
-      </div>
+
+          {!isNoSellingMode && (
+            <div>
+              <label className="block text-xs font-bold text-white/80 uppercase mb-1">
+                {t('pricing_unit_label') || 'Pricing Unit *'}
+              </label>
+              <select
+                value={fieldsState.unit || fieldsState.wholesaleUnit || 'Piece'}
+                onChange={e => {
+                  handleFieldChange('unit', e.target.value);
+                  handleFieldChange('wholesaleUnit', e.target.value);
+                }}
+                className="w-full p-3 bg-zinc-900 border border-white/10 focus:border-[#F5A623] rounded-xl text-xs text-white focus:outline-none transition"
+              >
+                {STANDARD_UNITS.map(u => (
+                  <option key={u} value={u} className="bg-[#0c0c0c]">
+                    {getLocalizedUnit(u, currentLanguage, 1)}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Real Estate Pricing & Condition */}
       {formData.category === 'properties' && (
@@ -183,6 +185,264 @@ export const WizardStep3Pricing: React.FC<WizardStep3PricingProps> = ({
               <option value="Under Construction" className="bg-[#0A0A0C]">{getTranslatedCondition('Under Construction', currentLanguage)}</option>
               <option value="Brand New / Newly Built" className="bg-[#0A0A0C]">{getTranslatedCondition('Brand New / Newly Built', currentLanguage)}</option>
             </select>
+          </div>
+        </div>
+      )}
+
+      {/* Jobs & Hiring: Compensation & Application */}
+      {majorCategory === 'Jobs' && (
+        <div className="space-y-6">
+          {/* Section 1: Compensation */}
+          <div className="p-4 sm:p-5 rounded-2xl bg-[#141418] border border-white/10 space-y-4">
+            <div className="flex items-center gap-2 border-b border-white/5 pb-3">
+              <DollarSign className="w-4 h-4 text-[#F5A623]" />
+              <h4 className="text-xs font-bold text-white uppercase tracking-wider">
+                {t('job_compensation_title') || 'Compensation'}
+              </h4>
+            </div>
+
+            {/* 1. Salary / Pay* */}
+            {(fieldsState.payType || 'Fixed amount') === 'Fixed amount' && (
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block text-xs font-bold text-white/80 uppercase">
+                    1. {t('salary_pay_label') || 'Salary / Pay'} *
+                  </label>
+                  <span className="text-[10px] text-white/40">{currency}</span>
+                </div>
+                <div className="flex gap-2">
+                  <select
+                    value={currency}
+                    onChange={e => setCurrency(e.target.value)}
+                    className="p-3 bg-zinc-900 border border-white/10 focus:border-[#F5A623] rounded-xl text-xs text-white font-bold shrink-0 focus:outline-none"
+                  >
+                    <option value="ETB">ETB</option>
+                    <option value="USD">USD ($)</option>
+                    <option value="SAR">SAR</option>
+                    <option value="EUR">EUR (€)</option>
+                    <option value="AED">AED</option>
+                  </select>
+                  <input
+                    type="number"
+                    min="0"
+                    step="any"
+                    required
+                    value={fieldsState.salary ?? fieldsState.price ?? ''}
+                    placeholder="e.g. 25000"
+                    onChange={e => {
+                      handleFieldChange('salary', e.target.value);
+                      handleFieldChange('price', e.target.value);
+                      handleFieldChange('salaryRange', `${e.target.value} ${currency} / ${fieldsState.payPeriod || 'Per month'}`);
+                    }}
+                    className="w-full p-3 bg-black/50 border border-white/10 focus:border-[#F5A623] rounded-xl text-xs text-white font-mono font-bold text-[#F5A623]"
+                  />
+                </div>
+              </div>
+            )}
+
+            {fieldsState.payType === 'Salary range' && (
+              <div className="space-y-2">
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block text-xs font-bold text-white/80 uppercase">
+                    1. {t('salary_pay_label') || 'Salary / Pay'} *
+                  </label>
+                  <select
+                    value={currency}
+                    onChange={e => setCurrency(e.target.value)}
+                    className="px-2.5 py-1 bg-zinc-900 border border-white/10 focus:border-[#F5A623] rounded-lg text-xs text-white font-bold focus:outline-none"
+                  >
+                    <option value="ETB">ETB</option>
+                    <option value="USD">USD ($)</option>
+                    <option value="SAR">SAR</option>
+                    <option value="EUR">EUR (€)</option>
+                    <option value="AED">AED</option>
+                  </select>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-[11px] font-medium text-white/60 mb-1">
+                      {t('min_salary_label') || 'Minimum Amount'} ({currency}) *
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      step="any"
+                      required
+                      value={fieldsState.salaryMin || ''}
+                      placeholder="e.g. 20000"
+                      onChange={e => {
+                        const minVal = e.target.value;
+                        handleFieldChange('salaryMin', minVal);
+                        handleFieldChange('salaryRange', `${minVal} - ${fieldsState.salaryMax || ''} ${currency} / ${fieldsState.payPeriod || 'Per month'}`);
+                      }}
+                      className="w-full p-3 bg-black/50 border border-white/10 focus:border-[#F5A623] rounded-xl text-xs text-white font-mono font-bold text-[#F5A623]"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-medium text-white/60 mb-1">
+                      {t('max_salary_label') || 'Maximum Amount'} ({currency}) *
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      step="any"
+                      required
+                      value={fieldsState.salaryMax || ''}
+                      placeholder="e.g. 35000"
+                      onChange={e => {
+                        const maxVal = e.target.value;
+                        handleFieldChange('salaryMax', maxVal);
+                        handleFieldChange('price', maxVal);
+                        handleFieldChange('salaryRange', `${fieldsState.salaryMin || ''} - ${maxVal} ${currency} / ${fieldsState.payPeriod || 'Per month'}`);
+                      }}
+                      className="w-full p-3 bg-black/50 border border-white/10 focus:border-[#F5A623] rounded-xl text-xs text-white font-mono font-bold text-[#F5A623]"
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {fieldsState.payType === 'Negotiable' && (
+              <div>
+                <label className="block text-xs font-bold text-white/80 uppercase mb-1">
+                  1. {t('salary_pay_label') || 'Salary / Pay'} *
+                </label>
+                <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl text-xs text-amber-300 flex items-center gap-2">
+                  <span>{t('salary_negotiable_hint') || 'Salary is negotiable upon interview. No specific amount is required.'}</span>
+                </div>
+              </div>
+            )}
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {/* 2. Pay Type* */}
+              <div>
+                <label className="block text-xs font-bold text-white/80 uppercase mb-1">
+                  2. {t('pay_type_label') || 'Pay Type'} *
+                </label>
+                <select
+                  value={fieldsState.payType || 'Fixed amount'}
+                  onChange={e => {
+                    const newPayType = e.target.value;
+                    handleFieldChange('payType', newPayType);
+                    if (newPayType === 'Negotiable') {
+                      handleFieldChange('salary', '');
+                      handleFieldChange('price', '');
+                      handleFieldChange('salaryMin', '');
+                      handleFieldChange('salaryMax', '');
+                      handleFieldChange('salaryRange', 'Negotiable');
+                    }
+                  }}
+                  className="w-full p-3 bg-zinc-900 border border-white/10 focus:border-[#F5A623] rounded-xl text-xs text-white focus:outline-none transition"
+                >
+                  <option value="Fixed amount">{t('pay_type_fixed') || 'Fixed amount'}</option>
+                  <option value="Salary range">{t('pay_type_range') || 'Salary range'}</option>
+                  <option value="Negotiable">{t('pay_type_negotiable') || 'Negotiable'}</option>
+                </select>
+              </div>
+
+              {/* 3. Pay Period* */}
+              <div>
+                <label className="block text-xs font-bold text-white/80 uppercase mb-1">
+                  3. {t('pay_period_label') || 'Pay Period'} *
+                </label>
+                <select
+                  value={fieldsState.payPeriod || 'Per month'}
+                  onChange={e => handleFieldChange('payPeriod', e.target.value)}
+                  className="w-full p-3 bg-zinc-900 border border-white/10 focus:border-[#F5A623] rounded-xl text-xs text-white focus:outline-none transition"
+                >
+                  <option value="Per hour">{t('pay_period_hour') || 'Per hour'}</option>
+                  <option value="Per day">{t('pay_period_day') || 'Per day'}</option>
+                  <option value="Per week">{t('pay_period_week') || 'Per week'}</option>
+                  <option value="Per month">{t('pay_period_month') || 'Per month'}</option>
+                  <option value="Per year">{t('pay_period_year') || 'Per year'}</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          {/* Section 2: Application */}
+          <div className="p-4 sm:p-5 rounded-2xl bg-[#141418] border border-white/10 space-y-4">
+            <div className="flex items-center gap-2 border-b border-white/5 pb-3">
+              <Briefcase className="w-4 h-4 text-[#F5A623]" />
+              <h4 className="text-xs font-bold text-white uppercase tracking-wider">
+                {t('job_application_title') || 'Application'}
+              </h4>
+            </div>
+
+            {/* 4. Application Method* */}
+            <div>
+              <label className="block text-xs font-bold text-white/80 uppercase mb-1">
+                4. {t('application_method_label') || 'Application Method'} *
+              </label>
+              <select
+                value={fieldsState.applicationMethod || 'Apply through SOF-UMER'}
+                onChange={e => {
+                  const method = e.target.value;
+                  handleFieldChange('applicationMethod', method);
+                  if (method === 'Phone' && !fieldsState.applicationContact) {
+                    handleFieldChange('applicationContact', fieldsState.contactPhone || '');
+                  } else if (method === 'Email' && !fieldsState.applicationContact) {
+                    handleFieldChange('applicationContact', fieldsState.contactEmail || '');
+                  }
+                }}
+                className="w-full p-3 bg-zinc-900 border border-white/10 focus:border-[#F5A623] rounded-xl text-xs text-white focus:outline-none transition"
+              >
+                <option value="Apply through SOF-UMER">{t('app_method_sofumer') || 'Apply through SOF-UMER'}</option>
+                <option value="Phone">{t('app_method_phone') || 'Phone'}</option>
+                <option value="Email">{t('app_method_email') || 'Email'}</option>
+                <option value="External link">{t('app_method_link') || 'External link'}</option>
+              </select>
+            </div>
+
+            {/* 5. Application Contact */}
+            <div>
+              <label className="block text-xs font-bold text-white/80 uppercase mb-1">
+                5. {fieldsState.applicationMethod === 'Phone'
+                  ? (t('app_contact_phone_label') || 'Application Contact Phone *')
+                  : fieldsState.applicationMethod === 'Email'
+                  ? (t('app_contact_email_label') || 'Application Email Address *')
+                  : fieldsState.applicationMethod === 'External link'
+                  ? (t('app_contact_link_label') || 'Application Website / URL Link *')
+                  : (t('app_contact_label') || 'Application Contact')}
+              </label>
+              {(!fieldsState.applicationMethod || fieldsState.applicationMethod === 'Apply through SOF-UMER') ? (
+                <div className="p-3 bg-white/5 border border-white/10 rounded-xl text-xs text-white/70 flex items-center justify-between">
+                  <span>{t('sofumer_app_info') || 'Candidates will apply directly via SOF-UMER in-app messaging and candidate contact channels.'}</span>
+                  <span className="text-[10px] bg-amber-500/20 text-amber-300 font-bold px-2 py-0.5 rounded">In-App</span>
+                </div>
+              ) : (
+                <input
+                  type={fieldsState.applicationMethod === 'Email' ? 'email' : fieldsState.applicationMethod === 'External link' ? 'url' : 'tel'}
+                  required
+                  value={fieldsState.applicationContact || ''}
+                  placeholder={
+                    fieldsState.applicationMethod === 'Phone'
+                      ? (fieldsState.contactPhone || '+251 91 123 4567')
+                      : fieldsState.applicationMethod === 'Email'
+                      ? 'jobs@company.com'
+                      : 'https://company.com/careers/apply'
+                  }
+                  onChange={e => handleFieldChange('applicationContact', e.target.value)}
+                  className="w-full p-3 bg-zinc-900 border border-white/10 focus:border-[#F5A623] rounded-xl text-xs text-white focus:outline-none transition"
+                />
+              )}
+            </div>
+
+            {/* 6. Application Deadline */}
+            <div>
+              <label className="block text-xs font-bold text-white/80 uppercase mb-1">
+                6. {t('deadline') || 'Application Deadline'}
+              </label>
+              <input
+                type="date"
+                value={fieldsState.applicationDeadline || fieldsState.deadline || ''}
+                onChange={e => {
+                  handleFieldChange('applicationDeadline', e.target.value);
+                  handleFieldChange('deadline', e.target.value);
+                }}
+                className="w-full p-3 bg-zinc-900 border border-white/10 focus:border-[#F5A623] rounded-xl text-xs text-white focus:outline-none transition [color-scheme:dark]"
+              />
+            </div>
           </div>
         </div>
       )}

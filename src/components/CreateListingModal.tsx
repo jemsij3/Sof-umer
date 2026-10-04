@@ -171,6 +171,14 @@ function buildCleanAmenities(
     qualification: 'Qualification',
     experience: 'Experience Required',
     deadline: 'Deadline',
+    employmentSkill: 'Employment Skill',
+    workArrangement: 'Work Arrangement',
+    salary: 'Salary / Pay',
+    payType: 'Pay Type',
+    payPeriod: 'Pay Period',
+    applicationMethod: 'Application Method',
+    applicationContact: 'Application Contact',
+    applicationDeadline: 'Application Deadline',
     pricingUnit: 'Pricing Unit',
     providerType: 'Provider Type',
     coverageArea: 'Coverage Area',
@@ -384,17 +392,17 @@ function getFieldsForSelection(majorCategory: string, subcategory: string, t?: (
   if (majorCategory === 'Jobs') {
     return [
       { id: 'title', label: 'Job Title', type: 'text', placeholder: 'e.g., Senior Full Stack Developer / Accountant', required: true, colSpan: 'full' },
-      { id: 'jobType', label: 'Employment Type', type: 'select', options: ['Full-time', 'Part-time', 'Internship', 'Freelance', 'Remote'], colSpan: 'half' },
-      { id: 'sector', label: 'Sector / Industry', type: 'text', placeholder: 'e.g., Technology, Banking, Hospitality, Construction', required: true, colSpan: 'half' },
-      { id: 'salaryRange', label: 'Salary Range', type: 'text', placeholder: 'e.g., 20,000 - 35,000 / month (Negotiable)', colSpan: 'half' },
-      { id: 'qualification', label: 'Education Required', type: 'text', placeholder: 'e.g., Bachelor\'s Degree in Computer Science', colSpan: 'half' },
-      { id: 'experience', label: 'Experience Required', type: 'text', placeholder: 'e.g., 2-4 years', required: true, colSpan: 'half' },
       { id: 'location', label: 'Location', type: 'text', placeholder: 'e.g., Bole, Addis Ababa', required: true, colSpan: 'half' },
-      { id: 'deadline', label: 'Application Deadline', type: 'text', placeholder: 'YYYY-MM-DD', required: true, colSpan: 'half' },
-      { id: 'contactPhone', label: 'Phone Number', type: 'text', placeholder: 'e.g., +251911223344', required: true, colSpan: 'half' },
-      { id: 'contactEmail', label: 'Email', type: 'text', placeholder: 'e.g., hr@company.com', required: true, colSpan: 'half' },
-      { id: 'description', label: 'Description & Requirements', type: 'textarea', placeholder: 'Describe job responsibilities, required skills, benefits...', required: true, colSpan: 'full' },
-      { id: 'logo', label: 'Company Logo URL', type: 'text', placeholder: 'Paste company logo image URL (optional)', colSpan: 'full' }
+      { id: 'employmentSkill', label: 'Employment Skill', type: 'text', placeholder: 'e.g., React, TypeScript, Accounting, Financial Analysis, Sales', required: true, colSpan: 'half' },
+      { id: 'workArrangement', label: 'Work Arrangement', type: 'select', options: ['On-site', 'Remote', 'Hybrid'], required: true, colSpan: 'half' },
+      { id: 'description', label: 'Description', type: 'textarea', placeholder: 'Describe job responsibilities, key qualifications, benefits, and requirements...', required: true, colSpan: 'full' },
+      { id: 'contactPhone', label: 'Contact Phone', type: 'text', placeholder: 'e.g., +251 91 123 4567', required: true, colSpan: 'half' },
+      { id: 'salary', label: 'Salary / Pay', type: 'text', placeholder: 'e.g., 25000', colSpan: 'half' },
+      { id: 'payType', label: 'Pay Type', type: 'select', options: ['Fixed amount', 'Salary range', 'Negotiable'], colSpan: 'half' },
+      { id: 'payPeriod', label: 'Pay Period', type: 'select', options: ['Per hour', 'Per day', 'Per week', 'Per month', 'Per year'], colSpan: 'half' },
+      { id: 'applicationMethod', label: 'Application Method', type: 'select', options: ['Apply through SOF-UMER', 'Phone', 'Email', 'External link'], colSpan: 'half' },
+      { id: 'applicationContact', label: 'Application Contact', type: 'text', placeholder: 'e.g., jobs@company.com or phone', colSpan: 'half' },
+      { id: 'applicationDeadline', label: 'Application Deadline', type: 'text', placeholder: 'YYYY-MM-DD', colSpan: 'half' }
     ];
   }
 
@@ -943,6 +951,42 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
     // Step 2 -> Step 3 validation & transition
     const handleContinueToStep3 = () => {
       setError('');
+      if (majorCategory === 'Jobs') {
+        if (!fieldsState.title || String(fieldsState.title).trim() === '') {
+          setError(t('job_title_val') || 'Please enter a job title.');
+          return;
+        }
+        if (!fieldsState.location || String(fieldsState.location).trim() === '') {
+          setError(t('locVal') || 'Please enter a job location.');
+          return;
+        }
+        if (!fieldsState.employmentSkill && !fieldsState.qualification) {
+          setError(t('employment_skill_val') || 'Please enter required employment skills.');
+          return;
+        }
+        if (!fieldsState.workArrangement || String(fieldsState.workArrangement).trim() === '') {
+          setError(t('work_arrangement_val') || 'Please select a work arrangement.');
+          return;
+        }
+        if (!fieldsState.description || String(fieldsState.description).trim() === '') {
+          setError(t('descVal') || 'Please provide a job description.');
+          return;
+        }
+        if (!fieldsState.contactPhone || String(fieldsState.contactPhone).trim() === '') {
+          setError(t('phoneVal') || 'Please enter a contact phone number.');
+          return;
+        }
+        if (currentUser?.role === 'admin') {
+          if (!fieldsState.ownerName || String(fieldsState.ownerName).trim() === '') {
+            setError(t('employer_name_val') || 'Please enter company / employer name.');
+            return;
+          }
+        }
+        // Media Upload is optional for Jobs as requested
+        setCurrentStep(3);
+        return;
+      }
+
       if (!fieldsState.title || String(fieldsState.title).trim() === '') {
         setError(t('titleVal') || 'Please enter a product/listing title.');
         return;
@@ -982,8 +1026,47 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
           setError(t('valid_property_price_val') || 'Please enter a valid Property Price greater than 0.');
           return;
         }
-      } else if (['Jobs', 'Vehicles', 'Services'].includes(majorCategory)) {
-        // Selling Intent / Mode removed for Jobs, Vehicles, and Services
+      } else if (majorCategory === 'Jobs') {
+        const payType = fieldsState.payType || 'Fixed amount';
+        if (payType === 'Fixed amount') {
+          const sal = Number(fieldsState.salary ?? fieldsState.price ?? 0);
+          if (!sal || sal <= 0) {
+            setError(t('valid_salary_val') || 'Please enter a valid salary / pay amount.');
+            return;
+          }
+        } else if (payType === 'Salary range') {
+          const minSal = Number(fieldsState.salaryMin || 0);
+          const maxSal = Number(fieldsState.salaryMax || 0);
+          if (!minSal || minSal <= 0) {
+            setError(t('valid_min_salary_val') || 'Please enter a valid minimum salary amount.');
+            return;
+          }
+          if (!maxSal || maxSal <= 0) {
+            setError(t('valid_max_salary_val') || 'Please enter a valid maximum salary amount.');
+            return;
+          }
+          if (maxSal < minSal) {
+            setError(t('max_salary_greater_val') || 'Maximum salary must be greater than or equal to minimum salary.');
+            return;
+          }
+        }
+        // Negotiable needs no salary validation
+
+        const appMethod = fieldsState.applicationMethod || 'Apply through SOF-UMER';
+        if (appMethod === 'Phone' && (!fieldsState.applicationContact || String(fieldsState.applicationContact).trim() === '')) {
+          setError(t('app_phone_val') || 'Please enter an application contact phone number.');
+          return;
+        }
+        if (appMethod === 'Email' && (!fieldsState.applicationContact || String(fieldsState.applicationContact).trim() === '')) {
+          setError(t('app_email_val') || 'Please enter an application email address.');
+          return;
+        }
+        if (appMethod === 'External link' && (!fieldsState.applicationContact || String(fieldsState.applicationContact).trim() === '')) {
+          setError(t('app_link_val') || 'Please enter the external application link / URL.');
+          return;
+        }
+      } else if (['Vehicles', 'Services'].includes(majorCategory)) {
+        // Selling Intent / Mode removed for Vehicles and Services
         if (majorCategory === 'Vehicles') {
           const vehPrice = Number(fieldsState.price || 0);
           if (!vehPrice || vehPrice <= 0) {
@@ -1187,7 +1270,17 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
         wholesalePriceTiers: isWholesale ? wholesaleTiers : undefined,
         deliveryOptions: !isNoSellingMode && Array.isArray(fieldsState.deliveryOptions) ? fieldsState.deliveryOptions : [],
         wholesaleNotes: isWholesale ? (fieldsState.wholesaleNotes || '') : undefined,
-        variations: variationsList.length > 0 ? variationsList : undefined
+        variations: variationsList.length > 0 ? variationsList : undefined,
+        employmentSkill: majorCategory === 'Jobs' ? (fieldsState.employmentSkill || fieldsState.qualification || '') : undefined,
+        workArrangement: majorCategory === 'Jobs' ? (fieldsState.workArrangement || 'On-site') : undefined,
+        salary: majorCategory === 'Jobs' ? (fieldsState.salary ? Number(fieldsState.salary) : undefined) : undefined,
+        salaryMin: majorCategory === 'Jobs' ? (fieldsState.salaryMin ? Number(fieldsState.salaryMin) : undefined) : undefined,
+        salaryMax: majorCategory === 'Jobs' ? (fieldsState.salaryMax ? Number(fieldsState.salaryMax) : undefined) : undefined,
+        payType: majorCategory === 'Jobs' ? (fieldsState.payType || 'Fixed amount') : undefined,
+        payPeriod: majorCategory === 'Jobs' ? (fieldsState.payPeriod || 'Per month') : undefined,
+        applicationMethod: majorCategory === 'Jobs' ? (fieldsState.applicationMethod || 'Apply through SOF-UMER') : undefined,
+        applicationContact: majorCategory === 'Jobs' ? (fieldsState.applicationContact || '') : undefined,
+        applicationDeadline: majorCategory === 'Jobs' ? (fieldsState.applicationDeadline || fieldsState.deadline || '') : undefined
       };
 
       const authToken = localStorage.getItem('sof_umer_token') || '';

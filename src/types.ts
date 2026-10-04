@@ -192,6 +192,18 @@ export interface Property {
   deliveryOptions?: string[];
   wholesaleNotes?: string;
   variations?: ProductVariation[];
+
+  // Jobs & Hiring extensions
+  employmentSkill?: string;
+  workArrangement?: string;
+  salary?: number;
+  salaryMin?: number;
+  salaryMax?: number;
+  payType?: string;
+  payPeriod?: string;
+  applicationMethod?: string;
+  applicationContact?: string;
+  applicationDeadline?: string;
 }
 
 export interface WholesalePriceTier {

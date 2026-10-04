@@ -227,6 +227,137 @@ export const WizardStep2Details: React.FC<WizardStep2DetailsProps> = ({
             </div>
           )}
         </div>
+      ) : majorCategory === 'Jobs' ? (
+        <div className="space-y-4">
+          <div className="border-l-2 border-amber-500 pl-3">
+            <h4 className="text-xs font-bold text-white tracking-wider uppercase">
+              {t('job_details') || 'Job Details'}
+            </h4>
+            <p className="text-[10px] text-white/40">
+              {getTranslatedCategoryName('Jobs', currentLanguage)}
+            </p>
+          </div>
+
+          {/* 1. Job Title* */}
+          <div>
+            <label className="block text-xs font-bold text-white/80 uppercase mb-1">
+              1. {t('job_title_label') || 'Job Title'} *
+            </label>
+            <input
+              type="text"
+              required
+              value={fieldsState.title || ''}
+              placeholder={t('job_title_placeholder') || 'e.g., Senior Full Stack Developer / Accountant'}
+              onChange={e => handleFieldChange('title', e.target.value)}
+              className="w-full p-3 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white focus:outline-none transition"
+            />
+          </div>
+
+          {/* 2. Location* */}
+          <div>
+            <label className="block text-xs font-bold text-white/80 uppercase mb-1">
+              2. {t('locLabel') || 'Location'} *
+            </label>
+            <input
+              type="text"
+              required
+              value={fieldsState.location || ''}
+              placeholder={t('locPlaceholder') || 'e.g. Bole, Addis Ababa'}
+              onChange={e => handleFieldChange('location', e.target.value)}
+              className="w-full p-3 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white focus:outline-none transition"
+            />
+          </div>
+
+          {/* 3. Employment Skill* */}
+          <div>
+            <label className="block text-xs font-bold text-white/80 uppercase mb-1">
+              3. {t('employment_skill_label') || 'Employment Skill'} *
+            </label>
+            <input
+              type="text"
+              required
+              value={fieldsState.employmentSkill || fieldsState.qualification || ''}
+              placeholder={t('employment_skill_placeholder') || 'e.g., React, TypeScript, Accounting, Financial Analysis, Sales'}
+              onChange={e => {
+                handleFieldChange('employmentSkill', e.target.value);
+                handleFieldChange('qualification', e.target.value);
+              }}
+              className="w-full p-3 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white focus:outline-none transition"
+            />
+          </div>
+
+          {/* 4. Work Arrangement* */}
+          <div>
+            <label className="block text-xs font-bold text-white/80 uppercase mb-1">
+              4. {t('work_arrangement_label') || 'Work Arrangement'} *
+            </label>
+            <select
+              required
+              value={fieldsState.workArrangement || 'On-site'}
+              onChange={e => handleFieldChange('workArrangement', e.target.value)}
+              className="w-full p-3 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white focus:outline-none transition"
+            >
+              <option value="On-site">{t('work_arr_onsite') || 'On-site'}</option>
+              <option value="Remote">{t('work_arr_remote') || 'Remote'}</option>
+              <option value="Hybrid">{t('work_arr_hybrid') || 'Hybrid'}</option>
+            </select>
+          </div>
+
+          {/* 5. Description* */}
+          <div>
+            <label className="block text-xs font-bold text-white/80 uppercase mb-1">
+              5. {t('descLabel') || 'Description'} *
+            </label>
+            <textarea
+              required
+              rows={4}
+              value={fieldsState.description || ''}
+              placeholder={t('job_desc_placeholder') || 'Describe job responsibilities, key qualifications, benefits, and requirements...'}
+              onChange={e => handleFieldChange('description', e.target.value)}
+              className="w-full p-3 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white focus:outline-none transition"
+            />
+          </div>
+
+          {/* 6. Contact Phone* */}
+          <div>
+            <label className="block text-xs font-bold text-white/80 uppercase mb-1">
+              6. {t('contact_phone_label') || 'Contact Phone'} *
+            </label>
+            <input
+              type="text"
+              required
+              value={fieldsState.contactPhone || ''}
+              placeholder="+251 91 123 4567"
+              onChange={e => handleFieldChange('contactPhone', e.target.value)}
+              className="w-full p-3 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white focus:outline-none transition"
+            />
+          </div>
+
+          {/* Admin-Only: Listing on Behalf of Owner / Employer */}
+          {(user?.role === 'admin' || user?.isAdmin) && (
+            <div className="flex flex-col gap-2 my-4 p-4 bg-[#141418] border border-[#F5A623]/30 rounded-xl">
+              <div className="flex items-center gap-2">
+                <span className="text-xs bg-[#F5A623] text-black font-bold px-2 py-0.5 rounded uppercase">
+                  {t('admin_only_badge') || 'Admin Only'}
+                </span>
+                <label className="text-sm font-medium text-[#F5A623] tracking-wider">
+                  {t('employerNameLabel') || 'Company / Employer Name'} *
+                </label>
+              </div>
+              <input
+                type="text"
+                placeholder={t('employerNamePlaceholder') || 'e.g., Acme Corp (Client Name)'}
+                value={formData.ownerName || ''}
+                onChange={(e) => setFormData({ ...formData, ownerName: e.target.value })}
+                className="w-full bg-[#1A1B22] text-white border border-[#22242E] rounded-lg p-3 focus:border-[#F5A623] outline-none text-sm placeholder:text-gray-500"
+                required={(user?.role === 'admin' || user?.isAdmin)}
+              />
+              <p className="text-xs text-gray-400">
+                {t('employerNameDesc') || 'Enter the name of the hiring organization you are listing on behalf of.'}
+              </p>
+            </div>
+          )}
+        </div>
       ) : (
         <div className="space-y-4">
           <div className="border-l-2 border-amber-500 pl-3">
@@ -435,7 +566,9 @@ export const WizardStep2Details: React.FC<WizardStep2DetailsProps> = ({
       <div className="space-y-3 pt-3 border-t border-white/5">
         <div className="flex items-center justify-between">
           <label className="block text-xs font-bold text-amber-500 uppercase tracking-widest">
-            {t('media_upload_title') || 'Media Upload (Photos & Video) *'}
+            {majorCategory === 'Jobs' 
+              ? (t('media_upload_optional') || '7. Media Upload (Photos & Video) (Optional)') 
+              : (t('media_upload_title') || 'Media Upload (Photos & Video) *')}
           </label>
           <span className="text-[11px] font-mono text-white/50">
             {imagesList.length} / 10 {t('photosCount') || 'photos'}
