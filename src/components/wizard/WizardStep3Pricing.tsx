@@ -30,6 +30,47 @@ export const WizardStep3Pricing: React.FC<WizardStep3PricingProps> = ({
   const { t, currentLanguage } = useApp();
   const currentDelivery = Array.isArray(fieldsState.deliveryOptions) ? fieldsState.deliveryOptions : [];
 
+  // Single authoritative MOQ
+  const authoritativeMoq = Math.max(1, Math.floor(Number(fieldsState.minimumOrderQuantity ?? wholesaleTiers[0]?.minimumQuantity ?? 10) || 10));
+  const [moqInputStr, setMoqInputStr] = React.useState<string>(() => String(authoritativeMoq));
+
+  React.useEffect(() => {
+    const propMoq = fieldsState.minimumOrderQuantity ?? wholesaleTiers[0]?.minimumQuantity;
+    if (propMoq !== undefined && propMoq !== null && propMoq !== '') {
+      const parsed = Number(propMoq);
+      if (!isNaN(parsed) && parsed > 0 && String(parsed) !== moqInputStr.trim()) {
+        setMoqInputStr(String(parsed));
+      }
+    }
+  }, [fieldsState.minimumOrderQuantity]);
+
+  const handleMoqInputChange = (raw: string) => {
+    setMoqInputStr(raw);
+    if (raw.trim() === '') {
+      handleFieldChange('minimumOrderQuantity', '');
+      return;
+    }
+    const parsed = parseInt(raw.trim(), 10);
+    if (!isNaN(parsed) && parsed >= 0) {
+      handleFieldChange('minimumOrderQuantity', parsed);
+      setWholesaleTiers(prev => {
+        if (!prev || prev.length === 0) return [{ minimumQuantity: parsed, pricePerUnit: 0 }];
+        return prev.map((t, idx) => idx === 0 ? { ...t, minimumQuantity: parsed } : t);
+      });
+    }
+  };
+
+  const handleMoqInputBlur = () => {
+    const parsed = parseInt(moqInputStr.trim(), 10);
+    const cleanMoq = isNaN(parsed) || parsed < 10 ? 10 : parsed;
+    setMoqInputStr(String(cleanMoq));
+    handleFieldChange('minimumOrderQuantity', cleanMoq);
+    setWholesaleTiers(prev => {
+      if (!prev || prev.length === 0) return [{ minimumQuantity: cleanMoq, pricePerUnit: 0 }];
+      return prev.map((t, idx) => idx === 0 ? { ...t, minimumQuantity: cleanMoq } : t);
+    });
+  };
+
   const isRealEstate = 
     majorCategory === 'Properties' || 
     majorCategory?.toLowerCase() === 'properties' || 
@@ -215,18 +256,22 @@ export const WizardStep3Pricing: React.FC<WizardStep3PricingProps> = ({
                 <label className="block text-xs font-bold text-white/80 uppercase mb-1">
                   {t('wholesale_moq_label') || 'Minimum Order Qty (MOQ ≥ 10) *'}
                 </label>
-                <input
-                  type="number"
-                  min="1"
-                  required
-                  value={fieldsState.minimumOrderQuantity || wholesaleTiers[0]?.minimumQuantity || 10}
-                  onChange={e => {
-                    const val = Number(e.target.value);
-                    handleFieldChange('minimumOrderQuantity', val);
-                    setWholesaleTiers(prev => prev.map((t, idx) => idx === 0 ? { ...t, minimumQuantity: val } : t));
-                  }}
-                  className="w-full p-3 bg-black/50 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white font-mono font-bold text-amber-400"
-                />
+                <div className="relative">
+                  <input
+                    type="number"
+                    min="10"
+                    step="1"
+                    required
+                    value={moqInputStr}
+                    onChange={e => handleMoqInputChange(e.target.value)}
+                    onBlur={handleMoqInputBlur}
+                    placeholder="e.g. 10"
+                    className="w-full p-3 pr-14 bg-black/50 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white font-mono font-bold text-amber-400"
+                  />
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[11px] text-white/40 pointer-events-none select-none">
+                    {getLocalizedUnit(fieldsState.unit || 'piece', currentLanguage, Number(moqInputStr) || 10)}
+                  </span>
+                </div>
               </div>
               <div>
                 <label className="block text-xs font-bold text-white/80 uppercase mb-1">
@@ -260,12 +305,13 @@ export const WizardStep3Pricing: React.FC<WizardStep3PricingProps> = ({
 
           {/* Wholesale Tier Cards (Vertical Stacked Cards) */}
           <WholesalePricingTiersEditor
+            moq={authoritativeMoq}
             tiers={wholesaleTiers}
+            onTiersChange={setWholesaleTiers}
             onChange={setWholesaleTiers}
             currency={currency}
             unit={fieldsState.unit || fieldsState.wholesaleUnit || 'Piece'}
-            baseMoq={Number(fieldsState.minimumOrderQuantity || wholesaleTiers[0]?.minimumQuantity || 10)}
-            disabled={false}
+            isRetailAndWholesale={false}
           />
         </div>
       )}
@@ -343,18 +389,22 @@ export const WizardStep3Pricing: React.FC<WizardStep3PricingProps> = ({
                 <label className="block text-xs font-bold text-white/80 uppercase mb-1">
                   {t('wholesale_moq_label') || 'Minimum Order Qty (MOQ ≥ 10) *'}
                 </label>
-                <input
-                  type="number"
-                  min="1"
-                  required
-                  value={fieldsState.minimumOrderQuantity || wholesaleTiers[0]?.minimumQuantity || 10}
-                  onChange={e => {
-                    const val = Number(e.target.value);
-                    handleFieldChange('minimumOrderQuantity', val);
-                    setWholesaleTiers(prev => prev.map((t, idx) => idx === 0 ? { ...t, minimumQuantity: val } : t));
-                  }}
-                  className="w-full p-3 bg-black/50 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white font-mono font-bold text-amber-400"
-                />
+                <div className="relative">
+                  <input
+                    type="number"
+                    min="10"
+                    step="1"
+                    required
+                    value={moqInputStr}
+                    onChange={e => handleMoqInputChange(e.target.value)}
+                    onBlur={handleMoqInputBlur}
+                    placeholder="e.g. 10"
+                    className="w-full p-3 pr-14 bg-black/50 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white font-mono font-bold text-amber-400"
+                  />
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[11px] text-white/40 pointer-events-none select-none">
+                    {getLocalizedUnit(fieldsState.unit || 'piece', currentLanguage, Number(moqInputStr) || 10)}
+                  </span>
+                </div>
               </div>
               <div>
                 <label className="block text-xs font-bold text-white/80 uppercase mb-1">
@@ -375,12 +425,13 @@ export const WizardStep3Pricing: React.FC<WizardStep3PricingProps> = ({
 
             {/* Wholesale Tier Cards (Vertical Stacked Cards) */}
             <WholesalePricingTiersEditor
+              moq={authoritativeMoq}
               tiers={wholesaleTiers}
+              onTiersChange={setWholesaleTiers}
               onChange={setWholesaleTiers}
               currency={currency}
               unit={fieldsState.unit || fieldsState.wholesaleUnit || 'Piece'}
-              baseMoq={Number(fieldsState.minimumOrderQuantity || wholesaleTiers[0]?.minimumQuantity || 10)}
-              disabled={false}
+              isRetailAndWholesale={true}
             />
           </div>
         </div>

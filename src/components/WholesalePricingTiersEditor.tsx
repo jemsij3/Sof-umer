@@ -6,18 +6,21 @@ import { useApp } from '../lib/AppContext';
 
 export interface WholesalePricingTiersEditorProps {
   moq?: number | string;
+  baseMoq?: number | string;
   initialMoq?: number | string;
   onMoqChange?: (moq: number) => void;
   tiers: WholesalePriceTier[];
   onTiersChange?: (tiers: WholesalePriceTier[]) => void;
-  onChange?: (moq: number, tiers: WholesalePriceTier[]) => void;
+  onChange?: ((tiers: WholesalePriceTier[]) => void) | ((moq: number, tiers: WholesalePriceTier[]) => void);
   currency: string;
   unit: string;
   isRetailAndWholesale?: boolean;
+  disabled?: boolean;
 }
 
 export const WholesalePricingTiersEditor: React.FC<WholesalePricingTiersEditorProps> = ({
   moq,
+  baseMoq,
   initialMoq,
   onMoqChange,
   tiers = [],
@@ -25,114 +28,41 @@ export const WholesalePricingTiersEditor: React.FC<WholesalePricingTiersEditorPr
   onChange,
   currency,
   unit,
-  isRetailAndWholesale = false
+  isRetailAndWholesale = false,
+  disabled = false
 }) => {
   const { t, currentLanguage } = useApp();
-  // Resolve starting MOQ (defaults to 1 for standard new listings if unspecified)
-  const resolveStartingMoq = (): number => {
-    if (moq !== undefined && moq !== null && moq !== '') {
-      const parsed = Number(moq);
-      if (!isNaN(parsed) && parsed >= 1) return Math.floor(parsed);
-    }
-    if (initialMoq !== undefined && initialMoq !== null && initialMoq !== '') {
-      const parsed = Number(initialMoq);
-      if (!isNaN(parsed) && parsed >= 1) return Math.floor(parsed);
-    }
-    if (tiers.length > 0 && tiers[0]?.minimumQuantity) {
-      const parsed = Number(tiers[0].minimumQuantity);
-      if (!isNaN(parsed) && parsed >= 1) return Math.floor(parsed);
-    }
-    return 1;
-  };
 
-  // Local state for the MOQ text input to allow free typing/clearing without UI fighting back
-  const [moqInputStr, setMoqInputStr] = useState<string>(() => String(resolveStartingMoq()));
+  // Authoritative MOQ provided by the parent form (defaults safely to 10 for wholesale)
+  const currentMoqNum = Math.max(
+    1,
+    Math.floor(Number(moq ?? baseMoq ?? initialMoq ?? tiers[0]?.minimumQuantity ?? 10) || 10)
+  );
 
-  // Active numeric MOQ value derived from valid input or resolved prop
-  const currentMoqNum = (() => {
-    const parsed = parseInt(moqInputStr.trim(), 10);
-    if (!isNaN(parsed) && parsed >= 1) {
-      return parsed;
-    }
-    return resolveStartingMoq();
-  })();
-
-  // Keep local MOQ string in sync when external moq prop changes (e.g. form load or reset)
-  useEffect(() => {
-    if (moq !== undefined && moq !== null && moq !== '') {
-      const propNum = Number(moq);
-      if (!isNaN(propNum) && propNum >= 1) {
-        const currentInputParsed = parseInt(moqInputStr.trim(), 10);
-        if (currentInputParsed !== propNum) {
-          setMoqInputStr(String(propNum));
-        }
-      }
-    }
-  }, [moq]);
-
-  // Centralized change dispatcher ensuring Tier #1 minimumQuantity ALWAYS derives from MOQ
-  const dispatchChanges = (newMoq: number, baseTiers: WholesalePriceTier[]) => {
-    const cleanMoq = Math.max(1, Math.floor(newMoq));
-    
-    // Ensure Tier #1 exists and its minimum quantity matches newMoq
+  // Centralized change dispatcher ensuring Tier #1 minimumQuantity ALWAYS derives from currentMoqNum
+  const dispatchChanges = (newTiers: WholesalePriceTier[]) => {
     let synchronizedTiers: WholesalePriceTier[];
-    if (baseTiers.length === 0) {
-      synchronizedTiers = [{ minimumQuantity: cleanMoq, pricePerUnit: 0 }];
+    if (newTiers.length === 0) {
+      synchronizedTiers = [{ minimumQuantity: currentMoqNum, pricePerUnit: 0 }];
     } else {
-      synchronizedTiers = baseTiers.map((t, idx) => 
-        idx === 0 ? { ...t, minimumQuantity: cleanMoq } : { ...t }
+      synchronizedTiers = newTiers.map((t, idx) => 
+        idx === 0 ? { ...t, minimumQuantity: currentMoqNum } : { ...t }
       );
     }
 
+    if (onTiersChange) {
+      onTiersChange(synchronizedTiers);
+    }
     if (onChange) {
-      onChange(cleanMoq, synchronizedTiers);
-    } else {
-      if (onMoqChange) onMoqChange(cleanMoq);
-      if (onTiersChange) onTiersChange(synchronizedTiers);
-    }
-  };
-
-  // Handle typing in the MOQ input field
-  const handleMoqInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const rawVal = e.target.value;
-    setMoqInputStr(rawVal);
-
-    // If user temporarily cleared the input (empty string), do NOT force '1'
-    if (rawVal.trim() === '') {
-      return;
-    }
-
-    const parsed = parseInt(rawVal.trim(), 10);
-    if (!isNaN(parsed) && parsed >= 1) {
-      // Valid positive whole number: automatically update Tier #1 to match
-      dispatchChanges(parsed, tiers);
-    }
-  };
-
-  // Handle blur on the MOQ input: validate and clean up formatting
-  const handleMoqBlur = () => {
-    const parsed = parseInt(moqInputStr.trim(), 10);
-    if (isNaN(parsed) || parsed < 1) {
-      // Reset to current valid MOQ if left blank or invalid
-      const fallback = Math.max(1, currentMoqNum);
-      setMoqInputStr(String(fallback));
-      dispatchChanges(fallback, tiers);
-    } else {
-      // Format cleanly (e.g. strips leading zeroes like "026" -> "26")
-      setMoqInputStr(String(parsed));
-      dispatchChanges(parsed, tiers);
+      onChange(synchronizedTiers as any);
     }
   };
 
   // Add a new wholesale pricing tier
   const handleAddTier = () => {
-    // If no tiers exist, start with Tier #1 derived from current MOQ
-    if (tiers.length === 0) {
-      dispatchChanges(currentMoqNum, [{ minimumQuantity: currentMoqNum, pricePerUnit: 0 }]);
-      return;
-    }
-
-    const lastTier = tiers[tiers.length - 1];
+    if (disabled) return;
+    const currentTiers = normalizedTiers;
+    const lastTier = currentTiers[currentTiers.length - 1];
     const prevQty = Number(lastTier.minimumQuantity) || currentMoqNum;
     
     // Suggest a logical next quantity threshold strictly greater than the previous tier
@@ -146,25 +76,26 @@ export const WholesalePricingTiersEditor: React.FC<WholesalePricingTiersEditorPr
     const nextPrice = prevPrice > 0 ? Math.max(1, Math.round(prevPrice * 0.9)) : 0;
 
     const newTiers = [
-      ...tiers.map((t, idx) => idx === 0 ? { ...t, minimumQuantity: currentMoqNum } : { ...t }),
+      ...currentTiers.map((t, idx) => idx === 0 ? { ...t, minimumQuantity: currentMoqNum } : { ...t }),
       { minimumQuantity: nextQty, pricePerUnit: nextPrice }
     ];
 
-    dispatchChanges(currentMoqNum, newTiers);
+    dispatchChanges(newTiers);
   };
 
   // Remove an additional tier (Tier #1 is permanent / required)
   const handleRemoveTier = (index: number) => {
-    if (index === 0 || tiers.length <= 1) return; // Cannot delete Tier #1 ({t('base_moq')})
-    const updated = tiers.filter((_, i) => i !== index);
-    dispatchChanges(currentMoqNum, updated);
+    if (disabled) return;
+    if (index === 0 || normalizedTiers.length <= 1) return; // Cannot delete Tier #1
+    const updated = normalizedTiers.filter((_, i) => i !== index);
+    dispatchChanges(updated);
   };
 
   // Edit quantity for additional tiers (Tier #2, #3, etc.)
   const handleAdditionalTierQtyChange = (index: number, rawVal: string) => {
-    if (index === 0) return; // Tier #1 is strictly derived from MOQ
+    if (disabled || index === 0) return; // Tier #1 is strictly derived from MOQ
 
-    const updated = tiers.map((t, idx) => {
+    const updated = normalizedTiers.map((t, idx) => {
       if (idx === 0) return { ...t, minimumQuantity: currentMoqNum };
       if (idx === index) {
         const parsed = parseInt(rawVal, 10);
@@ -173,19 +104,16 @@ export const WholesalePricingTiersEditor: React.FC<WholesalePricingTiersEditorPr
       return { ...t };
     });
 
-    if (onChange) {
-      onChange(currentMoqNum, updated);
-    } else {
-      if (onTiersChange) onTiersChange(updated);
-    }
+    dispatchChanges(updated);
   };
 
   // Edit price per unit for any tier (including Tier #1)
   const handleTierPriceChange = (index: number, rawVal: string) => {
+    if (disabled) return;
     const parsedPrice = parseFloat(rawVal);
     const cleanPrice = isNaN(parsedPrice) ? 0 : Math.max(0, parsedPrice);
 
-    const updated = (tiers.length > 0 ? tiers : [{ minimumQuantity: currentMoqNum, pricePerUnit: 0 }]).map((t, idx) => {
+    const updated = (normalizedTiers.length > 0 ? normalizedTiers : [{ minimumQuantity: currentMoqNum, pricePerUnit: 0 }]).map((t, idx) => {
       if (idx === 0 && index !== 0) {
         return { ...t, minimumQuantity: currentMoqNum };
       }
@@ -195,11 +123,7 @@ export const WholesalePricingTiersEditor: React.FC<WholesalePricingTiersEditorPr
       return { ...t };
     });
 
-    if (onChange) {
-      onChange(currentMoqNum, updated);
-    } else {
-      if (onTiersChange) onTiersChange(updated);
-    }
+    dispatchChanges(updated);
   };
 
   // Ensure tiers array always has at least Tier #1 synchronized with current MOQ
@@ -215,11 +139,6 @@ export const WholesalePricingTiersEditor: React.FC<WholesalePricingTiersEditorPr
   const unitPlural = getPluralizedUnit(2, unit);
   const moqUnitLabel = getPluralizedUnit(currentMoqNum, unit);
 
-  // Check if input is temporarily empty or invalid for instant visual warning
-  const isInputEmpty = moqInputStr.trim() === '';
-  const parsedInputMoq = parseInt(moqInputStr.trim(), 10);
-  const isMoqInvalid = isInputEmpty || isNaN(parsedInputMoq) || parsedInputMoq < 1;
-
   return (
     <div className="bg-[#10101a] border border-amber-500/25 rounded-2xl p-4 sm:p-5 space-y-4 shadow-lg">
       {/* Header */}
@@ -230,72 +149,38 @@ export const WholesalePricingTiersEditor: React.FC<WholesalePricingTiersEditorPr
           </div>
           <div>
             <span className="text-xs font-bold text-amber-400 uppercase tracking-wider block">
-              {t('wholesale_pricing_quantity_tiers')}
+              {t('wholesale_pricing_quantity_tiers') || 'Wholesale Pricing & Quantity Tiers'}
             </span>
             <span className="text-[11px] text-white/50">
-              {t('set_volume_discount_tiers_desc')}
+              {t('set_volume_discount_tiers_desc') || 'Define volume pricing tiers for buyers purchasing at or above your MOQ.'}
             </span>
           </div>
         </div>
 
         <span className="text-[10px] font-mono font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20 px-2.5 py-1 rounded-lg self-start sm:self-auto">
-          {t('unit_of_sale')}: {getLocalizedUnit(unitSingular, currentLanguage, 1)}
+          {t('unit_of_sale') || 'Unit'}: {getLocalizedUnit(unitSingular, currentLanguage, 1)}
         </span>
       </div>
 
-      {/* MOQ Input Section */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div>
-          <label className="block text-xs font-bold text-white mb-1">
-            {t('wholesale.minimum_order_quantity')} *
-          </label>
-          <div className="relative">
-            <input
-              type="number"
-              min="1"
-              step="1"
-              value={moqInputStr}
-              onChange={handleMoqInputChange}
-              onBlur={handleMoqBlur}
-              placeholder="e.g. 26"
-              className={`w-full bg-[#181826] border ${isMoqInvalid ? 'border-rose-500 text-rose-300' : 'border-white/10 text-white'} font-mono text-sm rounded-xl px-3.5 py-2.5 pr-20 focus:outline-none focus:border-amber-500 transition`}
-            />
-            <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-medium text-white/50 pointer-events-none select-none">
-              {getLocalizedUnit(moqUnitLabel, currentLanguage, currentMoqNum)}
-            </span>
-          </div>
-
-          {/* Dynamic buyer purchase message */}
-          <p className="text-[11px] text-white/70 mt-1.5 font-medium flex items-center gap-1.5">
-            <span className="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0 inline-block" />
-            {isRetailAndWholesale
-              ? (t('wholesale.qualify_wholesale_pricing', { quantity: currentMoqNum, unit: getLocalizedUnit(unit, currentLanguage, currentMoqNum) }) || `Orders of ${currentMoqNum}+ ${moqUnitLabel} qualify for wholesale pricing. Smaller orders use standard retail price.`)
-              : (t('wholesale.buyers_must_purchase', { quantity: currentMoqNum, unit: getLocalizedUnit(unit, currentLanguage, currentMoqNum) }) || `Buyers must purchase at least ${currentMoqNum} ${moqUnitLabel}.`)}
-          </p>
-
-          {isMoqInvalid && (
-            <p className="text-[10px] text-rose-400 font-semibold mt-1">
-              {t('wholesale.moq_invalid')}
-            </p>
-          )}
-        </div>
-
-        <div className="bg-black/30 border border-white/5 rounded-xl p-3 flex flex-col justify-center text-xs">
-          <span className="text-[10px] uppercase font-bold text-white/50 tracking-wider mb-1 flex items-center gap-1 font-mono">
-            <TrendingDown className="w-3.5 h-3.5 text-emerald-400" />
-            {t('pricing_strategy')}
-          </span>
-          <p className="text-white/70 text-[11px] leading-relaxed">
-            {t('set_volume_discount_tiers_desc')}
-          </p>
-        </div>
+      {/* Buyer Qualification Note & Strategy */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-black/30 border border-white/5 rounded-xl p-3 text-xs">
+        <p className="text-[11px] text-white/80 font-medium flex items-center gap-1.5">
+          <span className="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0 inline-block" />
+          {isRetailAndWholesale
+            ? (t('wholesale.qualify_wholesale_pricing', { quantity: currentMoqNum, unit: getLocalizedUnit(unit, currentLanguage, currentMoqNum) }) || `Orders of ${currentMoqNum}+ ${moqUnitLabel} qualify for wholesale pricing. Smaller orders use standard retail price.`)
+            : (t('wholesale.buyers_must_purchase', { quantity: currentMoqNum, unit: getLocalizedUnit(unit, currentLanguage, currentMoqNum) }) || `Buyers must purchase at least ${currentMoqNum} ${moqUnitLabel}.`)}
+        </p>
+        <span className="text-[10px] text-white/50 tracking-wider flex items-center gap-1 shrink-0 font-mono">
+          <TrendingDown className="w-3.5 h-3.5 text-emerald-400" />
+          {t('pricing_strategy') || 'Volume Discount'}
+        </span>
       </div>
 
-      {/* Mobile-First Tier Cards (Replaces Squeezed Horizontal Table) */}
+      {/* Mobile-First Tier Cards (Vertical Stacked Cards) */}
       <div className="space-y-3">
         <div className="flex items-center justify-between">
           <label className="text-xs font-bold text-white flex items-center gap-1.5">
-            <span>{t('wholesale_pricing_quantity_tiers')}</span>
+            <span>{t('wholesale_pricing_quantity_tiers') || 'Pricing Tiers'}</span>
             <span className="text-[10px] text-amber-400/80 font-normal font-mono">
               ({normalizedTiers.length} {normalizedTiers.length === 1 ? (t('wholesale.tier') || 'tier') : (t('wholesale.tiers') || 'tiers')})
             </span>
@@ -363,7 +248,7 @@ export const WholesalePricingTiersEditor: React.FC<WholesalePricingTiersEditorPr
                       </button>
                     ) : (
                       <span className="text-[10px] text-white/30 italic select-none">
-                        {t('required')}
+                        {t('required') || 'Required'}
                       </span>
                     )}
                   </div>
@@ -374,7 +259,7 @@ export const WholesalePricingTiersEditor: React.FC<WholesalePricingTiersEditorPr
                   {/* Quantity Range */}
                   <div>
                     <label className="block text-[10px] uppercase font-bold text-white/60 mb-1">
-                      {isFirst ? (t('wholesale.minimum_order_quantity') || 'Minimum Order Quantity') : (t('starting_qty_threshold') || 'Starting Quantity Threshold')}
+                      {isFirst ? (t('lock_base_moq') || 'Base MOQ Quantity') : (t('starting_qty_threshold') || 'Starting Quantity Threshold')}
                     </label>
                     {isFirst ? (
                       <div className="flex items-center gap-2 bg-black/40 border border-white/10 rounded-xl px-3 py-2 text-xs font-mono text-amber-400 font-bold">
