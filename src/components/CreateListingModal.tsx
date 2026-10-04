@@ -21,7 +21,6 @@ import { WizardStep1Category } from './wizard/WizardStep1Category';
 import { WizardStep2Details } from './wizard/WizardStep2Details';
 import { WizardStep3Pricing } from './wizard/WizardStep3Pricing';
 import { WizardStep4Review } from './wizard/WizardStep4Review';
-import { SellingTypeSelector } from './SellingTypeSelector';
 import { WholesalePricingTiersEditor } from './WholesalePricingTiersEditor';
 import { ProductVariationsManager } from './ProductVariationsManager';
 import { WholesalePriceTier, ProductVariation } from '../types';
@@ -983,6 +982,15 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
           setError(t('valid_property_price_val') || 'Please enter a valid Property Price greater than 0.');
           return;
         }
+      } else if (['Jobs', 'Vehicles', 'Services'].includes(majorCategory)) {
+        // Selling Intent / Mode removed for Jobs, Vehicles, and Services
+        if (majorCategory === 'Vehicles') {
+          const vehPrice = Number(fieldsState.price || 0);
+          if (!vehPrice || vehPrice <= 0) {
+            setError(t('valid_price_val') || 'Please enter a valid Price greater than 0.');
+            return;
+          }
+        }
       } else if (st === 'Retail') {
         const retPrice = Number(fieldsState.retailPrice || fieldsState.price || 0);
         if (!retPrice || retPrice <= 0) {
@@ -1108,22 +1116,23 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
       const expiresAt = days > 0 ? new Date(Date.now() + days * 24 * 60 * 60 * 1000).toISOString() : undefined;
 
       const isPropertyCategory = dbMajorCategory === 'Properties' || majorCategory === 'Properties';
-      const finalUnit = isPropertyCategory ? '' : (fieldsState.unit || fieldsState.wholesaleUnit || 'Piece');
-      const isRetail = !isPropertyCategory && (sellingType === 'Retail' || sellingType === 'Retail + Wholesale' || (sellingType as any) === 'Retail & Wholesale');
-      const isWholesale = !isPropertyCategory && (sellingType === 'Wholesale' || sellingType === 'Retail + Wholesale' || (sellingType as any) === 'Retail & Wholesale');
+      const isNoSellingMode = isPropertyCategory || ['Jobs', 'Vehicles', 'Services'].includes(majorCategory);
+      const finalUnit = isNoSellingMode ? '' : (fieldsState.unit || fieldsState.wholesaleUnit || 'Piece');
+      const isRetail = !isNoSellingMode && (sellingType === 'Retail' || sellingType === 'Retail + Wholesale' || (sellingType as any) === 'Retail & Wholesale');
+      const isWholesale = !isNoSellingMode && (sellingType === 'Wholesale' || sellingType === 'Retail + Wholesale' || (sellingType as any) === 'Retail & Wholesale');
 
       const retailVal = isPropertyCategory
         ? Number(fieldsState.price || fieldsState.retailPrice || 0)
-        : (isRetail ? Number(fieldsState.retailPrice || fieldsState.price || 0) : undefined);
+        : (isRetail ? Number(fieldsState.retailPrice || fieldsState.price || 0) : Number(fieldsState.price || 0));
       const wholesaleMoq = isWholesale ? Number(fieldsState.minimumOrderQuantity || wholesaleTiers[0]?.minimumQuantity || 1) : undefined;
       const primaryWholesalePrice = isWholesale ? Number(wholesaleTiers[0]?.pricePerUnit || fieldsState.wholesalePrice || 0) : undefined;
-      const availStock = isPropertyCategory
+      const availStock = isPropertyCategory || isNoSellingMode
         ? undefined
         : (fieldsState.availableQuantity ? Number(fieldsState.availableQuantity) : (fieldsState.quantity ? Number(fieldsState.quantity) : undefined));
 
       const displayPrice = isPropertyCategory
         ? Number(fieldsState.price || fieldsState.retailPrice || 0)
-        : (sellingType === 'Wholesale' ? (primaryWholesalePrice || 0) : (retailVal || 0));
+        : (sellingType === 'Wholesale' ? (primaryWholesalePrice || 0) : (retailVal || Number(fieldsState.price || 0)));
 
       const propertyData = {
         title: fieldsState.title,
@@ -1171,7 +1180,7 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
         verificationStatus: currentUser?.role === 'admin' ? 'verified' : 'pending',
         isVerifiedListing: currentUser?.role === 'admin',
         subCategoryId: computedSubcatId || undefined,
-        sellingType: isPropertyCategory ? 'Retail' : sellingType,
+        sellingType: isNoSellingMode ? undefined : sellingType,
         businessType: isWholesale ? (fieldsState.businessType || 'Wholesaler') : undefined,
         wholesalePrice: primaryWholesalePrice,
         minimumOrderQuantity: wholesaleMoq,

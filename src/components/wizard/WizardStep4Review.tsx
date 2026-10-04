@@ -445,7 +445,7 @@ export const WizardStep4Review: React.FC<WizardStep4ReviewProps> = ({
             )}
 
             {/* Available Stock */}
-            {!isRealEstate && fieldsState.stockQuantity !== undefined && fieldsState.stockQuantity !== '' && (
+            {!isRealEstate && !['Jobs', 'Vehicles', 'Services'].includes(majorCategory) && fieldsState.stockQuantity !== undefined && fieldsState.stockQuantity !== '' && (
               <div className="bg-[#1A1B22] p-2.5 rounded-xl border border-[#22242E]">
                 <span className="text-[#F5A623] text-[10px] font-semibold uppercase block mb-0.5 tracking-wider">
                   {t('available_stock_qty_label') || 'Available Stock'}
@@ -457,7 +457,7 @@ export const WizardStep4Review: React.FC<WizardStep4ReviewProps> = ({
             )}
 
             {/* Minimum Order Quantity (MOQ) */}
-            {!isRealEstate && (sellingType === 'Wholesale' || sellingType === 'Retail + Wholesale' || fieldsState.minimumOrderQuantity) && (
+            {!isRealEstate && !['Jobs', 'Vehicles', 'Services'].includes(majorCategory) && (sellingType === 'Wholesale' || sellingType === 'Retail + Wholesale' || fieldsState.minimumOrderQuantity) && (
               <div className="bg-[#1A1B22] p-2.5 rounded-xl border border-[#22242E]">
                 <span className="text-[#F5A623] text-[10px] font-semibold uppercase block mb-0.5 tracking-wider">
                   {t('wholesale_moq_label') || 'Min. Order (MOQ)'}

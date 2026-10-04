@@ -77,6 +77,11 @@ export const WizardStep3Pricing: React.FC<WizardStep3PricingProps> = ({
     fieldsState?.category === 'properties' || 
     fieldsState?.category === 'Properties';
 
+  const isNoSellingMode = 
+    isRealEstate || 
+    ['Jobs', 'Vehicles', 'Services'].includes(majorCategory) ||
+    ['jobs', 'vehicles', 'services'].includes(majorCategory?.toLowerCase());
+
   const formData = {
     ...fieldsState,
     category: isRealEstate ? 'properties' : (fieldsState.category || majorCategory?.toLowerCase() || majorCategory)
@@ -103,7 +108,7 @@ export const WizardStep3Pricing: React.FC<WizardStep3PricingProps> = ({
           </select>
         </div>
 
-        {formData.category !== 'properties' && (
+        {!isNoSellingMode && (
           <div>
             <label className="block text-xs font-bold text-white/80 uppercase mb-1">
               {t('pricing_unit_label') || 'Pricing Unit *'}
@@ -183,7 +188,7 @@ export const WizardStep3Pricing: React.FC<WizardStep3PricingProps> = ({
       )}
 
       {/* Single Units (Retail) */}
-      {majorCategory !== 'Properties' && sellingType === 'Retail' && (
+      {!isNoSellingMode && sellingType === 'Retail' && (
         <div className="p-4 rounded-2xl bg-zinc-900/60 border border-white/10 space-y-4">
           <div className="flex items-center gap-2">
             <Tag className="w-4 h-4 text-amber-400" />
@@ -242,7 +247,7 @@ export const WizardStep3Pricing: React.FC<WizardStep3PricingProps> = ({
       )}
 
       {/* Bulk Only (Wholesale) */}
-      {majorCategory !== 'Properties' && sellingType === 'Wholesale' && (
+      {!isNoSellingMode && sellingType === 'Wholesale' && (
         <div className="space-y-4">
           <div className="p-4 rounded-2xl bg-zinc-900/60 border border-white/10 space-y-4">
             <div className="flex items-center gap-2">
@@ -317,7 +322,7 @@ export const WizardStep3Pricing: React.FC<WizardStep3PricingProps> = ({
       )}
 
       {/* Dual Pricing (Retail & Wholesale) */}
-      {majorCategory !== 'Properties' && (sellingType === 'Retail + Wholesale' || (sellingType as string) === 'Retail & Wholesale') && (
+      {!isNoSellingMode && (sellingType === 'Retail + Wholesale' || (sellingType as string) === 'Retail & Wholesale') && (
         <div className="space-y-5">
           {/* Distinct Header 1: Retail Pricing */}
           <div className="p-4 rounded-2xl bg-zinc-900/60 border border-white/10 space-y-3">
