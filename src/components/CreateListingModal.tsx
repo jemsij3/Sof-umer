@@ -180,6 +180,11 @@ function buildCleanAmenities(
     applicationContact: 'Application Contact',
     applicationDeadline: 'Application Deadline',
     pricingUnit: 'Pricing Unit',
+    priceType: 'Price Type',
+    paymentMethod: 'Payment Method',
+    handoverMethod: 'Handover Method',
+    deliveryFee: 'Delivery Fee',
+    handoverLocation: 'Handover Location',
     providerType: 'Provider Type',
     coverageArea: 'Coverage Area',
     availability: 'Availability',
@@ -1065,16 +1070,30 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
           setError(t('app_link_val') || 'Please enter the external application link / URL.');
           return;
         }
-      } else if (['Vehicles', 'Services'].includes(majorCategory)) {
-        // Selling Intent / Mode removed for Vehicles and Services
-        if (majorCategory === 'Vehicles') {
-          const vehPrice = Number(fieldsState.price || 0);
-          if (!vehPrice || vehPrice <= 0) {
-            setError(t('valid_price_val') || 'Please enter a valid Price greater than 0.');
+      } else if (majorCategory === 'Vehicles') {
+        const vehPrice = Number(fieldsState.price || 0);
+        if (!vehPrice || vehPrice <= 0) {
+          setError(t('valid_price_val') || 'Please enter a valid Price greater than 0.');
+          return;
+        }
+        const handoverMethod = fieldsState.handoverMethod || 'Buyer Pickup';
+        if (handoverMethod === 'Seller Delivery' || handoverMethod === 'Pickup or Delivery') {
+          if (fieldsState.deliveryFeeType === 'Paid') {
+            const fee = Number(fieldsState.deliveryFee || 0);
+            if (!fee || fee <= 0) {
+              setError(t('valid_delivery_fee_val') || 'Please enter a valid delivery fee amount greater than 0.');
+              return;
+            }
+          }
+        }
+        if (fieldsState.handoverLocationType === 'Different location') {
+          if (!fieldsState.handoverLocation || String(fieldsState.handoverLocation).trim() === '') {
+            setError(t('handover_location_val') || 'Please enter the vehicle handover location.');
             return;
           }
         }
-      } else if (st === 'Retail') {
+      } else if (majorCategory === 'Services') {
+        // Selling Intent / Mode removed for Services
         const retPrice = Number(fieldsState.retailPrice || fieldsState.price || 0);
         if (!retPrice || retPrice <= 0) {
           setError(t('valid_retail_price_val') || 'Please enter a valid Retail Price greater than 0.');
@@ -1280,7 +1299,14 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
         payPeriod: majorCategory === 'Jobs' ? (fieldsState.payPeriod || 'Per month') : undefined,
         applicationMethod: majorCategory === 'Jobs' ? (fieldsState.applicationMethod || 'Apply through SOF-UMER') : undefined,
         applicationContact: majorCategory === 'Jobs' ? (fieldsState.applicationContact || '') : undefined,
-        applicationDeadline: majorCategory === 'Jobs' ? (fieldsState.applicationDeadline || fieldsState.deadline || '') : undefined
+        applicationDeadline: majorCategory === 'Jobs' ? (fieldsState.applicationDeadline || fieldsState.deadline || '') : undefined,
+        priceType: majorCategory === 'Vehicles' ? (fieldsState.priceType || (fieldsState.negotiable === 'Yes' ? 'Negotiable' : 'Fixed Price')) : undefined,
+        paymentMethod: majorCategory === 'Vehicles' ? (fieldsState.paymentMethod || 'Cash') : undefined,
+        handoverMethod: majorCategory === 'Vehicles' ? (fieldsState.handoverMethod || 'Buyer Pickup') : undefined,
+        deliveryFeeType: majorCategory === 'Vehicles' ? (fieldsState.deliveryFeeType || 'Free') : undefined,
+        deliveryFee: majorCategory === 'Vehicles' ? (fieldsState.deliveryFee ? Number(fieldsState.deliveryFee) : 0) : undefined,
+        handoverLocationType: majorCategory === 'Vehicles' ? (fieldsState.handoverLocationType || 'Same as listing location') : undefined,
+        handoverLocation: majorCategory === 'Vehicles' ? (fieldsState.handoverLocationType === 'Different location' ? (fieldsState.handoverLocation || fieldsState.location) : fieldsState.location) : undefined
       };
 
       const authToken = localStorage.getItem('sof_umer_token') || '';

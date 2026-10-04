@@ -486,11 +486,11 @@ export const WizardStep2Details: React.FC<WizardStep2DetailsProps> = ({
               <div>
                 <label className="block text-xs font-bold text-white/80 uppercase mb-1">{t('condition') || 'Condition'}</label>
                 <select
-                  value={fieldsState.condition || 'Used'}
+                  value={(fieldsState.condition === 'New' ? 'Brand New' : fieldsState.condition) || 'Used'}
                   onChange={e => handleFieldChange('condition', e.target.value)}
                   className="w-full p-2.5 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white"
                 >
-                  <option value="New">{getTranslatedCondition('Brand New', currentLanguage)}</option>
+                  <option value="Brand New">{getTranslatedCondition('Brand New', currentLanguage)}</option>
                   <option value="Used">{getTranslatedCondition('Used', currentLanguage)}</option>
                   <option value="Classic">{getTranslatedCondition('Classic', currentLanguage)}</option>
                 </select>
@@ -511,7 +511,11 @@ export const WizardStep2Details: React.FC<WizardStep2DetailsProps> = ({
               />
             </div>
             <div>
-              <label className="block text-xs font-bold text-white/80 uppercase mb-1">{t('ownerPhoneLabel') || 'Contact Phone'} *</label>
+              <label className="block text-xs font-bold text-white/80 uppercase mb-1">
+                {majorCategory === 'Vehicles'
+                  ? ((t('contact_phone_label') || 'Contact Phone').includes('*') ? (t('contact_phone_label') || 'Contact Phone') : `${t('contact_phone_label') || 'Contact Phone'} *`)
+                  : (t('ownerPhoneLabel') || 'Contact Phone *')}
+              </label>
               <input
                 type="text"
                 required

@@ -204,6 +204,15 @@ export interface Property {
   applicationMethod?: string;
   applicationContact?: string;
   applicationDeadline?: string;
+
+  // Vehicle & Motors extensions
+  priceType?: 'Fixed Price' | 'Negotiable' | string;
+  paymentMethod?: 'Cash' | 'Bank Transfer' | 'Financing Available' | string;
+  handoverMethod?: 'Buyer Pickup' | 'Seller Delivery' | 'Pickup or Delivery' | string;
+  deliveryFeeType?: 'Free' | 'Paid' | string;
+  deliveryFee?: number;
+  handoverLocationType?: 'Same as listing location' | 'Different location' | string;
+  handoverLocation?: string;
 }
 
 export interface WholesalePriceTier {

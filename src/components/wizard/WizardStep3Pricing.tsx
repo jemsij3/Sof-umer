@@ -1,5 +1,5 @@
 import React from 'react';
-import { Tag, Package, Truck, DollarSign, Briefcase, Calendar } from 'lucide-react';
+import { Tag, Package, Truck, DollarSign, Briefcase, Calendar, Car, CreditCard, MapPin } from 'lucide-react';
 import { NormalizedSellingType, STANDARD_UNITS, getLocalizedUnit } from '../../utils/wholesalePricing';
 import { WholesalePricingTiersEditor } from '../WholesalePricingTiersEditor';
 import { WholesalePriceTier } from '../../types';
@@ -89,8 +89,8 @@ export const WizardStep3Pricing: React.FC<WizardStep3PricingProps> = ({
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
-      {/* Currency & Base Unit (Hidden for Jobs since Jobs has integrated salary currency) */}
-      {majorCategory !== 'Jobs' && (
+      {/* Currency & Base Unit (Hidden for Jobs and Vehicles since both have specialized pricing structures) */}
+      {majorCategory !== 'Jobs' && majorCategory !== 'Vehicles' && (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <label className="block text-xs font-bold text-white/80 uppercase mb-1">
@@ -443,6 +443,219 @@ export const WizardStep3Pricing: React.FC<WizardStep3PricingProps> = ({
                 className="w-full p-3 bg-zinc-900 border border-white/10 focus:border-[#F5A623] rounded-xl text-xs text-white focus:outline-none transition [color-scheme:dark]"
               />
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Vehicle & Motors: Pricing, Payment, Vehicle Handover, and Handover Location */}
+      {majorCategory === 'Vehicles' && (
+        <div className="space-y-6">
+          {/* 1. Pricing */}
+          <div className="p-4 sm:p-5 rounded-2xl bg-[#141418] border border-white/10 space-y-4">
+            <div className="flex items-center gap-2 border-b border-white/5 pb-3">
+              <DollarSign className="w-4 h-4 text-[#F5A623]" />
+              <h4 className="text-xs font-bold text-white uppercase tracking-wider">
+                {t('vehicle_pricing_section') || '1. Pricing'}
+              </h4>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {/* Price* */}
+              <div>
+                <label className="block text-xs font-bold text-white/80 uppercase mb-1">
+                  {t('vehicle_price_label') || 'Price *'}
+                </label>
+                <div className="flex gap-2">
+                  <select
+                    value={currency}
+                    onChange={e => setCurrency(e.target.value)}
+                    className="p-3 bg-zinc-900 border border-white/10 focus:border-[#F5A623] rounded-xl text-xs text-white font-bold shrink-0 focus:outline-none"
+                  >
+                    <option value="ETB">ETB</option>
+                    <option value="USD">USD ($)</option>
+                    <option value="SAR">SAR</option>
+                    <option value="EUR">EUR (€)</option>
+                    <option value="AED">AED</option>
+                  </select>
+                  <input
+                    type="number"
+                    min="0"
+                    step="any"
+                    required
+                    value={fieldsState.price || ''}
+                    placeholder="e.g. 2800000"
+                    onChange={e => {
+                      handleFieldChange('price', e.target.value);
+                      handleFieldChange('retailPrice', e.target.value);
+                    }}
+                    className="w-full p-3 bg-black/50 border border-white/10 focus:border-[#F5A623] rounded-xl text-xs text-white font-mono font-bold text-[#F5A623]"
+                  />
+                </div>
+              </div>
+
+              {/* Price Type* */}
+              <div>
+                <label className="block text-xs font-bold text-white/80 uppercase mb-1">
+                  {t('price_type_label') || 'Price Type *'}
+                </label>
+                <select
+                  value={fieldsState.priceType || (fieldsState.negotiable === 'Yes' ? 'Negotiable' : 'Fixed Price')}
+                  onChange={e => {
+                    const val = e.target.value;
+                    handleFieldChange('priceType', val);
+                    handleFieldChange('negotiable', val === 'Negotiable' ? 'Yes' : 'No');
+                  }}
+                  className="w-full p-3 bg-zinc-900 border border-white/10 focus:border-[#F5A623] rounded-xl text-xs text-white focus:outline-none transition"
+                >
+                  <option value="Fixed Price">{t('price_type_fixed') || 'Fixed Price'}</option>
+                  <option value="Negotiable">{t('price_type_negotiable') || 'Negotiable'}</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          {/* 2. Payment */}
+          <div className="p-4 sm:p-5 rounded-2xl bg-[#141418] border border-white/10 space-y-4">
+            <div className="flex items-center gap-2 border-b border-white/5 pb-3">
+              <CreditCard className="w-4 h-4 text-[#F5A623]" />
+              <h4 className="text-xs font-bold text-white uppercase tracking-wider">
+                {t('vehicle_payment_section') || '2. Payment'}
+              </h4>
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-white/80 uppercase mb-1">
+                {t('vehicle_payment_method_label') || 'Payment Method'}
+              </label>
+              <select
+                value={fieldsState.paymentMethod || 'Cash'}
+                onChange={e => handleFieldChange('paymentMethod', e.target.value)}
+                className="w-full p-3 bg-zinc-900 border border-white/10 focus:border-[#F5A623] rounded-xl text-xs text-white focus:outline-none transition"
+              >
+                <option value="Cash">{t('pay_method_cash') || 'Cash'}</option>
+                <option value="Bank Transfer">{t('pay_method_bank') || 'Bank Transfer'}</option>
+                <option value="Financing Available">{t('pay_method_financing') || 'Financing Available'}</option>
+              </select>
+            </div>
+          </div>
+
+          {/* 3. Vehicle Handover */}
+          <div className="p-4 sm:p-5 rounded-2xl bg-[#141418] border border-white/10 space-y-4">
+            <div className="flex items-center gap-2 border-b border-white/5 pb-3">
+              <Car className="w-4 h-4 text-[#F5A623]" />
+              <h4 className="text-xs font-bold text-white uppercase tracking-wider">
+                {t('vehicle_handover_section') || '3. Vehicle Handover'}
+              </h4>
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-white/80 uppercase mb-1">
+                {t('handover_method_label') || 'Handover Method *'}
+              </label>
+              <select
+                value={fieldsState.handoverMethod || 'Buyer Pickup'}
+                onChange={e => handleFieldChange('handoverMethod', e.target.value)}
+                className="w-full p-3 bg-zinc-900 border border-white/10 focus:border-[#F5A623] rounded-xl text-xs text-white focus:outline-none transition"
+              >
+                <option value="Buyer Pickup">{t('handover_buyer_pickup') || 'Buyer Pickup'}</option>
+                <option value="Seller Delivery">{t('handover_seller_delivery') || 'Seller Delivery'}</option>
+                <option value="Pickup or Delivery">{t('handover_pickup_or_delivery') || 'Pickup or Delivery'}</option>
+              </select>
+            </div>
+
+            {/* Delivery Fee - Show this only when a delivery option is selected */}
+            {(fieldsState.handoverMethod === 'Seller Delivery' || fieldsState.handoverMethod === 'Pickup or Delivery') && (
+              <div className="p-4 bg-zinc-900/60 rounded-xl border border-white/5 space-y-3">
+                <label className="block text-xs font-bold text-[#F5A623] uppercase tracking-wider">
+                  {t('delivery_fee_label') || 'Delivery Fee'} *
+                </label>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <select
+                      value={fieldsState.deliveryFeeType || 'Free'}
+                      onChange={e => {
+                        const feeType = e.target.value;
+                        handleFieldChange('deliveryFeeType', feeType);
+                        if (feeType === 'Free') {
+                          handleFieldChange('deliveryFee', 0);
+                        }
+                      }}
+                      className="w-full p-3 bg-zinc-900 border border-white/10 focus:border-[#F5A623] rounded-xl text-xs text-white focus:outline-none transition"
+                    >
+                      <option value="Free">{t('fee_free') || 'Free'}</option>
+                      <option value="Paid">{t('fee_paid') || 'Paid'}</option>
+                    </select>
+                  </div>
+                  {fieldsState.deliveryFeeType === 'Paid' && (
+                    <div>
+                      <div className="flex gap-2">
+                        <input
+                          type="number"
+                          min="1"
+                          step="any"
+                          required
+                          value={fieldsState.deliveryFee || ''}
+                          placeholder={t('delivery_fee_amount_placeholder') || 'e.g. 5000'}
+                          onChange={e => handleFieldChange('deliveryFee', e.target.value)}
+                          className="w-full p-3 bg-black/50 border border-white/10 focus:border-[#F5A623] rounded-xl text-xs text-white font-mono font-bold text-[#F5A623]"
+                        />
+                        <span className="p-3 bg-zinc-900 border border-white/10 rounded-xl text-xs text-white font-bold shrink-0">
+                          {currency}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* 4. Handover Location */}
+          <div className="p-4 sm:p-5 rounded-2xl bg-[#141418] border border-white/10 space-y-4">
+            <div className="flex items-center gap-2 border-b border-white/5 pb-3">
+              <MapPin className="w-4 h-4 text-[#F5A623]" />
+              <h4 className="text-xs font-bold text-white uppercase tracking-wider">
+                {t('handover_location_section') || '4. Handover Location'}
+              </h4>
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-white/80 uppercase mb-1">
+                {t('handover_location_label') || 'Handover Location'} *
+              </label>
+              <select
+                value={fieldsState.handoverLocationType || 'Same as listing location'}
+                onChange={e => {
+                  const locType = e.target.value;
+                  handleFieldChange('handoverLocationType', locType);
+                  if (locType === 'Same as listing location') {
+                    handleFieldChange('handoverLocation', fieldsState.location || '');
+                  }
+                }}
+                className="w-full p-3 bg-zinc-900 border border-white/10 focus:border-[#F5A623] rounded-xl text-xs text-white focus:outline-none transition"
+              >
+                <option value="Same as listing location">
+                  {t('handover_loc_same') || 'Same as listing location'} {fieldsState.location ? `(${fieldsState.location})` : ''}
+                </option>
+                <option value="Different location">{t('handover_loc_different') || 'Different location'}</option>
+              </select>
+            </div>
+
+            {fieldsState.handoverLocationType === 'Different location' && (
+              <div>
+                <label className="block text-xs font-bold text-white/80 uppercase mb-1">
+                  {t('handover_location_label') || 'Handover Location'} *
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={fieldsState.handoverLocation || ''}
+                  placeholder={t('handover_location_input_placeholder') || 'Enter handover location (e.g. Mexico Square, Addis Ababa)'}
+                  onChange={e => handleFieldChange('handoverLocation', e.target.value)}
+                  className="w-full p-3 bg-zinc-900 border border-white/10 focus:border-[#F5A623] rounded-xl text-xs text-white focus:outline-none transition"
+                />
+              </div>
+            )}
           </div>
         </div>
       )}

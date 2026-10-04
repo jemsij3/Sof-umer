@@ -1999,6 +1999,35 @@ export const staticTranslations: TranslationKey[] = [
   { key: "app_link_val", en: "Please enter the external application link / URL.", om: "Maaloo liinkii iyyannoo alaa galchaa.", am: "እባክዎ የውጭ ማመልከቻ ሊንክ ያስገቡ።", category: "Jobs" },
   { key: "min_salary_label", en: "Minimum Salary", om: "Mindaa Gadi-aanaa", am: "ዝቅተኛ ደመወዝ", category: "Jobs" },
   { key: "max_salary_label", en: "Maximum Salary", om: "Mindaa Ol-aanaa", am: "ከፍተኛ ደመወዝ", category: "Jobs" },
-  { key: "salary_negotiable_hint", en: "Salary is negotiable upon interview. No specific amount is required.", om: "Gatiin/mindi mariidhaan murtaa'a. Hangi murtaa'e hin barbaachisu.", am: "ደመወዝ በቃለ መጠይቅ ወቅት በድርድር ይወሰናል። የተወሰነ መጠን ማስገባት አያስፈልግም።", category: "Jobs" }
+  { key: "salary_negotiable_hint", en: "Salary is negotiable upon interview. No specific amount is required.", om: "Gatiin/mindi mariidhaan murtaa'a. Hangi murtaa'e hin barbaachisu.", am: "ደመወዝ በቃለ መጠይቅ ወቅት በድርድር ይወሰናል። የተወሰነ መጠን ማስገባት አያስፈልግም።", category: "Jobs" },
+
+  // Vehicle & Motors Finalized Structure Keys
+  { key: "vehicle_pricing_section", en: "1. Pricing", om: "1. Murtee Gatii", am: "1. የዋጋ ውሳኔ", category: "Vehicles" },
+  { key: "vehicle_price_label", en: "Price *", om: "Gatii *", am: "ዋጋ *", category: "Vehicles" },
+  { key: "price_type_label", en: "Price Type *", om: "Gosa Gatii *", am: "የዋጋ ዓይነት *", category: "Vehicles" },
+  { key: "price_type_fixed", en: "Fixed Price", om: "Gatii Dhaabbataa", am: "ቋሚ ዋጋ", category: "Vehicles" },
+  { key: "price_type_negotiable", en: "Negotiable", om: "Waliigalteen", am: "በድርድር", category: "Vehicles" },
+  { key: "vehicle_payment_section", en: "2. Payment", om: "2. Kaffaltii", am: "2. ክፍያ", category: "Vehicles" },
+  { key: "vehicle_payment_method_label", en: "Payment Method", om: "Mala Kaffaltii", am: "የክፍያ ዘዴ", category: "Vehicles" },
+  { key: "pay_method_cash", en: "Cash", om: "Kaffaltii Qullaa (Kaash)", am: "ጥሬ ገንዘብ (ካሽ)", category: "Vehicles" },
+  { key: "pay_method_bank", en: "Bank Transfer", om: "Dabarsa Baankii", am: "የባንክ ዝውውር", category: "Vehicles" },
+  { key: "pay_method_financing", en: "Financing Available", om: "Liqaan Ni Danda'ama", am: "ብድር / ፋይናንሲንግ አለ", category: "Vehicles" },
+  { key: "vehicle_handover_section", en: "3. Vehicle Handover", om: "3. Dabarsee Kennuu Konkolaataa", am: "3. የመኪና ርክክብ", category: "Vehicles" },
+  { key: "handover_method_label", en: "Handover Method *", om: "Mala Dabarsee Kennuu *", am: "የመረከቢያ ዘዴ *", category: "Vehicles" },
+  { key: "handover_buyer_pickup", en: "Buyer Pickup", om: "Bitaatu Fudhata", am: "ገዢው መጥቶ የሚረከብ", category: "Vehicles" },
+  { key: "handover_seller_delivery", en: "Seller Delivery", om: "Gurguraatu Geessa", am: "ሻጩ የሚያደርስ", category: "Vehicles" },
+  { key: "handover_pickup_or_delivery", en: "Pickup or Delivery", om: "Fudhachuu ykn Geessuu", am: "መምጣት ወይም ማድረስ", category: "Vehicles" },
+  { key: "delivery_fee_label", en: "Delivery Fee", om: "Kaffaltii Geessuu", am: "የማድረሻ ክፍያ", category: "Vehicles" },
+  { key: "fee_free", en: "Free", om: "Bilisa", am: "ነጻ", category: "Vehicles" },
+  { key: "fee_paid", en: "Paid", om: "Kaffaltiin", am: "ክፍያ ያለው", category: "Vehicles" },
+  { key: "delivery_fee_amount_label", en: "Delivery Fee Amount *", om: "Hanga Kaffaltii Geessuu *", am: "የማድረሻ ክፍያ መጠን *", category: "Vehicles" },
+  { key: "delivery_fee_amount_placeholder", en: "e.g. 5000", om: "fkn. 5000", am: "ምሳሌ፡ 5000", category: "Vehicles" },
+  { key: "handover_location_section", en: "4. Handover Location", om: "4. Bakka Dabarsee Kennuu", am: "4. የመረከቢያ ቦታ", category: "Vehicles" },
+  { key: "handover_location_label", en: "Handover Location", om: "Bakka Dabarsee Kennuu", am: "የመረከቢያ ቦታ", category: "Vehicles" },
+  { key: "handover_loc_same", en: "Same as listing location", om: "Akkuma bakka beeksisaa", am: "ልክ እንደ ማስታወቂያው ቦታ", category: "Vehicles" },
+  { key: "handover_loc_different", en: "Different location", om: "Bakka addaa", am: "የተለየ ቦታ", category: "Vehicles" },
+  { key: "handover_location_input_placeholder", en: "Enter handover location (e.g. Mexico Square, Addis Ababa)", om: "Bakka itti dabarsee kennamu galchaa (fkn., Addabaabayii Meeksikoo)", am: "የመረከቢያ ቦታ ያስገቡ (ምሳሌ፡ ሜክሲኮ አደባባይ፣ አዲስ አበባ)", category: "Vehicles" },
+  { key: "valid_delivery_fee_val", en: "Please enter a valid delivery fee amount greater than 0.", om: "Maaloo hanga kaffaltii geessuu sirrii 0 ol ta'e galchaa.", am: "እባክዎ ከ 0 በላይ የሆነ ትክክለኛ የማድረሻ ክፍያ መጠን ያስገቡ።", category: "Vehicles" },
+  { key: "handover_location_val", en: "Please enter the vehicle handover location.", om: "Maaloo bakka dabarsee kennuu konkolaataa galchaa.", am: "እባክዎ የመኪናውን መረከቢያ ቦታ ያስገቡ።", category: "Vehicles" }
 ];
 
