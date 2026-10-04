@@ -471,7 +471,7 @@ export const WizardStep4Review: React.FC<WizardStep4ReviewProps> = ({
 
           {/* 3. DESCRIPTION & LOGISTICS PREVIEW */}
           {/* Configured Delivery & Logistics Preferences (Non-Properties) */}
-          {!isRealEstate && deliveryOptions.length > 0 && (
+          {!isRealEstate && !['Jobs', 'Vehicles', 'Services'].includes(majorCategory) && deliveryOptions.length > 0 && (
             <div className="pt-2 border-t border-[#22242E]">
               <span className="text-[10px] font-semibold text-[#F5A623] uppercase tracking-wider block mb-1.5">
                 {t('wholesale.delivery_options') || 'Delivery & Logistics Options'}

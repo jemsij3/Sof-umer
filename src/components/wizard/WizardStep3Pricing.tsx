@@ -442,8 +442,8 @@ export const WizardStep3Pricing: React.FC<WizardStep3PricingProps> = ({
         </div>
       )}
 
-      {/* Delivery & Logistics Options - Hidden for Real Estate */}
-      {formData.category !== 'properties' && (
+      {/* Delivery & Logistics Options - Hidden for Real Estate, Jobs, Vehicles, and Services */}
+      {!isNoSellingMode && (
         <div className="p-4 rounded-2xl bg-[#141418] border border-white/10 space-y-3">
           <div className="flex items-center gap-2">
             <Truck className="w-4 h-4 text-[#F5A623]" />

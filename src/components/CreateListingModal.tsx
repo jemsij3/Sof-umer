@@ -1185,7 +1185,7 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
         wholesalePrice: primaryWholesalePrice,
         minimumOrderQuantity: wholesaleMoq,
         wholesalePriceTiers: isWholesale ? wholesaleTiers : undefined,
-        deliveryOptions: isWholesale && Array.isArray(fieldsState.deliveryOptions) ? fieldsState.deliveryOptions : [],
+        deliveryOptions: !isNoSellingMode && Array.isArray(fieldsState.deliveryOptions) ? fieldsState.deliveryOptions : [],
         wholesaleNotes: isWholesale ? (fieldsState.wholesaleNotes || '') : undefined,
         variations: variationsList.length > 0 ? variationsList : undefined
       };
