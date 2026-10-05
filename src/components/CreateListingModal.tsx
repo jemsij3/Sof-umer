@@ -1611,6 +1611,7 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
           {currentStep === 2 && (
             <WizardStep2Details
               majorCategory={majorCategory}
+              subcategory={subcategory}
               fieldsState={fieldsState}
               handleFieldChange={handleFieldChange}
               imagesList={imagesList}

@@ -5,14 +5,135 @@ import {
 import { useApp } from '../../lib/AppContext';
 import { 
   getTranslatedCategoryName, 
+  getTranslatedSubcategoryName,
   getTranslatedFurnished, 
   getTranslatedCondition,
   getTranslatedFieldLabel,
   getTranslatedOption
 } from '../../lib/categoriesData';
 
+interface ProductCategoryConfig {
+  titlePlaceholder: string;
+  brandLabel: string;
+  brandPlaceholder: string;
+  modelLabel: string;
+  modelPlaceholder: string;
+}
+
+const PRODUCT_CATEGORY_CONFIGS: Record<string, ProductCategoryConfig> = {
+  'Electronics & Gadgets': {
+    titlePlaceholder: 'e.g., Samsung 55" 4K Smart TV',
+    brandLabel: 'Brand',
+    brandPlaceholder: 'e.g., Samsung, LG, Sony',
+    modelLabel: 'Model / Specifications',
+    modelPlaceholder: 'e.g., QLED 55-inch, 4K UHD, 120Hz'
+  },
+  'Phones & Tablets': {
+    titlePlaceholder: 'e.g., iPhone 15 Pro Max 256GB',
+    brandLabel: 'Brand',
+    brandPlaceholder: 'e.g., Apple, Samsung, Xiaomi',
+    modelLabel: 'Model / Storage',
+    modelPlaceholder: 'e.g., iPhone 15 Pro Max, 256GB'
+  },
+  'Computers & Laptops': {
+    titlePlaceholder: 'e.g., Dell Latitude 5420 Core i5 16GB RAM',
+    brandLabel: 'Brand',
+    brandPlaceholder: 'e.g., Dell, HP, Lenovo, Apple',
+    modelLabel: 'Model / Specifications',
+    modelPlaceholder: 'e.g., Latitude 5420, Core i5, 16GB RAM, 512GB SSD'
+  },
+  'Furniture & Home': {
+    titlePlaceholder: 'e.g., Modern 6-Seater Dining Table',
+    brandLabel: 'Brand / Maker',
+    brandPlaceholder: 'e.g., IKEA, Local Maker, Custom Made',
+    modelLabel: 'Material / Dimensions',
+    modelPlaceholder: 'e.g., Solid Wood, 180 × 90 cm'
+  },
+  'Clothing & Fashion': {
+    titlePlaceholder: "e.g., Men's Cotton Casual Shirt",
+    brandLabel: 'Brand / Designer',
+    brandPlaceholder: 'e.g., Nike, Adidas, Zara, Local Brand',
+    modelLabel: 'Size / Material',
+    modelPlaceholder: 'e.g., L, XL, 100% Cotton, Denim'
+  },
+  'Babies & Kids': {
+    titlePlaceholder: 'e.g., Baby Stroller with Adjustable Seat',
+    brandLabel: 'Brand',
+    brandPlaceholder: 'e.g., Chicco, Graco, Local Brand',
+    modelLabel: 'Age / Size / Details',
+    modelPlaceholder: 'e.g., 6–24 months, Adjustable, Foldable'
+  },
+  'Health & Beauty': {
+    titlePlaceholder: 'e.g., CeraVe Moisturizing Cream 454g',
+    brandLabel: 'Brand',
+    brandPlaceholder: "e.g., CeraVe, Nivea, L'Oréal",
+    modelLabel: 'Size / Product Details',
+    modelPlaceholder: 'e.g., 454g, Moisturizer, Original'
+  },
+  'Agriculture & Food': {
+    titlePlaceholder: 'e.g., Premium Teff Grain 50kg',
+    brandLabel: 'Brand / Producer',
+    brandPlaceholder: 'e.g., Local Farm, Producer Name',
+    modelLabel: 'Quantity / Weight',
+    modelPlaceholder: 'e.g., 50kg, 25kg, 10 bags'
+  },
+  'Animals & Pets': {
+    titlePlaceholder: 'e.g., Healthy German Shepherd Puppy',
+    brandLabel: 'Breed / Type',
+    brandPlaceholder: 'e.g., German Shepherd, Labrador, Local Breed',
+    modelLabel: 'Age / Gender / Details',
+    modelPlaceholder: 'e.g., 4 months, Male, Vaccinated'
+  },
+  'Sports & Outdoors': {
+    titlePlaceholder: 'e.g., Nike Football Boots Size 42',
+    brandLabel: 'Brand',
+    brandPlaceholder: 'e.g., Nike, Adidas, Puma',
+    modelLabel: 'Size / Type / Details',
+    modelPlaceholder: 'e.g., Size 42, FG Boots, Synthetic Leather'
+  },
+  'Commercial Equipment': {
+    titlePlaceholder: 'e.g., Commercial 2-Group Coffee Machine',
+    brandLabel: 'Brand',
+    brandPlaceholder: 'e.g., Rancilio, La Marzocco, Local Brand',
+    modelLabel: 'Model / Specifications',
+    modelPlaceholder: 'e.g., 2-group, 220V, Stainless Steel'
+  },
+  'Other Products': {
+    titlePlaceholder: 'e.g., Premium Product for Sale',
+    brandLabel: 'Brand / Maker',
+    brandPlaceholder: 'e.g., Brand Name, Local Maker',
+    modelLabel: 'Product Details',
+    modelPlaceholder: 'e.g., Size, Material, Model, Key Features'
+  }
+};
+
+PRODUCT_CATEGORY_CONFIGS['Electronics'] = PRODUCT_CATEGORY_CONFIGS['Electronics & Gadgets'];
+PRODUCT_CATEGORY_CONFIGS['Furniture'] = PRODUCT_CATEGORY_CONFIGS['Furniture & Home'];
+PRODUCT_CATEGORY_CONFIGS['Others'] = PRODUCT_CATEGORY_CONFIGS['Other Products'];
+
+function getProductCategoryConfig(subcat?: string): ProductCategoryConfig {
+  if (!subcat) return PRODUCT_CATEGORY_CONFIGS['Other Products'];
+  const s = subcat.trim().toLowerCase();
+
+  if (s.includes('electronic')) return PRODUCT_CATEGORY_CONFIGS['Electronics & Gadgets'];
+  if (s.includes('phone') || s.includes('tablet')) return PRODUCT_CATEGORY_CONFIGS['Phones & Tablets'];
+  if (s.includes('computer') || s.includes('laptop')) return PRODUCT_CATEGORY_CONFIGS['Computers & Laptops'];
+  if (s.includes('furniture') || s.includes('home')) return PRODUCT_CATEGORY_CONFIGS['Furniture & Home'];
+  if (s.includes('cloth') || s.includes('fashion')) return PRODUCT_CATEGORY_CONFIGS['Clothing & Fashion'];
+  if (s.includes('babi') || s.includes('baby') || s.includes('kid')) return PRODUCT_CATEGORY_CONFIGS['Babies & Kids'];
+  if (s.includes('health') || s.includes('beauty')) return PRODUCT_CATEGORY_CONFIGS['Health & Beauty'];
+  if (s.includes('agricultur') || s.includes('food') || s.includes('grain')) return PRODUCT_CATEGORY_CONFIGS['Agriculture & Food'];
+  if (s.includes('animal') || s.includes('pet')) return PRODUCT_CATEGORY_CONFIGS['Animals & Pets'];
+  if (s.includes('sport') || s.includes('outdoor')) return PRODUCT_CATEGORY_CONFIGS['Sports & Outdoors'];
+  if (s.includes('commercial') || s.includes('equipment')) return PRODUCT_CATEGORY_CONFIGS['Commercial Equipment'];
+  if (s.includes('other')) return PRODUCT_CATEGORY_CONFIGS['Other Products'];
+
+  return PRODUCT_CATEGORY_CONFIGS[subcat] || PRODUCT_CATEGORY_CONFIGS['Other Products'];
+}
+
 interface WizardStep2DetailsProps {
   majorCategory: string;
+  subcategory?: string;
   fieldsState: Record<string, any>;
   handleFieldChange: (field: string, value: any) => void;
   imagesList: string[];
@@ -30,6 +151,7 @@ interface WizardStep2DetailsProps {
 
 export const WizardStep2Details: React.FC<WizardStep2DetailsProps> = ({
   majorCategory,
+  subcategory,
   fieldsState,
   handleFieldChange,
   imagesList,
@@ -76,6 +198,9 @@ export const WizardStep2Details: React.FC<WizardStep2DetailsProps> = ({
     }
   };
 
+  const activeSubcategory = subcategory || fieldsState.subcategory || '';
+  const productConfig = getProductCategoryConfig(activeSubcategory);
+
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
       {/* Dynamic Inputs */}
@@ -83,59 +208,52 @@ export const WizardStep2Details: React.FC<WizardStep2DetailsProps> = ({
         <div className="space-y-4">
           <div className="border-l-2 border-amber-500 pl-3">
             <h4 className="text-xs font-bold text-white tracking-wider uppercase">
-              {t('product_details_pricing') || 'Product Specifications'}
+              {t('product_details_media') || 'Product Details & Media'}
             </h4>
-            <p className="text-[10px] text-white/40">{t('specSubtext') || 'Enter accurate specifications for your product'}</p>
+            <p className="text-[10px] text-white/40">
+              {activeSubcategory ? getTranslatedSubcategoryName(activeSubcategory, currentLanguage) : (t('specSubtext') || 'Enter accurate specifications for your product')}
+            </p>
           </div>
 
           <div>
             <label className="block text-xs font-bold text-white/80 uppercase mb-1">
-              {t('titleLabel') || 'Product Title'} *
+              1. {t('titleLabel') || 'Listing Title'} *
             </label>
             <input
               type="text"
               required
               value={fieldsState.title || ''}
-              placeholder={t('product_title_placeholder') || 'e.g., iPhone 15 Pro Max 256GB Natural Titanium'}
+              placeholder={productConfig.titlePlaceholder}
               onChange={e => handleFieldChange('title', e.target.value)}
               className="w-full p-3 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white focus:outline-none transition"
             />
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="block text-xs font-bold text-white/80 uppercase mb-1">
-                {t('brand') || 'Brand'}
+                2. {getTranslatedFieldLabel(productConfig.brandLabel, currentLanguage) || productConfig.brandLabel}
               </label>
               <input
                 type="text"
                 value={fieldsState.brand || ''}
-                placeholder="e.g. Apple, Samsung, Nike"
+                placeholder={productConfig.brandPlaceholder}
                 onChange={e => handleFieldChange('brand', e.target.value)}
                 className="w-full p-3 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white focus:outline-none transition"
               />
             </div>
             <div>
               <label className="block text-xs font-bold text-white/80 uppercase mb-1">
-                {t('model') || 'Model'}
+                {getTranslatedFieldLabel(productConfig.modelLabel, currentLanguage) || productConfig.modelLabel}
               </label>
               <input
                 type="text"
-                value={fieldsState.model || ''}
-                placeholder="e.g. A2849, Galaxy S24"
-                onChange={e => handleFieldChange('model', e.target.value)}
-                className="w-full p-3 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white focus:outline-none transition"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-bold text-white/80 uppercase mb-1">
-                {t('specs_storage_label') || 'Specs / Storage'}
-              </label>
-              <input
-                type="text"
-                value={fieldsState.storageSpec || ''}
-                placeholder={t('specs_storage_placeholder') || 'e.g. 256GB SSD, 16GB RAM, 100% Cotton'}
-                onChange={e => handleFieldChange('storageSpec', e.target.value)}
+                value={(fieldsState.model !== undefined && fieldsState.model !== '') ? fieldsState.model : (fieldsState.storageSpec || '')}
+                placeholder={productConfig.modelPlaceholder}
+                onChange={e => {
+                  handleFieldChange('model', e.target.value);
+                  handleFieldChange('storageSpec', e.target.value);
+                }}
                 className="w-full p-3 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white focus:outline-none transition"
               />
             </div>
@@ -144,7 +262,7 @@ export const WizardStep2Details: React.FC<WizardStep2DetailsProps> = ({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="block text-xs font-bold text-white/80 uppercase mb-1">
-                {t('condition') || 'Condition'} *
+                3. {t('condition') || 'Condition'} *
               </label>
               <select
                 value={fieldsState.condition || 'New'}
@@ -161,7 +279,7 @@ export const WizardStep2Details: React.FC<WizardStep2DetailsProps> = ({
 
             <div>
               <label className="block text-xs font-bold text-white/80 uppercase mb-1">
-                {t('locLabel') || 'Location'} *
+                4. {t('locLabel') || 'Location'} *
               </label>
               <input
                 type="text"
@@ -176,13 +294,13 @@ export const WizardStep2Details: React.FC<WizardStep2DetailsProps> = ({
 
           <div>
             <label className="block text-xs font-bold text-white/80 uppercase mb-1">
-              {t('descLabel') || 'Product Description'} *
+              5. {t('descLabel') || 'Description'} *
             </label>
             <textarea
               required
               rows={3}
               value={fieldsState.description || ''}
-              placeholder={t('descPlaceholder') || 'Describe your item, key features, warranty terms, and packaging...'}
+              placeholder={t('product_desc_placeholder') || 'Describe key features, condition, benefits, and special terms...'}
               onChange={e => handleFieldChange('description', e.target.value)}
               className="w-full p-3 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white focus:outline-none transition"
             />
@@ -190,14 +308,17 @@ export const WizardStep2Details: React.FC<WizardStep2DetailsProps> = ({
 
           <div>
             <label className="block text-xs font-bold text-white/80 uppercase mb-1">
-              {t('ownerPhoneLabel') || 'Contact Phone Number'} *
+              6. {(t('contact_phone_label') || 'Contact Phone').replace(/\s*\*+$/, '')} *
             </label>
             <input
               type="text"
               required
-              value={fieldsState.contactPhone || ''}
+              value={fieldsState.contactPhone || fieldsState.ownerPhone || ''}
               placeholder="+251 91 123 4567"
-              onChange={e => handleFieldChange('contactPhone', e.target.value)}
+              onChange={e => {
+                handleFieldChange('contactPhone', e.target.value);
+                handleFieldChange('ownerPhone', e.target.value);
+              }}
               className="w-full p-3 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white focus:outline-none transition"
             />
           </div>
@@ -670,6 +791,8 @@ export const WizardStep2Details: React.FC<WizardStep2DetailsProps> = ({
               ? (t('media_upload_optional') || '7. Media Upload (Photos & Video) (Optional)') 
               : majorCategory === 'Services'
               ? (t('service_media_upload_optional') || '5. Media Upload (Photos & Video) (Optional)')
+              : majorCategory === 'Products'
+              ? `7. ${(t('media_upload_title') || 'Media Upload (Photos & Video) *').replace(/\s*\*+$/, '')} *`
               : (t('media_upload_title') || 'Media Upload (Photos & Video) *')}
           </label>
           <span className="text-[11px] font-mono text-white/50">
