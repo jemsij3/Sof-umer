@@ -358,6 +358,102 @@ export const WizardStep2Details: React.FC<WizardStep2DetailsProps> = ({
             </div>
           )}
         </div>
+      ) : majorCategory === 'Services' ? (
+        <div className="space-y-4">
+          <div className="border-l-2 border-amber-500 pl-3">
+            <h4 className="text-xs font-bold text-white tracking-wider uppercase">
+              {t('service_details') || 'Service Details'}
+            </h4>
+            <p className="text-[10px] text-white/40">
+              {getTranslatedCategoryName('Services', currentLanguage)}
+            </p>
+          </div>
+
+          {/* 1. Service Title* */}
+          <div>
+            <label className="block text-xs font-bold text-white/80 uppercase mb-1">
+              1. {t('service_title_label') || 'Service Title'} *
+            </label>
+            <input
+              type="text"
+              required
+              value={fieldsState.title || ''}
+              placeholder={t('service_title_placeholder') || 'e.g., Professional House Cleaning & Painting'}
+              onChange={e => handleFieldChange('title', e.target.value)}
+              className="w-full p-3 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white focus:outline-none transition"
+            />
+          </div>
+
+          {/* 2. Location* */}
+          <div>
+            <label className="block text-xs font-bold text-white/80 uppercase mb-1">
+              2. {t('locLabel') || 'Location'} *
+            </label>
+            <input
+              type="text"
+              required
+              value={fieldsState.location || ''}
+              placeholder={t('locPlaceholder') || 'e.g. Bole, Addis Ababa'}
+              onChange={e => handleFieldChange('location', e.target.value)}
+              className="w-full p-3 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white focus:outline-none transition"
+            />
+          </div>
+
+          {/* 3. Description* */}
+          <div>
+            <label className="block text-xs font-bold text-white/80 uppercase mb-1">
+              3. {t('descLabel') || 'Description'} *
+            </label>
+            <textarea
+              required
+              rows={4}
+              value={fieldsState.description || ''}
+              placeholder={t('service_desc_placeholder') || 'Describe the services you offer, qualifications, experience, and workflow...'}
+              onChange={e => handleFieldChange('description', e.target.value)}
+              className="w-full p-3 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white focus:outline-none transition"
+            />
+          </div>
+
+          {/* 4. Contact Phone* */}
+          <div>
+            <label className="block text-xs font-bold text-white/80 uppercase mb-1">
+              4. {t('contact_phone_label') || 'Contact Phone'} *
+            </label>
+            <input
+              type="text"
+              required
+              value={fieldsState.contactPhone || ''}
+              placeholder="+251 91 123 4567"
+              onChange={e => handleFieldChange('contactPhone', e.target.value)}
+              className="w-full p-3 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white focus:outline-none transition"
+            />
+          </div>
+
+          {/* Admin-Only: Listing on Behalf of Owner / Provider */}
+          {(user?.role === 'admin' || user?.isAdmin) && (
+            <div className="flex flex-col gap-2 my-4 p-4 bg-[#141418] border border-[#F5A623]/30 rounded-xl">
+              <div className="flex items-center gap-2">
+                <span className="text-xs bg-[#F5A623] text-black font-bold px-2 py-0.5 rounded uppercase">
+                  {t('admin_only_badge') || 'Admin Only'}
+                </span>
+                <label className="text-sm font-medium text-[#F5A623] tracking-wider">
+                  {t('ownerNameLabel') || 'Service Provider / Owner Name'} *
+                </label>
+              </div>
+              <input
+                type="text"
+                placeholder={t('ownerNamePlaceholder') || 'e.g., Abebe Kebede (Client Name)'}
+                value={formData.ownerName || ''}
+                onChange={(e) => setFormData({ ...formData, ownerName: e.target.value })}
+                className="w-full bg-[#1A1B22] text-white border border-[#22242E] rounded-lg p-3 focus:border-[#F5A623] outline-none text-sm placeholder:text-gray-500"
+                required={(user?.role === 'admin' || user?.isAdmin)}
+              />
+              <p className="text-xs text-gray-400">
+                {t('ownerNameDesc') || 'Enter the full name of the service provider you are listing on behalf of.'}
+              </p>
+            </div>
+          )}
+        </div>
       ) : (
         <div className="space-y-4">
           <div className="border-l-2 border-amber-500 pl-3">
@@ -572,6 +668,8 @@ export const WizardStep2Details: React.FC<WizardStep2DetailsProps> = ({
           <label className="block text-xs font-bold text-amber-500 uppercase tracking-widest">
             {majorCategory === 'Jobs' 
               ? (t('media_upload_optional') || '7. Media Upload (Photos & Video) (Optional)') 
+              : majorCategory === 'Services'
+              ? (t('service_media_upload_optional') || '5. Media Upload (Photos & Video) (Optional)')
               : (t('media_upload_title') || 'Media Upload (Photos & Video) *')}
           </label>
           <span className="text-[11px] font-mono text-white/50">

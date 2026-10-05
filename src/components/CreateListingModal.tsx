@@ -185,6 +185,18 @@ function buildCleanAmenities(
     handoverMethod: 'Handover Method',
     deliveryFee: 'Delivery Fee',
     handoverLocation: 'Handover Location',
+    pricingType: 'Pricing Type',
+    serviceDuration: 'Service Duration',
+    serviceLocation: 'Service Location',
+    serviceArea: 'Service Area / Coverage',
+    travelFeeType: 'Travel / Call-Out Fee',
+    travelFee: 'Travel Fee',
+    transportType: 'Transport Type',
+    equipmentAvailable: 'Vehicle / Equipment Available',
+    pickupDropoff: 'Pickup & Drop-off',
+    lessonFormat: 'Lesson Format',
+    serviceFormat: 'Service Format',
+    serviceDelivery: 'Service Delivery',
     providerType: 'Provider Type',
     coverageArea: 'Coverage Area',
     availability: 'Availability',
@@ -413,20 +425,42 @@ function getFieldsForSelection(majorCategory: string, subcategory: string, t?: (
 
   // 5. SERVICES
   if (majorCategory === 'Services') {
-    return [
-      { id: 'title', label: 'Service Title', type: 'text', placeholder: 'e.g., Professional House Cleaning & Gardening Service', required: true, colSpan: 'full' },
-      { id: 'propertyType', label: 'Service Category', type: 'text', placeholder: 'e.g., Cleaning, Repair, Moving, Tutoring, Plumbing', required: true, colSpan: 'half' },
-      { id: 'pricingUnit', label: 'Pricing Unit', type: 'select', options: ['Fixed Rate', 'Hourly Rate', 'Daily Rate', 'Per Job / Negotiable'], colSpan: 'half' },
-      { id: 'price', label: 'Price / Rate', type: 'number', placeholder: 'e.g., 500', colSpan: 'half' },
-      { id: 'experience', label: 'Years of Experience', type: 'text', placeholder: 'e.g., 5+ Years', colSpan: 'half' },
-      { id: 'coverageArea', label: 'Coverage Area', type: 'text', placeholder: 'e.g., All Addis Ababa', colSpan: 'half' },
-      { id: 'location', label: 'Base Location', type: 'text', placeholder: 'e.g., Sarbet, Addis Ababa', required: true, colSpan: 'half' },
-      { id: 'contactPhone', label: 'Phone Number', type: 'text', placeholder: 'e.g., +251911223344', required: true, colSpan: 'half' },
-      { id: 'contactEmail', label: 'Email', type: 'text', placeholder: 'e.g., contact@service.com', required: true, colSpan: 'half' },
-      { id: 'description', label: 'Description', type: 'textarea', placeholder: 'Describe services offered, equipment used, reliability guarantee...', required: true, colSpan: 'full' },
-      { id: 'images', label: 'Photos', type: 'images', colSpan: 'full' },
-      { id: 'video', label: 'Video URL', type: 'text', placeholder: 'e.g., Showcase video URL (optional)', colSpan: 'full' }
+    const fields: FieldConfig[] = [
+      { id: 'title', label: 'Service Title', type: 'text', placeholder: 'e.g., Professional House Cleaning & Painting', required: true, colSpan: 'full' },
+      { id: 'location', label: 'Location', type: 'text', placeholder: 'e.g., Bole, Addis Ababa', required: true, colSpan: 'half' },
+      { id: 'description', label: 'Description', type: 'textarea', placeholder: 'Describe your service offerings, qualifications, experience, and workflow...', required: true, colSpan: 'full' },
+      { id: 'contactPhone', label: 'Contact Phone', type: 'text', placeholder: '+251 91 123 4567', required: true, colSpan: 'half' },
+      { id: 'pricingType', label: 'Pricing Type', type: 'select', options: ['Fixed Price', 'Starting From', 'Price Range', 'Hourly Rate', 'Daily Rate', 'Project-Based', 'Negotiable / Get a Quote'], colSpan: 'half' },
+      { id: 'price', label: 'Price', type: 'number', placeholder: 'e.g., 500', colSpan: 'half' },
+      { id: 'serviceDuration', label: 'Service Duration', type: 'select', options: ['One-time', 'Per Hour', 'Per Day', 'Per Project', 'Ongoing', 'By Appointment'], colSpan: 'half' },
+      { id: 'serviceLocation', label: 'Service Location', type: 'select', options: ['Customer Location', 'Provider Location', 'Remote / Online', 'Both / Flexible'], colSpan: 'half' },
+      { id: 'serviceArea', label: 'Service Area / Coverage', type: 'text', placeholder: 'e.g., All Addis Ababa, Bole, Kazanchis', colSpan: 'half' },
+      { id: 'travelFeeType', label: 'Travel / Call-Out Fee', type: 'select', options: ['No', 'Yes'], colSpan: 'half' },
+      { id: 'travelFee', label: 'Travel Fee', type: 'number', placeholder: 'e.g., 200', colSpan: 'half' },
+      { id: 'availability', label: 'Availability', type: 'select', options: ['Available Now', 'By Appointment', 'Scheduled', 'Ongoing Availability'], colSpan: 'half' }
     ];
+
+    if (subcategory === 'Transport & Moving' || subcategory === 'Transport Services') {
+      fields.push(
+        { id: 'transportType', label: 'Transport Type', type: 'select', options: ['Local', 'Long Distance', 'Nationwide'], colSpan: 'half' },
+        { id: 'equipmentAvailable', label: 'Vehicle / Equipment Available', type: 'select', options: ['Yes', 'No'], colSpan: 'half' },
+        { id: 'pickupDropoff', label: 'Pickup & Drop-off', type: 'select', options: ['Pickup Only', 'Pickup & Drop-off'], colSpan: 'half' }
+      );
+    } else if (subcategory === 'Education & Tutoring') {
+      fields.push(
+        { id: 'lessonFormat', label: 'Lesson Format', type: 'select', options: ['In Person', 'Online', 'Both'], colSpan: 'half' }
+      );
+    } else if (subcategory === 'Photography & Video' || subcategory === 'Photography & Media') {
+      fields.push(
+        { id: 'serviceFormat', label: 'Service Format', type: 'select', options: ['On Location', 'Studio', 'Remote / Online'], colSpan: 'half' }
+      );
+    } else if (subcategory === 'IT Services' || subcategory === 'IT & Software Services') {
+      fields.push(
+        { id: 'serviceDelivery', label: 'Service Delivery', type: 'select', options: ['Remote', 'On-site', 'Both'], colSpan: 'half' }
+      );
+    }
+
+    return fields;
   }
 
   // 6. LOCAL BUSINESSES
@@ -992,6 +1026,32 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
         return;
       }
 
+      if (majorCategory === 'Services') {
+        if (!fieldsState.title || String(fieldsState.title).trim() === '') {
+          setError(t('service_title_val') || 'Please enter a service title.');
+          return;
+        }
+        if (!fieldsState.location || String(fieldsState.location).trim() === '') {
+          setError(t('locVal') || 'Please enter a location.');
+          return;
+        }
+        if (!fieldsState.description || String(fieldsState.description).trim() === '') {
+          setError(t('descVal') || 'Please provide a description.');
+          return;
+        }
+        if (!fieldsState.contactPhone || String(fieldsState.contactPhone).trim() === '') {
+          setError(t('phoneVal') || 'Please enter a contact phone number.');
+          return;
+        }
+        if (currentUser?.role === 'admin' && (!fieldsState.ownerName || String(fieldsState.ownerName).trim() === '')) {
+          setError(t('ownerNameVal') || 'Please enter service provider name.');
+          return;
+        }
+        // Media Upload is optional for Services as requested
+        setCurrentStep(3);
+        return;
+      }
+
       if (!fieldsState.title || String(fieldsState.title).trim() === '') {
         setError(t('titleVal') || 'Please enter a product/listing title.');
         return;
@@ -1093,16 +1153,38 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
           }
         }
       } else if (majorCategory === 'Services') {
-        // Selling Intent / Mode removed for Services
-        const retPrice = Number(fieldsState.retailPrice || fieldsState.price || 0);
-        if (!retPrice || retPrice <= 0) {
-          setError(t('valid_retail_price_val') || 'Please enter a valid Retail Price greater than 0.');
+        const pricingType = fieldsState.pricingType || 'Fixed Price';
+        if (pricingType === 'Fixed Price' || pricingType === 'Starting From' || pricingType === 'Hourly Rate' || pricingType === 'Daily Rate' || pricingType === 'Project-Based') {
+          const sPrice = Number(fieldsState.price || 0);
+          if (!sPrice || sPrice <= 0) {
+            setError(t('service_price_label') ? `${t('service_price_label').replace('*', '').trim()} - ${t('valid_price_val') || 'Please enter a valid price greater than 0.'}` : 'Please enter a valid price amount greater than 0.');
+            return;
+          }
+        } else if (pricingType === 'Price Range') {
+          const minP = Number(fieldsState.priceMin || 0);
+          const maxP = Number(fieldsState.priceMax || 0);
+          if (!minP || minP <= 0) {
+            setError(t('min_price_label') ? `${t('min_price_label').replace('*', '').trim()} - ${t('valid_price_val') || 'Please enter a valid price greater than 0.'}` : 'Please enter a valid minimum price greater than 0.');
+            return;
+          }
+          if (maxP > 0 && maxP < minP) {
+            setError(t('max_price_greater_val') || 'Maximum price must be greater than or equal to minimum price.');
+            return;
+          }
+        }
+        // Negotiable / Get a Quote requires no mandatory price amount
+
+        if (!fieldsState.serviceLocation || String(fieldsState.serviceLocation).trim() === '') {
+          setError(t('valid_service_location_val') || 'Please select where the service is provided.');
           return;
         }
-        const qty = Number(fieldsState.quantity || fieldsState.availableQuantity || 0);
-        if (!qty || qty <= 0) {
-          setError(t('valid_stock_qty_val') || 'Please enter a valid Available Quantity / Stock.');
-          return;
+
+        if (fieldsState.travelFeeType === 'Yes') {
+          const tf = Number(fieldsState.travelFee || 0);
+          if (!tf || tf <= 0) {
+            setError(t('valid_travel_fee_val') || 'Please enter a valid travel fee amount greater than 0.');
+            return;
+          }
         }
       } else if (st === 'Wholesale') {
         const moq = Number(fieldsState.minimumOrderQuantity || wholesaleTiers[0]?.minimumQuantity || 10);
@@ -1234,6 +1316,8 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
 
       const displayPrice = isPropertyCategory
         ? Number(fieldsState.price || fieldsState.retailPrice || 0)
+        : majorCategory === 'Services'
+        ? (fieldsState.pricingType === 'Negotiable / Get a Quote' ? 0 : Number(fieldsState.price || fieldsState.priceMin || 0))
         : (sellingType === 'Wholesale' ? (primaryWholesalePrice || 0) : (retailVal || Number(fieldsState.price || 0)));
 
       const propertyData = {
@@ -1306,7 +1390,23 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
         deliveryFeeType: majorCategory === 'Vehicles' ? (fieldsState.deliveryFeeType || 'Free') : undefined,
         deliveryFee: majorCategory === 'Vehicles' ? (fieldsState.deliveryFee ? Number(fieldsState.deliveryFee) : 0) : undefined,
         handoverLocationType: majorCategory === 'Vehicles' ? (fieldsState.handoverLocationType || 'Same as listing location') : undefined,
-        handoverLocation: majorCategory === 'Vehicles' ? (fieldsState.handoverLocationType === 'Different location' ? (fieldsState.handoverLocation || fieldsState.location) : fieldsState.location) : undefined
+        handoverLocation: majorCategory === 'Vehicles' ? (fieldsState.handoverLocationType === 'Different location' ? (fieldsState.handoverLocation || fieldsState.location) : fieldsState.location) : undefined,
+        // Services & Trades extensions
+        pricingType: majorCategory === 'Services' ? (fieldsState.pricingType || 'Fixed Price') : undefined,
+        priceMin: majorCategory === 'Services' ? (fieldsState.priceMin ? Number(fieldsState.priceMin) : undefined) : undefined,
+        priceMax: majorCategory === 'Services' ? (fieldsState.priceMax ? Number(fieldsState.priceMax) : undefined) : undefined,
+        serviceDuration: majorCategory === 'Services' ? (fieldsState.serviceDuration || 'One-time') : undefined,
+        serviceLocation: majorCategory === 'Services' ? (fieldsState.serviceLocation || 'Customer Location') : undefined,
+        serviceArea: majorCategory === 'Services' ? (fieldsState.serviceArea || '') : undefined,
+        travelFeeType: majorCategory === 'Services' ? (fieldsState.travelFeeType || 'No') : undefined,
+        travelFee: majorCategory === 'Services' ? (fieldsState.travelFee ? Number(fieldsState.travelFee) : 0) : undefined,
+        availability: majorCategory === 'Services' ? (fieldsState.availability || 'Available Now') : undefined,
+        transportType: majorCategory === 'Services' ? fieldsState.transportType : undefined,
+        equipmentAvailable: majorCategory === 'Services' ? fieldsState.equipmentAvailable : undefined,
+        pickupDropoff: majorCategory === 'Services' ? fieldsState.pickupDropoff : undefined,
+        lessonFormat: majorCategory === 'Services' ? fieldsState.lessonFormat : undefined,
+        serviceFormat: majorCategory === 'Services' ? fieldsState.serviceFormat : undefined,
+        serviceDelivery: majorCategory === 'Services' ? fieldsState.serviceDelivery : undefined
       };
 
       const authToken = localStorage.getItem('sof_umer_token') || '';
@@ -1530,6 +1630,7 @@ export default function CreateListingModal({ onClose }: CreateListingModalProps)
           {currentStep === 3 && (
             <WizardStep3Pricing
               majorCategory={majorCategory}
+              subcategory={subcategory}
               sellingType={sellingType}
               currency={currency}
               setCurrency={setCurrency}

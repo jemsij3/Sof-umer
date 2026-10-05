@@ -1,5 +1,5 @@
 import React from 'react';
-import { Tag, Package, Truck, DollarSign, Briefcase, Calendar, Car, CreditCard, MapPin } from 'lucide-react';
+import { Tag, Package, Truck, DollarSign, Briefcase, Calendar, Car, CreditCard, MapPin, Clock, Compass, Wrench } from 'lucide-react';
 import { NormalizedSellingType, STANDARD_UNITS, getLocalizedUnit } from '../../utils/wholesalePricing';
 import { WholesalePricingTiersEditor } from '../WholesalePricingTiersEditor';
 import { WholesalePriceTier } from '../../types';
@@ -8,6 +8,7 @@ import { getTranslatedFurnished, getTranslatedCondition } from '../../lib/catego
 
 interface WizardStep3PricingProps {
   majorCategory: string;
+  subcategory?: string;
   sellingType: NormalizedSellingType;
   currency: string;
   setCurrency: (c: any) => void;
@@ -19,6 +20,7 @@ interface WizardStep3PricingProps {
 
 export const WizardStep3Pricing: React.FC<WizardStep3PricingProps> = ({
   majorCategory,
+  subcategory,
   sellingType,
   currency,
   setCurrency,
@@ -657,6 +659,586 @@ export const WizardStep3Pricing: React.FC<WizardStep3PricingProps> = ({
               </div>
             )}
           </div>
+        </div>
+      )}
+
+      {/* Services & Trades: Pricing, Logistics, Duration, Location, Area, Travel Fee, Availability & Conditional Fields */}
+      {majorCategory === 'Services' && (
+        <div className="space-y-6">
+          {/* Section A: Service Pricing */}
+          <div className="p-4 sm:p-5 rounded-2xl bg-[#141418] border border-white/10 space-y-4">
+            <div className="flex items-center gap-2 border-b border-white/5 pb-3">
+              <DollarSign className="w-4 h-4 text-[#F5A623]" />
+              <h4 className="text-xs font-bold text-white uppercase tracking-wider">
+                {t('service_pricing_section') || 'A. Service Pricing'}
+              </h4>
+            </div>
+
+            {/* Pricing Type* */}
+            <div>
+              <label className="block text-xs font-bold text-white/80 uppercase mb-1">
+                {t('pricing_type_label') || 'Pricing Type *'}
+              </label>
+              <select
+                value={fieldsState.pricingType || 'Fixed Price'}
+                onChange={e => {
+                  const val = e.target.value;
+                  handleFieldChange('pricingType', val);
+                  handleFieldChange('negotiable', val === 'Negotiable / Get a Quote' ? 'Yes' : 'No');
+                }}
+                className="w-full p-3 bg-zinc-900 border border-white/10 focus:border-[#F5A623] rounded-xl text-xs text-white focus:outline-none transition"
+              >
+                <option value="Fixed Price">{t('pricing_fixed') || 'Fixed Price'}</option>
+                <option value="Starting From">{t('pricing_starting_from') || 'Starting From'}</option>
+                <option value="Price Range">{t('pricing_price_range') || 'Price Range'}</option>
+                <option value="Hourly Rate">{t('pricing_hourly_rate') || 'Hourly Rate'}</option>
+                <option value="Daily Rate">{t('pricing_daily_rate') || 'Daily Rate'}</option>
+                <option value="Project-Based">{t('pricing_project_based') || 'Project-Based'}</option>
+                <option value="Negotiable / Get a Quote">{t('pricing_negotiable_quote') || 'Negotiable / Get a Quote'}</option>
+              </select>
+            </div>
+
+            {/* Conditional Price Inputs */}
+            {/* 1. Fixed Price */}
+            {(fieldsState.pricingType === 'Fixed Price' || !fieldsState.pricingType) && (
+              <div>
+                <label className="block text-xs font-bold text-white/80 uppercase mb-1">
+                  {t('service_price_label') || 'Price *'}
+                </label>
+                <div className="flex gap-2">
+                  <select
+                    value={currency}
+                    onChange={e => setCurrency(e.target.value)}
+                    className="p-3 bg-zinc-900 border border-white/10 focus:border-[#F5A623] rounded-xl text-xs text-white font-bold shrink-0 focus:outline-none"
+                  >
+                    <option value="ETB">ETB</option>
+                    <option value="USD">USD ($)</option>
+                    <option value="SAR">SAR</option>
+                    <option value="EUR">EUR (€)</option>
+                    <option value="AED">AED</option>
+                  </select>
+                  <input
+                    type="number"
+                    min="0"
+                    step="any"
+                    required
+                    value={fieldsState.price || ''}
+                    placeholder="e.g. 500"
+                    onChange={e => {
+                      handleFieldChange('price', e.target.value);
+                      handleFieldChange('retailPrice', e.target.value);
+                    }}
+                    className="w-full p-3 bg-black/50 border border-white/10 focus:border-[#F5A623] rounded-xl text-xs text-white font-mono font-bold text-[#F5A623]"
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* 2. Starting From */}
+            {fieldsState.pricingType === 'Starting From' && (
+              <div>
+                <label className="block text-xs font-bold text-white/80 uppercase mb-1">
+                  {t('starting_price_label') || 'Starting Price *'}
+                </label>
+                <div className="flex gap-2">
+                  <select
+                    value={currency}
+                    onChange={e => setCurrency(e.target.value)}
+                    className="p-3 bg-zinc-900 border border-white/10 focus:border-[#F5A623] rounded-xl text-xs text-white font-bold shrink-0 focus:outline-none"
+                  >
+                    <option value="ETB">ETB</option>
+                    <option value="USD">USD ($)</option>
+                    <option value="SAR">SAR</option>
+                    <option value="EUR">EUR (€)</option>
+                    <option value="AED">AED</option>
+                  </select>
+                  <input
+                    type="number"
+                    min="0"
+                    step="any"
+                    required
+                    value={fieldsState.price || ''}
+                    placeholder="e.g. 1000"
+                    onChange={e => {
+                      handleFieldChange('price', e.target.value);
+                      handleFieldChange('priceMin', e.target.value);
+                      handleFieldChange('retailPrice', e.target.value);
+                    }}
+                    className="w-full p-3 bg-black/50 border border-white/10 focus:border-[#F5A623] rounded-xl text-xs text-white font-mono font-bold text-[#F5A623]"
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* 3. Price Range */}
+            {fieldsState.pricingType === 'Price Range' && (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <label className="block text-xs font-bold text-white/80 uppercase">
+                    {t('pricing_price_range') || 'Price Range *'}
+                  </label>
+                  <select
+                    value={currency}
+                    onChange={e => setCurrency(e.target.value)}
+                    className="p-2 bg-zinc-900 border border-white/10 focus:border-[#F5A623] rounded-lg text-xs text-white font-bold focus:outline-none"
+                  >
+                    <option value="ETB">ETB</option>
+                    <option value="USD">USD ($)</option>
+                    <option value="SAR">SAR</option>
+                    <option value="EUR">EUR (€)</option>
+                    <option value="AED">AED</option>
+                  </select>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-[11px] font-bold text-white/60 uppercase mb-1">
+                      {t('min_price_label') || 'Minimum Price *'}
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      step="any"
+                      required
+                      value={fieldsState.priceMin || ''}
+                      placeholder="e.g. 500"
+                      onChange={e => {
+                        handleFieldChange('priceMin', e.target.value);
+                        handleFieldChange('price', e.target.value);
+                      }}
+                      className="w-full p-3 bg-black/50 border border-white/10 focus:border-[#F5A623] rounded-xl text-xs text-white font-mono font-bold text-[#F5A623]"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-bold text-white/60 uppercase mb-1">
+                      {t('max_price_label') || 'Maximum Price'}
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      step="any"
+                      value={fieldsState.priceMax || ''}
+                      placeholder="e.g. 2000"
+                      onChange={e => handleFieldChange('priceMax', e.target.value)}
+                      className="w-full p-3 bg-black/50 border border-white/10 focus:border-[#F5A623] rounded-xl text-xs text-white font-mono font-bold text-[#F5A623]"
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* 4. Hourly Rate */}
+            {fieldsState.pricingType === 'Hourly Rate' && (
+              <div>
+                <label className="block text-xs font-bold text-white/80 uppercase mb-1">
+                  {t('hourly_price_label') || 'Hourly Price *'}
+                </label>
+                <div className="flex gap-2">
+                  <select
+                    value={currency}
+                    onChange={e => setCurrency(e.target.value)}
+                    className="p-3 bg-zinc-900 border border-white/10 focus:border-[#F5A623] rounded-xl text-xs text-white font-bold shrink-0 focus:outline-none"
+                  >
+                    <option value="ETB">ETB</option>
+                    <option value="USD">USD ($)</option>
+                    <option value="SAR">SAR</option>
+                    <option value="EUR">EUR (€)</option>
+                    <option value="AED">AED</option>
+                  </select>
+                  <input
+                    type="number"
+                    min="0"
+                    step="any"
+                    required
+                    value={fieldsState.price || ''}
+                    placeholder="e.g. 200"
+                    onChange={e => {
+                      handleFieldChange('price', e.target.value);
+                      handleFieldChange('retailPrice', e.target.value);
+                    }}
+                    className="w-full p-3 bg-black/50 border border-white/10 focus:border-[#F5A623] rounded-xl text-xs text-white font-mono font-bold text-[#F5A623]"
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* 5. Daily Rate */}
+            {fieldsState.pricingType === 'Daily Rate' && (
+              <div>
+                <label className="block text-xs font-bold text-white/80 uppercase mb-1">
+                  {t('daily_price_label') || 'Daily Price *'}
+                </label>
+                <div className="flex gap-2">
+                  <select
+                    value={currency}
+                    onChange={e => setCurrency(e.target.value)}
+                    className="p-3 bg-zinc-900 border border-white/10 focus:border-[#F5A623] rounded-xl text-xs text-white font-bold shrink-0 focus:outline-none"
+                  >
+                    <option value="ETB">ETB</option>
+                    <option value="USD">USD ($)</option>
+                    <option value="SAR">SAR</option>
+                    <option value="EUR">EUR (€)</option>
+                    <option value="AED">AED</option>
+                  </select>
+                  <input
+                    type="number"
+                    min="0"
+                    step="any"
+                    required
+                    value={fieldsState.price || ''}
+                    placeholder="e.g. 1500"
+                    onChange={e => {
+                      handleFieldChange('price', e.target.value);
+                      handleFieldChange('retailPrice', e.target.value);
+                    }}
+                    className="w-full p-3 bg-black/50 border border-white/10 focus:border-[#F5A623] rounded-xl text-xs text-white font-mono font-bold text-[#F5A623]"
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* 6. Project-Based */}
+            {fieldsState.pricingType === 'Project-Based' && (
+              <div>
+                <label className="block text-xs font-bold text-white/80 uppercase mb-1">
+                  {t('project_price_label') || 'Project Price *'}
+                </label>
+                <div className="flex gap-2">
+                  <select
+                    value={currency}
+                    onChange={e => setCurrency(e.target.value)}
+                    className="p-3 bg-zinc-900 border border-white/10 focus:border-[#F5A623] rounded-xl text-xs text-white font-bold shrink-0 focus:outline-none"
+                  >
+                    <option value="ETB">ETB</option>
+                    <option value="USD">USD ($)</option>
+                    <option value="SAR">SAR</option>
+                    <option value="EUR">EUR (€)</option>
+                    <option value="AED">AED</option>
+                  </select>
+                  <input
+                    type="number"
+                    min="0"
+                    step="any"
+                    required
+                    value={fieldsState.price || ''}
+                    placeholder="e.g. 10000"
+                    onChange={e => {
+                      handleFieldChange('price', e.target.value);
+                      handleFieldChange('retailPrice', e.target.value);
+                    }}
+                    className="w-full p-3 bg-black/50 border border-white/10 focus:border-[#F5A623] rounded-xl text-xs text-white font-mono font-bold text-[#F5A623]"
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* 7. Negotiable / Get a Quote */}
+            {fieldsState.pricingType === 'Negotiable / Get a Quote' && (
+              <div className="p-3 bg-zinc-900/60 rounded-xl border border-white/5">
+                <p className="text-xs text-white/70">
+                  {t('negotiable_quote_hint') || 'Price is negotiable / quote-based. No specific price is required.'}
+                </p>
+              </div>
+            )}
+          </div>
+
+          {/* Section B: Service Duration */}
+          <div className="p-4 sm:p-5 rounded-2xl bg-[#141418] border border-white/10 space-y-4">
+            <div className="flex items-center gap-2 border-b border-white/5 pb-3">
+              <Clock className="w-4 h-4 text-[#F5A623]" />
+              <h4 className="text-xs font-bold text-white uppercase tracking-wider">
+                {t('service_duration_section') || 'B. Service Duration'}
+              </h4>
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-white/80 uppercase mb-1">
+                {t('service_duration_label') || 'Service Duration'}
+              </label>
+              <select
+                value={fieldsState.serviceDuration || 'One-time'}
+                onChange={e => handleFieldChange('serviceDuration', e.target.value)}
+                className="w-full p-3 bg-zinc-900 border border-white/10 focus:border-[#F5A623] rounded-xl text-xs text-white focus:outline-none transition"
+              >
+                <option value="One-time">{t('duration_onetime') || 'One-time'}</option>
+                <option value="Per Hour">{t('duration_per_hour') || 'Per Hour'}</option>
+                <option value="Per Day">{t('duration_per_day') || 'Per Day'}</option>
+                <option value="Per Project">{t('duration_per_project') || 'Per Project'}</option>
+                <option value="Ongoing">{t('duration_ongoing') || 'Ongoing'}</option>
+                <option value="By Appointment">{t('duration_by_appointment') || 'By Appointment'}</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Section C: Service Location */}
+          <div className="p-4 sm:p-5 rounded-2xl bg-[#141418] border border-white/10 space-y-4">
+            <div className="flex items-center gap-2 border-b border-white/5 pb-3">
+              <MapPin className="w-4 h-4 text-[#F5A623]" />
+              <h4 className="text-xs font-bold text-white uppercase tracking-wider">
+                {t('service_location_section') || 'C. Service Location'}
+              </h4>
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-white/80 uppercase mb-1">
+                {t('service_location_label') || 'Where is the service provided? *'}
+              </label>
+              <select
+                required
+                value={fieldsState.serviceLocation || 'Customer Location'}
+                onChange={e => handleFieldChange('serviceLocation', e.target.value)}
+                className="w-full p-3 bg-zinc-900 border border-white/10 focus:border-[#F5A623] rounded-xl text-xs text-white focus:outline-none transition"
+              >
+                <option value="Customer Location">{t('srv_loc_customer') || 'Customer Location'}</option>
+                <option value="Provider Location">{t('srv_loc_provider') || 'Provider Location'}</option>
+                <option value="Remote / Online">{t('srv_loc_remote') || 'Remote / Online'}</option>
+                <option value="Both / Flexible">{t('srv_loc_both') || 'Both / Flexible'}</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Section D: Service Area */}
+          <div className="p-4 sm:p-5 rounded-2xl bg-[#141418] border border-white/10 space-y-4">
+            <div className="flex items-center gap-2 border-b border-white/5 pb-3">
+              <Compass className="w-4 h-4 text-[#F5A623]" />
+              <h4 className="text-xs font-bold text-white uppercase tracking-wider">
+                {t('service_area_section') || 'D. Service Area'}
+              </h4>
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-white/80 uppercase mb-1">
+                {t('service_area_label') || 'Service Area / Coverage'}
+              </label>
+              <input
+                type="text"
+                value={fieldsState.serviceArea || ''}
+                placeholder={t('service_area_placeholder') || 'e.g., All Addis Ababa, Bole, Kazanchis, surrounding areas'}
+                onChange={e => handleFieldChange('serviceArea', e.target.value)}
+                className="w-full p-3 bg-zinc-900 border border-white/10 focus:border-[#F5A623] rounded-xl text-xs text-white focus:outline-none transition"
+              />
+              <p className="text-[11px] text-white/40 mt-1">
+                {t('service_area_subtext') || 'Specify the areas where you are willing to serve customers (distinct from your listing location).'}
+              </p>
+            </div>
+          </div>
+
+          {/* Section E: Travel / Call-Out Fee */}
+          <div className="p-4 sm:p-5 rounded-2xl bg-[#141418] border border-white/10 space-y-4">
+            <div className="flex items-center gap-2 border-b border-white/5 pb-3">
+              <DollarSign className="w-4 h-4 text-[#F5A623]" />
+              <h4 className="text-xs font-bold text-white uppercase tracking-wider">
+                {t('travel_fee_section') || 'E. Travel / Call-Out Fee'}
+              </h4>
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-white/80 uppercase mb-1">
+                {t('travel_fee_label') || 'Travel / Call-Out Fee'}
+              </label>
+              <select
+                value={fieldsState.travelFeeType || 'No'}
+                onChange={e => {
+                  const val = e.target.value;
+                  handleFieldChange('travelFeeType', val);
+                  if (val === 'No') {
+                    handleFieldChange('travelFee', 0);
+                  }
+                }}
+                className="w-full p-3 bg-zinc-900 border border-white/10 focus:border-[#F5A623] rounded-xl text-xs text-white focus:outline-none transition"
+              >
+                <option value="No">{t('option_no') || 'No'}</option>
+                <option value="Yes">{t('option_yes') || 'Yes'}</option>
+              </select>
+            </div>
+
+            {fieldsState.travelFeeType === 'Yes' && (
+              <div className="p-3 bg-zinc-900/60 rounded-xl border border-white/5 space-y-2">
+                <label className="block text-xs font-bold text-white/80 uppercase mb-1">
+                  {t('travel_fee_amount_label') || 'Fee Amount *'}
+                </label>
+                <div className="flex gap-2">
+                  <span className="p-3 bg-zinc-900 border border-white/10 rounded-xl text-xs text-white font-bold shrink-0">
+                    {currency}
+                  </span>
+                  <input
+                    type="number"
+                    min="0"
+                    step="any"
+                    required
+                    value={fieldsState.travelFee || ''}
+                    placeholder="e.g. 200"
+                    onChange={e => handleFieldChange('travelFee', e.target.value)}
+                    className="w-full p-3 bg-black/50 border border-white/10 focus:border-[#F5A623] rounded-xl text-xs text-white font-mono font-bold text-[#F5A623]"
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Section F: Availability */}
+          <div className="p-4 sm:p-5 rounded-2xl bg-[#141418] border border-white/10 space-y-4">
+            <div className="flex items-center gap-2 border-b border-white/5 pb-3">
+              <Calendar className="w-4 h-4 text-[#F5A623]" />
+              <h4 className="text-xs font-bold text-white uppercase tracking-wider">
+                {t('availability_section') || 'F. Availability'}
+              </h4>
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-white/80 uppercase mb-1">
+                {t('availability') || 'Availability'}
+              </label>
+              <select
+                value={fieldsState.availability || 'Available Now'}
+                onChange={e => handleFieldChange('availability', e.target.value)}
+                className="w-full p-3 bg-zinc-900 border border-white/10 focus:border-[#F5A623] rounded-xl text-xs text-white focus:outline-none transition"
+              >
+                <option value="Available Now">{t('avail_now') || 'Available Now'}</option>
+                <option value="By Appointment">{t('avail_appointment') || 'By Appointment'}</option>
+                <option value="Scheduled">{t('avail_scheduled') || 'Scheduled'}</option>
+                <option value="Ongoing Availability">{t('avail_ongoing') || 'Ongoing Availability'}</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Category-Specific Conditional Fields */}
+          {/* 1. Transport & Moving */}
+          {(subcategory === 'Transport & Moving' || subcategory === 'Transport Services' || fieldsState.subcategory === 'Transport & Moving') && (
+            <div className="p-4 sm:p-5 rounded-2xl bg-[#141418] border border-[#F5A623]/30 space-y-4">
+              <div className="flex items-center gap-2 border-b border-white/5 pb-3">
+                <Truck className="w-4 h-4 text-[#F5A623]" />
+                <h4 className="text-xs font-bold text-[#F5A623] uppercase tracking-wider">
+                  {t('transport_moving_spec_title') || 'Transport & Moving Specifications'}
+                </h4>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div>
+                  <label className="block text-xs font-bold text-white/80 uppercase mb-1">
+                    {t('transport_type_label') || 'Transport Type'}
+                  </label>
+                  <select
+                    value={fieldsState.transportType || 'Local'}
+                    onChange={e => handleFieldChange('transportType', e.target.value)}
+                    className="w-full p-3 bg-zinc-900 border border-white/10 focus:border-[#F5A623] rounded-xl text-xs text-white focus:outline-none transition"
+                  >
+                    <option value="Local">{t('trans_local') || 'Local'}</option>
+                    <option value="Long Distance">{t('trans_long_dist') || 'Long Distance'}</option>
+                    <option value="Nationwide">{t('trans_nationwide') || 'Nationwide'}</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-white/80 uppercase mb-1">
+                    {t('equipment_avail_label') || 'Vehicle / Equipment Available'}
+                  </label>
+                  <select
+                    value={fieldsState.equipmentAvailable || 'Yes'}
+                    onChange={e => handleFieldChange('equipmentAvailable', e.target.value)}
+                    className="w-full p-3 bg-zinc-900 border border-white/10 focus:border-[#F5A623] rounded-xl text-xs text-white focus:outline-none transition"
+                  >
+                    <option value="Yes">{t('option_yes') || 'Yes'}</option>
+                    <option value="No">{t('option_no') || 'No'}</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-white/80 uppercase mb-1">
+                    {t('pickup_dropoff_label') || 'Pickup & Drop-off'}
+                  </label>
+                  <select
+                    value={fieldsState.pickupDropoff || 'Pickup Only'}
+                    onChange={e => handleFieldChange('pickupDropoff', e.target.value)}
+                    className="w-full p-3 bg-zinc-900 border border-white/10 focus:border-[#F5A623] rounded-xl text-xs text-white focus:outline-none transition"
+                  >
+                    <option value="Pickup Only">{t('pickup_only') || 'Pickup Only'}</option>
+                    <option value="Pickup & Drop-off">{t('pickup_and_dropoff') || 'Pickup & Drop-off'}</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* 2. Education & Tutoring */}
+          {(subcategory === 'Education & Tutoring' || fieldsState.subcategory === 'Education & Tutoring') && (
+            <div className="p-4 sm:p-5 rounded-2xl bg-[#141418] border border-[#F5A623]/30 space-y-4">
+              <div className="flex items-center gap-2 border-b border-white/5 pb-3">
+                <Briefcase className="w-4 h-4 text-[#F5A623]" />
+                <h4 className="text-xs font-bold text-[#F5A623] uppercase tracking-wider">
+                  {t('education_tutoring_spec_title') || 'Education & Tutoring Specifications'}
+                </h4>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-white/80 uppercase mb-1">
+                  {t('lesson_format_label') || 'Lesson Format'}
+                </label>
+                <select
+                  value={fieldsState.lessonFormat || 'In Person'}
+                  onChange={e => handleFieldChange('lessonFormat', e.target.value)}
+                  className="w-full p-3 bg-zinc-900 border border-white/10 focus:border-[#F5A623] rounded-xl text-xs text-white focus:outline-none transition"
+                >
+                  <option value="In Person">{t('lesson_in_person') || 'In Person'}</option>
+                  <option value="Online">{t('lesson_online') || 'Online'}</option>
+                  <option value="Both">{t('lesson_both') || 'Both'}</option>
+                </select>
+              </div>
+            </div>
+          )}
+
+          {/* 3. Photography & Media */}
+          {(subcategory === 'Photography & Video' || subcategory === 'Photography & Media' || fieldsState.subcategory === 'Photography & Media') && (
+            <div className="p-4 sm:p-5 rounded-2xl bg-[#141418] border border-[#F5A623]/30 space-y-4">
+              <div className="flex items-center gap-2 border-b border-white/5 pb-3">
+                <Briefcase className="w-4 h-4 text-[#F5A623]" />
+                <h4 className="text-xs font-bold text-[#F5A623] uppercase tracking-wider">
+                  {t('photography_media_spec_title') || 'Photography & Media Specifications'}
+                </h4>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-white/80 uppercase mb-1">
+                  {t('service_format_label') || 'Service Format'}
+                </label>
+                <select
+                  value={fieldsState.serviceFormat || 'On Location'}
+                  onChange={e => handleFieldChange('serviceFormat', e.target.value)}
+                  className="w-full p-3 bg-zinc-900 border border-white/10 focus:border-[#F5A623] rounded-xl text-xs text-white focus:outline-none transition"
+                >
+                  <option value="On Location">{t('format_on_location') || 'On Location'}</option>
+                  <option value="Studio">{t('format_studio') || 'Studio'}</option>
+                  <option value="Remote / Online">{t('srv_loc_remote') || 'Remote / Online'}</option>
+                </select>
+              </div>
+            </div>
+          )}
+
+          {/* 4. IT & Software Services */}
+          {(subcategory === 'IT Services' || subcategory === 'IT & Software Services' || fieldsState.subcategory === 'IT & Software Services') && (
+            <div className="p-4 sm:p-5 rounded-2xl bg-[#141418] border border-[#F5A623]/30 space-y-4">
+              <div className="flex items-center gap-2 border-b border-white/5 pb-3">
+                <Briefcase className="w-4 h-4 text-[#F5A623]" />
+                <h4 className="text-xs font-bold text-[#F5A623] uppercase tracking-wider">
+                  {t('it_software_spec_title') || 'IT & Software Specifications'}
+                </h4>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-white/80 uppercase mb-1">
+                  {t('service_delivery_label') || 'Service Delivery'}
+                </label>
+                <select
+                  value={fieldsState.serviceDelivery || 'Remote'}
+                  onChange={e => handleFieldChange('serviceDelivery', e.target.value)}
+                  className="w-full p-3 bg-zinc-900 border border-white/10 focus:border-[#F5A623] rounded-xl text-xs text-white focus:outline-none transition"
+                >
+                  <option value="Remote">{t('delivery_remote') || 'Remote'}</option>
+                  <option value="On-site">{t('delivery_onsite') || 'On-site'}</option>
+                  <option value="Both">{t('delivery_both') || 'Both'}</option>
+                </select>
+              </div>
+            </div>
+          )}
         </div>
       )}
 

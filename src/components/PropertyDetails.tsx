@@ -58,6 +58,7 @@ import {
   Home,
   Car,
   Tag,
+  Wrench,
   Sliders
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
@@ -374,7 +375,7 @@ export default function PropertyDetails({
     Properties: ['subcategory', 'property type', 'purpose', 'condition', 'property condition', 'property condition / status', 'furnished', 'furnished status', 'toilets', 'toilet', 'parking', 'parking available', 'floor level', 'ownership', 'ownership / title deed', 'title deed', 'zoning', 'bedrooms', 'bathrooms', 'area', 'area (m²)', 'total area'],
     Vehicles: ['subcategory', 'vehicle type', 'body type', 'make / brand', 'transmission', 'fuel type', 'engine capacity', 'year', 'mileage', 'mileage (km)', 'color', 'brand', 'condition', 'model'],
     Jobs: ['subcategory', 'job type', 'employment type', 'sector', 'sector / industry', 'industry', 'salary range', 'qualification', 'education required', 'experience', 'experience required', 'deadline', 'application deadline'],
-    Services: ['subcategory', 'service type', 'service category', 'pricing unit', 'years of experience', 'coverage area', 'availability', 'opening hours'],
+    Services: ['subcategory', 'service type', 'service category', 'pricing unit', 'pricing type', 'service duration', 'service location', 'service area', 'service area / coverage', 'coverage area', 'travel fee', 'travel / call-out fee', 'travel fee type', 'availability', 'transport type', 'vehicle / equipment available', 'equipment available', 'pickup & drop-off', 'pickup and drop-off', 'lesson format', 'service format', 'service delivery', 'years of experience', 'opening hours'],
     'Local Businesses': ['subcategory', 'business category', 'business type', 'opening hours', 'website', 'website / social link', 'services offered'],
     Community: ['subcategory', 'post type', 'organizer', 'organizer name / group', 'venue', 'venue / address', 'date', 'time', 'event date & time']
   };
@@ -521,11 +522,13 @@ export default function PropertyDetails({
 
   const isVehiclesCategory = currentCategory === 'Vehicles' || listing.majorCategory === 'Vehicles' || listing.propertyType === 'Vehicles';
   const isRealEstateCategory = currentCategory === 'Properties' || isProperty;
-  const isProductsCategory = !isRealEstateCategory && !isVehiclesCategory && currentCategory !== 'Jobs' && currentCategory !== 'Services' && currentCategory !== 'Community';
+  const isServicesCategory = currentCategory === 'Services' || listing.majorCategory === 'Services';
+  const isJobsCategory = currentCategory === 'Jobs' || listing.majorCategory === 'Jobs';
+  const isProductsCategory = !isRealEstateCategory && !isVehiclesCategory && !isJobsCategory && !isServicesCategory && currentCategory !== 'Community';
 
   // Resolved metadata values with fallbacks
   const metaCondition = listing.condition || getListingMeta(['condition', 'property condition', 'property condition / status', 'furnished', 'furnished status']);
-  const metaSubcategory = (listing as any).subcategory || (listing as any).subCategoryName || listing.propertyType || getListingMeta(['subcategory', 'property type', 'vehicle type']);
+  const metaSubcategory = (listing as any).subcategory || (listing as any).subCategoryName || listing.propertyType || getListingMeta(['subcategory', 'property type', 'vehicle type', 'service category', 'service type']);
   const metaPurpose = (listing as any).purpose || (listing as any).category || (listing.category ? (listing.category === 'Sale' || listing.category === 'For Sale' ? 'For Sale' : listing.category === 'Rent' || listing.category === 'For Rent' ? 'For Rent' : listing.category) : undefined) || getListingMeta(['purpose']);
   
   const metaBedrooms = (listing.bedrooms !== undefined && listing.bedrooms > 0) ? listing.bedrooms : (getListingMeta(['bedrooms', 'beds']) ? Number(getListingMeta(['bedrooms', 'beds'])) : undefined);
@@ -542,6 +545,21 @@ export default function PropertyDetails({
   // Products specific metadata
   const metaBrand = listing.brand || getListingMeta(['brand', 'make']);
   const metaModel = (listing as any).model || getListingMeta(['model']);
+
+  // Services specific metadata
+  const metaPricingType = (listing as any).pricingType || getListingMeta(['pricing type', 'pricing unit', 'price type']);
+  const metaServiceDuration = (listing as any).serviceDuration || getListingMeta(['service duration', 'duration']);
+  const metaServiceLocation = (listing as any).serviceLocation || getListingMeta(['service location', 'where is the service provided?']);
+  const metaServiceArea = (listing as any).serviceArea || getListingMeta(['service area', 'service area / coverage', 'coverage area']);
+  const metaTravelFeeType = (listing as any).travelFeeType || getListingMeta(['travel fee type', 'travel / call-out fee']);
+  const metaTravelFee = (listing as any).travelFee || getListingMeta(['travel fee', 'travel fee amount', 'fee amount']);
+  const metaAvailability = (listing as any).availability || getListingMeta(['availability']);
+  const metaTransportType = (listing as any).transportType || getListingMeta(['transport type']);
+  const metaEquipmentAvailable = (listing as any).equipmentAvailable || getListingMeta(['vehicle / equipment available', 'equipment available']);
+  const metaPickupDropoff = (listing as any).pickupDropoff || getListingMeta(['pickup & drop-off', 'pickup and drop-off']);
+  const metaLessonFormat = (listing as any).lessonFormat || getListingMeta(['lesson format']);
+  const metaServiceFormat = (listing as any).serviceFormat || getListingMeta(['service format']);
+  const metaServiceDelivery = (listing as any).serviceDelivery || getListingMeta(['service delivery']);
   
   let metaSellingMode = (listing as any).sellingMode || (listing as any).selling_mode;
   if (!metaSellingMode && listing.sellingType) {
@@ -579,7 +597,8 @@ export default function PropertyDetails({
     'area', 'totalarea', 'aream', 'aream2', 'sqm', 'm2', 'surface',
     'condition', 'propertycondition', 'propertyconditionstatus', 'furnishing', 'furnished', 'furnishedstatus',
     'subcategory', 'subcat', 'propertytype', 'vehicletype', 'type',
-    'purpose', 'category'
+    'purpose', 'category',
+    'pricingtype', 'pricingunit', 'serviceduration', 'servicelocation', 'servicearea', 'travelfee', 'travelfeetype', 'availability', 'transporttype', 'equipmentavailable', 'pickupdropoff', 'lessonformat', 'serviceformat', 'servicedelivery', 'coveragearea'
   ];
   markRendered(...dedupeExcludedKeywords);
 
@@ -596,6 +615,18 @@ export default function PropertyDetails({
   if (metaBodyType) markRendered('bodytype', 'vehicletype');
   if (metaBrand) markRendered('brand', 'make');
   if (metaModel) markRendered('model');
+  if (metaPricingType) markRendered('pricingtype', 'pricingunit', 'pricetype');
+  if (metaServiceDuration) markRendered('serviceduration', 'duration');
+  if (metaServiceLocation) markRendered('servicelocation');
+  if (metaServiceArea) markRendered('servicearea', 'coveragearea');
+  if (metaTravelFeeType || metaTravelFee) markRendered('travelfee', 'travelfeetype', 'calloutfee');
+  if (metaAvailability) markRendered('availability');
+  if (metaTransportType) markRendered('transporttype');
+  if (metaEquipmentAvailable) markRendered('equipmentavailable');
+  if (metaPickupDropoff) markRendered('pickupdropoff');
+  if (metaLessonFormat) markRendered('lessonformat');
+  if (metaServiceFormat) markRendered('serviceformat');
+  if (metaServiceDelivery) markRendered('servicedelivery');
   if (metaSellingMode) markRendered('sellingmode', 'sellingintent', 'sellingtype');
   if (metaMoq) markRendered('moq', 'minimumorderquantity', 'minimumorder');
   if (metaStock) markRendered('stock', 'quantity', 'availablestock', 'availablequantity', 'retailquantity');
@@ -674,6 +705,10 @@ export default function PropertyDetails({
     metaBrand || metaModel || metaSellingMode || 
     (metaMoq !== undefined && Number(metaMoq) > 0) || 
     (metaStock !== undefined && Number(metaStock) > 0) ||
+    metaPricingType || metaServiceDuration || metaServiceLocation || metaServiceArea ||
+    metaTravelFeeType || metaAvailability || metaTransportType || metaEquipmentAvailable ||
+    metaPickupDropoff || metaLessonFormat || metaServiceFormat || metaServiceDelivery ||
+    (isServicesCategory && listing.location) ||
     visibleLeftoverSpecs.length > 0
   );
 
@@ -1243,6 +1278,8 @@ export default function PropertyDetails({
                   <Car className="w-5 h-5 text-[#F5A623]" />
                 ) : isProductsCategory ? (
                   <Package className="w-5 h-5 text-[#F5A623]" />
+                ) : isServicesCategory ? (
+                  <Wrench className="w-5 h-5 text-[#F5A623]" />
                 ) : (
                   <Sparkles className="w-5 h-5 text-[#F5A623]" />
                 )}
@@ -1250,8 +1287,8 @@ export default function PropertyDetails({
                   {isRealEstateCategory ? (t('property_specifications') || getTranslatedFieldLabel('Property Information & Specifications', currentLanguage)) :
                    isVehiclesCategory ? (t('vehicle_specifications') || getTranslatedFieldLabel('Vehicle Specifications', currentLanguage)) :
                    isProductsCategory ? (t('product_details_pricing') || getTranslatedFieldLabel('Product Details & Pricing', currentLanguage) || 'Product Details & Pricing') :
+                   isServicesCategory ? (t('service_information_specs') || 'Service Information & Specifications') :
                    currentCategory === 'Jobs' ? (t('job_details') || getTranslatedFieldLabel('Job Details', currentLanguage)) :
-                   currentCategory === 'Services' ? (t('service_information') || getTranslatedFieldLabel('Service Information', currentLanguage)) :
                    currentCategory === 'Community' ? (t('post_information') || getTranslatedFieldLabel('Post Information', currentLanguage)) :
                    (t('property_specifications') || getTranslatedFieldLabel('Property Information & Specifications', currentLanguage))}
                 </span>
@@ -1486,10 +1523,208 @@ export default function PropertyDetails({
                 </div>
               )}
 
-              {/* 3. ADDITIONAL SPECS LOOP (FILTER OUT DUPLICATES) */}
+              {/* 4. SERVICES & TRADES METADATA GRID */}
+              {isServicesCategory && (
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-2.5 sm:gap-3 my-4">
+                  {/* Service Category */}
+                  {metaSubcategory && (
+                    <div className="bg-[#1A1B22] p-3 sm:p-3.5 rounded-xl border border-[#22242E]">
+                      <span className="text-[#F5A623] text-[10px] sm:text-xs font-semibold uppercase tracking-wider block mb-1">
+                        {t('wizard.step_subcategory') || 'Service Category'}
+                      </span>
+                      <span className="text-white text-xs sm:text-sm font-medium">
+                        {getTranslatedSubcategoryName(metaSubcategory, currentLanguage) || metaSubcategory}
+                      </span>
+                    </div>
+                  )}
+
+                  {/* Location */}
+                  {listing.location && (
+                    <div className="bg-[#1A1B22] p-3 sm:p-3.5 rounded-xl border border-[#22242E]">
+                      <span className="text-[#F5A623] text-[10px] sm:text-xs font-semibold uppercase tracking-wider block mb-1">
+                        {t('locLabel') || 'Location'}
+                      </span>
+                      <div className="flex items-center gap-1.5 text-white text-xs sm:text-sm font-medium">
+                        <MapPin className="w-3.5 h-3.5 text-[#F5A623] shrink-0" />
+                        <span className="truncate">{listing.location}</span>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Pricing */}
+                  {metaPricingType && (
+                    <div className="bg-[#1A1B22] p-3 sm:p-3.5 rounded-xl border border-[#22242E]">
+                      <span className="text-[#F5A623] text-[10px] sm:text-xs font-semibold uppercase tracking-wider block mb-1">
+                        {t('pricing_type_label') || 'Pricing'}
+                      </span>
+                      <span className="text-white text-xs sm:text-sm font-medium font-mono text-[#F5A623] block truncate">
+                        {metaPricingType === 'Negotiable / Get a Quote'
+                          ? (t('pricing_negotiable_quote') || 'Negotiable / Get a Quote')
+                          : metaPricingType === 'Price Range'
+                          ? `${(listing as any).priceMin ? Number((listing as any).priceMin).toLocaleString() : '0'} - ${(listing as any).priceMax ? Number((listing as any).priceMax).toLocaleString() : '...'} ${listing.currency || 'ETB'}`
+                          : metaPricingType === 'Starting From'
+                          ? `${t('pricing_starting_from') || 'From'} ${listing.price ? Number(listing.price).toLocaleString() : '0'} ${listing.currency || 'ETB'}`
+                          : metaPricingType === 'Hourly Rate'
+                          ? `${listing.price ? Number(listing.price).toLocaleString() : '0'} ${listing.currency || 'ETB'} / hr`
+                          : metaPricingType === 'Daily Rate'
+                          ? `${listing.price ? Number(listing.price).toLocaleString() : '0'} ${listing.currency || 'ETB'} / day`
+                          : metaPricingType === 'Project-Based'
+                          ? `${listing.price ? Number(listing.price).toLocaleString() : '0'} ${listing.currency || 'ETB'} / proj`
+                          : `${listing.price ? Number(listing.price).toLocaleString() : '0'} ${listing.currency || 'ETB'}`}
+                      </span>
+                    </div>
+                  )}
+
+                  {/* Service Duration */}
+                  {metaServiceDuration && (
+                    <div className="bg-[#1A1B22] p-3 sm:p-3.5 rounded-xl border border-[#22242E]">
+                      <span className="text-[#F5A623] text-[10px] sm:text-xs font-semibold uppercase tracking-wider block mb-1">
+                        {t('service_duration_label') || 'Service Duration'}
+                      </span>
+                      <span className="text-white text-xs sm:text-sm font-medium">
+                        {metaServiceDuration}
+                      </span>
+                    </div>
+                  )}
+
+                  {/* Service Location */}
+                  {metaServiceLocation && (
+                    <div className="bg-[#1A1B22] p-3 sm:p-3.5 rounded-xl border border-[#22242E]">
+                      <span className="text-[#F5A623] text-[10px] sm:text-xs font-semibold uppercase tracking-wider block mb-1">
+                        {t('service_location_label') || 'Service Location'}
+                      </span>
+                      <span className="text-white text-xs sm:text-sm font-medium">
+                        {metaServiceLocation}
+                      </span>
+                    </div>
+                  )}
+
+                  {/* Service Area / Coverage */}
+                  {metaServiceArea && (
+                    <div className="bg-[#1A1B22] p-3 sm:p-3.5 rounded-xl border border-[#22242E] col-span-2 sm:col-span-1">
+                      <span className="text-[#F5A623] text-[10px] sm:text-xs font-semibold uppercase tracking-wider block mb-1">
+                        {t('service_area_label') || 'Service Area / Coverage'}
+                      </span>
+                      <span className="text-white text-xs sm:text-sm font-medium">
+                        {metaServiceArea}
+                      </span>
+                    </div>
+                  )}
+
+                  {/* Availability */}
+                  {metaAvailability && (
+                    <div className="bg-[#1A1B22] p-3 sm:p-3.5 rounded-xl border border-[#22242E]">
+                      <span className="text-[#F5A623] text-[10px] sm:text-xs font-semibold uppercase tracking-wider block mb-1">
+                        {t('availability') || 'Availability'}
+                      </span>
+                      <span className="text-white text-xs sm:text-sm font-medium">
+                        {metaAvailability}
+                      </span>
+                    </div>
+                  )}
+
+                  {/* Travel / Call-Out Fee */}
+                  {metaTravelFeeType && (
+                    <div className="bg-[#1A1B22] p-3 sm:p-3.5 rounded-xl border border-[#22242E]">
+                      <span className="text-[#F5A623] text-[10px] sm:text-xs font-semibold uppercase tracking-wider block mb-1">
+                        {t('travel_fee_label') || 'Travel / Call-Out Fee'}
+                      </span>
+                      <span className="text-white text-xs sm:text-sm font-medium">
+                        {metaTravelFeeType === 'Yes'
+                          ? `${metaTravelFee ? Number(metaTravelFee).toLocaleString() : '0'} ${listing.currency || 'ETB'}`
+                          : (t('option_no') || 'No')}
+                      </span>
+                    </div>
+                  )}
+
+                  {/* Contact Phone */}
+                  {(listing.contactPhone || (listing as any).ownerPhone) && (
+                    <div className="bg-[#1A1B22] p-3 sm:p-3.5 rounded-xl border border-[#22242E]">
+                      <span className="text-[#F5A623] text-[10px] sm:text-xs font-semibold uppercase tracking-wider block mb-1">
+                        {t('contact_phone_label') || 'Contact Phone'}
+                      </span>
+                      <div className="flex items-center gap-1.5 text-white text-xs sm:text-sm font-medium font-mono">
+                        <Phone className="w-3.5 h-3.5 text-[#F5A623] shrink-0" />
+                        <span className="truncate">{listing.contactPhone || (listing as any).ownerPhone}</span>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Category-Specific Fields */}
+                  {/* Transport & Moving */}
+                  {metaTransportType && (
+                    <div className="bg-[#1A1B22] p-3 sm:p-3.5 rounded-xl border border-[#22242E]">
+                      <span className="text-[#F5A623] text-[10px] sm:text-xs font-semibold uppercase tracking-wider block mb-1">
+                        {t('transport_type_label') || 'Transport Type'}
+                      </span>
+                      <span className="text-white text-xs sm:text-sm font-medium">
+                        {metaTransportType}
+                      </span>
+                    </div>
+                  )}
+                  {metaEquipmentAvailable && (
+                    <div className="bg-[#1A1B22] p-3 sm:p-3.5 rounded-xl border border-[#22242E]">
+                      <span className="text-[#F5A623] text-[10px] sm:text-xs font-semibold uppercase tracking-wider block mb-1">
+                        {t('equipment_avail_label') || 'Vehicle / Equipment'}
+                      </span>
+                      <span className="text-white text-xs sm:text-sm font-medium">
+                        {metaEquipmentAvailable}
+                      </span>
+                    </div>
+                  )}
+                  {metaPickupDropoff && (
+                    <div className="bg-[#1A1B22] p-3 sm:p-3.5 rounded-xl border border-[#22242E]">
+                      <span className="text-[#F5A623] text-[10px] sm:text-xs font-semibold uppercase tracking-wider block mb-1">
+                        {t('pickup_dropoff_label') || 'Pickup & Drop-off'}
+                      </span>
+                      <span className="text-white text-xs sm:text-sm font-medium">
+                        {metaPickupDropoff}
+                      </span>
+                    </div>
+                  )}
+
+                  {/* Education & Tutoring */}
+                  {metaLessonFormat && (
+                    <div className="bg-[#1A1B22] p-3 sm:p-3.5 rounded-xl border border-[#22242E]">
+                      <span className="text-[#F5A623] text-[10px] sm:text-xs font-semibold uppercase tracking-wider block mb-1">
+                        {t('lesson_format_label') || 'Lesson Format'}
+                      </span>
+                      <span className="text-white text-xs sm:text-sm font-medium">
+                        {metaLessonFormat}
+                      </span>
+                    </div>
+                  )}
+
+                  {/* Photography & Media */}
+                  {metaServiceFormat && (
+                    <div className="bg-[#1A1B22] p-3 sm:p-3.5 rounded-xl border border-[#22242E]">
+                      <span className="text-[#F5A623] text-[10px] sm:text-xs font-semibold uppercase tracking-wider block mb-1">
+                        {t('service_format_label') || 'Service Format'}
+                      </span>
+                      <span className="text-white text-xs sm:text-sm font-medium">
+                        {metaServiceFormat}
+                      </span>
+                    </div>
+                  )}
+
+                  {/* IT & Software Services */}
+                  {metaServiceDelivery && (
+                    <div className="bg-[#1A1B22] p-3 sm:p-3.5 rounded-xl border border-[#22242E]">
+                      <span className="text-[#F5A623] text-[10px] sm:text-xs font-semibold uppercase tracking-wider block mb-1">
+                        {t('service_delivery_label') || 'Service Delivery'}
+                      </span>
+                      <span className="text-white text-xs sm:text-sm font-medium">
+                        {metaServiceDelivery}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* 5. ADDITIONAL SPECS LOOP (FILTER OUT DUPLICATES) */}
               {visibleLeftoverSpecs.length > 0 && (
-                <div className={`${isRealEstateCategory || isVehiclesCategory || isProductsCategory ? 'mt-6 pt-6 border-t border-[#22242E]' : ''}`}>
-                  {(isRealEstateCategory || isVehiclesCategory || isProductsCategory) && (
+                <div className={`${isRealEstateCategory || isVehiclesCategory || isProductsCategory || isServicesCategory ? 'mt-6 pt-6 border-t border-[#22242E]' : ''}`}>
+                  {(isRealEstateCategory || isVehiclesCategory || isProductsCategory || isServicesCategory) && (
                     <div className="flex items-center gap-2 mb-3">
                       <Sliders className="w-4 h-4 text-[#F5A623]" />
                       <span className="text-xs font-semibold text-[#F5A623] uppercase tracking-wider">

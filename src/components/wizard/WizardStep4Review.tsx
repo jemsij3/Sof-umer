@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Camera, MapPin, Phone, User as UserIcon, Sparkles, Loader2,
-  BedDouble, Bath, Maximize, Truck, ShieldCheck, Tag, Zap, Check, Copy, AlertCircle, CreditCard, Film
+  BedDouble, Bath, Maximize, Truck, ShieldCheck, Tag, Zap, Check, Copy, AlertCircle, CreditCard, Film, Wrench
 } from 'lucide-react';
 import { NormalizedSellingType, getPluralizedUnit, getLocalizedUnit } from '../../utils/wholesalePricing';
 import { 
@@ -243,8 +243,8 @@ export const WizardStep4Review: React.FC<WizardStep4ReviewProps> = ({
     <div className="space-y-5 animate-in fade-in duration-300">
       {/* Preview Listing Card */}
       <div className="bg-[#141418] rounded-2xl border border-[#22242E] overflow-hidden shadow-xl max-w-xl mx-auto">
-        {/* 1. HEADER & MEDIA PREVIEW (Non-Jobs & Non-Vehicles only; Jobs & Vehicles display Media at their respective positions) */}
-        {majorCategory !== 'Jobs' && majorCategory !== 'Vehicles' && (
+        {/* 1. HEADER & MEDIA PREVIEW (Non-Jobs, Non-Vehicles & Non-Services only; Jobs, Vehicles & Services display Media at their respective positions) */}
+        {majorCategory !== 'Jobs' && majorCategory !== 'Vehicles' && majorCategory !== 'Services' && (
           <div className="relative h-56 bg-zinc-800">
             <img
               src={imagesList[0] || 'https://images.unsplash.com/photo-1613490493576-7fde63acd811?auto=format&fit=crop&w=1200&q=80'}
@@ -275,11 +275,15 @@ export const WizardStep4Review: React.FC<WizardStep4ReviewProps> = ({
                 <span className="text-[10px] font-bold text-[#F5A623] uppercase tracking-wider block mb-0.5">
                   1. {t('titleLabel') || 'Listing Title'}
                 </span>
+              ) : majorCategory === 'Services' ? (
+                <span className="text-[10px] font-bold text-[#F5A623] uppercase tracking-wider block mb-0.5">
+                  1. {t('service_title_label') || 'Service Title'}
+                </span>
               ) : null}
               <h3 className="font-serif text-lg font-bold text-white line-clamp-1">
                 {fieldsState.title || t('untitled') || 'Untitled Listing'}
               </h3>
-              {majorCategory !== 'Vehicles' && (
+              {majorCategory !== 'Vehicles' && majorCategory !== 'Services' && (
                 <div className="text-xs text-white/70 flex items-start gap-1.5 mt-1.5 leading-relaxed bg-white/5 p-2 rounded-xl border border-white/5">
                   <MapPin className="w-3.5 h-3.5 text-[#F5A623] shrink-0 mt-0.5" />
                   <div className="flex-1 min-w-0">
@@ -304,6 +308,29 @@ export const WizardStep4Review: React.FC<WizardStep4ReviewProps> = ({
                 <span className="bg-[#F5A623]/10 text-[#F5A623] border border-[#F5A623]/20 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider block">
                   {getTranslatedCategoryName('Vehicles', currentLanguage)} &bull; {getTranslatedSubcategoryName(subcategory, currentLanguage)}
                 </span>
+              ) : majorCategory === 'Services' ? (
+                <div>
+                  <span className="bg-[#F5A623]/10 text-[#F5A623] border border-[#F5A623]/20 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider block mb-1">
+                    {getTranslatedCategoryName('Services', currentLanguage)} &bull; {getTranslatedSubcategoryName(subcategory, currentLanguage)}
+                  </span>
+                  <span className="text-base font-extrabold text-[#F5A623] font-mono block">
+                    {fieldsState.pricingType === 'Negotiable / Get a Quote'
+                      ? (t('pricing_negotiable_quote') || 'Negotiable')
+                      : fieldsState.pricingType === 'Price Range'
+                      ? `${fieldsState.priceMin ? Number(fieldsState.priceMin).toLocaleString() : '0'} - ${fieldsState.priceMax ? Number(fieldsState.priceMax).toLocaleString() : '...'} ${currency}`
+                      : fieldsState.pricingType === 'Starting From'
+                      ? `${t('pricing_starting_from') || 'From'} ${fieldsState.price ? Number(fieldsState.price).toLocaleString() : '0'} ${currency}`
+                      : fieldsState.pricingType === 'Hourly Rate'
+                      ? `${fieldsState.price ? Number(fieldsState.price).toLocaleString() : '0'} ${currency} / hr`
+                      : fieldsState.pricingType === 'Daily Rate'
+                      ? `${fieldsState.price ? Number(fieldsState.price).toLocaleString() : '0'} ${currency} / day`
+                      : fieldsState.pricingType === 'Project-Based'
+                      ? `${fieldsState.price ? Number(fieldsState.price).toLocaleString() : '0'} ${currency} / proj`
+                      : fieldsState.price
+                      ? `${Number(fieldsState.price).toLocaleString()} ${currency}`
+                      : (t('contactPrice') || 'Contact for Price')}
+                  </span>
+                </div>
               ) : isRealEstate ? (
                 <span className="text-lg font-extrabold text-[#F5A623] font-mono block">
                   {fieldsState.price ? `${Number(fieldsState.price).toLocaleString()} ${currency}` : (t('contactPrice') || 'Contact for Price')}
@@ -686,6 +713,260 @@ export const WizardStep4Review: React.FC<WizardStep4ReviewProps> = ({
                 )}
               </div>
             </div>
+          ) : majorCategory === 'Services' ? (
+            <div className="space-y-4 my-3">
+              {/* Section Header */}
+              <div className="flex items-center gap-2 border-b border-[#22242E] pb-2">
+                <Wrench className="w-4 h-4 text-[#F5A623]" />
+                <h4 className="text-xs font-bold text-white uppercase tracking-wider">
+                  {t('service_information_specs') || 'Service Information & Specifications'}
+                </h4>
+              </div>
+
+              {/* Responsive Cards Grid */}
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+                {/* 1. Service Category */}
+                {subcategory && (
+                  <div className="bg-[#1A1B22] p-2.5 rounded-xl border border-[#22242E]">
+                    <span className="text-[#F5A623] text-[10px] font-semibold uppercase block mb-0.5 tracking-wider">
+                      {t('wizard.step_subcategory') || 'Service Category'}
+                    </span>
+                    <span className="text-white text-xs font-medium truncate block">
+                      {getTranslatedSubcategoryName(subcategory, currentLanguage)}
+                    </span>
+                  </div>
+                )}
+
+                {/* 2. Base Location */}
+                {fieldsState.location && (
+                  <div className="bg-[#1A1B22] p-2.5 rounded-xl border border-[#22242E]">
+                    <span className="text-[#F5A623] text-[10px] font-semibold uppercase block mb-0.5 tracking-wider">
+                      {t('locLabel') || 'Location'}
+                    </span>
+                    <div className="flex items-center gap-1.5 text-white text-xs font-medium truncate">
+                      <MapPin className="w-3.5 h-3.5 text-[#F5A623] shrink-0" />
+                      <span className="truncate">{fieldsState.location}</span>
+                    </div>
+                  </div>
+                )}
+
+                {/* 3. Pricing */}
+                {fieldsState.pricingType && (
+                  <div className="bg-[#1A1B22] p-2.5 rounded-xl border border-[#22242E]">
+                    <span className="text-[#F5A623] text-[10px] font-semibold uppercase block mb-0.5 tracking-wider">
+                      {t('pricing_type_label') || 'Pricing'}
+                    </span>
+                    <span className="text-white text-xs font-medium truncate block font-mono text-[#F5A623]">
+                      {fieldsState.pricingType === 'Negotiable / Get a Quote'
+                        ? (t('pricing_negotiable_quote') || 'Negotiable / Get a Quote')
+                        : fieldsState.pricingType === 'Price Range'
+                        ? `${fieldsState.priceMin ? Number(fieldsState.priceMin).toLocaleString() : '0'} - ${fieldsState.priceMax ? Number(fieldsState.priceMax).toLocaleString() : '...'} ${currency}`
+                        : fieldsState.pricingType === 'Starting From'
+                        ? `${t('pricing_starting_from') || 'From'} ${fieldsState.price ? Number(fieldsState.price).toLocaleString() : '0'} ${currency}`
+                        : fieldsState.pricingType === 'Hourly Rate'
+                        ? `${fieldsState.price ? Number(fieldsState.price).toLocaleString() : '0'} ${currency} / hr`
+                        : fieldsState.pricingType === 'Daily Rate'
+                        ? `${fieldsState.price ? Number(fieldsState.price).toLocaleString() : '0'} ${currency} / day`
+                        : fieldsState.pricingType === 'Project-Based'
+                        ? `${fieldsState.price ? Number(fieldsState.price).toLocaleString() : '0'} ${currency} / proj`
+                        : `${fieldsState.price ? Number(fieldsState.price).toLocaleString() : '0'} ${currency}`}
+                    </span>
+                  </div>
+                )}
+
+                {/* 4. Service Duration */}
+                {fieldsState.serviceDuration && (
+                  <div className="bg-[#1A1B22] p-2.5 rounded-xl border border-[#22242E]">
+                    <span className="text-[#F5A623] text-[10px] font-semibold uppercase block mb-0.5 tracking-wider">
+                      {t('service_duration_label') || 'Service Duration'}
+                    </span>
+                    <span className="text-white text-xs font-medium truncate block">
+                      {fieldsState.serviceDuration}
+                    </span>
+                  </div>
+                )}
+
+                {/* 5. Service Location */}
+                {fieldsState.serviceLocation && (
+                  <div className="bg-[#1A1B22] p-2.5 rounded-xl border border-[#22242E]">
+                    <span className="text-[#F5A623] text-[10px] font-semibold uppercase block mb-0.5 tracking-wider">
+                      {t('service_location_label') || 'Service Location'}
+                    </span>
+                    <span className="text-white text-xs font-medium truncate block">
+                      {fieldsState.serviceLocation}
+                    </span>
+                  </div>
+                )}
+
+                {/* 6. Service Area / Coverage */}
+                {fieldsState.serviceArea && (
+                  <div className="bg-[#1A1B22] p-2.5 rounded-xl border border-[#22242E]">
+                    <span className="text-[#F5A623] text-[10px] font-semibold uppercase block mb-0.5 tracking-wider">
+                      {t('service_area_label') || 'Service Area / Coverage'}
+                    </span>
+                    <span className="text-white text-xs font-medium truncate block">
+                      {fieldsState.serviceArea}
+                    </span>
+                  </div>
+                )}
+
+                {/* 7. Availability */}
+                {fieldsState.availability && (
+                  <div className="bg-[#1A1B22] p-2.5 rounded-xl border border-[#22242E]">
+                    <span className="text-[#F5A623] text-[10px] font-semibold uppercase block mb-0.5 tracking-wider">
+                      {t('availability') || 'Availability'}
+                    </span>
+                    <span className="text-white text-xs font-medium truncate block">
+                      {fieldsState.availability}
+                    </span>
+                  </div>
+                )}
+
+                {/* 8. Travel / Call-Out Fee */}
+                {fieldsState.travelFeeType && (
+                  <div className="bg-[#1A1B22] p-2.5 rounded-xl border border-[#22242E]">
+                    <span className="text-[#F5A623] text-[10px] font-semibold uppercase block mb-0.5 tracking-wider">
+                      {t('travel_fee_label') || 'Travel / Call-Out Fee'}
+                    </span>
+                    <span className="text-white text-xs font-medium truncate block">
+                      {fieldsState.travelFeeType === 'Yes'
+                        ? `${fieldsState.travelFee ? Number(fieldsState.travelFee).toLocaleString() : '0'} ${currency}`
+                        : (t('option_no') || 'No')}
+                    </span>
+                  </div>
+                )}
+
+                {/* 9. Category-Specific Fields */}
+                {/* Transport & Moving */}
+                {fieldsState.transportType && (
+                  <div className="bg-[#1A1B22] p-2.5 rounded-xl border border-[#22242E]">
+                    <span className="text-[#F5A623] text-[10px] font-semibold uppercase block mb-0.5 tracking-wider">
+                      {t('transport_type_label') || 'Transport Type'}
+                    </span>
+                    <span className="text-white text-xs font-medium truncate block">
+                      {fieldsState.transportType}
+                    </span>
+                  </div>
+                )}
+                {fieldsState.equipmentAvailable && (
+                  <div className="bg-[#1A1B22] p-2.5 rounded-xl border border-[#22242E]">
+                    <span className="text-[#F5A623] text-[10px] font-semibold uppercase block mb-0.5 tracking-wider">
+                      {t('equipment_avail_label') || 'Vehicle / Equipment'}
+                    </span>
+                    <span className="text-white text-xs font-medium truncate block">
+                      {fieldsState.equipmentAvailable}
+                    </span>
+                  </div>
+                )}
+                {fieldsState.pickupDropoff && (
+                  <div className="bg-[#1A1B22] p-2.5 rounded-xl border border-[#22242E]">
+                    <span className="text-[#F5A623] text-[10px] font-semibold uppercase block mb-0.5 tracking-wider">
+                      {t('pickup_dropoff_label') || 'Pickup & Drop-off'}
+                    </span>
+                    <span className="text-white text-xs font-medium truncate block">
+                      {fieldsState.pickupDropoff}
+                    </span>
+                  </div>
+                )}
+
+                {/* Education & Tutoring */}
+                {fieldsState.lessonFormat && (
+                  <div className="bg-[#1A1B22] p-2.5 rounded-xl border border-[#22242E]">
+                    <span className="text-[#F5A623] text-[10px] font-semibold uppercase block mb-0.5 tracking-wider">
+                      {t('lesson_format_label') || 'Lesson Format'}
+                    </span>
+                    <span className="text-white text-xs font-medium truncate block">
+                      {fieldsState.lessonFormat}
+                    </span>
+                  </div>
+                )}
+
+                {/* Photography & Media */}
+                {fieldsState.serviceFormat && (
+                  <div className="bg-[#1A1B22] p-2.5 rounded-xl border border-[#22242E]">
+                    <span className="text-[#F5A623] text-[10px] font-semibold uppercase block mb-0.5 tracking-wider">
+                      {t('service_format_label') || 'Service Format'}
+                    </span>
+                    <span className="text-white text-xs font-medium truncate block">
+                      {fieldsState.serviceFormat}
+                    </span>
+                  </div>
+                )}
+
+                {/* IT & Software Services */}
+                {fieldsState.serviceDelivery && (
+                  <div className="bg-[#1A1B22] p-2.5 rounded-xl border border-[#22242E]">
+                    <span className="text-[#F5A623] text-[10px] font-semibold uppercase block mb-0.5 tracking-wider">
+                      {t('service_delivery_label') || 'Service Delivery'}
+                    </span>
+                    <span className="text-white text-xs font-medium truncate block">
+                      {fieldsState.serviceDelivery}
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              {/* Description */}
+              <div className="pt-2 border-t border-[#22242E]">
+                <span className="text-[10px] font-semibold text-[#F5A623] uppercase tracking-wider block mb-1">
+                  {t('descLabel') || 'Description'}
+                </span>
+                <p className="text-xs text-white/70 whitespace-pre-line leading-relaxed bg-[#0A0A0C]/40 p-3 rounded-xl border border-[#22242E]/60 max-h-40 overflow-y-auto">
+                  {fieldsState.description || t('noDesc') || 'No description provided'}
+                </p>
+              </div>
+
+              {/* Contact Phone */}
+              {fieldsState.contactPhone && (
+                <div className="bg-[#1A1B22] p-2.5 rounded-xl border border-[#22242E]">
+                  <span className="text-[#F5A623] text-[10px] font-semibold uppercase block mb-0.5 tracking-wider">
+                    {t('contact_phone_label') || 'Contact Phone'}
+                  </span>
+                  <div className="flex items-center gap-1.5 text-white text-xs font-mono font-medium">
+                    <Phone className="w-3.5 h-3.5 text-[#F5A623]" />
+                    <span>{fieldsState.contactPhone}</span>
+                  </div>
+                </div>
+              )}
+
+              {/* Media Preview (Photos & Video) */}
+              <div className="pt-2 border-t border-[#22242E] space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-semibold text-[#F5A623] uppercase tracking-wider block">
+                    {t('media_label') || 'Photos / Video'}
+                  </span>
+                  <span className="text-[10px] text-white/40">
+                    {imagesList.length} {imagesList.length === 1 ? 'photo' : 'photos'}{fieldsState.video ? ' • 1 video' : ''}
+                  </span>
+                </div>
+                {imagesList.length > 0 ? (
+                  <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+                    {imagesList.map((img, i) => (
+                      <div key={i} className="relative aspect-video rounded-lg overflow-hidden border border-white/10 bg-zinc-800">
+                        <img src={img} alt={`Service preview ${i + 1}`} className="w-full h-full object-cover" />
+                        {i === 0 && (
+                          <span className="absolute bottom-1 left-1 bg-black/70 text-[#F5A623] text-[9px] px-1.5 py-0.5 rounded font-bold">
+                            Cover
+                          </span>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="p-3 bg-[#0A0A0C]/40 rounded-xl border border-[#22242E]/60 text-center">
+                    <p className="text-xs text-white/40 italic">
+                      {t('no_media_uploaded') || 'No photos or video uploaded'}
+                    </p>
+                  </div>
+                )}
+                {fieldsState.video && (
+                  <div className="p-2 bg-white/5 rounded-lg border border-white/10 flex items-center gap-2 text-xs text-white/80">
+                    <Film className="w-3.5 h-3.5 text-[#F5A623]" />
+                    <span className="truncate">{fieldsState.video}</span>
+                  </div>
+                )}
+              </div>
+            </div>
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 my-3">
               {/* Condition / Furnishing */}
@@ -842,8 +1123,8 @@ export const WizardStep4Review: React.FC<WizardStep4ReviewProps> = ({
             </div>
           )}
 
-          {/* Full Description text (Non-Jobs & Non-Vehicles only; Jobs & Vehicles display Description in their ordered lists) */}
-          {majorCategory !== 'Jobs' && majorCategory !== 'Vehicles' && (
+          {/* Full Description text (Non-Jobs, Non-Vehicles & Non-Services only; Jobs, Vehicles & Services display Description in their ordered lists) */}
+          {majorCategory !== 'Jobs' && majorCategory !== 'Vehicles' && majorCategory !== 'Services' && (
             <div className="pt-2 border-t border-[#22242E]">
               <span className="text-[10px] font-semibold text-[#F5A623] uppercase tracking-wider block mb-1">
                 {t('descLabel') || 'Description'}
@@ -855,7 +1136,7 @@ export const WizardStep4Review: React.FC<WizardStep4ReviewProps> = ({
           )}
 
           {/* Seller / Employer Info Badge */}
-          {majorCategory !== 'Jobs' && majorCategory !== 'Vehicles' ? (
+          {majorCategory !== 'Jobs' && majorCategory !== 'Vehicles' && majorCategory !== 'Services' ? (
             <div className="bg-[#1A1B22] p-3 rounded-xl border border-[#22242E] flex items-center justify-between text-xs">
               <div className="flex items-center gap-2">
                 <UserIcon className="w-4 h-4 text-[#F5A623]" />
@@ -870,7 +1151,7 @@ export const WizardStep4Review: React.FC<WizardStep4ReviewProps> = ({
             <div className="bg-[#1A1B22] p-3 rounded-xl border border-[#22242E] flex items-center justify-between text-xs">
               <div className="flex items-center gap-2">
                 <UserIcon className="w-4 h-4 text-[#F5A623]" />
-                <span className="text-white/80 font-medium">{majorCategory === 'Jobs' ? (t('employerNameLabel') || 'Employer') : (t('ownerNameLabel') || 'Owner')}: {fieldsState.ownerName}</span>
+                <span className="text-white/80 font-medium">{majorCategory === 'Jobs' ? (t('employerNameLabel') || 'Employer') : majorCategory === 'Services' ? (t('ownerNameLabel') || 'Service Provider') : (t('ownerNameLabel') || 'Owner')}: {fieldsState.ownerName}</span>
               </div>
             </div>
           ) : null}

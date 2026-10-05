@@ -213,6 +213,23 @@ export interface Property {
   deliveryFee?: number;
   handoverLocationType?: 'Same as listing location' | 'Different location' | string;
   handoverLocation?: string;
+
+  // Services & Trades extensions
+  pricingType?: 'Fixed Price' | 'Starting From' | 'Price Range' | 'Hourly Rate' | 'Daily Rate' | 'Project-Based' | 'Negotiable / Get a Quote' | string;
+  priceMin?: number;
+  priceMax?: number;
+  serviceDuration?: 'One-time' | 'Per Hour' | 'Per Day' | 'Per Project' | 'Ongoing' | 'By Appointment' | string;
+  serviceLocation?: 'Customer Location' | 'Provider Location' | 'Remote / Online' | 'Both / Flexible' | string;
+  serviceArea?: string;
+  travelFeeType?: 'No' | 'Yes' | string;
+  travelFee?: number;
+  availability?: string;
+  transportType?: 'Local' | 'Long Distance' | 'Nationwide' | string;
+  equipmentAvailable?: 'Yes' | 'No' | string;
+  pickupDropoff?: 'Pickup Only' | 'Pickup & Drop-off' | string;
+  lessonFormat?: 'In Person' | 'Online' | 'Both' | string;
+  serviceFormat?: 'On Location' | 'Studio' | 'Remote / Online' | string;
+  serviceDelivery?: 'Remote' | 'On-site' | 'Both' | string;
 }
 
 export interface WholesalePriceTier {
