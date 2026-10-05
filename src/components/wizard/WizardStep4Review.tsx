@@ -243,24 +243,51 @@ export const WizardStep4Review: React.FC<WizardStep4ReviewProps> = ({
     <div className="space-y-5 animate-in fade-in duration-300">
       {/* Preview Listing Card */}
       <div className="bg-[#141418] rounded-2xl border border-[#22242E] overflow-hidden shadow-xl max-w-xl mx-auto">
-        {/* 1. HEADER & MEDIA PREVIEW (Non-Jobs, Non-Vehicles & Non-Services only; Jobs, Vehicles & Services display Media at their respective positions) */}
-        {majorCategory !== 'Jobs' && majorCategory !== 'Vehicles' && majorCategory !== 'Services' && (
-          <div className="relative h-56 bg-zinc-800">
+        {/* 1. HEADER & MEDIA PREVIEW (Appears FIRST at the top for all categories) */}
+        <div className="relative h-56 bg-zinc-800 overflow-hidden">
+          {imagesList.length > 0 ? (
             <img
-              src={imagesList[0] || 'https://images.unsplash.com/photo-1613490493576-7fde63acd811?auto=format&fit=crop&w=1200&q=80'}
+              src={imagesList[0]}
               alt="Listing Cover Preview"
               className="w-full h-full object-cover"
               referrerPolicy="no-referrer"
             />
-            <div className="absolute top-3 left-3 bg-black/75 backdrop-blur-md px-3 py-1 rounded-full text-[10px] font-bold text-[#F5A623] uppercase tracking-wider border border-white/10">
-              {getTranslatedCategoryName(majorCategory, currentLanguage)} &bull; {getTranslatedSubcategoryName(subcategory, currentLanguage)}
+          ) : (
+            <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-[#1A1B22] to-[#0A0A0C] text-white/40 p-4 text-center">
+              <Camera className="w-8 h-8 mb-2 text-[#F5A623]/50" />
+              <span className="text-xs font-medium text-white/60">{t('no_media_uploaded') || 'No photos uploaded (optional)'}</span>
             </div>
-            {imagesList.length > 1 && (
-              <div className="absolute bottom-3 right-3 bg-black/80 px-2.5 py-1 rounded-md text-[10px] font-bold text-white flex items-center gap-1">
-                <Camera className="w-3 h-3 text-[#F5A623]" />
-                <span>{imagesList.length} {t('photosCount') || 'photos'}</span>
+          )}
+          <div className="absolute top-3 left-3 bg-black/75 backdrop-blur-md px-3 py-1 rounded-full text-[10px] font-bold text-[#F5A623] uppercase tracking-wider border border-white/10">
+            {getTranslatedCategoryName(majorCategory, currentLanguage)} &bull; {getTranslatedSubcategoryName(subcategory, currentLanguage)}
+          </div>
+          {imagesList.length > 1 && (
+            <div className="absolute bottom-3 right-3 bg-black/80 px-2.5 py-1 rounded-md text-[10px] font-bold text-white flex items-center gap-1">
+              <Camera className="w-3 h-3 text-[#F5A623]" />
+              <span>{imagesList.length} {t('photosCount') || 'photos'}</span>
+            </div>
+          )}
+          {fieldsState.video && (
+            <div className="absolute bottom-3 left-3 bg-black/80 px-2.5 py-1 rounded-md text-[10px] font-bold text-white flex items-center gap-1">
+              <Film className="w-3 h-3 text-[#F5A623]" />
+              <span className="truncate max-w-[150px]">{t('video') || 'Video'}</span>
+            </div>
+          )}
+        </div>
+
+        {/* Thumbnail strip if multiple images */}
+        {imagesList.length > 1 && (
+          <div className="px-5 pt-3 pb-2 flex gap-2 overflow-x-auto border-b border-[#22242E] bg-[#0A0A0C]/40">
+            {imagesList.map((img, i) => (
+              <div key={i} className={`relative w-16 h-12 rounded-lg overflow-hidden shrink-0 border ${i === 0 ? 'border-[#F5A623]' : 'border-white/10'} bg-zinc-800`}>
+                <img src={img} alt={`Preview ${i + 1}`} className="w-full h-full object-cover" />
+                {i === 0 && (
+                  <span className="absolute bottom-0.5 left-0.5 bg-black/80 text-[#F5A623] text-[8px] px-1 rounded font-bold">
+                    Cover
+                  </span>
+                )}
               </div>
-            )}
+            ))}
           </div>
         )}
 
@@ -486,47 +513,9 @@ export const WizardStep4Review: React.FC<WizardStep4ReviewProps> = ({
                   {fieldsState.applicationContact || (fieldsState.applicationMethod === 'Apply through SOF-UMER' ? (t('sofumer_app_contact') || 'Direct in-app application') : (fieldsState.contactPhone || t('not_specified') || 'Not specified'))}
                 </span>
               </div>
-
-              {/* 11. Media */}
-              <div className="pt-2 border-t border-[#22242E] space-y-2 sm:col-span-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-semibold text-[#F5A623] uppercase tracking-wider block">
-                    11. {t('media_label') || 'Media'}
-                  </span>
-                  <span className="text-[10px] text-white/40">
-                    {imagesList.length} {imagesList.length === 1 ? 'photo' : 'photos'}{fieldsState.video ? ' • 1 video' : ''}
-                  </span>
-                </div>
-                {imagesList.length > 0 ? (
-                  <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
-                    {imagesList.map((img, i) => (
-                      <div key={i} className="relative aspect-video rounded-lg overflow-hidden border border-white/10 bg-zinc-800">
-                        <img src={img} alt={`Job preview ${i + 1}`} className="w-full h-full object-cover" />
-                        {i === 0 && (
-                          <span className="absolute bottom-1 left-1 bg-black/70 text-[#F5A623] text-[9px] px-1.5 py-0.5 rounded font-bold">
-                            Cover
-                          </span>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="p-3 bg-[#0A0A0C]/40 rounded-xl border border-[#22242E]/60 text-center">
-                    <p className="text-xs text-white/40 italic">
-                      {t('no_media_uploaded') || 'No photos or video uploaded (optional)'}
-                    </p>
-                  </div>
-                )}
-                {fieldsState.video && (
-                  <div className="p-2 bg-white/5 rounded-lg border border-white/10 flex items-center gap-2 text-xs text-white/80">
-                    <Film className="w-3.5 h-3.5 text-[#F5A623]" />
-                    <span className="truncate">{fieldsState.video}</span>
-                  </div>
-                )}
-              </div>
             </div>
           ) : majorCategory === 'Vehicles' ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 my-3">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 my-3">
               {/* 2. Brand */}
               <div className="bg-[#1A1B22] p-2.5 rounded-xl border border-[#22242E]">
                 <span className="text-[#F5A623] text-[10px] font-semibold uppercase block mb-0.5 tracking-wider">
@@ -568,13 +557,13 @@ export const WizardStep4Review: React.FC<WizardStep4ReviewProps> = ({
               </div>
 
               {/* 6. Location */}
-              <div className="bg-[#1A1B22] p-2.5 rounded-xl border border-[#22242E] sm:col-span-2">
+              <div className="bg-[#1A1B22] p-2.5 rounded-xl border border-[#22242E] col-span-2 sm:col-span-1">
                 <span className="text-[#F5A623] text-[10px] font-semibold uppercase block mb-0.5 tracking-wider">
                   6. {t('locLabel') || 'Location'}
                 </span>
                 <div className="flex items-center gap-1.5 text-white text-xs font-medium">
                   <MapPin className="w-3.5 h-3.5 text-[#F5A623] shrink-0" />
-                  <span>{fieldsState.location || t('noLocation') || 'Location not specified'}</span>
+                  <span className="truncate">{fieldsState.location || t('noLocation') || 'Location not specified'}</span>
                 </div>
               </div>
 
@@ -629,11 +618,11 @@ export const WizardStep4Review: React.FC<WizardStep4ReviewProps> = ({
               </div>
 
               {/* 11. Handover Location */}
-              <div className="bg-[#1A1B22] p-2.5 rounded-xl border border-[#22242E] sm:col-span-2">
+              <div className="bg-[#1A1B22] p-2.5 rounded-xl border border-[#22242E] col-span-2 sm:col-span-1">
                 <span className="text-[#F5A623] text-[10px] font-semibold uppercase block mb-0.5 tracking-wider">
                   11. {t('handover_location_label') || 'Handover Location'}
                 </span>
-                <span className="text-white text-xs font-medium block">
+                <span className="text-white text-xs font-medium truncate block">
                   {fieldsState.handoverLocationType === 'Different location'
                     ? (fieldsState.handoverLocation || fieldsState.location || t('not_specified') || 'Not specified')
                     : `${t('handover_loc_same') || 'Same as listing location'}${fieldsState.location ? ` (${fieldsState.location})` : ''}`}
@@ -642,7 +631,7 @@ export const WizardStep4Review: React.FC<WizardStep4ReviewProps> = ({
 
               {/* 12. Delivery Fee, when applicable */}
               {(fieldsState.handoverMethod === 'Seller Delivery' || fieldsState.handoverMethod === 'Pickup or Delivery') && (
-                <div className="bg-[#1A1B22] p-2.5 rounded-xl border border-[#22242E] sm:col-span-2">
+                <div className="bg-[#1A1B22] p-2.5 rounded-xl border border-[#22242E] col-span-2 sm:col-span-1">
                   <span className="text-[#F5A623] text-[10px] font-semibold uppercase block mb-0.5 tracking-wider">
                     12. {t('delivery_fee_label') || 'Delivery Fee'}
                   </span>
@@ -654,63 +643,25 @@ export const WizardStep4Review: React.FC<WizardStep4ReviewProps> = ({
                 </div>
               )}
 
+              {/* 14. Contact Phone */}
+              <div className="bg-[#1A1B22] p-2.5 rounded-xl border border-[#22242E] col-span-2 sm:col-span-1">
+                <span className="text-[#F5A623] text-[10px] font-semibold uppercase block mb-0.5 tracking-wider">
+                  14. {t('contact_phone_label') || 'Contact Phone'}
+                </span>
+                <div className="flex items-center gap-1.5 text-white text-xs font-mono font-medium">
+                  <Phone className="w-3.5 h-3.5 text-[#F5A623]" />
+                  <span className="truncate">{fieldsState.contactPhone || '+251 91 123 4567'}</span>
+                </div>
+              </div>
+
               {/* 13. Description */}
-              <div className="pt-2 border-t border-[#22242E] sm:col-span-2">
+              <div className="pt-2 border-t border-[#22242E] col-span-2 sm:col-span-3">
                 <span className="text-[10px] font-semibold text-[#F5A623] uppercase tracking-wider block mb-1">
                   13. {t('descLabel') || 'Description'}
                 </span>
                 <p className="text-xs text-white/70 whitespace-pre-line leading-relaxed bg-[#0A0A0C]/40 p-3 rounded-xl border border-[#22242E]/60 max-h-40 overflow-y-auto">
                   {fieldsState.description || t('noDesc') || 'No description provided'}
                 </p>
-              </div>
-
-              {/* 14. Contact Phone */}
-              <div className="bg-[#1A1B22] p-2.5 rounded-xl border border-[#22242E] sm:col-span-2">
-                <span className="text-[#F5A623] text-[10px] font-semibold uppercase block mb-0.5 tracking-wider">
-                  14. {t('contact_phone_label') || 'Contact Phone'}
-                </span>
-                <div className="flex items-center gap-1.5 text-white text-xs font-mono font-medium">
-                  <Phone className="w-3.5 h-3.5 text-[#F5A623]" />
-                  <span>{fieldsState.contactPhone || '+251 91 123 4567'}</span>
-                </div>
-              </div>
-
-              {/* 15. Photos/Video */}
-              <div className="pt-2 border-t border-[#22242E] space-y-2 sm:col-span-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-semibold text-[#F5A623] uppercase tracking-wider block">
-                    15. {t('media_label') || 'Photos / Video'}
-                  </span>
-                  <span className="text-[10px] text-white/40">
-                    {imagesList.length} {imagesList.length === 1 ? 'photo' : 'photos'}{fieldsState.video ? ' • 1 video' : ''}
-                  </span>
-                </div>
-                {imagesList.length > 0 ? (
-                  <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
-                    {imagesList.map((img, i) => (
-                      <div key={i} className="relative aspect-video rounded-lg overflow-hidden border border-white/10 bg-zinc-800">
-                        <img src={img} alt={`Vehicle preview ${i + 1}`} className="w-full h-full object-cover" />
-                        {i === 0 && (
-                          <span className="absolute bottom-1 left-1 bg-black/70 text-[#F5A623] text-[9px] px-1.5 py-0.5 rounded font-bold">
-                            Cover
-                          </span>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="p-3 bg-[#0A0A0C]/40 rounded-xl border border-[#22242E]/60 text-center">
-                    <p className="text-xs text-white/40 italic">
-                      {t('no_media_uploaded') || 'No photos or video uploaded'}
-                    </p>
-                  </div>
-                )}
-                {fieldsState.video && (
-                  <div className="p-2 bg-white/5 rounded-lg border border-white/10 flex items-center gap-2 text-xs text-white/80">
-                    <Film className="w-3.5 h-3.5 text-[#F5A623]" />
-                    <span className="truncate">{fieldsState.video}</span>
-                  </div>
-                )}
               </div>
             </div>
           ) : majorCategory === 'Services' ? (
@@ -928,44 +879,6 @@ export const WizardStep4Review: React.FC<WizardStep4ReviewProps> = ({
                   </div>
                 </div>
               )}
-
-              {/* Media Preview (Photos & Video) */}
-              <div className="pt-2 border-t border-[#22242E] space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-semibold text-[#F5A623] uppercase tracking-wider block">
-                    {t('media_label') || 'Photos / Video'}
-                  </span>
-                  <span className="text-[10px] text-white/40">
-                    {imagesList.length} {imagesList.length === 1 ? 'photo' : 'photos'}{fieldsState.video ? ' • 1 video' : ''}
-                  </span>
-                </div>
-                {imagesList.length > 0 ? (
-                  <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
-                    {imagesList.map((img, i) => (
-                      <div key={i} className="relative aspect-video rounded-lg overflow-hidden border border-white/10 bg-zinc-800">
-                        <img src={img} alt={`Service preview ${i + 1}`} className="w-full h-full object-cover" />
-                        {i === 0 && (
-                          <span className="absolute bottom-1 left-1 bg-black/70 text-[#F5A623] text-[9px] px-1.5 py-0.5 rounded font-bold">
-                            Cover
-                          </span>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="p-3 bg-[#0A0A0C]/40 rounded-xl border border-[#22242E]/60 text-center">
-                    <p className="text-xs text-white/40 italic">
-                      {t('no_media_uploaded') || 'No photos or video uploaded'}
-                    </p>
-                  </div>
-                )}
-                {fieldsState.video && (
-                  <div className="p-2 bg-white/5 rounded-lg border border-white/10 flex items-center gap-2 text-xs text-white/80">
-                    <Film className="w-3.5 h-3.5 text-[#F5A623]" />
-                    <span className="truncate">{fieldsState.video}</span>
-                  </div>
-                )}
-              </div>
             </div>
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 my-3">
