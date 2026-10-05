@@ -131,6 +131,36 @@ function getProductCategoryConfig(subcat?: string): ProductCategoryConfig {
   return PRODUCT_CATEGORY_CONFIGS[subcat] || PRODUCT_CATEGORY_CONFIGS['Other Products'];
 }
 
+const LOCAL_BUSINESS_TITLE_PLACEHOLDERS: Record<string, string> = {
+  'Restaurants & Cafes': 'e.g., Habesha Family Restaurant & Cafe',
+  'Shops & Supermarkets': 'e.g., Bole Family Supermarket',
+  'Salons & Beauty': 'e.g., Elegant Beauty Salon',
+  'Salons & Beauty Shops': 'e.g., Elegant Beauty Salon',
+  'Auto Repair & Garage': 'e.g., Bole Auto Repair & Garage',
+  'Pharmacies & Health': 'e.g., Sunrise Pharmacy & Clinic',
+  'Pharmacies & Clinics': 'e.g., Sunrise Pharmacy & Clinic',
+  'Agencies & Consultancy': 'e.g., Abbadinsa Business Consultancy',
+  'Hotels & Lodging': 'e.g., Addis View Hotel & Guest House',
+  'Hotels & Guest Houses': 'e.g., Addis View Hotel & Guest House'
+};
+
+function getLocalBusinessTitlePlaceholder(subcat?: string): string {
+  if (!subcat) return 'e.g., Habesha Family Restaurant & Cafe';
+  if (LOCAL_BUSINESS_TITLE_PLACEHOLDERS[subcat]) {
+    return LOCAL_BUSINESS_TITLE_PLACEHOLDERS[subcat];
+  }
+  const s = subcat.trim().toLowerCase();
+  if (s.includes('restaurant') || s.includes('cafe')) return 'e.g., Habesha Family Restaurant & Cafe';
+  if (s.includes('shop') || s.includes('supermarket')) return 'e.g., Bole Family Supermarket';
+  if (s.includes('salon') || s.includes('beauty')) return 'e.g., Elegant Beauty Salon';
+  if (s.includes('auto') || s.includes('garage') || s.includes('repair')) return 'e.g., Bole Auto Repair & Garage';
+  if (s.includes('pharm') || s.includes('clinic') || s.includes('health')) return 'e.g., Sunrise Pharmacy & Clinic';
+  if (s.includes('agency') || s.includes('agencies') || s.includes('consult')) return 'e.g., Abbadinsa Business Consultancy';
+  if (s.includes('hotel') || s.includes('guest') || s.includes('lodg')) return 'e.g., Addis View Hotel & Guest House';
+
+  return 'e.g., Habesha Family Restaurant & Cafe';
+}
+
 interface WizardStep2DetailsProps {
   majorCategory: string;
   subcategory?: string;
@@ -575,6 +605,102 @@ export const WizardStep2Details: React.FC<WizardStep2DetailsProps> = ({
             </div>
           )}
         </div>
+      ) : majorCategory === 'Local Businesses' ? (
+        <div className="space-y-4">
+          <div className="border-l-2 border-amber-500 pl-3">
+            <h4 className="text-xs font-bold text-white tracking-wider uppercase">
+              {t('business_details_media') || 'Business Details & Media'}
+            </h4>
+            <p className="text-[10px] text-white/40">
+              {activeSubcategory ? getTranslatedSubcategoryName(activeSubcategory, currentLanguage) : (t('business_details_subtext') || 'Enter accurate details for your business')}
+            </p>
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold text-white/80 uppercase mb-1">
+              1. {t('titleLabel') || 'Listing Title'} *
+            </label>
+            <input
+              type="text"
+              required
+              value={fieldsState.title || ''}
+              placeholder={getLocalBusinessTitlePlaceholder(activeSubcategory)}
+              onChange={e => handleFieldChange('title', e.target.value)}
+              className="w-full p-3 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white focus:outline-none transition"
+            />
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-bold text-white/80 uppercase mb-1">
+                2. {t('locLabel') || 'Location'} *
+              </label>
+              <input
+                type="text"
+                required
+                value={fieldsState.location || ''}
+                placeholder="e.g., Bole, Addis Ababa"
+                onChange={e => handleFieldChange('location', e.target.value)}
+                className="w-full p-3 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white focus:outline-none transition"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-white/80 uppercase mb-1">
+                3. {(t('contact_phone_label') || 'Contact Phone').replace(/\s*\*+$/, '')} *
+              </label>
+              <input
+                type="text"
+                required
+                value={fieldsState.contactPhone || fieldsState.ownerPhone || ''}
+                placeholder="+251 91 123 4567"
+                onChange={e => {
+                  handleFieldChange('contactPhone', e.target.value);
+                  handleFieldChange('ownerPhone', e.target.value);
+                }}
+                className="w-full p-3 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white focus:outline-none transition"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold text-white/80 uppercase mb-1">
+              4. {t('descLabel') || 'Description'} *
+            </label>
+            <textarea
+              required
+              rows={3}
+              value={fieldsState.description || ''}
+              placeholder={t('business_desc_placeholder') || 'Describe your business, services, products, opening hours, and other important information...'}
+              onChange={e => handleFieldChange('description', e.target.value)}
+              className="w-full p-3 bg-zinc-900 border border-white/10 focus:border-amber-500 rounded-xl text-xs text-white focus:outline-none transition"
+            />
+          </div>
+
+          {/* Admin-Only: Listing on Behalf of Owner */}
+          {(user?.role === 'admin' || user?.isAdmin) && (
+            <div className="flex flex-col gap-2 my-4 p-4 bg-[#141418] border border-[#F5A623]/30 rounded-xl">
+              <div className="flex items-center gap-2">
+                <span className="text-xs bg-[#F5A623] text-black font-bold px-2 py-0.5 rounded uppercase">
+                  {t('admin_only_badge') || 'Admin Only'}
+                </span>
+                <label className="text-sm font-medium text-[#F5A623] tracking-wider">
+                  {t('ownerNameLabel') || 'Business Owner Name'} *
+                </label>
+              </div>
+              <input
+                type="text"
+                placeholder={t('ownerNamePlaceholder') || 'e.g., Abebe Kebede (Client Name)'}
+                value={formData.ownerName || ''}
+                onChange={(e) => setFormData({ ...formData, ownerName: e.target.value })}
+                className="w-full bg-[#1A1B22] text-white border border-[#22242E] rounded-lg p-3 focus:border-[#F5A623] outline-none text-sm placeholder:text-gray-500"
+                required={(user?.role === 'admin' || user?.isAdmin)}
+              />
+              <p className="text-xs text-gray-400">
+                {t('ownerNameDesc') || 'Enter the full name of the business owner you are listing on behalf of.'}
+              </p>
+            </div>
+          )}
+        </div>
       ) : (
         <div className="space-y-4">
           <div className="border-l-2 border-amber-500 pl-3">
@@ -793,6 +919,8 @@ export const WizardStep2Details: React.FC<WizardStep2DetailsProps> = ({
               ? (t('service_media_upload_optional') || '5. Media Upload (Photos & Video) (Optional)')
               : majorCategory === 'Products'
               ? `7. ${(t('media_upload_title') || 'Media Upload (Photos & Video) *').replace(/\s*\*+$/, '')} *`
+              : majorCategory === 'Local Businesses'
+              ? `5. ${(t('media_upload_title') || 'Media Upload (Photos & Video) *').replace(/\s*\*+$/, '')} *`
               : (t('media_upload_title') || 'Media Upload (Photos & Video) *')}
           </label>
           <span className="text-[11px] font-mono text-white/50">
