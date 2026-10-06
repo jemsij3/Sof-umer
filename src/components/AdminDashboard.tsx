@@ -855,8 +855,19 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
     setSiteStatusSuccess('');
     setIsSavingSiteStatus(true);
     try {
-      const isMaint = (systemSettings.maintenanceMode === true) || 
-        ['maintenance', 'offline', 'under maintenance', 'maintenance mode', 'off'].includes(String(systemSettings.siteStatus || '').toLowerCase().trim());
+      const cleanStatus = String(systemSettings.siteStatus || 'Online').trim().toLowerCase();
+      const isLiveSelected = ['online', 'live', 'website live', 'on', 'active'].includes(cleanStatus);
+      const isMaintSelected = ['maintenance', 'offline', 'under maintenance', 'maintenance mode', 'off'].includes(cleanStatus);
+
+      let isMaint = false;
+      if (isLiveSelected) {
+        isMaint = false;
+      } else if (isMaintSelected) {
+        isMaint = true;
+      } else {
+        isMaint = Boolean(systemSettings.maintenanceMode);
+      }
+
       const updated = {
         ...systemSettings,
         siteStatus: isMaint ? 'Maintenance' : 'Online',
@@ -1310,8 +1321,14 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
     setIsSavingSettings(true);
     setSaveSettingsSuccess(false);
     try {
+      const cleanStatus = String(systemSettings.siteStatus || 'Online').trim().toLowerCase();
+      const isLiveSelected = ['online', 'live', 'website live', 'on', 'active'].includes(cleanStatus);
+      const isMaint = isLiveSelected ? false : Boolean(systemSettings.maintenanceMode);
+
       const payload = {
         ...systemSettings,
+        siteStatus: isMaint ? 'Maintenance' : 'Online',
+        maintenanceMode: isMaint,
         contactUsSettings: contactUsData
       };
       await updateSystemSettings(payload);
@@ -6311,16 +6328,22 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
                         </p>
                       </div>
                       <div className="flex items-center gap-2">
-                        <span className={`px-3 py-1 rounded-full text-xs font-bold border flex items-center gap-1.5 ${
-                          (systemSettings.siteStatus || 'Online') === 'Online'
-                            ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
-                            : 'bg-amber-500/10 border-amber-500/30 text-amber-400 animate-pulse'
-                        }`}>
-                          <div className={`w-2 h-2 rounded-full ${
-                            (systemSettings.siteStatus || 'Online') === 'Online' ? 'bg-emerald-400 animate-ping' : 'bg-amber-400'
-                          }`} />
-                          <span>{(systemSettings.siteStatus || 'Online') === 'Online' ? 'LIVE ONLINE' : 'MAINTENANCE MODE'}</span>
-                        </span>
+                        {(() => {
+                          const cleanStatus = String(systemSettings.siteStatus || 'Online').trim().toLowerCase();
+                          const isLive = ['online', 'live', 'website live', 'on', 'active'].includes(cleanStatus) && systemSettings.maintenanceMode !== true;
+                          return (
+                            <span className={`px-3 py-1 rounded-full text-xs font-bold border flex items-center gap-1.5 ${
+                              isLive
+                                ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
+                                : 'bg-amber-500/10 border-amber-500/30 text-amber-400 animate-pulse'
+                            }`}>
+                              <div className={`w-2 h-2 rounded-full ${
+                                isLive ? 'bg-emerald-400 animate-ping' : 'bg-amber-400'
+                              }`} />
+                              <span>{isLive ? 'LIVE ONLINE' : 'MAINTENANCE MODE'}</span>
+                            </span>
+                          );
+                        })()}
                       </div>
                     </div>
 
@@ -6354,8 +6377,12 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
                       </label>
                       
                       {(() => {
-                        const isMaintMode = systemSettings.maintenanceMode === true || 
-                          ['maintenance', 'offline', 'under maintenance', 'maintenance mode', 'off'].includes(String(systemSettings.siteStatus || '').toLowerCase().trim());
+                        const cleanStatus = String(systemSettings.siteStatus || 'Online').trim().toLowerCase();
+                        const isLive = ['online', 'live', 'website live', 'on', 'active'].includes(cleanStatus);
+                        const isMaintMode = !isLive && (
+                          systemSettings.maintenanceMode === true || 
+                          ['maintenance', 'offline', 'under maintenance', 'maintenance mode', 'off'].includes(cleanStatus)
+                        );
                         return (
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <button

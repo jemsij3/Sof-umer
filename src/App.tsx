@@ -39,8 +39,6 @@ function MainAppLayout() {
   // Check Site Live Status (Maintenance or Offline) - Single Source of Truth
   const isMaintenanceMode = React.useMemo(() => {
     if (!systemSettings) return false;
-    if (systemSettings.maintenanceMode === false) return false;
-    if (systemSettings.maintenanceMode === true) return true;
     const status = String(systemSettings.siteStatus || 'Online').trim().toLowerCase();
     if (status === 'online' || status === 'live' || status === 'website live' || status === 'on' || status === 'active') {
       return false;
@@ -48,6 +46,8 @@ function MainAppLayout() {
     if (status === 'maintenance' || status === 'offline' || status === 'under maintenance' || status === 'maintenance mode' || status === 'off') {
       return true;
     }
+    if (systemSettings.maintenanceMode === false) return false;
+    if (systemSettings.maintenanceMode === true) return true;
     return false;
   }, [systemSettings]);
 

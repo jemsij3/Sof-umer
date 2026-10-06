@@ -1045,6 +1045,26 @@ function normalizePhone(phone: string): string {
   return cleaned;
 }
 
+// Robust, Single Source of Truth helper for Maintenance Status
+const isPlatformInMaintenance = (settings: any): boolean => {
+  if (!settings) return false;
+  
+  // Status string check (case-insensitive) - explicit LIVE always means LIVE
+  const status = String(settings.siteStatus || 'Online').trim().toLowerCase();
+  if (status === 'online' || status === 'live' || status === 'website live' || status === 'on' || status === 'active') {
+    return false;
+  }
+  if (status === 'maintenance' || status === 'offline' || status === 'under maintenance' || status === 'maintenance mode' || status === 'off') {
+    return true;
+  }
+
+  // Explicit boolean flag check
+  if (settings.maintenanceMode === false) return false;
+  if (settings.maintenanceMode === true) return true;
+
+  return false;
+};
+
 const applyDataSanityAndMigrations = () => {
   if (!localDb.appFeatures || !Array.isArray(localDb.appFeatures)) {
     localDb.appFeatures = getInitialData().appFeatures;
@@ -1329,6 +1349,11 @@ const applyDataSanityAndMigrations = () => {
   delete appSet.termsAndPrivacy;
   delete appSet.notificationsEnabled;
 
+  // Single source of truth: synchronize live siteStatus and maintenanceMode
+  const isMaint = isPlatformInMaintenance(appSet);
+  appSet.maintenanceMode = isMaint;
+  appSet.siteStatus = isMaint ? 'Maintenance' : 'Online';
+
   if (Array.isArray(localDb.translations)) {
     for (const tr of localDb.translations) {
       if (!tr || typeof tr !== 'object' || !tr.key) continue;
@@ -1383,7 +1408,15 @@ const saveDb = (): Promise<void> => {
       }
     }
 
-    // 2. Sync to MongoDB asynchronously if connected
+    // 2. Also keep workspace seed in sync so state survives container restarts and rebuilds
+    try {
+      const workspaceSeed = path.join(process.cwd(), 'sof_umer_db.json');
+      if (DB_FILE !== workspaceSeed) {
+        await fs.writeFile(workspaceSeed, JSON.stringify(localDb, null, 2), 'utf-8');
+      }
+    } catch (_) {}
+
+    // 3. Sync to MongoDB asynchronously if connected
     if (isMongoConnected) {
       await saveToMongo().catch(e => console.error('[Storage] Async saveToMongo error:', e));
     }
@@ -1898,24 +1931,6 @@ async function startServer() {
       return res.status(403).json({ error: 'Access denied. Admin access required.' });
     }
     next();
-  };
-
-  // Robust, Single Source of Truth helper for Maintenance Status
-  const isPlatformInMaintenance = (settings: any): boolean => {
-    if (!settings) return false;
-    // Explicit boolean flag check
-    if (settings.maintenanceMode === false) return false;
-    if (settings.maintenanceMode === true) return true;
-    
-    // Status string check (case-insensitive)
-    const status = String(settings.siteStatus || 'Online').trim().toLowerCase();
-    if (status === 'online' || status === 'live' || status === 'website live' || status === 'on' || status === 'active') {
-      return false;
-    }
-    if (status === 'maintenance' || status === 'offline' || status === 'under maintenance' || status === 'maintenance mode' || status === 'off') {
-      return true;
-    }
-    return false;
   };
 
   // --- SERVER-SIDE MAINTENANCE ENFORCEMENT MIDDLEWARE ---
@@ -5524,9 +5539,7 @@ async function startServer() {
     // Synchronize maintenanceMode boolean with single source of truth helper
     const currentIsMaint = isPlatformInMaintenance((localDb as any).appSettings);
     (localDb as any).appSettings.maintenanceMode = currentIsMaint;
-    if (!currentIsMaint && isPlatformInMaintenance({ siteStatus: (localDb as any).appSettings.siteStatus })) {
-      (localDb as any).appSettings.siteStatus = 'Online';
-    }
+    (localDb as any).appSettings.siteStatus = currentIsMaint ? 'Maintenance' : 'Online';
 
     res.json((localDb as any).appSettings);
   });
@@ -5551,17 +5564,20 @@ async function startServer() {
       ? String(settings.siteStatus).trim() 
       : ((localDb as any).appSettings.siteStatus || 'Online');
     
+    const lowerStatus = rawStatus.toLowerCase();
     let isMaint: boolean;
-    if (settings.maintenanceMode !== undefined) {
+    if (['online', 'live', 'website live', 'on', 'active'].includes(lowerStatus)) {
+      isMaint = false;
+    } else if (['maintenance', 'offline', 'under maintenance', 'maintenance mode', 'off'].includes(lowerStatus)) {
+      isMaint = true;
+    } else if (settings.maintenanceMode !== undefined) {
       isMaint = Boolean(settings.maintenanceMode);
     } else {
-      isMaint = isPlatformInMaintenance({ siteStatus: rawStatus });
+      isMaint = isPlatformInMaintenance((localDb as any).appSettings);
     }
 
     // Single source of truth: synchronize siteStatus string with isMaint flag
-    const cleanSiteStatus = isMaint 
-      ? 'Maintenance' 
-      : (['online', 'live', 'website live', 'on'].includes(rawStatus.toLowerCase()) ? rawStatus : 'Online');
+    const cleanSiteStatus = isMaint ? 'Maintenance' : 'Online';
 
     (localDb as any).appSettings = {
       ...(localDb as any).appSettings,

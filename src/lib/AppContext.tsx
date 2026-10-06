@@ -238,9 +238,10 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     if (savedSysSettings) {
       try {
         const parsed = JSON.parse(savedSysSettings);
-        if (!parsed.siteStatus) {
-          parsed.siteStatus = 'Online';
-        }
+        // CRITICAL: Stale client localStorage must NEVER lock the platform in maintenance mode.
+        // Platform live availability is strictly server-authoritative.
+        parsed.siteStatus = 'Online';
+        parsed.maintenanceMode = false;
         if (!parsed.heroTitle || parsed.heroTitle.includes("Connecting Ethiopia")) {
           parsed.heroTitle = 'The Smart Way to Discover, Connect & Grow';
         }
