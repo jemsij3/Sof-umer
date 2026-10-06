@@ -103,14 +103,26 @@ function MainAppLayout() {
     const handleLocationChange = () => {
       const adminNav = checkIsAdminRoute();
       setIsAdminRoute(adminNav);
-      if (adminNav && isAuthorizedAdmin) {
+
+      const path = typeof window !== 'undefined' ? window.location.pathname.toLowerCase().replace(/\/+$/, '') : '';
+      const search = typeof window !== 'undefined' ? window.location.search.toLowerCase() : '';
+      const hash = typeof window !== 'undefined' ? window.location.hash.toLowerCase() : '';
+
+      const isAdminUrl = path === '/admin' || path === '/admin/login' || path === '/admin-login' || path.startsWith('/admin/') || search.includes('view=admin') || hash.includes('#admin');
+      const isLoginUrl = path === '/login' || path === '/auth' || path === '/auth/login' || search.includes('view=login') || search.includes('login=true') || hash.includes('#login');
+
+      if (isAdminUrl) {
         setView('admin');
+      } else if (isLoginUrl) {
+        if (!currentUser) {
+          setAuthScreenOpen(true);
+        }
       }
     };
     handleLocationChange();
     window.addEventListener('popstate', handleLocationChange);
     return () => window.removeEventListener('popstate', handleLocationChange);
-  }, [isAuthorizedAdmin]);
+  }, [currentUser]);
 
   // If authorized admin and on admin route or under maintenance, ensure admin view is active
   React.useEffect(() => {
@@ -161,9 +173,9 @@ function MainAppLayout() {
   // Unified Authentication state & destination tracking
   const [authScreenOpen, setAuthScreenOpen] = useState(false);
   const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
-  const [authDestination, setAuthDestination] = useState<'profile' | 'messages' | 'favorites' | 'create' | null>(null);
+  const [authDestination, setAuthDestination] = useState<'profile' | 'messages' | 'favorites' | 'create' | 'admin' | null>(null);
 
-  const handleOpenAuth = (mode: 'login' | 'signup' = 'login', destination: 'profile' | 'messages' | 'favorites' | 'create' | null = null) => {
+  const handleOpenAuth = (mode: 'login' | 'signup' = 'login', destination: 'profile' | 'messages' | 'favorites' | 'create' | 'admin' | null = null) => {
     setAuthMode(mode);
     setAuthDestination(destination);
     setAuthScreenOpen(true);
@@ -181,15 +193,20 @@ function MainAppLayout() {
   React.useEffect(() => {
     if (currentUser && authScreenOpen) {
       setAuthScreenOpen(false);
-      if (authDestination === 'create') {
+      if (authDestination === 'admin') {
+        setView('admin');
+        setAuthDestination(null);
+      } else if (authDestination === 'create') {
         setCreateModalOpen(true);
         setAuthDestination(null);
       } else if (authDestination) {
         setView(authDestination);
         setAuthDestination(null);
+      } else if ((currentUser.role === 'admin' || (currentUser as any).isAdmin) && view === 'admin') {
+        setView('admin');
       }
     }
-  }, [currentUser, authScreenOpen, authDestination]);
+  }, [currentUser, authScreenOpen, authDestination, view]);
 
   // Report modal states
   const [reportModalOpen, setReportModalOpen] = useState(false);
@@ -358,7 +375,9 @@ function MainAppLayout() {
         onNavigate={(v) => {
           if (v === 'admin' || v === 'profile' || v === 'messages' || v === 'favorites' || v === 'notifications' || v === 'payments' || v === 'settings') {
             if (!currentUser) {
-              if (v === 'profile' || v === 'messages' || v === 'favorites') {
+              if (v === 'admin') {
+                setView('admin');
+              } else if (v === 'profile' || v === 'messages' || v === 'favorites') {
                 handleOpenAuth('login', v as any);
               } else {
                 handleOpenAuth('login', null);
@@ -492,7 +511,10 @@ function MainAppLayout() {
                   initialMode={authMode}
                   onClose={() => setView('marketplace')}
                   onSuccess={() => {
-                    if (authDestination === 'create') {
+                    if (view === 'admin' || authDestination === 'admin') {
+                      setView('admin');
+                      setAuthDestination(null);
+                    } else if (authDestination === 'create') {
                       setCreateModalOpen(true);
                       setAuthDestination(null);
                     } else if (authDestination) {
@@ -631,7 +653,10 @@ function MainAppLayout() {
                 initialMode={authMode}
                 onClose={handleCloseAuth}
                 onSuccess={() => {
-                  if (authDestination === 'create') {
+                  if (authDestination === 'admin') {
+                    setView('admin');
+                    setAuthDestination(null);
+                  } else if (authDestination === 'create') {
                     setCreateModalOpen(true);
                     setAuthDestination(null);
                   } else if (authDestination) {
