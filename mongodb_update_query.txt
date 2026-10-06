@@ -1,0 +1,11 @@
+// Run this in MongoDB Atlas UI, mongosh, or your preferred MongoDB client:
+
+db.appsettings.updateOne(
+  { key: 'appSettings' },
+  {
+    $set: {
+      "data.maintenanceMode": false,
+      "data.siteStatus": "Online"
+    }
+  }
+);
