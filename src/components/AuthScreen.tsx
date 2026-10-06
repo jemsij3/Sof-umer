@@ -128,9 +128,9 @@ export default function AuthScreen({ initialMode = 'login', onClose, onSuccess }
     }
   }, [initialMode]);
 
-  // When system is under maintenance, enforce administrator login mode
+  // When system is under maintenance, enforce administrator authentication and recovery modes
   useEffect(() => {
-    if (isMaintenanceActive && mode !== 'login' && mode !== 'twoFactor') {
+    if (isMaintenanceActive && mode !== 'login' && mode !== 'twoFactor' && mode !== 'forgot' && mode !== 'reset') {
       setMode('login');
     }
   }, [isMaintenanceActive, mode]);
@@ -211,7 +211,7 @@ export default function AuthScreen({ initialMode = 'login', onClose, onSuccess }
       const res = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: email.trim(), password, captchaId, captchaAnswer, rememberMe })
+        body: JSON.stringify({ email: email.trim(), password: password.trim(), captchaId, captchaAnswer, rememberMe })
       });
       const data = await res.json();
       if (!res.ok) {
