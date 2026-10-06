@@ -38,8 +38,19 @@ export default function AuthScreen({ initialMode = 'login', onClose, onSuccess }
     refreshData
   } = useApp();
 
-  const siteStatusNorm = (systemSettings?.siteStatus || 'Online').trim();
-  const isMaintenanceActive = siteStatusNorm === 'Maintenance' || siteStatusNorm === 'Offline' || siteStatusNorm === 'Under Maintenance';
+  const isMaintenanceActive = React.useMemo(() => {
+    if (!systemSettings) return false;
+    if (systemSettings.maintenanceMode === false) return false;
+    if (systemSettings.maintenanceMode === true) return true;
+    const status = String(systemSettings.siteStatus || 'Online').trim().toLowerCase();
+    if (status === 'online' || status === 'live' || status === 'website live' || status === 'on' || status === 'active') {
+      return false;
+    }
+    if (status === 'maintenance' || status === 'offline' || status === 'under maintenance' || status === 'maintenance mode' || status === 'off') {
+      return true;
+    }
+    return false;
+  }, [systemSettings]);
 
   const isUserAdminRole = (u: any): boolean => {
     if (!u) return false;
@@ -248,7 +259,8 @@ export default function AuthScreen({ initialMode = 'login', onClose, onSuccess }
         return;
       }
 
-      if (isMaintenanceActive && !isUserAdminRole(data.user)) {
+      const serverMaint = data.maintenanceMode !== undefined ? Boolean(data.maintenanceMode) : isMaintenanceActive;
+      if (serverMaint && !isUserAdminRole(data.user)) {
         setError('Access restricted. System is currently undergoing scheduled maintenance. Only authorized administrators may log in.');
         setSubmitting(false);
         return;
@@ -302,7 +314,8 @@ export default function AuthScreen({ initialMode = 'login', onClose, onSuccess }
         throw new Error(data.error || '2FA verification failed.');
       }
 
-      if (isMaintenanceActive && !isUserAdminRole(data.user)) {
+      const serverMaint = data.maintenanceMode !== undefined ? Boolean(data.maintenanceMode) : isMaintenanceActive;
+      if (serverMaint && !isUserAdminRole(data.user)) {
         setError('Access restricted. System is currently undergoing scheduled maintenance. Only authorized administrators may log in.');
         setSubmitting(false);
         return;

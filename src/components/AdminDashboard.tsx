@@ -855,14 +855,17 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
     setSiteStatusSuccess('');
     setIsSavingSiteStatus(true);
     try {
+      const isMaint = (systemSettings.maintenanceMode === true) || 
+        ['maintenance', 'offline', 'under maintenance', 'maintenance mode', 'off'].includes(String(systemSettings.siteStatus || '').toLowerCase().trim());
       const updated = {
         ...systemSettings,
-        siteStatus: systemSettings.siteStatus || 'Online',
+        siteStatus: isMaint ? 'Maintenance' : 'Online',
+        maintenanceMode: isMaint,
         maintenanceMessage: (systemSettings.maintenanceMessage || 'SOF-UMER is currently undergoing scheduled platform maintenance. Normal operations will resume shortly. Thank you for your patience.').trim()
       };
       setSystemSettings(updated);
       await updateSystemSettings(updated);
-      setSiteStatusSuccess(`Site Live Status updated to "${updated.siteStatus}" successfully! Changes apply instantly.`);
+      setSiteStatusSuccess(`Site Live Status updated to "${isMaint ? 'Maintenance' : 'Live (Online)'}" successfully! Changes apply instantly.`);
       setTimeout(() => setSiteStatusSuccess(''), 4000);
     } catch (err: any) {
       setSiteStatusError(err.message || 'Failed to save Site Live Status.');
@@ -878,7 +881,8 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
     try {
       const updated = {
         ...systemSettings,
-        siteStatus: 'Online'
+        siteStatus: 'Online',
+        maintenanceMode: false
       };
       setSystemSettings(updated);
       await updateSystemSettings(updated);
@@ -6349,51 +6353,57 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
                         Platform Mode Selection
                       </label>
                       
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <button
-                          type="button"
-                          onClick={() => setSystemSettings({ ...systemSettings, siteStatus: 'Online' })}
-                          className={`p-4 rounded-2xl border text-left transition flex items-start gap-3 cursor-pointer ${
-                            (systemSettings.siteStatus || 'Online') === 'Online'
-                              ? 'bg-emerald-500/10 border-emerald-500 text-white shadow-lg'
-                              : 'bg-black/40 border-white/5 text-white/60 hover:border-white/20'
-                          }`}
-                        >
-                          <div className={`p-2.5 rounded-xl ${
-                            (systemSettings.siteStatus || 'Online') === 'Online' ? 'bg-emerald-500 text-black' : 'bg-white/5 text-white/40'
-                          }`}>
-                            <Zap className="w-5 h-5" />
-                          </div>
-                          <div>
-                            <span className="font-bold text-sm text-white block">ON — Website Live</span>
-                            <span className="text-xs text-white/50 block mt-0.5">
-                              Normal application access enabled for all users.
-                            </span>
-                          </div>
-                        </button>
+                      {(() => {
+                        const isMaintMode = systemSettings.maintenanceMode === true || 
+                          ['maintenance', 'offline', 'under maintenance', 'maintenance mode', 'off'].includes(String(systemSettings.siteStatus || '').toLowerCase().trim());
+                        return (
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <button
+                              type="button"
+                              onClick={() => setSystemSettings({ ...systemSettings, siteStatus: 'Online', maintenanceMode: false })}
+                              className={`p-4 rounded-2xl border text-left transition flex items-start gap-3 cursor-pointer ${
+                                !isMaintMode
+                                  ? 'bg-emerald-500/10 border-emerald-500 text-white shadow-lg'
+                                  : 'bg-black/40 border-white/5 text-white/60 hover:border-white/20'
+                              }`}
+                            >
+                              <div className={`p-2.5 rounded-xl ${
+                                !isMaintMode ? 'bg-emerald-500 text-black' : 'bg-white/5 text-white/40'
+                              }`}>
+                                <Zap className="w-5 h-5" />
+                              </div>
+                              <div>
+                                <span className="font-bold text-sm text-white block">ON — Website Live</span>
+                                <span className="text-xs text-white/50 block mt-0.5">
+                                  Normal application access enabled for all users.
+                                </span>
+                              </div>
+                            </button>
 
-                        <button
-                          type="button"
-                          onClick={() => setSystemSettings({ ...systemSettings, siteStatus: 'Maintenance' })}
-                          className={`p-4 rounded-2xl border text-left transition flex items-start gap-3 cursor-pointer ${
-                            (systemSettings.siteStatus || 'Online') === 'Maintenance'
-                              ? 'bg-amber-500/10 border-amber-500 text-white shadow-lg'
-                              : 'bg-black/40 border-white/5 text-white/60 hover:border-white/20'
-                          }`}
-                        >
-                          <div className={`p-2.5 rounded-xl ${
-                            (systemSettings.siteStatus || 'Online') === 'Maintenance' ? 'bg-amber-500 text-black' : 'bg-white/5 text-white/40'
-                          }`}>
-                            <ShieldAlert className="w-5 h-5" />
+                            <button
+                              type="button"
+                              onClick={() => setSystemSettings({ ...systemSettings, siteStatus: 'Maintenance', maintenanceMode: true })}
+                              className={`p-4 rounded-2xl border text-left transition flex items-start gap-3 cursor-pointer ${
+                                isMaintMode
+                                  ? 'bg-amber-500/10 border-amber-500 text-white shadow-lg'
+                                  : 'bg-black/40 border-white/5 text-white/60 hover:border-white/20'
+                              }`}
+                            >
+                              <div className={`p-2.5 rounded-xl ${
+                                isMaintMode ? 'bg-amber-500 text-black' : 'bg-white/5 text-white/40'
+                              }`}>
+                                <ShieldAlert className="w-5 h-5" />
+                              </div>
+                              <div>
+                                <span className="font-bold text-sm text-white block">OFF — Maintenance Mode</span>
+                                <span className="text-xs text-white/50 block mt-0.5">
+                                  Displays maintenance screen to users. Allows admin access.
+                                </span>
+                              </div>
+                            </button>
                           </div>
-                          <div>
-                            <span className="font-bold text-sm text-white block">OFF — Maintenance Mode</span>
-                            <span className="text-xs text-white/50 block mt-0.5">
-                              Displays maintenance screen to users. Allows admin access.
-                            </span>
-                          </div>
-                        </button>
-                      </div>
+                        );
+                      })()}
 
                       <div className="space-y-2 pt-2">
                         <label className="block text-xs font-bold text-white/80 uppercase tracking-wider">

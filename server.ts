@@ -1900,13 +1900,31 @@ async function startServer() {
     next();
   };
 
+  // Robust, Single Source of Truth helper for Maintenance Status
+  const isPlatformInMaintenance = (settings: any): boolean => {
+    if (!settings) return false;
+    // Explicit boolean flag check
+    if (settings.maintenanceMode === false) return false;
+    if (settings.maintenanceMode === true) return true;
+    
+    // Status string check (case-insensitive)
+    const status = String(settings.siteStatus || 'Online').trim().toLowerCase();
+    if (status === 'online' || status === 'live' || status === 'website live' || status === 'on' || status === 'active') {
+      return false;
+    }
+    if (status === 'maintenance' || status === 'offline' || status === 'under maintenance' || status === 'maintenance mode' || status === 'off') {
+      return true;
+    }
+    return false;
+  };
+
   // --- SERVER-SIDE MAINTENANCE ENFORCEMENT MIDDLEWARE ---
   // When Maintenance Mode is active, all normal users and unauthenticated callers are strictly blocked
   // with HTTP 503 from accessing protected API endpoints. Authorized administrators always bypass.
   app.use((req, res, next) => {
     const appSettings = (localDb as any).appSettings;
-    const siteStatus = (appSettings?.siteStatus || 'Online').trim();
-    const isMaintenance = siteStatus === 'Maintenance' || siteStatus === 'Offline' || siteStatus === 'Under Maintenance';
+    const isMaintenance = isPlatformInMaintenance(appSettings);
+    const siteStatus = (appSettings?.siteStatus || (isMaintenance ? 'Maintenance' : 'Online')).trim();
 
     if (!isMaintenance) {
       return next();
@@ -2309,6 +2327,17 @@ async function startServer() {
       });
     }
 
+    const isMaintenance = isPlatformInMaintenance((localDb as any).appSettings);
+    if (isMaintenance && !isAdmin) {
+      console.log(`[AUTH REJECTED] Normal user ${user.id} (${user.email}) login blocked during active maintenance.`);
+      return res.status(503).json({
+        error: 'Platform is currently undergoing scheduled maintenance. Only authorized administrators may log in.',
+        maintenance: true,
+        siteStatus: (localDb as any).appSettings?.siteStatus || 'Maintenance',
+        message: (localDb as any).appSettings?.maintenanceMessage || 'Platform is undergoing scheduled maintenance.'
+      });
+    }
+
     await saveDb();
 
     const token = jwt.sign({
@@ -2319,7 +2348,12 @@ async function startServer() {
       tokenVersion: user.tokenVersion
     }, JWT_SECRET, { expiresIn: '365d' });
 
-    res.json({ token, user: stripSecrets(user) });
+    res.json({
+      token,
+      user: stripSecrets(user),
+      maintenanceMode: isMaintenance,
+      siteStatus: (localDb as any).appSettings?.siteStatus || (isMaintenance ? 'Maintenance' : 'Online')
+    });
   });
 
   // --- GOOGLE AUTHENTICATOR (2FA) API ENDPOINTS ---
@@ -2514,6 +2548,18 @@ async function startServer() {
       if (!user.loginHistory) user.loginHistory = [];
       user.loginHistory.unshift({ ip, userAgent, timestamp: new Date().toISOString(), deviceType });
 
+      const isMaintenance = isPlatformInMaintenance((localDb as any).appSettings);
+      const isAdmin = isUserAdmin(user);
+      if (isMaintenance && !isAdmin) {
+        console.log(`[AUTH REJECTED] Normal user ${user.id} (${user.email}) 2FA login blocked during active maintenance.`);
+        return res.status(503).json({
+          error: 'Platform is currently undergoing scheduled maintenance. Only authorized administrators may log in.',
+          maintenance: true,
+          siteStatus: (localDb as any).appSettings?.siteStatus || 'Maintenance',
+          message: (localDb as any).appSettings?.maintenanceMessage || 'Platform is undergoing scheduled maintenance.'
+        });
+      }
+
       await saveDb();
 
       const token = jwt.sign({
@@ -2528,6 +2574,8 @@ async function startServer() {
         token,
         user: stripSecrets(user),
         backupCodes: generatedBackupCodes,
+        maintenanceMode: isMaintenance,
+        siteStatus: (localDb as any).appSettings?.siteStatus || (isMaintenance ? 'Maintenance' : 'Online'),
         message: 'Two-Factor Authentication verified successfully!'
       });
     } catch (err: any) {
@@ -5469,8 +5517,14 @@ async function startServer() {
       });
     }
 
-    // Ensure siteStatus defaults to Online if invalid or empty
-    if (!(localDb as any).appSettings.siteStatus) {
+    res.set('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
+    res.set('Pragma', 'no-cache');
+    res.set('Expires', '0');
+
+    // Synchronize maintenanceMode boolean with single source of truth helper
+    const currentIsMaint = isPlatformInMaintenance((localDb as any).appSettings);
+    (localDb as any).appSettings.maintenanceMode = currentIsMaint;
+    if (!currentIsMaint && isPlatformInMaintenance({ siteStatus: (localDb as any).appSettings.siteStatus })) {
       (localDb as any).appSettings.siteStatus = 'Online';
     }
 
@@ -5484,7 +5538,7 @@ async function startServer() {
     (localDb as any).appSettings.siteStatus = 'Online';
     (localDb as any).appSettings.maintenanceMode = false;
     await saveDb();
-    res.json({ success: true, siteStatus: 'Online', appSettings: (localDb as any).appSettings });
+    res.json({ success: true, siteStatus: 'Online', maintenanceMode: false, appSettings: (localDb as any).appSettings });
   });
 
   app.put('/api/system-settings', requireAdmin, async (req, res) => {
@@ -5492,8 +5546,23 @@ async function startServer() {
     if (!(localDb as any).appSettings) {
       (localDb as any).appSettings = {};
     }
-    const cleanSiteStatus = (settings.siteStatus ? String(settings.siteStatus).trim() : ((localDb as any).appSettings.siteStatus || 'Online'));
-    const isMaint = cleanSiteStatus === 'Maintenance' || cleanSiteStatus === 'Offline' || cleanSiteStatus === 'Under Maintenance';
+
+    const rawStatus = settings.siteStatus !== undefined 
+      ? String(settings.siteStatus).trim() 
+      : ((localDb as any).appSettings.siteStatus || 'Online');
+    
+    let isMaint: boolean;
+    if (settings.maintenanceMode !== undefined) {
+      isMaint = Boolean(settings.maintenanceMode);
+    } else {
+      isMaint = isPlatformInMaintenance({ siteStatus: rawStatus });
+    }
+
+    // Single source of truth: synchronize siteStatus string with isMaint flag
+    const cleanSiteStatus = isMaint 
+      ? 'Maintenance' 
+      : (['online', 'live', 'website live', 'on'].includes(rawStatus.toLowerCase()) ? rawStatus : 'Online');
+
     (localDb as any).appSettings = {
       ...(localDb as any).appSettings,
       ...settings,

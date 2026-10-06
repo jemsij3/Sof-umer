@@ -36,15 +36,24 @@ function MainAppLayout() {
   const [view, setView] = useState<'marketplace' | 'profile' | 'messages' | 'favorites' | 'notifications' | 'payments' | 'settings' | 'admin' | 'info-page'>('marketplace');
   const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
 
-  // Check Site Live Status (Maintenance or Offline)
-  const siteStatusNormalized = (systemSettings?.siteStatus || 'Online').trim();
-  const isMaintenanceMode = siteStatusNormalized === 'Offline' || 
-                            siteStatusNormalized === 'Maintenance' || 
-                            siteStatusNormalized === 'Under Maintenance';
+  // Check Site Live Status (Maintenance or Offline) - Single Source of Truth
+  const isMaintenanceMode = React.useMemo(() => {
+    if (!systemSettings) return false;
+    if (systemSettings.maintenanceMode === false) return false;
+    if (systemSettings.maintenanceMode === true) return true;
+    const status = String(systemSettings.siteStatus || 'Online').trim().toLowerCase();
+    if (status === 'online' || status === 'live' || status === 'website live' || status === 'on' || status === 'active') {
+      return false;
+    }
+    if (status === 'maintenance' || status === 'offline' || status === 'under maintenance' || status === 'maintenance mode' || status === 'off') {
+      return true;
+    }
+    return false;
+  }, [systemSettings]);
 
   const isAuthorizedAdmin = Boolean(
     currentUser && 
-    (currentUser.role === 'admin' || currentUser.role === 'owner' || currentUser.role === 'superadmin' || (currentUser as any).isAdmin) &&
+    (currentUser.role === 'admin' || currentUser.role === 'owner' || currentUser.role === 'superadmin' || (currentUser as any).isAdmin || (currentUser.email && currentUser.email.toLowerCase() === 'jemaljima@gmail.com')) &&
     currentUser.status !== 'suspended' &&
     currentUser.status !== 'banned'
   );
@@ -76,6 +85,19 @@ function MainAppLayout() {
   };
 
   const [isAdminRoute, setIsAdminRoute] = useState(checkIsAdminRoute);
+
+  // Key combination (Ctrl+Shift+A or Alt+A) to enable admin login during maintenance without public UI buttons
+  React.useEffect(() => {
+    if (!isSiteInactive) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey && e.shiftKey && (e.key === 'A' || e.key === 'a')) || (e.altKey && (e.key === 'A' || e.key === 'a'))) {
+        e.preventDefault();
+        setIsAdminRoute(true);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isSiteInactive]);
 
   React.useEffect(() => {
     const handleLocationChange = () => {

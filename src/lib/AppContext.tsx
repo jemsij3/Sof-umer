@@ -250,6 +250,17 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         setSystemSettings(parsed);
       } catch (e) {}
     }
+
+    // Immediately fetch fresh system settings from backend to prevent stale maintenance state
+    fetch('/api/system-settings', { cache: 'no-store' })
+      .then(res => res.ok ? res.json() : null)
+      .then(freshSettings => {
+        if (freshSettings && typeof freshSettings === 'object') {
+          setSystemSettings(freshSettings);
+          localStorage.setItem('sof_umer_sys_settings', JSON.stringify(freshSettings));
+        }
+      })
+      .catch(err => console.warn('Instant system settings sync deferred:', err));
   }, []);
 
   // Complete PWA Removal: Unregister Service Worker & Clear Caches
@@ -368,7 +379,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
 
       const safeFetchJson = async (url: string, defaultValue: any = []) => {
         try {
-          const res = await fetch(url, { headers });
+          const res = await fetch(url, { headers, cache: 'no-store' });
           if (!res.ok) {
             console.warn(`Fetch to ${url} returned status ${res.status}`);
             return defaultValue;
