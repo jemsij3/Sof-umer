@@ -37,19 +37,9 @@ function MainAppLayout() {
   const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
 
   // Check Site Live Status (Maintenance or Offline) - Single Source of Truth
-  const isMaintenanceMode = React.useMemo(() => {
-    if (!systemSettings) return false;
-    const status = String(systemSettings.siteStatus || 'Online').trim().toLowerCase();
-    if (status === 'online' || status === 'live' || status === 'website live' || status === 'on' || status === 'active') {
-      return false;
-    }
-    if (status === 'maintenance' || status === 'offline' || status === 'under maintenance' || status === 'maintenance mode' || status === 'off') {
-      return true;
-    }
-    if (systemSettings.maintenanceMode === false) return false;
-    if (systemSettings.maintenanceMode === true) return true;
-    return false;
-  }, [systemSettings]);
+  // Temporarily overridden to always return false to ensure site stays live
+  const isMaintenanceMode = false;
+
 
   const isAuthorizedAdmin = Boolean(
     currentUser && 
