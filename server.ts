@@ -1501,6 +1501,7 @@ async function startServer() {
     } = user;
     return {
       ...rest,
+      isAdmin: isUserAdmin(user),
       twoFactorEnabled: Boolean(user.twoFactorEnabled),
       backupRecoveryCodesCount: backupRecoveryCodes ? backupRecoveryCodes.length : 0,
     } as User;
@@ -1898,6 +1899,67 @@ async function startServer() {
     }
     next();
   };
+
+  // --- SERVER-SIDE MAINTENANCE ENFORCEMENT MIDDLEWARE ---
+  // When Maintenance Mode is active, all normal users and unauthenticated callers are strictly blocked
+  // with HTTP 503 from accessing protected API endpoints. Authorized administrators always bypass.
+  app.use((req, res, next) => {
+    const appSettings = (localDb as any).appSettings;
+    const siteStatus = (appSettings?.siteStatus || 'Online').trim();
+    const isMaintenance = siteStatus === 'Maintenance' || siteStatus === 'Offline' || siteStatus === 'Under Maintenance';
+
+    if (!isMaintenance) {
+      return next();
+    }
+
+    const user = (req as any).user;
+    const isAdmin = Boolean(user && isUserAdmin(user));
+
+    // Authorized administrators always bypass maintenance mode
+    if (isAdmin) {
+      return next();
+    }
+
+    // Public endpoints that MUST remain reachable during maintenance:
+    // 1. Health check
+    if (req.path === '/api/health') {
+      return next();
+    }
+
+    // 2. Auth endpoints required for administrators to authenticate while maintenance is active
+    const allowedAuthPaths = [
+      '/api/auth/login',
+      '/api/auth/2fa/verify-login',
+      '/api/auth/captcha',
+      '/api/auth/logout',
+      '/api/auth/me'
+    ];
+    if (allowedAuthPaths.includes(req.path)) {
+      return next();
+    }
+
+    // 3. System settings GET endpoint so client can read site status and custom maintenance notice
+    if (req.path === '/api/system-settings' && req.method === 'GET') {
+      return next();
+    }
+
+    // 4. Non-API requests (static assets, client bundle navigation)
+    if (!req.path.startsWith('/api/')) {
+      return next();
+    }
+
+    // All other API endpoints are strictly blocked for non-admins with HTTP 503
+    const maintenanceNotice = appSettings?.maintenanceMessage || 
+      'SOF-UMER is currently undergoing scheduled platform maintenance. Normal operations will resume shortly. Thank you for your patience.';
+
+    res.set('Retry-After', '300');
+    return res.status(503).json({
+      error: 'Service Unavailable. Platform is undergoing scheduled maintenance.',
+      maintenance: true,
+      siteStatus,
+      message: maintenanceNotice
+    });
+  });
 
   // --- API ROUTES ---
 
@@ -2850,7 +2912,13 @@ async function startServer() {
   });
 
   app.get('/api/auth/me', requireAuth, (req, res) => {
-    res.json({ user: stripSecrets((req as any).user) });
+    const rawUser = (req as any).user;
+    res.json({
+      user: {
+        ...stripSecrets(rawUser),
+        isAdmin: isUserAdmin(rawUser)
+      }
+    });
   });
 
   app.post('/api/auth/google', async (req, res) => {
@@ -5326,11 +5394,12 @@ async function startServer() {
     res.json((localDb as any).appSettings);
   });
 
-  app.post('/api/system-settings/reset-online', async (req, res) => {
+  app.post('/api/system-settings/reset-online', requireAdmin, async (req, res) => {
     if (!(localDb as any).appSettings) {
       (localDb as any).appSettings = {};
     }
     (localDb as any).appSettings.siteStatus = 'Online';
+    (localDb as any).appSettings.maintenanceMode = false;
     await saveDb();
     res.json({ success: true, siteStatus: 'Online', appSettings: (localDb as any).appSettings });
   });
@@ -5340,9 +5409,13 @@ async function startServer() {
     if (!(localDb as any).appSettings) {
       (localDb as any).appSettings = {};
     }
+    const cleanSiteStatus = (settings.siteStatus ? String(settings.siteStatus).trim() : ((localDb as any).appSettings.siteStatus || 'Online'));
+    const isMaint = cleanSiteStatus === 'Maintenance' || cleanSiteStatus === 'Offline' || cleanSiteStatus === 'Under Maintenance';
     (localDb as any).appSettings = {
       ...(localDb as any).appSettings,
-      ...settings
+      ...settings,
+      siteStatus: cleanSiteStatus,
+      maintenanceMode: isMaint
     };
     await saveDb();
     res.json((localDb as any).appSettings);

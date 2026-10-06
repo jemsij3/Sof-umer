@@ -16,7 +16,7 @@ import ListingCard from './components/ListingCard';
 import Footer from './components/Footer';
 import InfoPage from './components/InfoPage';
 import { Property } from './types';
-import { ShieldAlert, X, Send, Compass, Heart, Plus, Search, User as UserIcon, Home, MessageSquare } from 'lucide-react';
+import { ShieldAlert, RefreshCw, X, Send, Compass, Heart, Plus, Search, User as UserIcon, Home, MessageSquare } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { getThemeCSS } from './lib/themes';
 import { PWAInstallPrompt } from './components/PWAInstallPrompt';
@@ -36,13 +36,50 @@ function MainAppLayout() {
   const [view, setView] = useState<'marketplace' | 'profile' | 'messages' | 'favorites' | 'notifications' | 'payments' | 'settings' | 'admin' | 'info-page'>('marketplace');
   const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
 
-  // State to allow administrator login override when site is in maintenance or offline
-  const [showAdminLogin, setShowAdminLogin] = useState(false);
-
   // Check Site Live Status (Maintenance or Offline)
   const siteStatusNormalized = (systemSettings?.siteStatus || 'Online').trim();
-  const isSiteInactive = (siteStatusNormalized === 'Offline' || siteStatusNormalized === 'Maintenance' || siteStatusNormalized === 'Under Maintenance') && 
-    currentUser?.role !== 'admin';
+  const isMaintenanceMode = siteStatusNormalized === 'Offline' || 
+                            siteStatusNormalized === 'Maintenance' || 
+                            siteStatusNormalized === 'Under Maintenance';
+
+  const isAuthorizedAdmin = Boolean(
+    currentUser && 
+    (currentUser.role === 'admin' || currentUser.role === 'owner' || currentUser.role === 'superadmin' || (currentUser as any).isAdmin) &&
+    currentUser.status !== 'suspended' &&
+    currentUser.status !== 'banned'
+  );
+
+  const isSiteInactive = isMaintenanceMode && !isAuthorizedAdmin;
+
+  // Track if URL path points to the administrative management portal
+  const [isAdminRoute, setIsAdminRoute] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    const path = window.location.pathname.toLowerCase();
+    const search = window.location.search.toLowerCase();
+    return path === '/admin' || path.startsWith('/admin/') || search.includes('view=admin');
+  });
+
+  React.useEffect(() => {
+    const handleLocationChange = () => {
+      const path = window.location.pathname.toLowerCase();
+      const search = window.location.search.toLowerCase();
+      const adminNav = path === '/admin' || path.startsWith('/admin/') || search.includes('view=admin');
+      setIsAdminRoute(adminNav);
+      if (adminNav && isAuthorizedAdmin) {
+        setView('admin');
+      }
+    };
+    handleLocationChange();
+    window.addEventListener('popstate', handleLocationChange);
+    return () => window.removeEventListener('popstate', handleLocationChange);
+  }, [isAuthorizedAdmin]);
+
+  // If already authorized admin and on admin route, switch to admin view
+  React.useEffect(() => {
+    if (isAdminRoute && isAuthorizedAdmin && view !== 'admin') {
+      setView('admin');
+    }
+  }, [isAdminRoute, isAuthorizedAdmin, view]);
   
   React.useEffect(() => {
     if (selectedProperty) {
@@ -207,51 +244,59 @@ function MainAppLayout() {
   };
 
   // If site is set to Maintenance or Offline, render system maintenance screen for non-admins
-  if (isSiteInactive && !showAdminLogin) {
-    const isOffline = siteStatusNormalized === 'Offline';
+  if (isSiteInactive) {
+    if (isAdminRoute && !currentUser) {
+      // Direct Admin portal navigation: allow authorized administrators to log in securely
+      return (
+        <div className="min-h-screen bg-[#060608] flex items-center justify-center p-4">
+          <AuthScreen
+            initialMode="login"
+            onClose={() => {
+              window.location.href = '/';
+            }}
+            onSuccess={() => {
+              setView('admin');
+            }}
+          />
+        </div>
+      );
+    }
+
+    const appTitle = systemSettings?.appName || 'SOF-UMER';
+    const rawMessage = systemSettings?.maintenanceMessage?.trim();
+    const defaultMaintenanceMessage = 
+      `${appTitle} is temporarily under maintenance.\n\n` +
+      `We are making improvements to provide you with a better and more reliable experience. Please check back soon.\n\n` +
+      `Thank you for your patience.`;
+    const displayMessage = rawMessage || defaultMaintenanceMessage;
+
     return (
-      <div className="min-h-screen bg-[#060608] text-white flex flex-col items-center justify-center p-6 text-center relative font-sans">
+      <div className="min-h-screen bg-[#060608] text-white flex flex-col items-center justify-center p-6 text-center relative font-sans select-none">
         <style>{getThemeCSS(systemSettings?.themeName || 'cosmic-slate')}</style>
-        <div className="max-w-md w-full bg-[#12121a] border border-amber-500/20 p-8 rounded-3xl shadow-2xl space-y-6 animate-fade-in relative z-10">
+        <div className="max-w-md w-full bg-[#12121a] border border-white/10 p-8 sm:p-10 rounded-3xl shadow-2xl space-y-6 animate-fade-in relative z-10">
           <div className="w-16 h-16 bg-amber-500/10 border border-amber-500/30 text-amber-500 rounded-2xl flex items-center justify-center mx-auto shadow-inner">
             <ShieldAlert className="w-8 h-8 text-amber-500" />
           </div>
-          <div className="space-y-2">
+          <div className="space-y-3">
             <h2 className="text-2xl font-serif font-bold text-white uppercase tracking-wider">
-              {isOffline ? 'System Offline' : 'Under Scheduled Maintenance'}
+              {appTitle} is Temporarily Under Maintenance
             </h2>
-            <p className="text-xs text-white/70 leading-relaxed">
-              {isOffline 
-                ? `${systemSettings?.appName || 'SOF-UMER'} is currently offline. System operations will resume shortly.`
-                : `${systemSettings?.appName || 'SOF-UMER'} is undergoing essential system maintenance to enhance security and platform performance. We will return online shortly.`
-              }
-            </p>
+            <div className="text-xs sm:text-sm text-white/70 leading-relaxed whitespace-pre-line text-center">
+              {displayMessage}
+            </div>
           </div>
-          <div className="pt-4 border-t border-white/10 space-y-3">
+          <div className="pt-4 border-t border-white/10 flex flex-col items-center gap-3">
             <button
               type="button"
-              onClick={() => setShowAdminLogin(true)}
-              className="w-full py-3 bg-amber-500 hover:bg-amber-400 text-black font-bold text-xs uppercase tracking-widest rounded-xl transition shadow-lg cursor-pointer"
+              onClick={() => window.location.reload()}
+              className="px-6 py-2.5 bg-white/5 hover:bg-white/10 text-white/80 hover:text-white text-xs font-semibold rounded-xl border border-white/10 transition cursor-pointer flex items-center gap-2"
             >
-              Administrator Login Portal
+              <RefreshCw className="w-3.5 h-3.5" />
+              <span>Refresh Page</span>
             </button>
-            <button
-              type="button"
-              onClick={async () => {
-                try {
-                  await fetch('/api/system-settings/reset-online', { method: 'POST' });
-                  await refreshData();
-                  window.location.reload();
-                } catch (e) {
-                  console.error(e);
-                  window.location.reload();
-                }
-              }}
-              className="w-full py-2.5 bg-white/5 hover:bg-white/10 text-amber-400 font-bold text-[11px] uppercase tracking-wider rounded-xl border border-amber-500/20 transition cursor-pointer"
-            >
-              Restore Live Online Mode
-            </button>
-            <p className="text-[10px] text-white/40 font-mono">Current Live Mode: <span className="text-amber-400 font-bold">{siteStatusNormalized}</span></p>
+            <p className="text-[11px] text-white/40">
+              Platform availability will resume automatically once scheduled updates conclude.
+            </p>
           </div>
         </div>
       </div>

@@ -238,7 +238,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     if (savedSysSettings) {
       try {
         const parsed = JSON.parse(savedSysSettings);
-        if (!parsed.siteStatus || parsed.siteStatus === 'Offline') {
+        if (!parsed.siteStatus) {
           parsed.siteStatus = 'Online';
         }
         if (!parsed.heroTitle || parsed.heroTitle.includes("Connecting Ethiopia")) {
