@@ -34,8 +34,23 @@ export default function AuthScreen({ initialMode = 'login', onClose, onSuccess }
     setSessionExpired,
     currentLanguage,
     setLanguage,
-    systemSettings
+    systemSettings,
+    refreshData
   } = useApp();
+
+  const siteStatusNorm = (systemSettings?.siteStatus || 'Online').trim();
+  const isMaintenanceActive = siteStatusNorm === 'Maintenance' || siteStatusNorm === 'Offline' || siteStatusNorm === 'Under Maintenance';
+
+  const isUserAdminRole = (u: any): boolean => {
+    if (!u) return false;
+    if (u.status === 'suspended' || u.status === 'banned') return false;
+    if (u.email && u.email.toLowerCase() === 'jemaljima@gmail.com') return true;
+    const role = (u.role || '').toLowerCase();
+    const adminRoles = ['admin', 'owner', 'superadmin'];
+    if (adminRoles.includes(role)) return true;
+    if (u.isAdmin || u.isOwner || u.isSuperAdmin || u.isEmployee) return true;
+    return false;
+  };
 
   const [showLangDropdown, setShowLangDropdown] = useState(false);
   const langDropdownRef = useRef<HTMLDivElement>(null);
@@ -112,6 +127,13 @@ export default function AuthScreen({ initialMode = 'login', onClose, onSuccess }
       setMode(initialMode);
     }
   }, [initialMode]);
+
+  // When system is under maintenance, enforce administrator login mode
+  useEffect(() => {
+    if (isMaintenanceActive && mode !== 'login' && mode !== 'twoFactor') {
+      setMode('login');
+    }
+  }, [isMaintenanceActive, mode]);
 
   // Evaluate password strength score (1 to 5)
   const getPasswordStrength = (pass: string) => {
@@ -226,6 +248,12 @@ export default function AuthScreen({ initialMode = 'login', onClose, onSuccess }
         return;
       }
 
+      if (isMaintenanceActive && !isUserAdminRole(data.user)) {
+        setError('Access restricted. System is currently undergoing scheduled maintenance. Only authorized administrators may log in.');
+        setSubmitting(false);
+        return;
+      }
+
       // Clear any legacy cached admin items to maintain strict security
       localStorage.removeItem('sof_umer_cached_admin');
       localStorage.removeItem('sof_umer_admin_pass');
@@ -233,6 +261,12 @@ export default function AuthScreen({ initialMode = 'login', onClose, onSuccess }
       setToken(data.token);
       setCurrentUser(data.user);
       setSessionExpired(false);
+
+      try {
+        await refreshData();
+      } catch (e) {
+        console.warn('Initial refresh after login deferred:', e);
+      }
 
       if (onSuccess) onSuccess();
       else if (onClose) onClose();
@@ -268,6 +302,12 @@ export default function AuthScreen({ initialMode = 'login', onClose, onSuccess }
         throw new Error(data.error || '2FA verification failed.');
       }
 
+      if (isMaintenanceActive && !isUserAdminRole(data.user)) {
+        setError('Access restricted. System is currently undergoing scheduled maintenance. Only authorized administrators may log in.');
+        setSubmitting(false);
+        return;
+      }
+
       // Clear any legacy cached admin items
       localStorage.removeItem('sof_umer_cached_admin');
       localStorage.removeItem('sof_umer_admin_pass');
@@ -275,6 +315,12 @@ export default function AuthScreen({ initialMode = 'login', onClose, onSuccess }
       setToken(data.token);
       setCurrentUser(data.user);
       setSessionExpired(false);
+
+      try {
+        await refreshData();
+      } catch (e) {
+        console.warn('Initial refresh after 2FA login deferred:', e);
+      }
 
       if (onSuccess) onSuccess();
       else if (onClose) onClose();
@@ -500,9 +546,22 @@ export default function AuthScreen({ initialMode = 'login', onClose, onSuccess }
       if (!res.ok) {
         throw new Error(data.error || t('google_login_failed'));
       }
+
+      if (isMaintenanceActive && !isUserAdminRole(data.user)) {
+        setError('Access restricted. System is currently undergoing scheduled maintenance. Only authorized administrators may log in.');
+        setSubmitting(false);
+        return;
+      }
+
       setToken(data.token);
       setCurrentUser(data.user);
       setSessionExpired(false);
+
+      try {
+        await refreshData();
+      } catch (e) {
+        console.warn('Initial refresh after Google login deferred:', e);
+      }
 
       if (onSuccess) onSuccess();
       else if (onClose) onClose();
@@ -868,21 +927,28 @@ export default function AuthScreen({ initialMode = 'login', onClose, onSuccess }
                 <span>{currentLanguage === 'en' ? 'Continue with Google' : (t('continue_with_google') || 'Continue with Google')}</span>
               </button>
 
-              {/* Switch to Register */}
-              <div className="text-center text-xs text-white/50 pt-3">
-                {currentLanguage === 'en' ? "Don't have an account?" : (t('dont_have_account') || "Don't have an account?")}{' '}
-                <button
-                  type="button"
-                  onClick={() => {
-                    setMode('signup');
-                    setError('');
-                    setSuccess('');
-                  }}
-                  className="font-bold text-amber-400 hover:text-amber-300 ml-1 transition underline cursor-pointer"
-                >
-                  {currentLanguage === 'en' ? 'Register Now' : (t('register_now') || t('auth_register_label') || 'Register Now')}
-                </button>
-              </div>
+              {/* Switch to Register (Disabled during system maintenance) */}
+              {!isMaintenanceActive ? (
+                <div className="text-center text-xs text-white/50 pt-3">
+                  {currentLanguage === 'en' ? "Don't have an account?" : (t('dont_have_account') || "Don't have an account?")}{' '}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMode('signup');
+                      setError('');
+                      setSuccess('');
+                    }}
+                    className="font-bold text-amber-400 hover:text-amber-300 ml-1 transition underline cursor-pointer"
+                  >
+                    {currentLanguage === 'en' ? 'Register Now' : (t('register_now') || t('auth_register_label') || 'Register Now')}
+                  </button>
+                </div>
+              ) : (
+                <div className="text-center text-[11px] text-amber-400/80 pt-3 flex items-center justify-center gap-1.5 font-medium">
+                  <ShieldCheck className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                  <span>System maintenance is active. Authorized administrator access only.</span>
+                </div>
+              )}
             </form>
           )}
 

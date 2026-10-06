@@ -1921,8 +1921,9 @@ async function startServer() {
     }
 
     // Public endpoints that MUST remain reachable during maintenance:
-    // 1. Health check
-    if (req.path === '/api/health') {
+    // 1. Health checks
+    const normalizedPath = (req.path || '').toLowerCase().replace(/\/+$/, '');
+    if (normalizedPath === '/api/health' || normalizedPath === '/healthz' || normalizedPath === '/health') {
       return next();
     }
 
@@ -1932,18 +1933,26 @@ async function startServer() {
       '/api/auth/2fa/verify-login',
       '/api/auth/captcha',
       '/api/auth/logout',
-      '/api/auth/me'
+      '/api/auth/me',
+      '/api/auth/google',
+      '/api/auth/forgot-password',
+      '/api/auth/reset-password'
     ];
-    if (allowedAuthPaths.includes(req.path)) {
+    if (allowedAuthPaths.includes(normalizedPath)) {
       return next();
     }
 
     // 3. System settings GET endpoint so client can read site status and custom maintenance notice
-    if (req.path === '/api/system-settings' && req.method === 'GET') {
+    if (normalizedPath === '/api/system-settings' && req.method === 'GET') {
       return next();
     }
 
-    // 4. Non-API requests (static assets, client bundle navigation)
+    // 4. Languages & translations GET endpoint for client UI dictionary
+    if (normalizedPath === '/api/languages' && req.method === 'GET') {
+      return next();
+    }
+
+    // 5. Non-API requests (static assets, client bundle navigation)
     if (!req.path.startsWith('/api/')) {
       return next();
     }

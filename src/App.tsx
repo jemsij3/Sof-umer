@@ -51,19 +51,35 @@ function MainAppLayout() {
 
   const isSiteInactive = isMaintenanceMode && !isAuthorizedAdmin;
 
-  // Track if URL path points to the administrative management portal
-  const [isAdminRoute, setIsAdminRoute] = useState(() => {
+  // Check if current URL path or search parameters point to the administrator portal or admin login
+  const checkIsAdminRoute = () => {
     if (typeof window === 'undefined') return false;
-    const path = window.location.pathname.toLowerCase();
+    const path = window.location.pathname.toLowerCase().replace(/\/+$/, '') || '/';
     const search = window.location.search.toLowerCase();
-    return path === '/admin' || path.startsWith('/admin/') || search.includes('view=admin');
-  });
+    const hash = window.location.hash.toLowerCase();
+    return (
+      path === '/admin' ||
+      path === '/admin/login' ||
+      path === '/admin-login' ||
+      path.startsWith('/admin/') ||
+      path === '/login' ||
+      path === '/auth' ||
+      path === '/auth/login' ||
+      search.includes('view=admin') ||
+      search.includes('view=login') ||
+      search.includes('admin=true') ||
+      search.includes('mode=admin') ||
+      search.includes('login=true') ||
+      hash.includes('#admin') ||
+      hash.includes('#login')
+    );
+  };
+
+  const [isAdminRoute, setIsAdminRoute] = useState(checkIsAdminRoute);
 
   React.useEffect(() => {
     const handleLocationChange = () => {
-      const path = window.location.pathname.toLowerCase();
-      const search = window.location.search.toLowerCase();
-      const adminNav = path === '/admin' || path.startsWith('/admin/') || search.includes('view=admin');
+      const adminNav = checkIsAdminRoute();
       setIsAdminRoute(adminNav);
       if (adminNav && isAuthorizedAdmin) {
         setView('admin');
@@ -74,12 +90,16 @@ function MainAppLayout() {
     return () => window.removeEventListener('popstate', handleLocationChange);
   }, [isAuthorizedAdmin]);
 
-  // If already authorized admin and on admin route, switch to admin view
+  // If authorized admin and on admin route or under maintenance, ensure admin view is active
   React.useEffect(() => {
-    if (isAdminRoute && isAuthorizedAdmin && view !== 'admin') {
-      setView('admin');
+    if (isAuthorizedAdmin) {
+      if (isAdminRoute && view !== 'admin') {
+        setView('admin');
+      } else if (isMaintenanceMode && view !== 'admin') {
+        setView('admin');
+      }
     }
-  }, [isAdminRoute, isAuthorizedAdmin, view]);
+  }, [isAdminRoute, isAuthorizedAdmin, isMaintenanceMode, view]);
   
   React.useEffect(() => {
     if (selectedProperty) {
@@ -395,7 +415,7 @@ function MainAppLayout() {
                 }}
               />
             </motion.div>
-          ) : currentUser?.role === 'admin' ? (
+          ) : (view === 'admin' || isMaintenanceMode) && isAuthorizedAdmin ? (
             /* COMPREHENSIVE ADMIN ADMINISTRATIVE VIEW */
             <motion.div
               key="admin"
@@ -405,7 +425,11 @@ function MainAppLayout() {
               className="admin-console"
             >
               <AdminDashboard
-                onBackToMarketplace={() => handleNavigate('marketplace')}
+                onBackToMarketplace={() => {
+                  if (!isMaintenanceMode) {
+                    handleNavigate('marketplace');
+                  }
+                }}
                 onOpenCreateModal={() => setCreateModalOpen(true)}
                 onSelectProperty={(prop) => setSelectedProperty(prop)}
               />
