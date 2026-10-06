@@ -37,8 +37,8 @@ function MainAppLayout() {
   const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
 
   // Check Site Live Status (Maintenance or Offline) - Single Source of Truth
-  // Temporarily overridden to always return false to ensure site stays live
-  const isMaintenanceMode = false;
+  const isMaintenanceMode = systemSettings?.maintenanceMode === true ||
+    ['maintenance', 'offline', 'under maintenance', 'maintenance mode', 'off'].includes(String(systemSettings?.siteStatus || '').toLowerCase().trim());
 
 
   const isAuthorizedAdmin = Boolean(

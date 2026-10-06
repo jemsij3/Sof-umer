@@ -1,0 +1,10 @@
+db.systemsettings.updateOne(
+  {}, // Update the only system settings document
+  {
+    $set: {
+      siteStatus: "Online",
+      maintenanceMode: false
+    }
+  },
+  { upsert: true }
+)
