@@ -18,6 +18,7 @@ import {
   X
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { AmharicInput } from './AmharicInput';
 
 interface AuthScreenProps {
   initialMode?: 'login' | 'signup';

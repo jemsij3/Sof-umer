@@ -4,6 +4,7 @@ import { useApp } from '../lib/AppContext';
 import { X, ShieldCheck, MapPin, Calendar, Briefcase, Phone, MessageSquare, Building2, Package } from 'lucide-react';
 import ListingCard from './ListingCard';
 import { motion, AnimatePresence } from 'motion/react';
+import { AmharicInput } from './AmharicInput';
 
 interface SellerProfileModalProps {
   isOpen: boolean;
