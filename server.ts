@@ -181,6 +181,21 @@ export const FaqModel = mongoose.models.Faq || mongoose.model('Faq', faqSchema);
 export const ReviewModel = mongoose.models.Review || mongoose.model('Review', reviewSchema);
 export const AppSettingsModel = mongoose.models.AppSettings || mongoose.model('AppSettings', appSettingsSchema);
 
+
+// MongoDB Connection Event Listeners (registered once)
+mongoose.connection.on('connected', () => {
+  isMongoConnected = true;
+  console.log('[Storage] MongoDB connection event: connected');
+});
+mongoose.connection.on('disconnected', () => {
+  isMongoConnected = false;
+  console.warn('[Storage] MongoDB connection event: disconnected');
+});
+mongoose.connection.on('error', (err) => {
+  isMongoConnected = false;
+  console.error('[Storage] MongoDB connection error event:', err);
+});
+
 async function connectMongo(retries: number = 3): Promise<boolean> {
   if (!MONGODB_URI) {
     console.log('[Storage] MONGODB_URI is not set. Using persistent disk file storage fallback.');
@@ -191,18 +206,10 @@ async function connectMongo(retries: number = 3): Promise<boolean> {
       console.log(`[Storage] Connecting to MongoDB instance (attempt ${attempt}/${retries})...`);
       mongoose.set('bufferCommands', false);
 
-      mongoose.connection.on('connected', () => {
-        isMongoConnected = true;
-        console.log('[Storage] MongoDB connection event: connected');
-      });
-      mongoose.connection.on('disconnected', () => {
-        isMongoConnected = false;
-        console.warn('[Storage] MongoDB connection event: disconnected');
-      });
-      mongoose.connection.on('error', (err) => {
-        isMongoConnected = false;
-        console.error('[Storage] MongoDB connection error event:', err);
-      });
+
+
+
+
 
       await mongoose.connect(MONGODB_URI, {
         serverSelectionTimeoutMS: 15000,
@@ -1431,15 +1438,20 @@ const loadDb = async () => {
     console.log('[Storage] Connecting to MongoDB and loading database records...');
     try {
       const connected = await connectMongo();
-      if (connected) {
-        const loaded = await loadFromMongo();
-        if (loaded) {
-          applyDataSanityAndMigrations();
-          console.log('[Storage] Primary MongoDB database synchronization completed successfully.');
-        }
+      if (!connected) {
+        console.error('CRITICAL: Failed to connect to MongoDB. Aborting startup to prevent data corruption.');
+        process.exit(1);
       }
+      const loaded = await loadFromMongo();
+      if (!loaded) {
+        console.error('CRITICAL: Failed to load data from MongoDB. Aborting startup to prevent data corruption.');
+        process.exit(1);
+      }
+      applyDataSanityAndMigrations();
+      console.log('[Storage] Primary MongoDB database synchronization completed successfully.');
     } catch (err) {
-      console.error('[Storage] Primary MongoDB connection error:', err);
+      console.error('CRITICAL: Primary MongoDB connection error:', err);
+      process.exit(1);
     }
   }
   isInitialLoadComplete = true;
