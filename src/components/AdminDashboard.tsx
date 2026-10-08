@@ -1106,6 +1106,14 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
   const [rejectionModalReceipt, setRejectionModalReceipt] = useState<PaymentReceipt | null>(null);
   const [rejectionReasonText, setRejectionReasonText] = useState('Unclear receipt image / Reference number mismatch.');
   const [receiptActionSubmitting, setReceiptActionSubmitting] = useState(false);
+  const [selectedReceiptIds, setSelectedReceiptIds] = useState<string[]>([]);
+  const [deleteReceiptModal, setDeleteReceiptModal] = useState<{
+    type: 'single' | 'selected' | 'all' | null;
+    targetReceipt?: PaymentReceipt;
+  }>({ type: null });
+  const [deleteReceiptConfirmInput, setDeleteReceiptConfirmInput] = useState('');
+  const [isDeletingReceipts, setIsDeletingReceipts] = useState(false);
+  const [receiptToastMessage, setReceiptToastMessage] = useState<string | null>(null);
   const [ticketReplyId, setTicketReplyId] = useState<string | null>(null);
   const [ticketReplyText, setTicketReplyText] = useState('');
 
@@ -1887,7 +1895,7 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
       const res = await fetch('/api/receipts/approve-all', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('sof_umer_token')}`
+          'Authorization': `Bearer ${localStorage.getItem('sof_umer_token') || localStorage.getItem('sof_umer_auth_token')}`
         }
       });
       if (res.ok) {
@@ -1895,6 +1903,115 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
       }
     } catch (e) {
       console.error(e);
+    }
+  };
+
+  // Payment / Receipt History Deletion Handlers
+  const handleToggleSelectReceipt = (id: string) => {
+    setSelectedReceiptIds(prev =>
+      prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]
+    );
+  };
+
+  const handleToggleSelectAllReceipts = () => {
+    if (selectedReceiptIds.length === receipts.length) {
+      setSelectedReceiptIds([]);
+    } else {
+      setSelectedReceiptIds(receipts.map(r => r.id));
+    }
+  };
+
+  const openDeleteSingleReceiptModal = (rec: PaymentReceipt) => {
+    setDeleteReceiptModal({ type: 'single', targetReceipt: rec });
+  };
+
+  const openDeleteSelectedReceiptsModal = () => {
+    if (selectedReceiptIds.length === 0) return;
+    setDeleteReceiptModal({ type: 'selected' });
+  };
+
+  const openDeleteAllReceiptsModal = () => {
+    if (receipts.length === 0) return;
+    setDeleteReceiptConfirmInput('');
+    setDeleteReceiptModal({ type: 'all' });
+  };
+
+  const closeDeleteReceiptModal = () => {
+    setDeleteReceiptModal({ type: null });
+    setDeleteReceiptConfirmInput('');
+    setIsDeletingReceipts(false);
+  };
+
+  const executeDeleteReceipts = async () => {
+    const token = localStorage.getItem('sof_umer_token') || localStorage.getItem('sof_umer_auth_token') || '';
+    setIsDeletingReceipts(true);
+    try {
+      if (deleteReceiptModal.type === 'single' && deleteReceiptModal.targetReceipt) {
+        const id = deleteReceiptModal.targetReceipt.id;
+        const res = await fetch(`/api/receipts/${id}`, {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        if (res.ok) {
+          const data = await res.json().catch(() => ({}));
+          setSelectedReceiptIds(prev => prev.filter(item => item !== id));
+          await refreshData();
+          closeDeleteReceiptModal();
+          setReceiptToastMessage(`Payment receipt history record deleted successfully.`);
+          setTimeout(() => setReceiptToastMessage(null), 4000);
+        } else {
+          const errData = await res.json().catch(() => ({}));
+          alert(errData.error || 'Failed to delete receipt record.');
+        }
+      } else if (deleteReceiptModal.type === 'selected') {
+        if (selectedReceiptIds.length === 0) {
+          closeDeleteReceiptModal();
+          return;
+        }
+        const res = await fetch('/api/receipts/delete-batch', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ ids: selectedReceiptIds })
+        });
+        if (res.ok) {
+          const data = await res.json().catch(() => ({}));
+          setSelectedReceiptIds([]);
+          await refreshData();
+          closeDeleteReceiptModal();
+          setReceiptToastMessage(`Deleted ${data.deletedCount ?? selectedReceiptIds.length} payment receipt history records successfully.`);
+          setTimeout(() => setReceiptToastMessage(null), 4000);
+        } else {
+          const errData = await res.json().catch(() => ({}));
+          alert(errData.error || 'Failed to batch delete selected receipt records.');
+        }
+      } else if (deleteReceiptModal.type === 'all') {
+        const res = await fetch('/api/receipts/delete-all', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        if (res.ok) {
+          setSelectedReceiptIds([]);
+          await refreshData();
+          closeDeleteReceiptModal();
+          setReceiptToastMessage('Entire payment & receipt history has been permanently cleared.');
+          setTimeout(() => setReceiptToastMessage(null), 4000);
+        } else {
+          const errData = await res.json().catch(() => ({}));
+          alert(errData.error || 'Failed to delete all payment receipts history.');
+        }
+      }
+    } catch (err: any) {
+      console.error('[ReceiptDelete] Error:', err);
+      alert(err.message || 'An error occurred while deleting payment receipt history.');
+    } finally {
+      setIsDeletingReceipts(false);
     }
   };
 
@@ -5765,42 +5882,148 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
               <div className="space-y-4">
                 <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
                   <div>
-                    <h3 className="text-xl font-serif font-bold text-white">Manual Bank Deposit / Telebirr Slips Desk</h3>
-                    <p className="text-xs text-white/40 mt-1">Audit uploaded manual CBE receipt images, verify against banking logs, and approve property promotions and wallet top-ups.</p>
+                    <div className="flex items-center gap-3">
+                      <h3 className="text-xl font-serif font-bold text-white">Manual Bank Deposit / Telebirr Slips Desk</h3>
+                      <span className="text-xs px-2.5 py-0.5 rounded-full bg-white/5 border border-white/10 text-white/60 font-mono">
+                        {receipts.length} {receipts.length === 1 ? 'record' : 'records'}
+                      </span>
+                    </div>
+                    <p className="text-xs text-white/40 mt-1">Audit uploaded manual CBE receipt images, verify against banking logs, and manage payment/receipt history.</p>
                   </div>
-                  {pendingReceiptsCount > 0 && (
-                    <button
-                      onClick={handleApproveAllReceipts}
-                      className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-black font-extrabold text-xs uppercase rounded-xl shadow cursor-pointer transition flex items-center gap-1.5 shrink-0"
-                    >
-                      <Check className="w-4 h-4" /> Batch Approve All ({pendingReceiptsCount}) Slips & Activate Promotions
-                    </button>
-                  )}
+                  <div className="flex flex-wrap items-center gap-2">
+                    {pendingReceiptsCount > 0 && (
+                      <button
+                        onClick={handleApproveAllReceipts}
+                        className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-black font-extrabold text-xs uppercase rounded-xl shadow cursor-pointer transition flex items-center gap-1.5 shrink-0"
+                      >
+                        <Check className="w-4 h-4" /> Batch Approve All ({pendingReceiptsCount}) Slips
+                      </button>
+                    )}
+                    {selectedReceiptIds.length > 0 && (
+                      <button
+                        type="button"
+                        onClick={openDeleteSelectedReceiptsModal}
+                        className="px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white font-extrabold text-xs uppercase rounded-xl shadow cursor-pointer transition flex items-center gap-1.5 shrink-0 animate-fade-in"
+                      >
+                        <Trash2 className="w-4 h-4" /> Delete Selected ({selectedReceiptIds.length})
+                      </button>
+                    )}
+                    {receipts.length > 0 && (
+                      <button
+                        type="button"
+                        onClick={openDeleteAllReceiptsModal}
+                        className="px-4 py-2 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 hover:text-rose-300 border border-rose-500/30 hover:border-rose-500/50 font-bold text-xs uppercase rounded-xl cursor-pointer transition flex items-center gap-1.5 shrink-0"
+                        title="Delete entire payment and receipt history"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" /> Delete All History
+                      </button>
+                    )}
+                  </div>
                 </div>
+
+                {/* Toast feedback banner */}
+                {receiptToastMessage && (
+                  <div className="p-3 bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs rounded-xl flex items-center justify-between gap-2 animate-fade-in">
+                    <div className="flex items-center gap-2 font-medium">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                      <span>{receiptToastMessage}</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setReceiptToastMessage(null)}
+                      className="text-emerald-400/60 hover:text-emerald-300 p-1 cursor-pointer"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                )}
+
+                {/* Multi-selection Toolbar */}
+                {receipts.length > 0 && (
+                  <div className="flex flex-wrap items-center justify-between gap-3 p-3 bg-white/[0.02] border border-white/5 rounded-2xl">
+                    <div className="flex items-center gap-3">
+                      <label className="flex items-center gap-2 cursor-pointer text-xs font-semibold text-white/80 select-none">
+                        <input
+                          type="checkbox"
+                          checked={receipts.length > 0 && selectedReceiptIds.length === receipts.length}
+                          onChange={handleToggleSelectAllReceipts}
+                          className="w-4 h-4 rounded border-white/20 bg-black/40 text-amber-500 focus:ring-amber-500/20 cursor-pointer accent-amber-500"
+                        />
+                        <span>Select All ({receipts.length})</span>
+                      </label>
+                      {selectedReceiptIds.length > 0 && (
+                        <span className="text-amber-400 font-mono text-xs font-bold">
+                          ● {selectedReceiptIds.length} of {receipts.length} selected
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {selectedReceiptIds.length > 0 ? (
+                        <>
+                          <button
+                            type="button"
+                            onClick={() => setSelectedReceiptIds([])}
+                            className="text-xs text-white/50 hover:text-white underline cursor-pointer px-2 py-1"
+                          >
+                            Clear Selection
+                          </button>
+                          <button
+                            type="button"
+                            onClick={openDeleteSelectedReceiptsModal}
+                            className="px-3.5 py-1.5 bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs rounded-xl shadow cursor-pointer transition flex items-center gap-1.5"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" /> Delete Selected ({selectedReceiptIds.length})
+                          </button>
+                        </>
+                      ) : (
+                        <span className="text-[11px] text-white/40">Use checkboxes to select multiple records for batch deletion</span>
+                      )}
+                    </div>
+                  </div>
+                )}
 
                 <div className="overflow-x-auto">
                   <table className="w-full text-xs text-white">
                     <thead>
                       <tr className="border-b border-white/5 bg-[#12121a] text-[9px] text-white/40 font-bold uppercase tracking-wider">
+                        <th className="py-3 px-3 text-center w-10">
+                          <input
+                            type="checkbox"
+                            checked={receipts.length > 0 && selectedReceiptIds.length === receipts.length}
+                            onChange={handleToggleSelectAllReceipts}
+                            disabled={receipts.length === 0}
+                            title={receipts.length > 0 && selectedReceiptIds.length === receipts.length ? "Deselect All" : "Select All"}
+                            className="w-4 h-4 rounded border-white/20 bg-black/40 text-amber-500 focus:ring-amber-500/20 cursor-pointer accent-amber-500"
+                          />
+                        </th>
                         <th className="py-3 px-4 text-left">Sender Info</th>
                         <th className="py-3 px-4 text-left">Payment Method</th>
                         <th className="py-3 px-4 text-left">Listing / Purpose</th>
                         <th className="py-3 px-4 text-left">Amount (ETB)</th>
                         <th className="py-3 px-4 text-left">Receipt Document</th>
                         <th className="py-3 px-4 text-left">Status</th>
-                        <th className="py-3 px-4 text-right">Verification</th>
+                        <th className="py-3 px-4 text-right">Verification & Actions</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-white/5">
                       {receipts.length === 0 ? (
                         <tr>
-                          <td colSpan={7} className="py-12 text-center text-white/30 font-light text-xs">No payment receipts in queue.</td>
+                          <td colSpan={8} className="py-12 text-center text-white/30 font-light text-xs">No payment receipts in queue.</td>
                         </tr>
                       ) : (
                         receipts.map(rec => {
                           const linkedProp = properties.find(p => p.id === rec.relatedPropertyId);
+                          const isSelected = selectedReceiptIds.includes(rec.id);
                           return (
-                            <tr key={rec.id} className="hover:bg-white/[0.01]">
+                            <tr key={rec.id} className={`hover:bg-white/[0.01] transition-colors ${isSelected ? 'bg-amber-500/[0.03]' : ''}`}>
+                              <td className="py-3 px-3 text-center w-10">
+                                <input
+                                  type="checkbox"
+                                  checked={isSelected}
+                                  onChange={() => handleToggleSelectReceipt(rec.id)}
+                                  className="w-4 h-4 rounded border-white/20 bg-black/40 text-amber-500 focus:ring-amber-500/20 cursor-pointer accent-amber-500"
+                                />
+                              </td>
                               <td className="py-3 px-4">
                                 <p className="font-bold text-white">{rec.userEmail}</p>
                                 <span className="text-[10px] text-white/30 font-mono">ID: {rec.userId}</span>
@@ -5859,7 +6082,7 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
                               </td>
                               <td className="py-3 px-4 text-right">
                                 {rec.status === 'Pending' ? (
-                                  <div className="flex justify-end gap-1.5">
+                                  <div className="flex justify-end gap-1.5 items-center">
                                     <button 
                                       onClick={() => setInspectingReceipt(rec)} 
                                       className="px-2.5 py-1.5 bg-amber-500 hover:bg-amber-400 text-black font-extrabold rounded-lg cursor-pointer text-[10px] uppercase flex items-center gap-1"
@@ -5877,8 +6100,17 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
                                     <button 
                                       onClick={() => setRejectionModalReceipt(rec)} 
                                       className="px-2.5 py-1.5 bg-rose-500/20 hover:bg-rose-500 text-rose-300 hover:text-white font-extrabold rounded-lg cursor-pointer text-[10px] uppercase flex items-center gap-1"
+                                      title="Reject Receipt"
                                     >
                                       <X className="w-3.5 h-3.5" /> Reject
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => openDeleteSingleReceiptModal(rec)}
+                                      className="p-1.5 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 hover:border-rose-500/40 rounded-lg cursor-pointer transition flex items-center justify-center shrink-0"
+                                      title="Delete this payment/receipt history record"
+                                    >
+                                      <Trash2 className="w-3.5 h-3.5" />
                                     </button>
                                   </div>
                                 ) : (
@@ -5894,6 +6126,14 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
                                       className="text-[9px] text-white/40 font-bold hover:underline cursor-pointer uppercase"
                                     >
                                       Re-audit
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => openDeleteSingleReceiptModal(rec)}
+                                      className="p-1.5 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 hover:border-rose-500/40 rounded-lg cursor-pointer transition flex items-center justify-center shrink-0"
+                                      title="Delete this payment/receipt history record"
+                                    >
+                                      <Trash2 className="w-3.5 h-3.5" />
                                     </button>
                                   </div>
                                 )}
@@ -9511,6 +9751,161 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
                 className="px-4 py-2 bg-rose-500 hover:bg-rose-600 text-white font-bold text-xs rounded-xl shadow cursor-pointer flex items-center gap-1.5 disabled:opacity-50"
               >
                 {receiptActionSubmitting ? 'Rejecting...' : 'Confirm Rejection'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Payment / Receipt History Deletion Confirmation Modal */}
+      {deleteReceiptModal.type && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in">
+          <div className="bg-[#0f1015] border border-white/10 rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-5">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between pb-3 border-b border-white/10">
+              <h4 className="text-base font-bold text-white flex items-center gap-2">
+                <AlertTriangle className={`w-5 h-5 ${deleteReceiptModal.type === 'all' ? 'text-rose-500' : 'text-amber-400'}`} />
+                {deleteReceiptModal.type === 'single' && 'Confirm Receipt Record Deletion'}
+                {deleteReceiptModal.type === 'selected' && `Delete ${selectedReceiptIds.length} Selected Receipts`}
+                {deleteReceiptModal.type === 'all' && 'Delete Entire Payment & Receipt History'}
+              </h4>
+              <button
+                type="button"
+                onClick={closeDeleteReceiptModal}
+                disabled={isDeletingReceipts}
+                className="p-1.5 bg-white/5 hover:bg-white/10 rounded-full text-white/40 hover:text-white transition disabled:opacity-50 cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Modal Content */}
+            {deleteReceiptModal.type === 'single' && deleteReceiptModal.targetReceipt && (
+              <div className="space-y-3">
+                <p className="text-xs text-white/70">
+                  Are you sure you want to permanently delete this payment/receipt history record?
+                </p>
+                <div className="p-3.5 bg-white/5 border border-white/10 rounded-2xl space-y-1.5 text-xs">
+                  <div className="flex justify-between">
+                    <span className="text-white/40">Sender:</span>
+                    <span className="font-bold text-white">{deleteReceiptModal.targetReceipt.userEmail}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-white/40">Amount:</span>
+                    <span className="font-mono font-bold text-amber-400">{deleteReceiptModal.targetReceipt.amount.toLocaleString()} ETB</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-white/40">Payment Method:</span>
+                    <span className="text-white">{deleteReceiptModal.targetReceipt.paymentMethodName}</span>
+                  </div>
+                  {deleteReceiptModal.targetReceipt.referenceNumber && (
+                    <div className="flex justify-between">
+                      <span className="text-white/40">Ref Number:</span>
+                      <span className="font-mono text-white/70">{deleteReceiptModal.targetReceipt.referenceNumber}</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between">
+                    <span className="text-white/40">Status:</span>
+                    <span className="font-bold text-white uppercase text-[10px]">{deleteReceiptModal.targetReceipt.status}</span>
+                  </div>
+                </div>
+                <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl text-[11px] text-amber-300">
+                  Note: This operation only removes this historical payment/receipt record. Unrelated users, property listings, and marketplace configurations remain completely untouched.
+                </div>
+              </div>
+            )}
+
+            {deleteReceiptModal.type === 'selected' && (
+              <div className="space-y-3">
+                <p className="text-xs text-white/70">
+                  Are you sure you want to permanently delete the <span className="font-bold text-white">{selectedReceiptIds.length}</span> selected payment/receipt history records?
+                </p>
+                <div className="p-3 bg-white/5 border border-white/10 rounded-2xl max-h-36 overflow-y-auto space-y-1.5 text-xs font-mono">
+                  {selectedReceiptIds.slice(0, 5).map(id => {
+                    const rec = receipts.find(r => r.id === id);
+                    return (
+                      <div key={id} className="flex justify-between items-center text-[11px] text-white/60">
+                        <span className="truncate max-w-[220px]">{rec ? rec.userEmail : id}</span>
+                        <span className="text-amber-400">{rec ? `${rec.amount.toLocaleString()} ETB` : ''}</span>
+                      </div>
+                    );
+                  })}
+                  {selectedReceiptIds.length > 5 && (
+                    <p className="text-[10px] text-white/40 italic text-center pt-1">
+                      ...and {selectedReceiptIds.length - 5} more records
+                    </p>
+                  )}
+                </div>
+                <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl text-[11px] text-amber-300">
+                  Note: Only the selected payment receipt history records will be deleted. All users, property listings, promotion packages, and system data will remain completely intact.
+                </div>
+              </div>
+            )}
+
+            {deleteReceiptModal.type === 'all' && (
+              <div className="space-y-4">
+                <div className="p-4 bg-rose-500/10 border border-rose-500/30 rounded-2xl space-y-2">
+                  <div className="flex items-center gap-2 text-rose-400 font-bold text-xs uppercase tracking-wide">
+                    <AlertOctagon className="w-4 h-4 shrink-0" />
+                    High Impact Administrative Action
+                  </div>
+                  <p className="text-xs text-white/80">
+                    You are about to permanently delete <span className="font-bold text-rose-400">ALL {receipts.length}</span> payment and receipt history records.
+                  </p>
+                  <p className="text-[11px] text-white/60 leading-relaxed">
+                    This will clear the entire manual deposit slip and receipt verification audit trail. Unrelated users, accounts, listings, promotion packages, and payment methods will NOT be modified.
+                  </p>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="block text-[11px] font-bold text-white/70 uppercase tracking-wider">
+                    Type <span className="text-rose-400 font-mono">DELETE ALL</span> to confirm:
+                  </label>
+                  <input
+                    type="text"
+                    value={deleteReceiptConfirmInput}
+                    onChange={e => setDeleteReceiptConfirmInput(e.target.value)}
+                    placeholder="Type DELETE ALL"
+                    className="w-full p-3 bg-black/60 border border-white/10 rounded-xl text-xs text-white placeholder-white/20 focus:border-rose-500 focus:outline-none font-mono"
+                    autoFocus
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Modal Actions */}
+            <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-white/10">
+              <button
+                type="button"
+                onClick={closeDeleteReceiptModal}
+                disabled={isDeletingReceipts}
+                className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white font-bold text-xs rounded-xl cursor-pointer transition disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={executeDeleteReceipts}
+                disabled={isDeletingReceipts || (deleteReceiptModal.type === 'all' && deleteReceiptConfirmInput.trim().toUpperCase() !== 'DELETE ALL')}
+                className="px-5 py-2 bg-rose-600 hover:bg-rose-500 disabled:opacity-40 disabled:cursor-not-allowed text-white font-extrabold text-xs rounded-xl shadow cursor-pointer transition flex items-center gap-1.5"
+              >
+                {isDeletingReceipts ? (
+                  <>
+                    <RefreshCw className="w-3.5 h-3.5 animate-spin" /> Deleting...
+                  </>
+                ) : deleteReceiptModal.type === 'single' ? (
+                  <>
+                    <Trash2 className="w-3.5 h-3.5" /> Confirm Deletion
+                  </>
+                ) : deleteReceiptModal.type === 'selected' ? (
+                  <>
+                    <Trash2 className="w-3.5 h-3.5" /> Delete {selectedReceiptIds.length} Selected
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="w-3.5 h-3.5" /> Permanently Delete All History
+                  </>
+                )}
               </button>
             </div>
           </div>

@@ -5209,22 +5209,73 @@ async function startServer() {
     res.status(404).json({ error: 'Receipt not found' });
   });
 
-  app.delete('/api/receipts/:id', async (req, res) => {
+  app.delete('/api/receipts/:id', requireAdmin, async (req, res) => {
     const { id } = req.params;
-    const idx = localDb.receipts.findIndex(r => r.id === id);
+    const idx = localDb.receipts.findIndex(r => r.id === id || (r as any)._id === id);
     if (idx !== -1) {
-      localDb.receipts.splice(idx, 1);
+      const removed = localDb.receipts.splice(idx, 1)[0];
       if (isMongoConnected) {
         try {
-          await ReceiptModel.deleteOne({ id });
+          await ReceiptModel.deleteOne({ $or: [{ id }, { _id: id }] });
         } catch (e) {
           console.error('[Receipts] Mongo delete failed:', e);
         }
       }
       await saveDb();
-      return res.json({ success: true });
+      return res.json({ success: true, remainingCount: localDb.receipts.length, deletedId: removed.id });
     }
     res.status(404).json({ error: 'Receipt not found' });
+  });
+
+  // Batch delete selected payment/receipt history records
+  app.post('/api/receipts/delete-batch', requireAdmin, async (req, res) => {
+    const { ids } = req.body;
+    if (!Array.isArray(ids) || ids.length === 0) {
+      return res.status(400).json({ error: 'Array of receipt IDs required.' });
+    }
+    const idSet = new Set(ids);
+    const initialCount = localDb.receipts.length;
+    localDb.receipts = localDb.receipts.filter(r => !idSet.has(r.id) && !idSet.has((r as any)._id));
+    const deletedCount = initialCount - localDb.receipts.length;
+
+    if (isMongoConnected) {
+      try {
+        await ReceiptModel.deleteMany({ $or: [{ id: { $in: ids } }, { _id: { $in: ids } }] });
+      } catch (e) {
+        console.error('[Receipts] Mongo batch delete failed:', e);
+      }
+    }
+    await saveDb();
+    res.json({ success: true, deletedCount, remainingCount: localDb.receipts.length });
+  });
+
+  // Delete all payment/receipt history records
+  app.delete('/api/receipts', requireAdmin, async (req, res) => {
+    const deletedCount = localDb.receipts.length;
+    localDb.receipts = [];
+    if (isMongoConnected) {
+      try {
+        await ReceiptModel.deleteMany({});
+      } catch (e) {
+        console.error('[Receipts] Mongo delete all failed:', e);
+      }
+    }
+    await saveDb();
+    res.json({ success: true, deletedCount, remainingCount: 0 });
+  });
+
+  app.post('/api/receipts/delete-all', requireAdmin, async (req, res) => {
+    const deletedCount = localDb.receipts.length;
+    localDb.receipts = [];
+    if (isMongoConnected) {
+      try {
+        await ReceiptModel.deleteMany({});
+      } catch (e) {
+        console.error('[Receipts] Mongo delete all failed:', e);
+      }
+    }
+    await saveDb();
+    res.json({ success: true, deletedCount, remainingCount: 0 });
   });
 
   // Batch approve pending receipts
