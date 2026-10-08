@@ -16,7 +16,7 @@ import ListingCard from './components/ListingCard';
 import Footer from './components/Footer';
 import InfoPage from './components/InfoPage';
 import { Property } from './types';
-import { ShieldAlert, RefreshCw, X, Send, Compass, Heart, Plus, Search, User as UserIcon, Home, MessageSquare } from 'lucide-react';
+import { ShieldAlert, Shield, RefreshCw, X, Send, Compass, Heart, Plus, Search, User as UserIcon, Home, MessageSquare } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { getThemeCSS } from './lib/themes';
 import { PWAInstallPrompt } from './components/PWAInstallPrompt';
@@ -114,10 +114,10 @@ function MainAppLayout() {
     return () => window.removeEventListener('popstate', handleLocationChange);
   }, [currentUser]);
 
-  // If authorized admin and on admin route or under maintenance, ensure admin view is active
+  // If authorized admin and on admin/profile route or under maintenance, ensure SOF-UMER CONTROL CONSOLE is active
   React.useEffect(() => {
     if (isAuthorizedAdmin) {
-      if (isAdminRoute && view !== 'admin') {
+      if ((isAdminRoute || view === 'profile') && view !== 'admin') {
         setView('admin');
       } else if (isMaintenanceMode && view !== 'admin') {
         setView('admin');
@@ -179,11 +179,16 @@ function MainAppLayout() {
     }
   };
 
-  // When user successfully authenticates, navigate to their intended destination
+  // When user successfully authenticates, navigate to their intended destination:
+  // Admin account goes directly to the SOF-UMER CONTROL CONSOLE; normal user goes to user dashboard
   React.useEffect(() => {
     if (currentUser && authScreenOpen) {
       setAuthScreenOpen(false);
-      if (authDestination === 'admin') {
+      const isAdmin = currentUser.role === 'admin' || currentUser.role === 'owner' || currentUser.role === 'superadmin' || (currentUser as any).isAdmin || (currentUser.email && currentUser.email.toLowerCase() === 'jemaljima@gmail.com');
+      if (isAdmin) {
+        setView('admin');
+        setAuthDestination(null);
+      } else if (authDestination === 'admin') {
         setView('admin');
         setAuthDestination(null);
       } else if (authDestination === 'create') {
@@ -192,8 +197,8 @@ function MainAppLayout() {
       } else if (authDestination) {
         setView(authDestination);
         setAuthDestination(null);
-      } else if ((currentUser.role === 'admin' || (currentUser as any).isAdmin) && view === 'admin') {
-        setView('admin');
+      } else {
+        setView('profile');
       }
     }
   }, [currentUser, authScreenOpen, authDestination, view]);
@@ -446,7 +451,7 @@ function MainAppLayout() {
                 }}
               />
             </motion.div>
-          ) : (view === 'admin' || isMaintenanceMode) && isAuthorizedAdmin ? (
+          ) : (view === 'admin' || isMaintenanceMode || (isAuthorizedAdmin && (view === 'profile' || view === 'settings'))) && isAuthorizedAdmin ? (
             /* COMPREHENSIVE ADMIN ADMINISTRATIVE VIEW */
             <motion.div
               key="admin"
@@ -501,7 +506,8 @@ function MainAppLayout() {
                   initialMode={authMode}
                   onClose={() => setView('marketplace')}
                   onSuccess={() => {
-                    if (view === 'admin' || authDestination === 'admin') {
+                    const isAdmin = isAuthorizedAdmin || currentUser?.role === 'admin' || (currentUser as any)?.isAdmin;
+                    if (isAdmin || view === 'admin' || authDestination === 'admin') {
                       setView('admin');
                       setAuthDestination(null);
                     } else if (authDestination === 'create') {
@@ -510,6 +516,8 @@ function MainAppLayout() {
                     } else if (authDestination) {
                       setView(authDestination);
                       setAuthDestination(null);
+                    } else {
+                      setView('profile');
                     }
                   }}
                 />
@@ -597,12 +605,14 @@ function MainAppLayout() {
           </span>
         </button>
 
-        {/* 5. Profile */}
+        {/* 5. Profile / Console */}
         <button
           onClick={() => {
             setSelectedProperty(null);
             if (!currentUser) {
               handleOpenAuth('login', 'profile');
+            } else if (isAuthorizedAdmin) {
+              setView('admin');
             } else {
               setView('profile');
             }
@@ -611,9 +621,9 @@ function MainAppLayout() {
             view === 'profile' || view === 'admin' || (currentUser && (view === 'settings' || view === 'payments' || view === 'notifications')) ? 'text-amber-400 font-bold' : 'text-white/60 hover:text-white'
           }`}
         >
-          <UserIcon className="w-5 h-5 shrink-0" />
+          {isAuthorizedAdmin ? <Shield className="w-5 h-5 shrink-0" /> : <UserIcon className="w-5 h-5 shrink-0" />}
           <span className="text-[10px] tracking-tight whitespace-nowrap overflow-hidden text-ellipsis max-w-full">
-            {t('profile') || 'Profile'}
+            {isAuthorizedAdmin ? (t('admin_dashboard') || 'Console') : (t('profile') || 'Profile')}
           </span>
         </button>
       </nav>
@@ -643,7 +653,8 @@ function MainAppLayout() {
                 initialMode={authMode}
                 onClose={handleCloseAuth}
                 onSuccess={() => {
-                  if (authDestination === 'admin') {
+                  const isAdmin = isAuthorizedAdmin || currentUser?.role === 'admin' || (currentUser as any)?.isAdmin;
+                  if (isAdmin || authDestination === 'admin') {
                     setView('admin');
                     setAuthDestination(null);
                   } else if (authDestination === 'create') {
@@ -652,6 +663,8 @@ function MainAppLayout() {
                   } else if (authDestination) {
                     setView(authDestination);
                     setAuthDestination(null);
+                  } else {
+                    setView('profile');
                   }
                 }}
               />
