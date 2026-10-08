@@ -35,7 +35,8 @@ export const AmharicInput: React.FC<AmharicInputProps> = ({
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     if (isAmharic) {
       // Fidelify processing
-      const { value: newValue } = transliterator.processChange(contextId, e.target.value, value);
+      const result = transliterator.processChange(contextId, e.target.value, value);
+      const { value: newValue, cursorPosition: newCursorPos } = result;
 
       // Create a synthetic event to pass to the parent
       const syntheticEvent = {
@@ -49,7 +50,7 @@ export const AmharicInput: React.FC<AmharicInputProps> = ({
 
       // Update cursor position - we need to wait a tick for React to update the DOM
       const element = e.target;
-      const newCursorPos = transliterator.processChange(contextId, e.target.value, value).cursorPosition;
+
 
       onChange(syntheticEvent);
 
