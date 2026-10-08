@@ -33,6 +33,7 @@ import { AllCategoriesModal } from './AllCategoriesModal';
 import { LocationSelectorModal } from './LocationSelectorModal';
 import { matchesLocationFilter } from '../lib/locationData';
 import { ListingCard, PropertyCard } from './ListingCard';
+import { AmharicInput } from './AmharicInput';
 
 function SofUmerCaveLogo({ className = "w-16 h-16" }: { className?: string }) {
   return (

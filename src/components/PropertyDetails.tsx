@@ -62,6 +62,7 @@ import {
   Sliders
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { AmharicInput } from './AmharicInput';
 
 interface PropertyDetailsProps {
   property: Property;
@@ -1993,7 +1994,7 @@ export default function PropertyDetails({
                     </div>
                   </div>
 
-                  <textarea
+                  <AmharicInput multiline
                     rows={3}
                     placeholder={t('reviews.placeholder') || 'Share your experience with this listing or seller...'}
                     value={reviewComment}
@@ -2190,7 +2191,7 @@ export default function PropertyDetails({
 
             {currentUser ? (
               <form onSubmit={handleSendInquiry} className="space-y-4">
-                <textarea
+                <AmharicInput multiline
                   required
                   value={messageText}
                   onChange={e => setMessageText(e.target.value)}
@@ -2443,7 +2444,7 @@ export default function PropertyDetails({
                     <label className="block text-xs font-bold text-white/70 mb-1.5 uppercase tracking-wider">
                       Additional Details / Requirements
                     </label>
-                    <textarea
+                    <AmharicInput multiline
                       rows={3}
                       value={quoteMessage}
                       onChange={e => setQuoteMessage(e.target.value)}
@@ -2637,7 +2638,7 @@ export default function PropertyDetails({
                     <label className="block text-xs font-bold text-white/60 mb-2 uppercase">
                       Optional Note for Seller
                     </label>
-                    <textarea
+                    <AmharicInput multiline
                       value={offerNote}
                       onChange={e => setOfferNote(e.target.value)}
                       rows={3}

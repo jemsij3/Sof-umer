@@ -20,6 +20,7 @@ import { APP_THEMES, getThemeCSS } from '../lib/themes';
 import { extractString } from '../lib/categoriesData';
 import { maskName, maskEmail } from '../lib/utils';
 import { getCampaignStatusInfo } from '../utils/campaignUtils';
+import { AmharicInput } from './AmharicInput';
 
 interface AdminDashboardProps {
   onBackToMarketplace: () => void;
@@ -3697,7 +3698,7 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
 
                       <div className="sm:col-span-2 md:col-span-3">
                         <label className="block text-[10px] text-white/50 font-bold uppercase mb-1">Description</label>
-                        <textarea
+                        <AmharicInput multiline
                           rows={4}
                           value={propForm.description}
                           onChange={e => setPropForm({ ...propForm, description: e.target.value })}
@@ -3852,7 +3853,7 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                       <div className="sm:col-span-2 md:col-span-3">
                         <label className="block text-[10px] text-white/50 font-bold uppercase mb-1">Full Location / Address *</label>
-                        <textarea
+                        <AmharicInput multiline
                           rows={2}
                           required
                           value={propForm.location}
@@ -4173,7 +4174,7 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
 
                       <div className="sm:col-span-2 md:col-span-3">
                         <label className="block text-[10px] text-white/50 font-bold uppercase mb-1">Wholesale Terms & Notes</label>
-                        <textarea
+                        <AmharicInput multiline
                           rows={2}
                           value={propForm.wholesaleNotes}
                           onChange={e => setPropForm({ ...propForm, wholesaleNotes: e.target.value })}
@@ -4942,7 +4943,7 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
 
                   <div className="sm:col-span-2">
                     <label className="block text-xs font-bold text-white/40 mb-2">Description / Copy text *</label>
-                    <textarea
+                    <AmharicInput multiline
                       required
                       rows={2}
                       value={adForm.description}
@@ -5063,7 +5064,7 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
                             </div>
                             <div>
                               <label className="block text-[8px] uppercase tracking-wider text-white/40 font-bold mb-0.5">Package Description</label>
-                              <textarea
+                              <AmharicInput multiline
                                 rows={2}
                                 value={editingPkgDesc}
                                 onChange={e => setEditingPkgDesc(e.target.value)}
@@ -5287,7 +5288,7 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
                 {ticketReplyId && (
                   <form onSubmit={handleReplyTicket} className="bg-white/5 border border-white/10 p-4 rounded-2xl space-y-3">
                     <h5 className="text-xs font-bold text-amber-500 uppercase tracking-widest">Send Support Reply</h5>
-                    <textarea
+                    <AmharicInput multiline
                       required
                       rows={2}
                       placeholder="Type your response to the user ticket..."
@@ -5367,7 +5368,7 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
                         onChange={e => setNewFaqQuestion({ ...newFaqQuestion, en: e.target.value })}
                         className="w-full px-3 py-1.5 bg-black/60 border border-white/10 rounded-lg text-xs text-white focus:outline-none focus:border-amber-500"
                       />
-                      <textarea
+                      <AmharicInput multiline
                         required
                         rows={2}
                         placeholder="Answer (English)..."
@@ -5390,7 +5391,7 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
                         onChange={e => setNewFaqQuestion({ ...newFaqQuestion, om: e.target.value })}
                         className="w-full px-3 py-1.5 bg-black/60 border border-white/10 rounded-lg text-xs text-white focus:outline-none focus:border-teal-500"
                       />
-                      <textarea
+                      <AmharicInput multiline
                         rows={2}
                         placeholder="Deebii (Afaan Oromoo)..."
                         value={newFaqAnswer.om}
@@ -5412,7 +5413,7 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
                         onChange={e => setNewFaqQuestion({ ...newFaqQuestion, am: e.target.value })}
                         className="w-full px-3 py-1.5 bg-black/60 border border-white/10 rounded-lg text-xs text-white focus:outline-none focus:border-purple-500"
                       />
-                      <textarea
+                      <AmharicInput multiline
                         rows={2}
                         placeholder="መልስ (አማርኛ)..."
                         value={newFaqAnswer.am}
@@ -5468,7 +5469,7 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
                                 placeholder="Question (EN)"
                                 className="w-full px-3 py-1.5 bg-black/60 border border-white/10 rounded-lg text-xs text-white"
                               />
-                              <textarea 
+                              <AmharicInput multiline
                                 required
                                 rows={3}
                                 value={editFaqAnswer.en}
@@ -5488,7 +5489,7 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
                                 placeholder="Gaaffii (Afaan Oromoo)"
                                 className="w-full px-3 py-1.5 bg-black/60 border border-white/10 rounded-lg text-xs text-white"
                               />
-                              <textarea 
+                              <AmharicInput multiline
                                 rows={3}
                                 value={editFaqAnswer.om}
                                 onChange={e => setEditFaqAnswer({ ...editFaqAnswer, om: e.target.value })}
@@ -5507,7 +5508,7 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
                                 placeholder="ጥያቄ (አማርኛ)"
                                 className="w-full px-3 py-1.5 bg-black/60 border border-white/10 rounded-lg text-xs text-white"
                               />
-                              <textarea 
+                              <AmharicInput multiline
                                 rows={3}
                                 value={editFaqAnswer.am}
                                 onChange={e => setEditFaqAnswer({ ...editFaqAnswer, am: e.target.value })}
@@ -6240,7 +6241,7 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
                             </div>
                             <div>
                               <label className="block text-[10px] text-white/50 uppercase tracking-wider mb-1 font-semibold">Instructions for Users</label>
-                              <textarea
+                              <AmharicInput multiline
                                 rows={2}
                                 placeholder="e.g. Transfer to CBE, take screenshot of transaction receipt and upload here."
                                 value={payForm.instructions}
@@ -6670,7 +6671,7 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
                         <label className="block text-xs font-bold text-white/80 uppercase tracking-wider">
                           Custom Maintenance Notice Message
                         </label>
-                        <textarea
+                        <AmharicInput multiline
                           rows={3}
                           placeholder="e.g. SOF-UMER is currently undergoing scheduled platform maintenance. Normal operations will resume shortly. Thank you for your patience."
                           value={systemSettings.maintenanceMessage || ''}
@@ -6791,7 +6792,7 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
                               {(systemSettings.heroDescription || '').length}/1000
                             </span>
                           </div>
-                          <textarea
+                          <AmharicInput multiline
                             rows={4}
                             maxLength={1000}
                             value={systemSettings.heroDescription ?? ''}
@@ -7402,7 +7403,7 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
                           {(systemSettings.heroDescription || '').length}/1000
                         </span>
                       </div>
-                      <textarea
+                      <AmharicInput multiline
                         rows={4}
                         maxLength={1000}
                         value={systemSettings.heroDescription ?? ''}
@@ -7846,7 +7847,7 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                           <div>
                             <label className="block text-[10px] text-white/50 mb-1 font-bold">{contactUsData.fullNameLabel || 'Full Name *'}</label>
-                            <input
+                            <AmharicInput
                               type="text"
                               disabled
                               readOnly
@@ -7856,7 +7857,7 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
                           </div>
                           <div>
                             <label className="block text-[10px] text-white/50 mb-1 font-bold">{contactUsData.emailLabel || 'Email Address *'}</label>
-                            <input
+                            <AmharicInput
                               type="text"
                               disabled
                               readOnly
@@ -7866,7 +7867,7 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
                           </div>
                           <div className="sm:col-span-2">
                             <label className="block text-[10px] text-white/50 mb-1 font-bold">{contactUsData.messageLabel || 'Message / Inquiry *'}</label>
-                            <textarea
+                            <AmharicInput multiline
                               disabled
                               readOnly
                               rows={2}
@@ -7957,7 +7958,7 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
 
                       <div>
                         <label className="block text-[10px] text-white/50 uppercase tracking-wider mb-1 font-bold">Step Description *</label>
-                        <textarea
+                        <AmharicInput multiline
                           rows={3}
                           required
                           placeholder="Provide detailed instructions for this step..."
@@ -8130,7 +8131,7 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
 
                         <div className="sm:col-span-2">
                           <label className="block text-[10px] text-white/50 font-bold uppercase mb-1">Job Description & Requirements *</label>
-                          <textarea
+                          <AmharicInput multiline
                             required
                             rows={3}
                             placeholder="Describe roles, responsibilities, and qualifications..."
@@ -8785,7 +8786,7 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
                 <label className="block text-[10px] uppercase font-bold text-white/50 tracking-wider mb-1">
                   Unlock Reason / Admin Audit Note (Optional)
                 </label>
-                <textarea
+                <AmharicInput multiline
                   rows={2}
                   value={unlockNoteInput}
                   onChange={e => setUnlockNoteInput(e.target.value)}
@@ -9019,7 +9020,7 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
               <div className="space-y-4">
                 <form onSubmit={e => handleAddAdminNote(e, viewingUser, setViewingUser)} className="space-y-2">
                   <label className="block text-[10px] font-bold text-white/50 uppercase">Add Private Admin Note (Admin-Only Visible)</label>
-                  <textarea
+                  <AmharicInput multiline
                     rows={2}
                     required
                     value={adminNoteInput}
@@ -9154,7 +9155,7 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
 
               <div>
                 <label className="block text-[10px] font-bold text-white/60 uppercase mb-1">Optional Admin Note</label>
-                <textarea
+                <AmharicInput multiline
                   rows={2}
                   value={warningNote}
                   onChange={e => setWarningNote(e.target.value)}
@@ -9320,7 +9321,7 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
 
                   <div>
                     <label className="block text-[10px] font-bold text-white/60 uppercase mb-1">Optional Admin Note</label>
-                    <textarea
+                    <AmharicInput multiline
                       rows={2}
                       value={statusNote}
                       onChange={e => setStatusNote(e.target.value)}
@@ -9719,7 +9720,7 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
                 Rejecting receipt for <span className="font-bold text-white">{rejectionModalReceipt.userEmail}</span> ({rejectionModalReceipt.amount.toLocaleString()} ETB via {rejectionModalReceipt.paymentMethodName}).
               </p>
               <label className="text-xs text-white/40 block mt-3 mb-1">Reason for Rejection (sent to customer):</label>
-              <textarea
+              <AmharicInput multiline
                 value={rejectionReasonText}
                 onChange={e => setRejectionReasonText(e.target.value)}
                 rows={3}

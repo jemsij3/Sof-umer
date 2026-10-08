@@ -3,6 +3,7 @@ import {
   Camera, ArrowLeft, ArrowRight, Trash2, Film, AlertCircle, Loader2 
 } from 'lucide-react';
 import { useApp } from '../../lib/AppContext';
+import { AmharicInput } from '../AmharicInput';
 import { 
   getTranslatedCategoryName, 
   getTranslatedSubcategoryName,
@@ -249,7 +250,7 @@ export const WizardStep2Details: React.FC<WizardStep2DetailsProps> = ({
             <label className="block text-xs font-bold text-white/80 uppercase mb-1">
               1. {t('titleLabel') || 'Listing Title'} *
             </label>
-            <input
+            <AmharicInput
               type="text"
               required
               value={fieldsState.title || ''}
@@ -264,7 +265,7 @@ export const WizardStep2Details: React.FC<WizardStep2DetailsProps> = ({
               <label className="block text-xs font-bold text-white/80 uppercase mb-1">
                 2. {getTranslatedFieldLabel(productConfig.brandLabel, currentLanguage) || productConfig.brandLabel}
               </label>
-              <input
+              <AmharicInput
                 type="text"
                 value={fieldsState.brand || ''}
                 placeholder={productConfig.brandPlaceholder}
@@ -276,7 +277,7 @@ export const WizardStep2Details: React.FC<WizardStep2DetailsProps> = ({
               <label className="block text-xs font-bold text-white/80 uppercase mb-1">
                 {getTranslatedFieldLabel(productConfig.modelLabel, currentLanguage) || productConfig.modelLabel}
               </label>
-              <input
+              <AmharicInput
                 type="text"
                 value={(fieldsState.model !== undefined && fieldsState.model !== '') ? fieldsState.model : (fieldsState.storageSpec || '')}
                 placeholder={productConfig.modelPlaceholder}
@@ -311,7 +312,7 @@ export const WizardStep2Details: React.FC<WizardStep2DetailsProps> = ({
               <label className="block text-xs font-bold text-white/80 uppercase mb-1">
                 4. {t('locLabel') || 'Location'} *
               </label>
-              <input
+              <AmharicInput
                 type="text"
                 required
                 value={fieldsState.location || ''}
@@ -326,7 +327,7 @@ export const WizardStep2Details: React.FC<WizardStep2DetailsProps> = ({
             <label className="block text-xs font-bold text-white/80 uppercase mb-1">
               5. {t('descLabel') || 'Description'} *
             </label>
-            <textarea
+            <AmharicInput multiline
               required
               rows={3}
               value={fieldsState.description || ''}
@@ -340,7 +341,7 @@ export const WizardStep2Details: React.FC<WizardStep2DetailsProps> = ({
             <label className="block text-xs font-bold text-white/80 uppercase mb-1">
               6. {(t('contact_phone_label') || 'Contact Phone').replace(/\s*\*+$/, '')} *
             </label>
-            <input
+            <AmharicInput
               type="text"
               required
               value={fieldsState.contactPhone || fieldsState.ownerPhone || ''}
@@ -364,7 +365,7 @@ export const WizardStep2Details: React.FC<WizardStep2DetailsProps> = ({
                   {t('ownerNameLabel') || 'Property / Item Owner Name'} *
                 </label>
               </div>
-              <input
+              <AmharicInput
                 type="text"
                 placeholder={t('ownerNamePlaceholder') || 'e.g., Abebe Kebede (Client Name)'}
                 value={formData.ownerName || ''}
@@ -394,7 +395,7 @@ export const WizardStep2Details: React.FC<WizardStep2DetailsProps> = ({
             <label className="block text-xs font-bold text-white/80 uppercase mb-1">
               1. {t('job_title_label') || 'Job Title'} *
             </label>
-            <input
+            <AmharicInput
               type="text"
               required
               value={fieldsState.title || ''}
@@ -409,7 +410,7 @@ export const WizardStep2Details: React.FC<WizardStep2DetailsProps> = ({
             <label className="block text-xs font-bold text-white/80 uppercase mb-1">
               2. {t('locLabel') || 'Location'} *
             </label>
-            <input
+            <AmharicInput
               type="text"
               required
               value={fieldsState.location || ''}
@@ -424,7 +425,7 @@ export const WizardStep2Details: React.FC<WizardStep2DetailsProps> = ({
             <label className="block text-xs font-bold text-white/80 uppercase mb-1">
               3. {t('employment_skill_label') || 'Employment Skill'} *
             </label>
-            <input
+            <AmharicInput
               type="text"
               required
               value={fieldsState.employmentSkill || fieldsState.qualification || ''}
@@ -459,7 +460,7 @@ export const WizardStep2Details: React.FC<WizardStep2DetailsProps> = ({
             <label className="block text-xs font-bold text-white/80 uppercase mb-1">
               5. {t('descLabel') || 'Description'} *
             </label>
-            <textarea
+            <AmharicInput multiline
               required
               rows={4}
               value={fieldsState.description || ''}
@@ -474,7 +475,7 @@ export const WizardStep2Details: React.FC<WizardStep2DetailsProps> = ({
             <label className="block text-xs font-bold text-white/80 uppercase mb-1">
               6. {t('contact_phone_label') || 'Contact Phone'} *
             </label>
-            <input
+            <AmharicInput
               type="text"
               required
               value={fieldsState.contactPhone || ''}
@@ -495,7 +496,7 @@ export const WizardStep2Details: React.FC<WizardStep2DetailsProps> = ({
                   {t('employerNameLabel') || 'Company / Employer Name'} *
                 </label>
               </div>
-              <input
+              <AmharicInput
                 type="text"
                 placeholder={t('employerNamePlaceholder') || 'e.g., Acme Corp (Client Name)'}
                 value={formData.ownerName || ''}
@@ -525,7 +526,7 @@ export const WizardStep2Details: React.FC<WizardStep2DetailsProps> = ({
             <label className="block text-xs font-bold text-white/80 uppercase mb-1">
               1. {t('service_title_label') || 'Service Title'} *
             </label>
-            <input
+            <AmharicInput
               type="text"
               required
               value={fieldsState.title || ''}
@@ -540,7 +541,7 @@ export const WizardStep2Details: React.FC<WizardStep2DetailsProps> = ({
             <label className="block text-xs font-bold text-white/80 uppercase mb-1">
               2. {t('locLabel') || 'Location'} *
             </label>
-            <input
+            <AmharicInput
               type="text"
               required
               value={fieldsState.location || ''}
@@ -555,7 +556,7 @@ export const WizardStep2Details: React.FC<WizardStep2DetailsProps> = ({
             <label className="block text-xs font-bold text-white/80 uppercase mb-1">
               3. {t('descLabel') || 'Description'} *
             </label>
-            <textarea
+            <AmharicInput multiline
               required
               rows={4}
               value={fieldsState.description || ''}
@@ -570,7 +571,7 @@ export const WizardStep2Details: React.FC<WizardStep2DetailsProps> = ({
             <label className="block text-xs font-bold text-white/80 uppercase mb-1">
               4. {t('contact_phone_label') || 'Contact Phone'} *
             </label>
-            <input
+            <AmharicInput
               type="text"
               required
               value={fieldsState.contactPhone || ''}
@@ -591,7 +592,7 @@ export const WizardStep2Details: React.FC<WizardStep2DetailsProps> = ({
                   {t('ownerNameLabel') || 'Service Provider / Owner Name'} *
                 </label>
               </div>
-              <input
+              <AmharicInput
                 type="text"
                 placeholder={t('ownerNamePlaceholder') || 'e.g., Abebe Kebede (Client Name)'}
                 value={formData.ownerName || ''}
@@ -620,7 +621,7 @@ export const WizardStep2Details: React.FC<WizardStep2DetailsProps> = ({
             <label className="block text-xs font-bold text-white/80 uppercase mb-1">
               1. {t('titleLabel') || 'Listing Title'} *
             </label>
-            <input
+            <AmharicInput
               type="text"
               required
               value={fieldsState.title || ''}
@@ -635,7 +636,7 @@ export const WizardStep2Details: React.FC<WizardStep2DetailsProps> = ({
               <label className="block text-xs font-bold text-white/80 uppercase mb-1">
                 2. {t('locLabel') || 'Location'} *
               </label>
-              <input
+              <AmharicInput
                 type="text"
                 required
                 value={fieldsState.location || ''}
@@ -648,7 +649,7 @@ export const WizardStep2Details: React.FC<WizardStep2DetailsProps> = ({
               <label className="block text-xs font-bold text-white/80 uppercase mb-1">
                 3. {(t('contact_phone_label') || 'Contact Phone').replace(/\s*\*+$/, '')} *
               </label>
-              <input
+              <AmharicInput
                 type="text"
                 required
                 value={fieldsState.contactPhone || fieldsState.ownerPhone || ''}
@@ -666,7 +667,7 @@ export const WizardStep2Details: React.FC<WizardStep2DetailsProps> = ({
             <label className="block text-xs font-bold text-white/80 uppercase mb-1">
               4. {t('descLabel') || 'Description'} *
             </label>
-            <textarea
+            <AmharicInput multiline
               required
               rows={3}
               value={fieldsState.description || ''}
@@ -687,7 +688,7 @@ export const WizardStep2Details: React.FC<WizardStep2DetailsProps> = ({
                   {t('ownerNameLabel') || 'Business Owner Name'} *
                 </label>
               </div>
-              <input
+              <AmharicInput
                 type="text"
                 placeholder={t('ownerNamePlaceholder') || 'e.g., Abebe Kebede (Client Name)'}
                 value={formData.ownerName || ''}
@@ -716,7 +717,7 @@ export const WizardStep2Details: React.FC<WizardStep2DetailsProps> = ({
             <label className="block text-xs font-bold text-white/80 uppercase mb-1">
               {t('titleLabel') || 'Listing Title'} *
             </label>
-            <input
+            <AmharicInput
               type="text"
               required
               value={fieldsState.title || ''}
@@ -798,7 +799,7 @@ export const WizardStep2Details: React.FC<WizardStep2DetailsProps> = ({
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               <div>
                 <label className="block text-xs font-bold text-white/80 uppercase mb-1">{t('brand') || 'Make / Brand'}</label>
-                <input
+                <AmharicInput
                   type="text"
                   value={fieldsState.brand || ''}
                   placeholder="Toyota"
@@ -808,7 +809,7 @@ export const WizardStep2Details: React.FC<WizardStep2DetailsProps> = ({
               </div>
               <div>
                 <label className="block text-xs font-bold text-white/80 uppercase mb-1">{t('model') || 'Model'}</label>
-                <input
+                <AmharicInput
                   type="text"
                   value={fieldsState.model || ''}
                   placeholder="RAV4"
@@ -844,7 +845,7 @@ export const WizardStep2Details: React.FC<WizardStep2DetailsProps> = ({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="block text-xs font-bold text-white/80 uppercase mb-1">{t('locLabel') || 'Location'} *</label>
-              <input
+              <AmharicInput
                 type="text"
                 required
                 value={fieldsState.location || ''}
@@ -859,7 +860,7 @@ export const WizardStep2Details: React.FC<WizardStep2DetailsProps> = ({
                   ? ((t('contact_phone_label') || 'Contact Phone').includes('*') ? (t('contact_phone_label') || 'Contact Phone') : `${t('contact_phone_label') || 'Contact Phone'} *`)
                   : (t('ownerPhoneLabel') || 'Contact Phone *')}
               </label>
-              <input
+              <AmharicInput
                 type="text"
                 required
                 value={fieldsState.contactPhone || ''}
@@ -872,7 +873,7 @@ export const WizardStep2Details: React.FC<WizardStep2DetailsProps> = ({
 
           <div>
             <label className="block text-xs font-bold text-white/80 uppercase mb-1">{t('descLabel') || 'Description'} *</label>
-            <textarea
+            <AmharicInput multiline
               required
               rows={3}
               value={fieldsState.description || ''}
@@ -893,7 +894,7 @@ export const WizardStep2Details: React.FC<WizardStep2DetailsProps> = ({
                   {t('ownerNameLabel') || 'Property / Item Owner Name'} *
                 </label>
               </div>
-              <input
+              <AmharicInput
                 type="text"
                 placeholder={t('ownerNamePlaceholder') || 'e.g., Abebe Kebede (Client Name)'}
                 value={formData.ownerName || ''}

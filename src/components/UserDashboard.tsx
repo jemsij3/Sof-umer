@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { usePWAInstall } from '../lib/usePWAInstall';
+import { AmharicInput } from './AmharicInput';
 
 // Expandable Accordion Item for FAQ Section
 function AccordionItem({ title, content, isOpen, onToggle }: { title: string; content: string; isOpen: boolean; onToggle: () => void; key?: React.Key }) {
@@ -1589,7 +1590,7 @@ export default function UserDashboard({
                         </div>
                         <div>
                           <label className="block text-[10px] font-bold text-white/40 uppercase mb-1 font-mono">{tLocal('item_description')}</label>
-                          <textarea rows={4} value={editDesc} onChange={e => setEditDesc(e.target.value)} className="w-full p-2.5 bg-black border border-white/10 text-xs text-white rounded-xl focus:outline-none" />
+                          <AmharicInput multiline rows={4} value={editDesc} onChange={e => setEditDesc(e.target.value)} className="w-full p-2.5 bg-black border border-white/10 text-xs text-white rounded-xl focus:outline-none" />
                         </div>
                         <div className="flex gap-2">
                           <button type="submit" disabled={editSubmitting} className="bg-amber-500 hover:bg-amber-400 text-black font-extrabold py-2 px-5 rounded-xl text-[10px] uppercase tracking-wider transition cursor-pointer">
@@ -2123,7 +2124,7 @@ export default function UserDashboard({
                       </div>
                       <div>
                         <label className="block text-[10px] font-bold text-white/40 uppercase mb-1 font-mono">Message context</label>
-                        <textarea 
+                        <AmharicInput multiline
                           required 
                           rows={3}
                           value={ticketMessage}
@@ -2186,7 +2187,7 @@ export default function UserDashboard({
                       </div>
                       <div>
                         <label className="block text-[10px] font-bold text-white/40 uppercase mb-1 font-mono">Technical Details</label>
-                        <textarea 
+                        <AmharicInput multiline
                           required 
                           rows={3}
                           value={reportDetails}
