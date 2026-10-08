@@ -1,3 +1,6 @@
+import dotenv from 'dotenv';
+dotenv.config();
+
 import express from 'express';
 import path from 'path';
 import fs from 'fs/promises';
@@ -137,6 +140,7 @@ console.log(`[Storage] Resolved DB_FILE: ${DB_FILE} (Persistent Storage: ${IS_PE
 // --- MONGODB PERSISTENCE LAYER ---
 const MONGODB_URI = process.env.MONGODB_URI || process.env.MONGO_URL || process.env.DATABASE_URL;
 let isMongoConnected = false;
+let isInitialLoadComplete = false;
 
 // Mongoose Schemas (strict: false allows dynamic properties while using MongoDB as persistent single source of truth)
 const userSchema = new mongoose.Schema({ id: { type: String, required: true, unique: true } }, { strict: false });
@@ -177,39 +181,44 @@ export const FaqModel = mongoose.models.Faq || mongoose.model('Faq', faqSchema);
 export const ReviewModel = mongoose.models.Review || mongoose.model('Review', reviewSchema);
 export const AppSettingsModel = mongoose.models.AppSettings || mongoose.model('AppSettings', appSettingsSchema);
 
-async function connectMongo(): Promise<boolean> {
+async function connectMongo(retries: number = 3): Promise<boolean> {
   if (!MONGODB_URI) {
     console.log('[Storage] MONGODB_URI is not set. Using persistent disk file storage fallback.');
     return false;
   }
-  try {
-    console.log('[Storage] Connecting to MongoDB instance...');
-    mongoose.set('bufferCommands', false);
+  for (let attempt = 1; attempt <= retries; attempt++) {
+    try {
+      console.log(`[Storage] Connecting to MongoDB instance (attempt ${attempt}/${retries})...`);
+      mongoose.set('bufferCommands', false);
 
-    mongoose.connection.on('connected', () => {
+      mongoose.connection.on('connected', () => {
+        isMongoConnected = true;
+        console.log('[Storage] MongoDB connection event: connected');
+      });
+      mongoose.connection.on('disconnected', () => {
+        isMongoConnected = false;
+        console.warn('[Storage] MongoDB connection event: disconnected');
+      });
+      mongoose.connection.on('error', (err) => {
+        isMongoConnected = false;
+        console.error('[Storage] MongoDB connection error event:', err);
+      });
+
+      await mongoose.connect(MONGODB_URI, {
+        serverSelectionTimeoutMS: 15000,
+      });
       isMongoConnected = true;
-      console.log('[Storage] MongoDB connection event: connected');
-    });
-    mongoose.connection.on('disconnected', () => {
-      isMongoConnected = false;
-      console.warn('[Storage] MongoDB connection event: disconnected');
-    });
-    mongoose.connection.on('error', (err) => {
-      isMongoConnected = false;
-      console.error('[Storage] MongoDB connection error event:', err);
-    });
-
-    await mongoose.connect(MONGODB_URI, {
-      serverSelectionTimeoutMS: 5000,
-    });
-    isMongoConnected = true;
-    console.log('[Storage] Successfully connected to MongoDB database as primary source of truth!');
-    return true;
-  } catch (err) {
-    console.error('[Storage] Error connecting to MongoDB:', err);
-    isMongoConnected = false;
-    return false;
+      console.log('[Storage] Successfully connected to MongoDB database as primary source of truth!');
+      return true;
+    } catch (err) {
+      console.error(`[Storage] Error connecting to MongoDB (attempt ${attempt}/${retries}):`, err);
+      if (attempt < retries) {
+        await new Promise(r => setTimeout(r, 2000));
+      }
+    }
   }
+  isMongoConnected = false;
+  return false;
 }
 
 export interface ServerUser extends User {
@@ -819,10 +828,11 @@ async function syncCollectionToMongo<T extends Record<string, any>>(
   items: T[],
   idKey: string = 'id'
 ) {
-  if (!isMongoConnected) return;
+  if (!isMongoConnected || !isInitialLoadComplete) return;
   try {
     if (!items || !Array.isArray(items) || items.length === 0) {
-      await model.deleteMany({});
+      // Guard against accidental wipes: Never delete all documents if array is unexpectedly empty
+      console.warn(`[Storage] syncCollectionToMongo: skipping sync for ${model.modelName} because items array is empty`);
       return;
     }
     const currentIds = items.map(item => item[idKey]).filter(id => id !== undefined && id !== null && id !== '');
@@ -851,7 +861,7 @@ async function syncCollectionToMongo<T extends Record<string, any>>(
 }
 
 async function saveToMongo() {
-  if (!isMongoConnected) return;
+  if (!isMongoConnected || !isInitialLoadComplete) return;
   try {
     await Promise.all([
       syncCollectionToMongo(UserModel, localDb.users || [], 'id'),
@@ -907,16 +917,39 @@ async function fetchAppSettings(): Promise<any> {
 async function loadFromMongo(): Promise<boolean> {
   if (!isMongoConnected) return false;
   try {
-    const userCount = await UserModel.countDocuments();
-    if (userCount === 0) {
-      console.log('[Storage] MongoDB database is empty. Initializing and seeding MongoDB from baseline seed...');
-      await loadFromFileSeed();
-      await saveToMongo();
-      console.log('[Storage] MongoDB initial seed completed successfully.');
-      return true;
+    console.log('[Storage] Inspecting and loading database records directly from MongoDB...');
+    
+    // Check available collections in the MongoDB database
+    let collectionNames: string[] = [];
+    try {
+      const db = mongoose.connection.db;
+      if (db) {
+        const cols = await db.listCollections().toArray();
+        collectionNames = cols.map(c => c.name.toLowerCase());
+        console.log('[Storage] Discovered MongoDB collections:', cols.map(c => c.name));
+      }
+    } catch (colErr) {
+      console.warn('[Storage] Could not list MongoDB collections:', colErr);
     }
 
-    console.log('[Storage] Loading database records directly from MongoDB...');
+    // Support legacy single-document state collections (dbstates, DbState) if present
+    let legacyData: any = null;
+    if (collectionNames.includes('dbstates') || collectionNames.includes('dbstate')) {
+      try {
+        const DbStateModel = mongoose.models.DbState || mongoose.model('DbState', new mongoose.Schema({}, { strict: false }));
+        const stateDoc: any = await (DbStateModel as any).findOne({}).lean().exec();
+        if (stateDoc) {
+          legacyData = stateDoc.data || stateDoc.state || stateDoc;
+          if (legacyData && (Array.isArray(legacyData.users) || Array.isArray(legacyData.properties))) {
+            console.log(`[Storage] Discovered legacy DbState collection with ${legacyData.users?.length || 0} users, ${legacyData.properties?.length || 0} properties.`);
+          }
+        }
+      } catch (legacyErr) {
+        console.warn('[Storage] Error checking legacy DbState:', legacyErr);
+      }
+    }
+
+    // Fetch discrete collections
     const [
       users,
       properties,
@@ -960,26 +993,46 @@ async function loadFromMongo(): Promise<boolean> {
     const prevLocal: any = localDb || {};
     const defaultData = getInitialData();
 
+    // Determine users source: discrete collection > legacy state > existing localDb > default
+    let loadedUsers = (Array.isArray(users) && users.length > 0) ? users : null;
+    if (!loadedUsers && legacyData && Array.isArray(legacyData.users) && legacyData.users.length > 0) {
+      loadedUsers = legacyData.users;
+    }
+    if (!loadedUsers && Array.isArray(prevLocal.users) && prevLocal.users.length > 0) {
+      loadedUsers = prevLocal.users;
+    }
+
+    // Determine properties source: discrete collection > legacy state > existing localDb
+    let loadedProperties = (Array.isArray(properties) && properties.length > 0) ? properties : null;
+    if (!loadedProperties && legacyData && Array.isArray(legacyData.properties) && legacyData.properties.length > 0) {
+      loadedProperties = legacyData.properties;
+    }
+    if (!loadedProperties && Array.isArray(prevLocal.properties) && prevLocal.properties.length > 0) {
+      loadedProperties = prevLocal.properties;
+    }
+
     localDb = {
-      users: (Array.isArray(users) && users.length > 0) ? users : (prevLocal.users || defaultData.users),
-      properties: Array.isArray(properties) ? properties : [],
-      paymentMethods: (Array.isArray(paymentMethods) && paymentMethods.length > 0) ? paymentMethods : (prevLocal.paymentMethods || defaultData.paymentMethods),
-      receipts: Array.isArray(receipts) ? receipts : [],
-      inquiries: Array.isArray(inquiries) ? inquiries : [],
-      advertisements: Array.isArray(advertisements) ? advertisements : [],
-      reports: Array.isArray(reports) ? reports : [],
-      notifications: Array.isArray(notifications) ? notifications : [],
-      categories: (Array.isArray(categories) && categories.length > 0) ? categories : (prevLocal.categories || defaultData.categories),
-      appFeatures: (Array.isArray(appFeatures) && appFeatures.length > 0) ? appFeatures : (prevLocal.appFeatures || defaultData.appFeatures),
-      jobOpenings: Array.isArray(jobOpenings) ? jobOpenings : [],
-      supportTickets: Array.isArray(supportTickets) ? supportTickets : [],
-      offers: Array.isArray(offers) ? offers : [],
-      languages: (Array.isArray(languages) && languages.length > 0) ? languages : (prevLocal.languages || defaultData.languages),
-      translations: (Array.isArray(translations) && translations.length > 0) ? translations : (prevLocal.translations || defaultData.translations),
-      faqs: (Array.isArray(faqs) && faqs.length > 0) ? faqs : (prevLocal.faqs || defaultData.faqs),
-      reviews: Array.isArray(reviews) ? reviews : [],
-      appSettings: appSettingsDoc && appSettingsDoc.data ? appSettingsDoc.data : (prevLocal.appSettings || defaultData.appSettings)
+      users: loadedUsers || defaultData.users,
+      properties: loadedProperties || [],
+      paymentMethods: (Array.isArray(paymentMethods) && paymentMethods.length > 0) ? paymentMethods : (legacyData?.paymentMethods || prevLocal.paymentMethods || defaultData.paymentMethods),
+      receipts: (Array.isArray(receipts) && receipts.length > 0) ? receipts : (legacyData?.receipts || prevLocal.receipts || []),
+      inquiries: (Array.isArray(inquiries) && inquiries.length > 0) ? inquiries : (legacyData?.inquiries || prevLocal.inquiries || []),
+      advertisements: (Array.isArray(advertisements) && advertisements.length > 0) ? advertisements : (legacyData?.advertisements || prevLocal.advertisements || []),
+      reports: (Array.isArray(reports) && reports.length > 0) ? reports : (legacyData?.reports || prevLocal.reports || []),
+      notifications: (Array.isArray(notifications) && notifications.length > 0) ? notifications : (legacyData?.notifications || prevLocal.notifications || []),
+      categories: (Array.isArray(categories) && categories.length > 0) ? categories : (legacyData?.categories || prevLocal.categories || defaultData.categories),
+      appFeatures: (Array.isArray(appFeatures) && appFeatures.length > 0) ? appFeatures : (legacyData?.appFeatures || prevLocal.appFeatures || defaultData.appFeatures),
+      jobOpenings: (Array.isArray(jobOpenings) && jobOpenings.length > 0) ? jobOpenings : (legacyData?.jobOpenings || prevLocal.jobOpenings || []),
+      supportTickets: (Array.isArray(supportTickets) && supportTickets.length > 0) ? supportTickets : (legacyData?.supportTickets || prevLocal.supportTickets || []),
+      offers: (Array.isArray(offers) && offers.length > 0) ? offers : (legacyData?.offers || prevLocal.offers || []),
+      languages: (Array.isArray(languages) && languages.length > 0) ? languages : (legacyData?.languages || prevLocal.languages || defaultData.languages),
+      translations: (Array.isArray(translations) && translations.length > 0) ? translations : (legacyData?.translations || prevLocal.translations || defaultData.translations),
+      faqs: (Array.isArray(faqs) && faqs.length > 0) ? faqs : (legacyData?.faqs || prevLocal.faqs || defaultData.faqs),
+      reviews: (Array.isArray(reviews) && reviews.length > 0) ? reviews : (legacyData?.reviews || prevLocal.reviews || []),
+      appSettings: appSettingsDoc && appSettingsDoc.data ? appSettingsDoc.data : (legacyData?.appSettings || prevLocal.appSettings || defaultData.appSettings)
     } as any;
+
+    isInitialLoadComplete = true;
 
     // Immediately persist loaded MongoDB state to local disk fallback so they are in sync
     try {
@@ -1375,19 +1428,21 @@ const loadDb = async () => {
   applyDataSanityAndMigrations();
 
   if (MONGODB_URI) {
-    console.log('[Storage] Initiating background connection to MongoDB...');
-    connectMongo().then(async (connected) => {
+    console.log('[Storage] Connecting to MongoDB and loading database records...');
+    try {
+      const connected = await connectMongo();
       if (connected) {
         const loaded = await loadFromMongo();
         if (loaded) {
           applyDataSanityAndMigrations();
-          console.log('[Storage] Background MongoDB synchronization completed successfully.');
+          console.log('[Storage] Primary MongoDB database synchronization completed successfully.');
         }
       }
-    }).catch(err => {
-      console.error('[Storage] Background MongoDB connection error:', err);
-    });
+    } catch (err) {
+      console.error('[Storage] Primary MongoDB connection error:', err);
+    }
   }
+  isInitialLoadComplete = true;
 };
 
 let savePromise: Promise<void> = Promise.resolve();
@@ -1416,8 +1471,8 @@ const saveDb = (): Promise<void> => {
       }
     } catch (_) {}
 
-    // 3. Sync to MongoDB asynchronously if connected
-    if (isMongoConnected) {
+    // 3. Sync to MongoDB asynchronously only if connected and initial load completed
+    if (isMongoConnected && isInitialLoadComplete) {
       await saveToMongo().catch(e => console.error('[Storage] Async saveToMongo error:', e));
     }
   }).catch(err => {
