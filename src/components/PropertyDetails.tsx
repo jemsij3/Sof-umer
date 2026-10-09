@@ -83,6 +83,7 @@ export default function PropertyDetails({
     favorites,
     toggleFavorite,
     currentUser,
+    token,
     t,
     refreshData,
     properties,
@@ -156,7 +157,10 @@ export default function PropertyDetails({
 
   useEffect(() => {
     if (!property?.id) return;
-    fetch(`/api/properties/${property.id}/view`, { method: 'POST' })
+    const authToken = localStorage.getItem('sof_umer_token') || token;
+    const headers: Record<string, string> = {};
+    if (authToken) headers['Authorization'] = `Bearer ${authToken}`;
+    fetch(`/api/properties/${property.id}/view`, { method: 'POST', headers })
       .then(res => res.json())
       .then(data => {
         if (data && typeof data.viewsCount === 'number') {
@@ -165,7 +169,7 @@ export default function PropertyDetails({
         }
       })
       .catch(() => {});
-  }, [property?.id]);
+  }, [property?.id, token]);
 
   const listingAge = useMemo(() => {
     return formatListingAge(property.createdAt || (property as any).publishedAt, currentLanguage, t);
@@ -228,9 +232,13 @@ export default function PropertyDetails({
     try {
       const formattedMsg = `[QUOTE REQUEST] Requested Quantity: ${numQty} ${getPluralizedUnit(numQty, pricingInfo.unit)}. Contact Phone: ${quotePhone || 'Not provided'}. Note: ${quoteMessage || 'No additional note'}`;
       
+      const authToken = localStorage.getItem('sof_umer_token') || token;
       const res = await fetch(`/api/properties/${property.id}/inquiry`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(authToken ? { 'Authorization': `Bearer ${authToken}` } : {})
+        },
         body: JSON.stringify({
           senderId: currentUser.id,
           senderName: currentUser.name || currentUser.username,
@@ -724,9 +732,13 @@ export default function PropertyDetails({
 
     setSendingInquiry(true);
     try {
+      const authToken = localStorage.getItem('sof_umer_token') || token;
       const res = await fetch('/api/inquiries', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(authToken ? { 'Authorization': `Bearer ${authToken}` } : {})
+        },
         body: JSON.stringify({
           propertyId: property.id,
           propertyTitle: property.title,

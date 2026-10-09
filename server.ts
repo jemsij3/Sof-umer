@@ -2147,7 +2147,45 @@ async function startServer() {
       return next();
     }
 
-    const user = (req as any).user;
+    let user = (req as any).user;
+    if (!user) {
+      const authHeader = req.headers['authorization'];
+      let token: string | undefined;
+      if (authHeader && authHeader.startsWith('Bearer ')) {
+        token = authHeader.substring(7);
+      } else if (req.query && typeof req.query.token === 'string') {
+        token = req.query.token;
+      }
+      if (token) {
+        try {
+          const decoded = jwt.verify(token, JWT_SECRET) as any;
+          if (decoded && decoded.purpose !== '2fa_login') {
+            const targetUserId = decoded.userId || decoded.id;
+            let dbUser = localDb.users.find(u => u.id === targetUserId);
+            if (!dbUser && decoded.email) {
+              const targetEmail = normalizeEmail(decoded.email);
+              dbUser = localDb.users.find(u => u.email && normalizeEmail(u.email) === targetEmail);
+            }
+            if (dbUser) {
+              if (dbUser.status !== 'suspended' && dbUser.status !== 'banned') {
+                user = dbUser;
+                (req as any).user = dbUser;
+              }
+            } else if (decoded && (decoded.role === 'admin' || decoded.role === 'owner' || decoded.role === 'superadmin' || (decoded.email && decoded.email.toLowerCase() === 'jemaljima@gmail.com'))) {
+              user = {
+                id: targetUserId || 'usr-admin',
+                email: decoded.email || 'jemaljima@gmail.com',
+                role: decoded.role || 'admin',
+                isAdmin: true,
+                fullName: decoded.fullName || 'Administrator'
+              };
+              (req as any).user = user;
+            }
+          }
+        } catch (e) {}
+      }
+    }
+
     const isAdmin = Boolean(user && isUserAdmin(user));
 
     // Authorized administrators always bypass maintenance mode

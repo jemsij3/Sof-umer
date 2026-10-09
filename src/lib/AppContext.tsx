@@ -142,8 +142,21 @@ interface AppContextType {
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export const AppProvider = ({ children }: { children: ReactNode }) => {
-  const [currentUser, setCurrentUserState] = useState<User | null>(null);
-  const [token, setTokenState] = useState<string | null>(null);
+  const [currentUser, setCurrentUserState] = useState<User | null>(() => {
+    try {
+      const saved = localStorage.getItem('sof_umer_user');
+      return saved ? JSON.parse(saved) : null;
+    } catch (e) {
+      return null;
+    }
+  });
+  const [token, setTokenState] = useState<string | null>(() => {
+    try {
+      return localStorage.getItem('sof_umer_token') || null;
+    } catch (e) {
+      return null;
+    }
+  });
   const [sessionExpired, setSessionExpired] = useState<boolean>(false);
   const [currentLanguage, setLanguageState] = useState<string>('en');
   const [languages, setLanguages] = useState<Language[]>([]);

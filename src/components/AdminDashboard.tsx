@@ -1007,7 +1007,10 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
         try {
           const res = await fetch('/api/upload', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${localStorage.getItem('sof_umer_token') || token}`
+            },
             body: JSON.stringify({ image: base64, folder: 'sof_umer_login_hero' })
           });
           if (res.ok) {
@@ -1364,7 +1367,10 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
         try {
           const res = await fetch('/api/upload', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${localStorage.getItem('sof_umer_token') || token}`
+            },
             body: JSON.stringify({ image: base64String, folder: 'sof_umer_branding' })
           });
           if (res.ok) {
@@ -1460,7 +1466,10 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
       try {
         const res = await fetch('/api/upload', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('sof_umer_token') || token}`
+          },
           body: JSON.stringify({ image: compressedBase64, folder: 'sof_umer_ads' })
         });
 
@@ -1502,7 +1511,10 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
       const method = editingAd ? 'PUT' : 'POST';
       const res = await fetch(url, {
         method,
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('sof_umer_token') || token}`
+        },
         body: JSON.stringify(adForm)
       });
       if (res.ok) {
@@ -1627,7 +1639,10 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
     try {
       await fetch(`/api/payment-methods/${pm.id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('sof_umer_token') || token}`
+        },
         body: JSON.stringify({ isActive: !pm.isActive })
       });
       refreshData();
@@ -1643,7 +1658,10 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
     try {
       const res = await fetch(`/api/users/${editingUser.id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('sof_umer_token') || token}`
+        },
         body: JSON.stringify(userForm)
       });
       if (res.ok) {
@@ -1660,7 +1678,10 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
     try {
       await fetch(`/api/users/${user.id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('sof_umer_token') || token}`
+        },
         body: JSON.stringify({ status: nextStatus })
       });
       refreshData();
@@ -1674,7 +1695,10 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
     try {
       await fetch(`/api/users/${user.id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('sof_umer_token') || token}`
+        },
         body: JSON.stringify({ role: nextRole })
       });
       refreshData();
@@ -1798,7 +1822,10 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
     try {
       const res = await fetch('/api/languages', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('sof_umer_token') || token}`
+        },
         body: JSON.stringify({ code: newLangCode.toLowerCase(), name: newLangName })
       });
       if (res.ok) {
@@ -1815,7 +1842,10 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
     try {
       await fetch(`/api/languages/${lang.code}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('sof_umer_token') || token}`
+        },
         body: JSON.stringify({ isActive: !lang.isActive })
       });
       refreshData();
@@ -1834,7 +1864,10 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
     try {
       const res = await fetch('/api/languages/translations', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('sof_umer_token') || token}`
+        },
         body: JSON.stringify({ translations: updated })
       });
       if (res.ok) {
@@ -2039,7 +2072,10 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
     try {
       await fetch(`/api/users/${user.id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('sof_umer_token') || token}`
+        },
         body: JSON.stringify({
           verificationStatus: status,
           isVerified: status === 'verified',
@@ -2057,7 +2093,10 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
     try {
       await fetch(`/api/reports/${reportId}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('sof_umer_token') || token}`
+        },
         body: JSON.stringify({ status: 'resolved' })
       });
       refreshData();

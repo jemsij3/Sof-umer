@@ -16,7 +16,7 @@ import ListingCard from './components/ListingCard';
 import Footer from './components/Footer';
 import InfoPage from './components/InfoPage';
 import { Property } from './types';
-import { ShieldAlert, Shield, RefreshCw, X, Send, Compass, Heart, Plus, Search, User as UserIcon, Home, MessageSquare } from 'lucide-react';
+import { ShieldAlert, Shield, RefreshCw, X, Send, Compass, Heart, Plus, Search, User as UserIcon, Home, MessageSquare, Building } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { getThemeCSS } from './lib/themes';
 import { PWAInstallPrompt } from './components/PWAInstallPrompt';
@@ -50,7 +50,7 @@ function MainAppLayout() {
 
   const isSiteInactive = isMaintenanceMode && !isAuthorizedAdmin;
 
-  // Check if current URL path or search parameters point to the administrator portal or admin login
+  // Check if current URL path or search parameters point to the administrator portal
   const checkIsAdminRoute = () => {
     if (typeof window === 'undefined') return false;
     const path = window.location.pathname.toLowerCase().replace(/\/+$/, '') || '/';
@@ -61,16 +61,10 @@ function MainAppLayout() {
       path === '/admin/login' ||
       path === '/admin-login' ||
       path.startsWith('/admin/') ||
-      path === '/login' ||
-      path === '/auth' ||
-      path === '/auth/login' ||
       search.includes('view=admin') ||
-      search.includes('view=login') ||
       search.includes('admin=true') ||
       search.includes('mode=admin') ||
-      search.includes('login=true') ||
-      hash.includes('#admin') ||
-      hash.includes('#login')
+      hash.includes('#admin')
     );
   };
 
@@ -114,12 +108,10 @@ function MainAppLayout() {
     return () => window.removeEventListener('popstate', handleLocationChange);
   }, [currentUser]);
 
-  // If authorized admin and explicitly navigating to admin route, ensure SOF-UMER CONTROL CONSOLE is active
+  // If authorized admin and explicitly navigating to admin route via URL or popstate, ensure SOF-UMER CONTROL CONSOLE is active
   React.useEffect(() => {
-    if (isAuthorizedAdmin) {
-      if (isAdminRoute && view !== 'admin') {
-        setView('admin');
-      }
+    if (isAuthorizedAdmin && isAdminRoute && view !== 'admin') {
+      setView('admin');
     }
   }, [isAdminRoute, isAuthorizedAdmin, view]);
   
@@ -213,6 +205,38 @@ function MainAppLayout() {
   const handleNavigate = (newView: typeof view) => {
     setSelectedProperty(null);
     setView(newView);
+    if (newView === 'admin') {
+      setIsAdminRoute(true);
+      if (typeof window !== 'undefined') {
+        const path = window.location.pathname.toLowerCase().replace(/\/+$/, '') || '/';
+        if (path !== '/admin' && !path.startsWith('/admin/')) {
+          window.history.pushState(null, '', '/admin');
+        }
+      }
+    } else {
+      setIsAdminRoute(false);
+      if (typeof window !== 'undefined') {
+        const path = window.location.pathname.toLowerCase().replace(/\/+$/, '') || '/';
+        if (path === '/admin' || path === '/admin-login' || path.startsWith('/admin/')) {
+          window.history.pushState(null, '', '/');
+        } else if (window.location.search || window.location.hash) {
+          try {
+            const url = new URL(window.location.href);
+            let changed = false;
+            ['view', 'admin', 'mode'].forEach(k => {
+              if (url.searchParams.has(k)) { url.searchParams.delete(k); changed = true; }
+            });
+            if (url.hash === '#admin') {
+              url.hash = '';
+              changed = true;
+            }
+            if (changed) {
+              window.history.pushState(null, '', url.pathname + (url.search || '') + (url.hash || ''));
+            }
+          } catch (e) {}
+        }
+      }
+    }
   };
 
   const handleFooterLinkClick = (type: 'marketplace' | 'info', value: string) => {
@@ -369,15 +393,14 @@ function MainAppLayout() {
           if (v === 'admin' || v === 'profile' || v === 'messages' || v === 'favorites' || v === 'notifications' || v === 'payments' || v === 'settings') {
             if (!currentUser) {
               if (v === 'admin') {
-                setView('admin');
+                handleNavigate('admin');
               } else if (v === 'profile' || v === 'messages' || v === 'favorites') {
                 handleOpenAuth('login', v as any);
               } else {
                 handleOpenAuth('login', null);
               }
             } else {
-              setView(v as any);
-              setSelectedProperty(null);
+              handleNavigate(v as any);
             }
           } else {
             handleNavigate(v as any);
@@ -405,14 +428,23 @@ function MainAppLayout() {
             </span>
           </div>
           <div className="flex items-center gap-2 shrink-0">
-            {view !== 'admin' && (
+            {view !== 'admin' ? (
               <button
                 type="button"
-                onClick={() => setView('admin')}
+                onClick={() => handleNavigate('admin')}
                 className="px-3 py-1 bg-amber-500 hover:bg-amber-400 text-black font-extrabold text-[11px] rounded-lg shadow transition cursor-pointer flex items-center gap-1.5"
               >
                 <Shield className="w-3.5 h-3.5" />
                 <span>Admin Console</span>
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={() => handleNavigate('marketplace')}
+                className="px-3 py-1 bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 font-extrabold text-[11px] rounded-lg border border-amber-500/40 shadow transition cursor-pointer flex items-center gap-1.5"
+              >
+                <Building className="w-3.5 h-3.5" />
+                <span>Marketplace Home</span>
               </button>
             )}
           </div>
@@ -632,9 +664,9 @@ function MainAppLayout() {
             if (!currentUser) {
               handleOpenAuth('login', 'profile');
             } else if (isAuthorizedAdmin) {
-              setView('admin');
+              handleNavigate('admin');
             } else {
-              setView('profile');
+              handleNavigate('profile');
             }
           }}
           className={`flex-1 flex flex-col items-center justify-center gap-1 py-1 px-1 rounded-xl transition cursor-pointer min-w-0 ${
