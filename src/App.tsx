@@ -114,16 +114,14 @@ function MainAppLayout() {
     return () => window.removeEventListener('popstate', handleLocationChange);
   }, [currentUser]);
 
-  // If authorized admin and on admin/profile route or under maintenance, ensure SOF-UMER CONTROL CONSOLE is active
+  // If authorized admin and explicitly navigating to admin route, ensure SOF-UMER CONTROL CONSOLE is active
   React.useEffect(() => {
     if (isAuthorizedAdmin) {
-      if ((isAdminRoute || view === 'profile') && view !== 'admin') {
-        setView('admin');
-      } else if (isMaintenanceMode && view !== 'admin') {
+      if (isAdminRoute && view !== 'admin') {
         setView('admin');
       }
     }
-  }, [isAdminRoute, isAuthorizedAdmin, isMaintenanceMode, view]);
+  }, [isAdminRoute, isAuthorizedAdmin, view]);
   
   React.useEffect(() => {
     if (selectedProperty) {
@@ -397,6 +395,30 @@ function MainAppLayout() {
         }}
       />
 
+      {/* Active Maintenance Notice Banner for Authorized Administrators */}
+      {isMaintenanceMode && isAuthorizedAdmin && (
+        <div className="bg-amber-500/10 border-b border-amber-500/30 px-4 py-2.5 text-amber-300 text-xs flex flex-wrap items-center justify-between gap-3 sticky top-20 z-30 backdrop-blur-md">
+          <div className="flex items-center gap-2">
+            <ShieldAlert className="w-4 h-4 text-amber-400 shrink-0" />
+            <span className="font-semibold">
+              Maintenance Mode Active — Public visitors see the maintenance screen. You have full administrator access to test and manage the marketplace.
+            </span>
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            {view !== 'admin' && (
+              <button
+                type="button"
+                onClick={() => setView('admin')}
+                className="px-3 py-1 bg-amber-500 hover:bg-amber-400 text-black font-extrabold text-[11px] rounded-lg shadow transition cursor-pointer flex items-center gap-1.5"
+              >
+                <Shield className="w-3.5 h-3.5" />
+                <span>Admin Console</span>
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Main Body Switcher Layout */}
       <main className="flex-1 pb-20 md:pb-16">
         <AnimatePresence mode="wait">
@@ -451,7 +473,7 @@ function MainAppLayout() {
                 }}
               />
             </motion.div>
-          ) : (view === 'admin' || isMaintenanceMode || (isAuthorizedAdmin && (view === 'profile' || view === 'settings'))) && isAuthorizedAdmin ? (
+          ) : view === 'admin' && isAuthorizedAdmin ? (
             /* COMPREHENSIVE ADMIN ADMINISTRATIVE VIEW */
             <motion.div
               key="admin"
@@ -462,9 +484,7 @@ function MainAppLayout() {
             >
               <AdminDashboard
                 onBackToMarketplace={() => {
-                  if (!isMaintenanceMode) {
-                    handleNavigate('marketplace');
-                  }
+                  handleNavigate('marketplace');
                 }}
                 onOpenCreateModal={() => setCreateModalOpen(true)}
                 onSelectProperty={(prop) => setSelectedProperty(prop)}
