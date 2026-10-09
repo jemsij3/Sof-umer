@@ -31,6 +31,7 @@ interface AdminDashboardProps {
 export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal, onSelectProperty }: AdminDashboardProps) {
   const {
     currentUser,
+    token,
     logout,
     users,
     properties,
@@ -1944,7 +1945,7 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
   };
 
   const executeDeleteReceipts = async () => {
-    const token = localStorage.getItem('sof_umer_token') || localStorage.getItem('sof_umer_auth_token') || '';
+    const authToken = token || localStorage.getItem('sof_umer_token') || localStorage.getItem('sof_umer_auth_token') || '';
     setIsDeletingReceipts(true);
     try {
       if (deleteReceiptModal.type === 'single' && deleteReceiptModal.targetReceipt) {
@@ -1952,7 +1953,7 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
         const res = await fetch(`/api/receipts/${id}`, {
           method: 'DELETE',
           headers: {
-            'Authorization': `Bearer ${token}`
+            'Authorization': `Bearer ${authToken}`
           }
         });
         if (res.ok) {
@@ -1975,7 +1976,7 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
+            'Authorization': `Bearer ${authToken}`
           },
           body: JSON.stringify({ ids: selectedReceiptIds })
         });
@@ -1994,7 +1995,7 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
         const res = await fetch('/api/receipts/delete-all', {
           method: 'POST',
           headers: {
-            'Authorization': `Bearer ${token}`
+            'Authorization': `Bearer ${authToken}`
           }
         });
         if (res.ok) {
@@ -2704,6 +2705,25 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
                       {supportTickets.filter(t => t.status === 'Open').length > 0 && (
                         <span className="bg-amber-500 text-black font-extrabold text-[9px] px-2 py-0.5 rounded-full">
                           {supportTickets.filter(t => t.status === 'Open').length}
+                        </span>
+                      )}
+                    </button>
+                  )}
+
+                  {isTabAllowed('payments') && (
+                    <button
+                      onClick={() => setAdminTab('payments')}
+                      className={`w-full text-left px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center justify-between cursor-pointer ${
+                        adminTab === 'payments' ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-black shadow-lg shadow-amber-500/10' : 'text-white/70 hover:text-white hover:bg-white/5'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <CreditCard className="w-3.5 h-3.5 shrink-0" />
+                        <span>{t('admin_nav_payments') || 'Payment & Receipts'}</span>
+                      </div>
+                      {pendingReceiptsCount > 0 && (
+                        <span className="bg-amber-500 text-black font-extrabold text-[9px] px-2 py-0.5 rounded-full">
+                          {pendingReceiptsCount}
                         </span>
                       )}
                     </button>
@@ -5883,6 +5903,11 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
               <div className="space-y-4">
                 <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
                   <div>
+                    <div className="flex items-center gap-1.5 text-[10px] uppercase font-bold tracking-wider text-amber-500 mb-1">
+                      <span>Marketplace Operations</span>
+                      <ChevronRight className="w-3 h-3 text-white/30" />
+                      <span className="text-white/70">Payment & Receipts</span>
+                    </div>
                     <div className="flex items-center gap-3">
                       <h3 className="text-xl font-serif font-bold text-white">Manual Bank Deposit / Telebirr Slips Desk</h3>
                       <span className="text-xs px-2.5 py-0.5 rounded-full bg-white/5 border border-white/10 text-white/60 font-mono">

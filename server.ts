@@ -5,6 +5,22 @@ import express from 'express';
 import path from 'path';
 import fs from 'fs/promises';
 import fsSync from 'fs';
+
+// Process-level crash guards to ensure Render instance never terminates on unhandled async events
+process.on('uncaughtException', (err) => {
+  console.error('[ProcessUncaughtException]', err);
+});
+
+process.on('unhandledRejection', (reason) => {
+  console.error('[ProcessUnhandledRejection]', reason);
+});
+
+// Auto-detect production mode if running as a bundled CJS script or if static dist build exists
+if (!process.env.NODE_ENV) {
+  if (fsSync.existsSync(path.join(process.cwd(), 'dist', 'index.html')) || (typeof __filename !== 'undefined' && (__filename.includes('dist') || __filename.endsWith('.cjs')))) {
+    process.env.NODE_ENV = 'production';
+  }
+}
 import { createServer as createViteServer } from 'vite';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
@@ -93,7 +109,25 @@ import {
 } from './src/types';
 import { staticTranslations } from './src/lib/translations';
 
-const PORT = process.env.RENDER && process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
+function resolveServerPort(): number {
+  // 1. Explicit CLI argument (--port <number>) takes absolute precedence
+  const portArgIndex = process.argv.indexOf('--port');
+  if (portArgIndex !== -1 && process.argv[portArgIndex + 1]) {
+    const parsed = parseInt(process.argv[portArgIndex + 1], 10);
+    if (!isNaN(parsed) && parsed > 0) return parsed;
+  }
+
+  // 2. Render / Production / Container environment: bind to assigned PORT (e.g. 10000 on Render)
+  if (process.env.PORT) {
+    const parsed = parseInt(process.env.PORT, 10);
+    if (!isNaN(parsed) && parsed > 0) return parsed;
+  }
+
+  // 3. AI Studio development environment constraint: dev server must run on 3000
+  return 3000;
+}
+
+const PORT = resolveServerPort();
 
 function resolveDbFilePath(): { dbPath: string; isPersistent: boolean } {
   // Check explicit environment variables first
@@ -138,7 +172,7 @@ const { dbPath: DB_FILE, isPersistent: IS_PERSISTENT_STORAGE } = resolveDbFilePa
 console.log(`[Storage] Resolved DB_FILE: ${DB_FILE} (Persistent Storage: ${IS_PERSISTENT_STORAGE ? 'YES' : 'NO - Ephemeral Workspace'})`);
 
 // --- MONGODB PERSISTENCE LAYER ---
-const MONGODB_URI = process.env.MONGODB_URI || process.env.MONGO_URL || process.env.DATABASE_URL;
+const MONGODB_URI = process.env.MONGODB_URI || process.env.MONGO_URI || process.env.MONGO_URL || process.env.DATABASE_URL || process.env.MONGODB_URL;
 let isMongoConnected = false;
 let isInitialLoadComplete = false;
 
@@ -181,50 +215,98 @@ export const FaqModel = mongoose.models.Faq || mongoose.model('Faq', faqSchema);
 export const ReviewModel = mongoose.models.Review || mongoose.model('Review', reviewSchema);
 export const AppSettingsModel = mongoose.models.AppSettings || mongoose.model('AppSettings', appSettingsSchema);
 
+let mongoListenersAttached = false;
+function attachMongoListeners() {
+  if (mongoListenersAttached) return;
+  mongoListenersAttached = true;
 
-// MongoDB Connection Event Listeners (registered once)
-mongoose.connection.on('connected', () => {
-  isMongoConnected = true;
-  console.log('[Storage] MongoDB connection event: connected');
-});
-mongoose.connection.on('disconnected', () => {
-  isMongoConnected = false;
-  console.warn('[Storage] MongoDB connection event: disconnected');
-});
-mongoose.connection.on('error', (err) => {
-  isMongoConnected = false;
-  console.error('[Storage] MongoDB connection error event:', err);
-});
+  mongoose.connection.on('connected', async () => {
+    isMongoConnected = true;
+    console.log('[Storage] MongoDB connection event: connected');
+    // If initial load hasn't succeeded, load authoritative records from MongoDB immediately
+    if (!isInitialLoadComplete) {
+      try {
+        const loaded = await loadFromMongo();
+        if (loaded) {
+          applyDataSanityAndMigrations();
+          console.log('[Storage] Primary MongoDB records loaded upon reconnection.');
+        }
+      } catch (e) {
+        console.error('[Storage] Error loading from Mongo on reconnect:', e);
+      }
+    }
+  });
 
-async function connectMongo(retries: number = 3): Promise<boolean> {
+  mongoose.connection.on('disconnected', () => {
+    isMongoConnected = false;
+    console.warn('[Storage] MongoDB connection event: disconnected');
+  });
+
+  mongoose.connection.on('error', (err) => {
+    isMongoConnected = false;
+    console.error('[Storage] MongoDB connection error event:', err);
+  });
+}
+
+let isBackgroundRetrying = false;
+function retryMongoInBackground() {
+  if (isBackgroundRetrying || !MONGODB_URI || isMongoConnected) return;
+  isBackgroundRetrying = true;
+  console.log('[Storage] Initiating background MongoDB reconnection loop (non-blocking)...');
+  const interval = setInterval(async () => {
+    if (isMongoConnected) {
+      clearInterval(interval);
+      isBackgroundRetrying = false;
+      return;
+    }
+    try {
+      console.log('[Storage] Attempting background MongoDB connection...');
+      await mongoose.connect(MONGODB_URI, {
+        serverSelectionTimeoutMS: 5000,
+        connectTimeoutMS: 5000,
+      });
+      isMongoConnected = true;
+      clearInterval(interval);
+      isBackgroundRetrying = false;
+      console.log('[Storage] Successfully established background MongoDB connection!');
+      const loaded = await loadFromMongo();
+      if (loaded) {
+        applyDataSanityAndMigrations();
+        console.log('[Storage] Loaded authoritative MongoDB records in background.');
+      }
+    } catch (e: any) {
+      console.warn('[Storage] Background MongoDB reconnect attempt pending:', e.message || e);
+    }
+  }, 6000);
+}
+
+async function connectMongo(retries: number = 2): Promise<boolean> {
   if (!MONGODB_URI) {
     console.log('[Storage] MONGODB_URI is not set. Using persistent disk file storage fallback.');
     return false;
   }
+  attachMongoListeners();
   for (let attempt = 1; attempt <= retries; attempt++) {
     try {
       console.log(`[Storage] Connecting to MongoDB instance (attempt ${attempt}/${retries})...`);
       mongoose.set('bufferCommands', false);
 
-
-
-
-
-
       await mongoose.connect(MONGODB_URI, {
-        serverSelectionTimeoutMS: 15000,
+        serverSelectionTimeoutMS: 5000,
+        connectTimeoutMS: 5000,
       });
       isMongoConnected = true;
       console.log('[Storage] Successfully connected to MongoDB database as primary source of truth!');
       return true;
-    } catch (err) {
-      console.error(`[Storage] Error connecting to MongoDB (attempt ${attempt}/${retries}):`, err);
+    } catch (err: any) {
+      console.error(`[Storage] Error connecting to MongoDB (attempt ${attempt}/${retries}):`, err.message || err);
       if (attempt < retries) {
-        await new Promise(r => setTimeout(r, 2000));
+        await new Promise(r => setTimeout(r, 1000));
       }
     }
   }
   isMongoConnected = false;
+  retryMongoInBackground();
   return false;
 }
 
@@ -854,14 +936,12 @@ async function syncCollectionToMongo<T extends Record<string, any>>(
         }
       };
     });
-    if (currentIds.length > 0) {
-      bulkOps.push({
-        deleteMany: {
-          filter: { [idKey]: { $nin: currentIds } }
-        }
-      });
+    // CRITICAL FIX: NEVER run blanket deleteMany during background sync!
+    // Blanket deletions wipe records whenever in-memory state is partial or unpopulated.
+    // Deletions in MongoDB are strictly handled by dedicated, explicit delete API endpoints.
+    if (bulkOps.length > 0) {
+      await model.bulkWrite(bulkOps as any, { ordered: false });
     }
-    await model.bulkWrite(bulkOps as any, { ordered: false });
   } catch (err) {
     console.error(`[Storage] Error syncing collection ${model.modelName} to MongoDB:`, err);
   }
@@ -1005,22 +1085,50 @@ async function loadFromMongo(): Promise<boolean> {
     if (!loadedUsers && legacyData && Array.isArray(legacyData.users) && legacyData.users.length > 0) {
       loadedUsers = legacyData.users;
     }
-    if (!loadedUsers && Array.isArray(prevLocal.users) && prevLocal.users.length > 0) {
-      loadedUsers = prevLocal.users;
-    }
 
     // Determine properties source: discrete collection > legacy state > existing localDb
     let loadedProperties = (Array.isArray(properties) && properties.length > 0) ? properties : null;
     if (!loadedProperties && legacyData && Array.isArray(legacyData.properties) && legacyData.properties.length > 0) {
       loadedProperties = legacyData.properties;
     }
-    if (!loadedProperties && Array.isArray(prevLocal.properties) && prevLocal.properties.length > 0) {
-      loadedProperties = prevLocal.properties;
+
+    // Protect against missing data: MERGE loaded users with any existing in-memory users by ID/email
+    const allUsersMap = new Map<string, ServerUser>();
+    if (Array.isArray(loadedUsers)) {
+      for (const u of loadedUsers) {
+        const key = u.id || (u.email ? normalizeEmail(u.email) : '');
+        if (key) allUsersMap.set(key, u);
+      }
     }
+    if (Array.isArray(prevLocal.users)) {
+      for (const u of prevLocal.users) {
+        const key = u.id || (u.email ? normalizeEmail(u.email) : '');
+        if (key && !allUsersMap.has(key)) {
+          allUsersMap.set(key, u);
+        }
+      }
+    }
+    const finalUsers = allUsersMap.size > 0 ? Array.from(allUsersMap.values()) : defaultData.users;
+
+    // Protect against missing data: MERGE loaded properties with any existing in-memory properties by ID
+    const allPropsMap = new Map<string, Property>();
+    if (Array.isArray(loadedProperties)) {
+      for (const p of loadedProperties) {
+        if (p.id) allPropsMap.set(p.id, p);
+      }
+    }
+    if (Array.isArray(prevLocal.properties)) {
+      for (const p of prevLocal.properties) {
+        if (p.id && !allPropsMap.has(p.id)) {
+          allPropsMap.set(p.id, p);
+        }
+      }
+    }
+    const finalProperties = Array.from(allPropsMap.values());
 
     localDb = {
-      users: loadedUsers || defaultData.users,
-      properties: loadedProperties || [],
+      users: finalUsers,
+      properties: finalProperties,
       paymentMethods: (Array.isArray(paymentMethods) && paymentMethods.length > 0) ? paymentMethods : (legacyData?.paymentMethods || prevLocal.paymentMethods || defaultData.paymentMethods),
       receipts: (Array.isArray(receipts) && receipts.length > 0) ? receipts : (legacyData?.receipts || prevLocal.receipts || []),
       inquiries: (Array.isArray(inquiries) && inquiries.length > 0) ? inquiries : (legacyData?.inquiries || prevLocal.inquiries || []),
@@ -1107,6 +1215,12 @@ function normalizePhone(phone: string): string {
 
 // Robust, Single Source of Truth helper for Maintenance Status
 const isPlatformInMaintenance = (settings: any): boolean => {
+  if (process.env.FORCE_ONLINE === 'true' || process.env.MAINTENANCE_MODE === 'false') {
+    return false;
+  }
+  if (process.env.FORCE_MAINTENANCE === 'true' || process.env.MAINTENANCE_MODE === 'true') {
+    return true;
+  }
   if (!settings) return false;
   
   // Status string check (case-insensitive) - explicit LIVE always means LIVE
@@ -1238,11 +1352,13 @@ const applyDataSanityAndMigrations = () => {
   } else {
     localDb.properties = localDb.properties.filter(p => !p.id.startsWith('prop-sample-'));
     localDb.properties.forEach(p => {
+      // Preserve active status: if a listing is active or approved, do NOT force to pending
+      const isActive = (p as any).status === 'active' || (p as any).status === 'approved' || p.isVerifiedListing === true || p.approvalStatus === 'approved';
       if (!p.verificationStatus) {
-        p.verificationStatus = 'pending';
+        p.verificationStatus = isActive ? 'verified' : 'pending';
       }
       if (!p.approvalStatus) {
-        p.approvalStatus = 'pending';
+        p.approvalStatus = isActive ? 'approved' : 'pending';
       }
       if ((p as any).isArchived === undefined) {
         (p as any).isArchived = false;
@@ -1433,29 +1549,33 @@ const loadDb = async () => {
   console.log('[Storage] Loading database file/seed source for instant availability...');
   await loadFromFileSeed();
   applyDataSanityAndMigrations();
-
-  if (MONGODB_URI) {
-    console.log('[Storage] Connecting to MongoDB and loading database records...');
-    try {
-      const connected = await connectMongo();
-      if (!connected) {
-        console.error('CRITICAL: Failed to connect to MongoDB. Aborting startup to prevent data corruption.');
-        process.exit(1);
-      }
-      const loaded = await loadFromMongo();
-      if (!loaded) {
-        console.error('CRITICAL: Failed to load data from MongoDB. Aborting startup to prevent data corruption.');
-        process.exit(1);
-      }
-      applyDataSanityAndMigrations();
-      console.log('[Storage] Primary MongoDB database synchronization completed successfully.');
-    } catch (err) {
-      console.error('CRITICAL: Primary MongoDB connection error:', err);
-      process.exit(1);
-    }
-  }
-  isInitialLoadComplete = true;
 };
+
+async function syncMongoAuthoritative() {
+  if (!MONGODB_URI) {
+    isInitialLoadComplete = true;
+    console.log('[Storage] MONGODB_URI is not set. Operating with persistent disk storage fallback.');
+    return;
+  }
+
+  console.log('[Storage] Connecting to MongoDB as authoritative source of truth...');
+  try {
+    const connected = await connectMongo(3);
+    if (connected) {
+      const loaded = await loadFromMongo();
+      if (loaded) {
+        applyDataSanityAndMigrations();
+        await saveToMongo();
+        console.log('[Storage] Primary MongoDB database synchronization completed successfully.');
+      }
+    } else {
+      console.warn('[Storage] Initial MongoDB connection not ready yet. HTTP server is running and live; background reconnect active.');
+    }
+  } catch (err) {
+    console.error('[Storage] Primary MongoDB connection error:', err);
+    retryMongoInBackground();
+  }
+}
 
 let savePromise: Promise<void> = Promise.resolve();
 
@@ -1515,9 +1635,16 @@ async function startServer() {
     next();
   });
 
-  // Health check routes for Render load balancer
-  app.get(['/healthz', '/health'], (req, res) => {
-    res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
+  // Health check routes for Render load balancer & container probes
+  app.get(['/healthz', '/health', '/api/health'], (req, res) => {
+    res.status(200).json({
+      status: 'ok',
+      service: 'SOF-UMER Marketplace',
+      mongoConnected: isMongoConnected,
+      initialLoadComplete: isInitialLoadComplete,
+      uptimeSeconds: Math.floor(process.uptime()),
+      timestamp: new Date().toISOString()
+    });
   });
 
   // Ensure all /api responses default to application/json
@@ -3912,14 +4039,16 @@ async function startServer() {
       );
       if (isOwner) return true;
 
-      // Must be approved by Admin
-      if (p.approvalStatus === 'pending' || p.approvalStatus === 'rejected') return false;
-      if (p.verificationStatus === 'pending' || p.verificationStatus === 'rejected') return false;
-      const isApproved = p.approvalStatus === 'approved' || p.verificationStatus === 'verified' || p.isVerifiedListing === true;
-      if (!isApproved) return false;
+      if (p.approvalStatus === 'rejected' || p.verificationStatus === 'rejected') return false;
+      if ((p as any).isArchived === true) return false;
 
       const status = ((p as any).status || '').toLowerCase();
-      if (['sold', 'rented', 'unavailable', 'expired', 'deleted', 'rejected', 'pending'].includes(status)) {
+      if (['sold', 'rented', 'unavailable', 'expired', 'deleted', 'rejected'].includes(status)) {
+        return false;
+      }
+
+      const isApproved = p.approvalStatus === 'approved' || p.verificationStatus === 'verified' || p.isVerifiedListing === true || status === 'active';
+      if (!isApproved && (p.approvalStatus === 'pending' || p.verificationStatus === 'pending')) {
         return false;
       }
       return true;
@@ -6323,22 +6452,48 @@ async function startServer() {
     next();
   });
 
-  // Vite Integration for Front-end serving
-  if (process.env.NODE_ENV !== 'production') {
+  function resolveDistPath(): string {
+    const candidate1 = path.join(process.cwd(), 'dist');
+    if (fsSync.existsSync(path.join(candidate1, 'index.html'))) return candidate1;
+    const candidate2 = typeof __dirname !== 'undefined' ? __dirname : '';
+    if (candidate2 && fsSync.existsSync(path.join(candidate2, 'index.html'))) return candidate2;
+    return candidate1;
+  }
+
+  // Frontend serving:
+  // If static build exists (dist/index.html) or NODE_ENV === 'production', serve pre-built static assets
+  const hasDist = fsSync.existsSync(path.join(process.cwd(), 'dist', 'index.html'));
+  const isDevMode = process.env.NODE_ENV !== 'production' && !hasDist;
+
+  if (isDevMode) {
     const vite = await createViteServer({
       server: { middlewareMode: true },
       appType: 'spa',
     });
     app.use(vite.middlewares);
   } else {
-    const distPath = path.join(process.cwd(), 'dist');
-    app.use(express.static(distPath));
+    const distPath = resolveDistPath();
+    console.log(`[Static] Serving production assets from: ${distPath}`);
+    app.use(express.static(distPath, {
+      maxAge: '1d',
+      setHeaders: (res, filePath) => {
+        if (filePath.endsWith('.html') || filePath.endsWith('sw.js') || filePath.endsWith('manifest.webmanifest')) {
+          res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+        }
+      }
+    }));
     app.get('*', (req, res) => {
       res.sendFile(path.join(distPath, 'index.html'));
     });
   }
 
+  // BIND THE HTTP PORT IMMEDIATELY so Render health checks succeed without delay
   app.listen(PORT, '0.0.0.0', () => {
-    console.log(`Server running on http://localhost:${PORT}`);
+    console.log(`[Server] Sof Umer production server live on http://0.0.0.0:${PORT} (PID: ${process.pid}, env: ${process.env.NODE_ENV || 'production'})`);
+  });
+
+  // Asynchronously connect to MongoDB as authoritative source of truth without delaying HTTP port readiness
+  syncMongoAuthoritative().catch(err => {
+    console.error('[Storage] MongoDB initial synchronization error:', err);
   });
 }
