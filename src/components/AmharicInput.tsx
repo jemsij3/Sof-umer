@@ -1,12 +1,5 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { Fidelify } from 'fidelify';
-
-// Shared fidelify instance
-const transliterator = new Fidelify({
-  convertPunctuation: true,
-  convertNumbers: false,
-  allowEnglish: true
-});
+import { sharedTransliterator } from '../lib/amharicTransliterator';
 
 interface AmharicInputProps extends React.InputHTMLAttributes<HTMLInputElement | HTMLTextAreaElement> {
   multiline?: boolean;
@@ -28,17 +21,17 @@ export const AmharicInput: React.FC<AmharicInputProps> = ({
 
   useEffect(() => {
     return () => {
-      transliterator.destroyContext(contextId);
+      sharedTransliterator.destroyContext(contextId);
     };
   }, [contextId]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     if (isAmharic) {
-      // Fidelify processing
-      const result = transliterator.processChange(contextId, e.target.value, value);
+      // High-accuracy Amharic transliteration processing
+      const result = sharedTransliterator.processChange(contextId, e.target.value, value || '');
       const { value: newValue, cursorPosition: newCursorPos } = result;
 
-      // Create a synthetic event to pass to the parent
+      // Create synthetic event to pass to parent
       const syntheticEvent = {
         ...e,
         target: {
@@ -48,12 +41,9 @@ export const AmharicInput: React.FC<AmharicInputProps> = ({
         }
       };
 
-      // Update cursor position - we need to wait a tick for React to update the DOM
-      const element = e.target;
-
-
       onChange(syntheticEvent);
 
+      // Restore cursor position on the next tick
       setTimeout(() => {
         if (inputRef.current) {
           inputRef.current.setSelectionRange(newCursorPos, newCursorPos);
@@ -67,11 +57,12 @@ export const AmharicInput: React.FC<AmharicInputProps> = ({
   const toggleAmharic = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    setIsAmharic(!isAmharic);
-    if (!isAmharic) {
-      transliterator.resetContext(contextId);
+    const nextState = !isAmharic;
+    setIsAmharic(nextState);
+    if (!nextState) {
+      sharedTransliterator.resetContext(contextId);
     }
-    // keep focus
+    // Keep input focus
     setTimeout(() => {
       inputRef.current?.focus();
     }, 0);
@@ -86,6 +77,9 @@ export const AmharicInput: React.FC<AmharicInputProps> = ({
         value={value}
         onChange={handleChange}
         className={`${className} ${isAmharic ? 'pr-12' : ''}`}
+        autoCapitalize={isAmharic ? "none" : undefined}
+        autoCorrect={isAmharic ? "off" : undefined}
+        spellCheck={isAmharic ? false : undefined}
         {...(props as any)}
       />
       <button
