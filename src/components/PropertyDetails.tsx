@@ -98,6 +98,9 @@ export default function PropertyDetails({
   } = useApp();
 
   const [activeImage, setActiveImage] = useState(property.images[0] || '');
+  const hasPhotos = property.images && property.images.length > 0;
+  const hasVideo = !!((property as any).video || (property as any).videoUrl);
+  const [activeMediaMode, setActiveMediaMode] = useState<'photos' | 'video'>(hasPhotos ? 'photos' : (hasVideo ? 'video' : 'photos'));
   const isProperty = useMemo(() => isPropertyListing(property), [property]);
   const pricingInfo = useMemo(() => getListingCustomerPricingDisplay(property, currentLanguage), [property, currentLanguage]);
 
@@ -932,23 +935,63 @@ export default function PropertyDetails({
         {/* Left Column: Primary Property Content (Order 1 to 7) */}
         <div className="lg:col-span-8 space-y-6">
           
-          {/* ORDER 1: Property Images */}
+          {/* ORDER 1: Property Images & Video Shared Gallery */}
           <div className="space-y-3">
-            <div className="bg-[#0c0c10] rounded-3xl overflow-hidden border border-white/5 shadow-2xl relative h-[380px] sm:h-[480px] group">
-              <img
-                src={activeImage}
-                alt={property.title}
-                className="w-full h-full object-cover transition duration-700"
-                referrerPolicy="no-referrer"
-              />
-              <div className="absolute bottom-4 right-4 bg-black/70 backdrop-blur-md px-3 py-1.5 rounded-full text-[10px] font-mono text-white/80 border border-white/10 flex items-center gap-1.5">
-                <Eye className="w-3.5 h-3.5 text-amber-500" />
-                <span>{property.images.length > 0 ? `${property.images.indexOf(activeImage) + 1} / ${property.images.length} Photos` : '1 Photo'}</span>
-              </div>
+            <div className="bg-[#0c0c10] rounded-3xl overflow-hidden border border-white/5 shadow-2xl relative h-[380px] sm:h-[480px] group flex justify-center items-center">
+
+              {activeMediaMode === 'photos' && hasPhotos && (
+                <>
+                  <img
+                    src={activeImage}
+                    alt={property.title}
+                    className="w-full h-full object-cover transition duration-700"
+                    referrerPolicy="no-referrer"
+                  />
+                  <div className="absolute bottom-4 right-4 bg-black/70 backdrop-blur-md px-3 py-1.5 rounded-full text-[10px] font-mono text-white/80 border border-white/10 flex items-center gap-1.5 z-10">
+                    <Eye className="w-3.5 h-3.5 text-amber-500" />
+                    <span>{property.images.length > 0 ? `${property.images.indexOf(activeImage) + 1} / ${property.images.length} Photos` : '1 Photo'}</span>
+                  </div>
+                </>
+              )}
+
+              {activeMediaMode === 'video' && hasVideo && (
+                <video
+                  src={(property as any).video || (property as any).videoUrl}
+                  controls
+                  preload="metadata"
+                  className="w-full h-full object-contain"
+                />
+              )}
+
+              {/* Photos / Video Toggle Buttons */}
+              {hasPhotos && hasVideo && (
+                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-2 bg-black/50 backdrop-blur-md p-1 rounded-full border border-white/10 z-10">
+                  <button
+                    onClick={() => setActiveMediaMode('photos')}
+                    className={`px-4 py-1.5 rounded-full text-xs font-bold transition duration-300 ${activeMediaMode === 'photos' ? 'bg-amber-500 text-black' : 'text-white hover:bg-white/20'}`}
+                  >
+                    Photos
+                  </button>
+                  <button
+                    onClick={() => setActiveMediaMode('video')}
+                    className={`px-4 py-1.5 rounded-full text-xs font-bold flex items-center gap-1.5 transition duration-300 ${activeMediaMode === 'video' ? 'bg-amber-500 text-black' : 'text-white hover:bg-white/20'}`}
+                  >
+                    <Video className="w-3.5 h-3.5" />
+                    Video
+                  </button>
+                </div>
+              )}
+
+              {/* Fallback for no media */}
+              {!hasPhotos && !hasVideo && (
+                <div className="w-full h-full bg-white/5 flex items-center justify-center text-white/40">
+                  <span>No media available</span>
+                </div>
+              )}
             </div>
 
             {/* Gallery Thumbnails */}
-            {property.images.length > 1 && (
+            {activeMediaMode === 'photos' && hasPhotos && property.images.length > 1 && (
               <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-none">
                 {property.images.map((img, i) => (
                   <button
@@ -961,24 +1004,6 @@ export default function PropertyDetails({
                     <img src={img} alt="Thumb" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                   </button>
                 ))}
-              </div>
-            )}
-
-            {/* Video Showcase / Tour */}
-            {((property as any).video || (property as any).videoUrl) && (
-              <div className="bg-[#0d0d12]/90 rounded-3xl p-5 border border-white/10 shadow-xl text-[#F5F5F4] space-y-3">
-                <div className="flex items-center gap-2 text-amber-400 font-bold text-xs uppercase tracking-wider">
-                  <Video className="w-4 h-4 text-amber-500" />
-                  <span>{t("video_tour_showcase")}</span>
-                </div>
-                <div className="rounded-2xl overflow-hidden border border-white/10 bg-black max-h-[380px] flex justify-center">
-                  <video
-                    src={(property as any).video || (property as any).videoUrl}
-                    controls
-                    preload="metadata"
-                    className="w-full max-h-[380px] object-contain"
-                  />
-                </div>
               </div>
             )}
           </div>
