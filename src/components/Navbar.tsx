@@ -385,7 +385,7 @@ export default function Navbar({ onNavigate, activeView, onOpenCreateModal, onOp
                               <p className="font-bold text-xs text-white truncate uppercase tracking-wider">{currentUser.fullName}</p>
                               <p className="text-[10px] text-white/40 truncate font-mono">{currentUser.email}</p>
                               <span className="inline-block mt-1 text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-500">
-                                {t('role_admin_badge')}
+                                {currentUser.isEmployee && currentUser.employeeRole ? currentUser.employeeRole : t('role_admin_badge')}
                               </span>
                             </div>
                           </div>

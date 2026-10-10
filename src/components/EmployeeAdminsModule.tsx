@@ -304,12 +304,13 @@ export const EmployeeAdminsModule: React.FC<EmployeeAdminsModuleProps> = ({
       return;
     }
 
-    if (!editingEmployee && tempPassword !== confirmPassword) {
+    const assignedPermissions = getPermissionsForRole(employeeRole);
+    const isExistingUser = users.some(u => (u.email || '').toLowerCase() === email.trim().toLowerCase());
+
+    if (!editingEmployee && !isExistingUser && tempPassword !== confirmPassword) {
       triggerNotification('Passwords do not match.', 'error');
       return;
     }
-
-    const assignedPermissions = getPermissionsForRole(employeeRole);
 
     try {
       if (editingEmployee) {
@@ -349,65 +350,47 @@ export const EmployeeAdminsModule: React.FC<EmployeeAdminsModuleProps> = ({
 
         triggerNotification(`Employee "${fullName}" updated successfully!`);
       } else {
-        // Create flow using /api/auth/register
-        const registerPayload = {
-          email,
-          fullName,
-          username,
-          password: tempPassword,
-          role: 'admin'
-        };
-
-        // Register the standard admin account
-        const registerRes = await fetch('/api/auth/register', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(registerPayload)
-        });
-
-        if (!registerRes.ok) {
-          const err = await registerRes.json();
-          throw new Error(err.error || 'Failed to create employee admin account.');
-        }
-
-        const registeredData = await registerRes.json();
-        
-        // Retrieve standard ID of the created user from backend response
-        const createdId = registeredData.userId || users.find(u => (u.email || '').toLowerCase() === (email || '').toLowerCase())?.id || ('usr-' + Date.now()); // fallback if sync is delayed
-
-        const updatePayload = {
-          isEmployee: true,
-          employeeId: employeeId || 'EMP-' + Math.floor(100000 + Math.random() * 900000),
-          phone,
-          username,
-          department,
+        // Assign role to existing user or create new employee admin via dedicated endpoint
+        const assignPayload = {
+          email: email.trim(),
+          fullName: fullName.trim(),
+          username: username.trim(),
+          phone: phone.trim() || undefined,
+          employeeId: employeeId.trim() || undefined,
+          department: department.trim() || undefined,
           employeeRole,
           status: employeeStatus,
           permissions: assignedPermissions,
-          notes,
-          photoUrl,
-          temporaryPassword: tempPassword,
-          isVerified: true,
-          verificationStatus: 'verified'
+          notes: notes.trim() || undefined,
+          photoUrl: photoUrl || undefined,
+          password: isExistingUser ? undefined : tempPassword
         };
 
-        // Now save the employee details
-        await fetch(`/api/users/${createdId}`, {
-          method: 'PUT',
+        const assignRes = await fetch('/api/admin/employees/assign-role', {
+          method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${localStorage.getItem('sof_umer_token')}`
           },
-          body: JSON.stringify(updatePayload)
+          body: JSON.stringify(assignPayload)
         });
+
+        if (!assignRes.ok) {
+          const err = await assignRes.json();
+          throw new Error(err.error || 'Failed to assign employee role.');
+        }
+
+        const assignData = await assignRes.json();
 
         await logEmployeeAction(
           currentUser?.fullName || 'Super Admin',
-          `Created new employee "${fullName}" as ${employeeRole}`,
+          assignData.mode === 'assigned_existing'
+            ? `Assigned employee role "${employeeRole}" to existing user "${fullName}" (${email})`
+            : `Created new employee "${fullName}" as ${employeeRole}`,
           'Employee Management'
         );
 
-        triggerNotification(`Employee "${fullName}" created successfully! Temporary Password: ${tempPassword}`);
+        triggerNotification(assignData.message || `Employee role "${employeeRole}" assigned successfully!`);
       }
 
       setShowAddEmployeeForm(false);
@@ -557,35 +540,32 @@ export const EmployeeAdminsModule: React.FC<EmployeeAdminsModuleProps> = ({
     }
   };
 
-  const handleDeleteEmployee = async (emp: UserType) => {
-    if (!window.confirm(`Are you absolutely sure you want to permanently delete employee "${emp.fullName}"?`)) return;
+  const handleRevokeEmployeeRole = async (emp: UserType) => {
+    if (!window.confirm(`Are you sure you want to revoke the employee role from "${emp.fullName}"? Their account will revert to an ordinary user account and all personal data, listings, and messages will remain intact.`)) return;
 
     try {
-      // In the server, deleting users is done by status update or deleting record
-      // Let's mark as deleted or delete standard record
-      const res = await fetch(`/api/users/${emp.id}`, {
-        method: 'PUT',
+      const res = await fetch(`/api/admin/employees/${emp.id}/revoke`, {
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('sof_umer_token')}`
-        },
-        body: JSON.stringify({ isEmployee: false, status: 'suspended', role: 'user' }) // Demote and disable
+        }
       });
 
-      if (!res.ok) throw new Error('Failed to delete employee.');
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || 'Failed to revoke employee role.');
+      }
 
-      await logEmployeeAction(
-        currentUser?.fullName || 'Super Admin',
-        `Deleted/Deactivated employee "${emp.fullName}" from the staff module`,
-        'Employee Management'
-      );
-
-      triggerNotification(`Employee "${emp.fullName}" removed from staff module.`);
+      const data = await res.json();
+      triggerNotification(data.message || `Employee role revoked from "${emp.fullName}".`);
       onRefreshData();
     } catch (e: any) {
       triggerNotification(e.message, 'error');
     }
   };
+
+  const handleDeleteEmployee = handleRevokeEmployeeRole;
 
   // Start Edit role (predefined or custom)
   const handleStartEditRole = (role: any, isPredefined: boolean = false) => {
@@ -1291,10 +1271,27 @@ export const EmployeeAdminsModule: React.FC<EmployeeAdminsModuleProps> = ({
                         required
                         disabled={!!editingEmployee}
                         value={email}
-                        onChange={e => setEmail(e.target.value)}
+                        onChange={e => {
+                          const val = e.target.value;
+                          setEmail(val);
+                          if (!editingEmployee && val.trim()) {
+                            const found = users.find(u => (u.email || '').toLowerCase() === val.trim().toLowerCase());
+                            if (found) {
+                              if (!fullName && found.fullName) setFullName(found.fullName);
+                              if (!username && found.username) setUsername(found.username);
+                              if (!phone && found.phone) setPhone(found.phone);
+                              if (!photoUrl && found.photoUrl) setPhotoUrl(found.photoUrl);
+                            }
+                          }
+                        }}
                         placeholder="employee@sofumer.com"
                         className="w-full px-3.5 py-2.5 bg-[#12121a] border border-white/5 rounded-2xl text-xs text-white disabled:opacity-50 focus:outline-none focus:border-amber-500"
                       />
+                      {!editingEmployee && email.trim() && users.some(u => (u.email || '').toLowerCase() === email.trim().toLowerCase()) && (
+                        <p className="text-[10px] text-amber-400 mt-1 font-semibold flex items-center gap-1">
+                          <span>✓ Existing registered user found. Existing account and password will be retained.</span>
+                        </p>
+                      )}
                     </div>
 
                     <div>
@@ -1335,28 +1332,35 @@ export const EmployeeAdminsModule: React.FC<EmployeeAdminsModuleProps> = ({
                     </div>
 
                     {!editingEmployee && (
-                      <div className="grid grid-cols-2 gap-2">
-                        <div>
-                          <label className="block text-[10px] uppercase font-extrabold text-white/40 tracking-wider mb-1">Temporary Password</label>
-                          <input
-                            type="password"
-                            required
-                            value={tempPassword}
-                            onChange={e => setTempPassword(e.target.value)}
-                            className="w-full px-3.5 py-2.5 bg-[#12121a] border border-white/5 rounded-2xl text-xs text-white focus:outline-none focus:border-amber-500"
-                          />
+                      users.some(u => (u.email || '').toLowerCase() === email.trim().toLowerCase()) ? (
+                        <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-2xl text-left">
+                          <p className="text-[11px] font-bold text-amber-400">Existing User Password Preserved</p>
+                          <p className="text-[9px] text-white/60 mt-0.5">This user will continue logging in with their existing Sof Umer password. No password change is required.</p>
                         </div>
-                        <div>
-                          <label className="block text-[10px] uppercase font-extrabold text-white/40 tracking-wider mb-1">Confirm Password</label>
-                          <input
-                            type="password"
-                            required
-                            value={confirmPassword}
-                            onChange={e => setConfirmPassword(e.target.value)}
-                            className="w-full px-3.5 py-2.5 bg-[#12121a] border border-white/5 rounded-2xl text-xs text-white focus:outline-none focus:border-amber-500"
-                          />
+                      ) : (
+                        <div className="grid grid-cols-2 gap-2">
+                          <div>
+                            <label className="block text-[10px] uppercase font-extrabold text-white/40 tracking-wider mb-1">Temporary Password</label>
+                            <input
+                              type="password"
+                              required
+                              value={tempPassword}
+                              onChange={e => setTempPassword(e.target.value)}
+                              className="w-full px-3.5 py-2.5 bg-[#12121a] border border-white/5 rounded-2xl text-xs text-white focus:outline-none focus:border-amber-500"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-[10px] uppercase font-extrabold text-white/40 tracking-wider mb-1">Confirm Password</label>
+                            <input
+                              type="password"
+                              required
+                              value={confirmPassword}
+                              onChange={e => setConfirmPassword(e.target.value)}
+                              className="w-full px-3.5 py-2.5 bg-[#12121a] border border-white/5 rounded-2xl text-xs text-white focus:outline-none focus:border-amber-500"
+                            />
+                          </div>
                         </div>
-                      </div>
+                      )
                     )}
 
                     <div>
@@ -1507,7 +1511,7 @@ export const EmployeeAdminsModule: React.FC<EmployeeAdminsModuleProps> = ({
                       <button
                         onClick={() => handleDeleteEmployee(emp)}
                         className="p-1.5 text-rose-500 hover:text-rose-400 bg-black/45 hover:bg-black/60 rounded-xl transition"
-                        title="Permanently Delete Employee"
+                        title="Revoke Employee Role (Revert to User)"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
@@ -2214,6 +2218,19 @@ export const EmployeeAdminsModule: React.FC<EmployeeAdminsModuleProps> = ({
 
                 {/* Form Submit Button */}
                 <div className="pt-2 flex justify-end gap-3">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (activeProfileEmployee) {
+                        const target = activeProfileEmployee;
+                        setSelectedProfileEmployee(null);
+                        handleRevokeEmployeeRole(target);
+                      }
+                    }}
+                    className="px-4 py-2 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 font-bold text-xs rounded-xl transition cursor-pointer mr-auto"
+                  >
+                    Revoke Employee Role
+                  </button>
                   <button
                     type="button"
                     onClick={() => setSelectedProfileEmployee(null)}

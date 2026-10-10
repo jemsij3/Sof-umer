@@ -825,7 +825,14 @@ export default function UserDashboard({
             {currentUser.email}
           </p>
 
-          <div className="mt-2.5">
+          <div className="mt-2.5 flex flex-wrap items-center justify-center gap-2">
+            {currentUser.isEmployee && currentUser.employeeRole && (
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/15 text-amber-400 border border-amber-500/30 text-xs font-bold tracking-wide shadow-sm">
+                <Shield className="w-3.5 h-3.5 text-amber-400" />
+                <span>{currentUser.employeeRole}</span>
+              </div>
+            )}
+
             {currentUser.isVerified || currentUser.verificationStatus === 'verified' ? (
               <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-xs font-semibold">
                 <ShieldCheck className="w-3.5 h-3.5" />

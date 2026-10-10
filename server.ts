@@ -6865,6 +6865,172 @@ async function startServer() {
     res.json((localDb as any).customRoles || []);
   });
 
+  // Assign employee role to an existing user or create employee admin
+  app.post('/api/admin/employees/assign-role', requireAdmin, async (req, res) => {
+    try {
+      const {
+        email,
+        fullName,
+        username,
+        phone,
+        employeeId,
+        department,
+        employeeRole,
+        permissions,
+        notes,
+        photoUrl,
+        password,
+        status = 'active'
+      } = req.body;
+
+      if (!email || !email.trim()) {
+        return res.status(400).json({ error: 'Email address is required.' });
+      }
+
+      const normEmail = normalizeEmail(email);
+      let existingUser = localDb.users.find(u => u.email && normalizeEmail(u.email) === normEmail);
+
+      const assignedRole = employeeRole || 'Content Moderator';
+
+      if (existingUser) {
+        // Prevent assigning the exact same role if already an active employee with that role
+        if (existingUser.isEmployee === true && existingUser.employeeRole === assignedRole && existingUser.status === 'active') {
+          return res.status(400).json({
+            error: `User "${existingUser.fullName || existingUser.email}" is already assigned as an active ${assignedRole}. Duplicate role assignment prevented.`
+          });
+        }
+
+        // Assign employee role to existing account
+        existingUser.isEmployee = true;
+        existingUser.employeeRole = assignedRole;
+        existingUser.department = department || existingUser.department || 'Operations';
+        existingUser.employeeId = employeeId || existingUser.employeeId || ('EMP-' + Math.floor(100000 + Math.random() * 900000));
+        if (permissions && Array.isArray(permissions)) {
+          existingUser.permissions = permissions;
+        }
+        if (notes !== undefined) existingUser.notes = notes;
+        if (photoUrl) existingUser.photoUrl = photoUrl;
+        if (phone && !existingUser.phone) existingUser.phone = phone;
+        if (fullName && !existingUser.fullName) existingUser.fullName = fullName;
+        if (status) existingUser.status = status;
+        existingUser.role = 'admin'; // Grant admin role so admin UI & permissions gate allow access
+        existingUser.tokenVersion = (existingUser.tokenVersion || 1) + 1; // Revalidate session tokens
+
+        await saveDb();
+
+        return res.json({
+          success: true,
+          mode: 'assigned_existing',
+          message: `Employee role "${assignedRole}" successfully assigned to existing account "${existingUser.email}". The user retains their original credentials, listings, and messages.`,
+          user: stripSecrets(existingUser)
+        });
+      }
+
+      // New employee registration flow
+      if (!fullName || !fullName.trim()) {
+        return res.status(400).json({ error: 'Full name is required for new employee registration.' });
+      }
+      if (!password) {
+        return res.status(400).json({ error: 'Password is required for new employee registration.' });
+      }
+      if (!isValidPassword(password)) {
+        return res.status(400).json({ error: 'Password must be at least 8 characters long and contain uppercase, lowercase, number, and special character.' });
+      }
+
+      if (username && username.trim()) {
+        const normU = username.trim().toLowerCase();
+        const uConflict = localDb.users.find(u => u.username && u.username.toLowerCase() === normU);
+        if (uConflict) {
+          return res.status(400).json({ error: 'This username is already taken by another account.' });
+        }
+      }
+
+      const passwordHash = await bcrypt.hash(password, 10);
+      const newEmployee: ServerUser = {
+        id: 'usr-' + Date.now() + '-' + Math.floor(Math.random() * 1000),
+        email: normEmail,
+        fullName: fullName.trim(),
+        username: username ? username.trim() : undefined,
+        phone: phone ? normalizePhone(phone) : undefined,
+        passwordHash,
+        role: 'admin',
+        isEmployee: true,
+        employeeRole: assignedRole,
+        employeeId: employeeId || ('EMP-' + Math.floor(100000 + Math.random() * 900000)),
+        department: department || 'Operations',
+        permissions: permissions || [],
+        notes: notes || '',
+        photoUrl: photoUrl || '',
+        temporaryPassword: password,
+        status: status || 'active',
+        isVerified: true,
+        verificationStatus: 'verified',
+        tokenVersion: 1,
+        createdAt: new Date().toISOString()
+      };
+
+      localDb.users.push(newEmployee);
+      await saveDb();
+
+      return res.status(201).json({
+        success: true,
+        mode: 'created_new',
+        message: `New employee admin "${fullName}" registered successfully as ${assignedRole}.`,
+        user: stripSecrets(newEmployee)
+      });
+    } catch (err: any) {
+      console.error('[EMPLOYEE ASSIGN ERROR]', err);
+      res.status(500).json({ error: err.message || 'Failed to assign employee role.' });
+    }
+  });
+
+  // Revoke employee role (reverts to normal user without deleting account or data)
+  app.post('/api/admin/employees/:id/revoke', requireAdmin, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const targetUser = localDb.users.find(u => u.id === id);
+
+      if (!targetUser) {
+        return res.status(404).json({ error: 'Employee account not found.' });
+      }
+
+      if (targetUser.email && targetUser.email.toLowerCase() === 'jemaljima@gmail.com') {
+        return res.status(403).json({ error: 'Cannot revoke permissions from the primary system owner.' });
+      }
+
+      const prevRole = targetUser.employeeRole || 'Employee Admin';
+
+      // Revoke employee status while preserving user account, listings, messages, wallet, etc.
+      targetUser.isEmployee = false;
+      targetUser.employeeRole = undefined;
+      targetUser.permissions = [];
+      targetUser.role = 'user'; // Revert back to ordinary user
+      targetUser.tokenVersion = (targetUser.tokenVersion || 1) + 1; // Immediately invalidate active admin JWT sessions
+
+      // Log activity
+      if (!(localDb as any).activityLogs) (localDb as any).activityLogs = [];
+      (localDb as any).activityLogs.unshift({
+        id: 'al-' + Date.now() + '-' + Math.floor(Math.random() * 1000),
+        timestamp: new Date().toISOString(),
+        fullName: (req as any).user?.fullName || 'Super Admin',
+        action: `Revoked employee role "${prevRole}" from "${targetUser.fullName || targetUser.email}". Reverted to ordinary user account.`,
+        module: 'Employee Management',
+        status: 'success'
+      });
+
+      await saveDb();
+
+      return res.json({
+        success: true,
+        message: `Employee role for "${targetUser.fullName || targetUser.email}" has been successfully revoked. User account and data remain intact.`,
+        user: stripSecrets(targetUser)
+      });
+    } catch (err: any) {
+      console.error('[EMPLOYEE REVOKE ERROR]', err);
+      res.status(500).json({ error: err.message || 'Failed to revoke employee role.' });
+    }
+  });
+
   app.post('/api/employee/custom-roles', async (req, res) => {
     const role = req.body;
     if (!role || !role.name) {
