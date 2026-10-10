@@ -20,6 +20,7 @@ import { ShieldAlert, Shield, RefreshCw, X, Send, Compass, Heart, Plus, Search, 
 import { motion, AnimatePresence } from 'motion/react';
 import { getThemeCSS } from './lib/themes';
 import { PWAInstallPrompt } from './components/PWAInstallPrompt';
+import { AnnouncementBanner } from './components/AnnouncementBanner';
 
 function MainAppLayout() {
   const {
@@ -417,6 +418,11 @@ function MainAppLayout() {
           handleOpenAuth(mode, null);
         }}
       />
+
+      {/* Critical / Important System Announcements Alert Banner */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full pt-3">
+        <AnnouncementBanner importantAlertOnly={true} />
+      </div>
 
       {/* Active Maintenance Notice Banner for Authorized Administrators */}
       {isMaintenanceMode && isAuthorizedAdmin && (

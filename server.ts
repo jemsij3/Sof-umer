@@ -195,6 +195,7 @@ const translationSchema = new mongoose.Schema({ key: { type: String, required: t
 const faqSchema = new mongoose.Schema({ id: { type: String, required: true, unique: true } }, { strict: false });
 const reviewSchema = new mongoose.Schema({ id: { type: String, required: true, unique: true } }, { strict: false });
 const appSettingsSchema = new mongoose.Schema({ key: { type: String, required: true, unique: true } }, { strict: false });
+const announcementSchema = new mongoose.Schema({ id: { type: String, required: true, unique: true } }, { strict: false });
 
 export const UserModel = mongoose.models.User || mongoose.model('User', userSchema);
 export const PropertyModel = mongoose.models.Property || mongoose.model('Property', propertySchema);
@@ -214,6 +215,7 @@ export const TranslationModel = mongoose.models.Translation || mongoose.model('T
 export const FaqModel = mongoose.models.Faq || mongoose.model('Faq', faqSchema);
 export const ReviewModel = mongoose.models.Review || mongoose.model('Review', reviewSchema);
 export const AppSettingsModel = mongoose.models.AppSettings || mongoose.model('AppSettings', appSettingsSchema);
+export const AnnouncementModel = mongoose.models.Announcement || mongoose.model('Announcement', announcementSchema);
 
 let mongoListenersAttached = false;
 function attachMongoListeners() {
@@ -968,6 +970,7 @@ async function saveToMongo() {
       syncCollectionToMongo(TranslationModel, localDb.translations || [], 'key'),
       syncCollectionToMongo(FaqModel, (localDb as any).faqs || [], 'id'),
       syncCollectionToMongo(ReviewModel, (localDb as any).reviews || [], 'id'),
+      syncCollectionToMongo(AnnouncementModel, (localDb as any).announcements || [], 'id'),
       (async () => {
         if ((localDb as any).appSettings) {
           await AppSettingsModel.updateOne(
@@ -1055,6 +1058,7 @@ async function loadFromMongo(): Promise<boolean> {
       translations,
       faqs,
       reviews,
+      announcements,
       appSettingsDoc
     ] = await Promise.all([
       fetchCollection(UserModel),
@@ -1074,6 +1078,7 @@ async function loadFromMongo(): Promise<boolean> {
       fetchCollection(TranslationModel),
       fetchCollection(FaqModel),
       fetchCollection(ReviewModel),
+      fetchCollection(AnnouncementModel),
       fetchAppSettings()
     ]);
 
@@ -1144,6 +1149,7 @@ async function loadFromMongo(): Promise<boolean> {
       translations: (Array.isArray(translations) && translations.length > 0) ? translations : (legacyData?.translations || prevLocal.translations || defaultData.translations),
       faqs: (Array.isArray(faqs) && faqs.length > 0) ? faqs : (legacyData?.faqs || prevLocal.faqs || defaultData.faqs),
       reviews: (Array.isArray(reviews) && reviews.length > 0) ? reviews : (legacyData?.reviews || prevLocal.reviews || []),
+      announcements: (Array.isArray(announcements) && announcements.length > 0) ? announcements : (prevLocal.announcements || []),
       appSettings: appSettingsDoc && appSettingsDoc.data ? appSettingsDoc.data : (legacyData?.appSettings || prevLocal.appSettings || defaultData.appSettings)
     } as any;
 
@@ -1487,6 +1493,7 @@ const applyDataSanityAndMigrations = () => {
   }
   if (!localDb.reports || !Array.isArray(localDb.reports)) localDb.reports = [];
   if (!localDb.notifications || !Array.isArray(localDb.notifications)) localDb.notifications = [];
+  if (!(localDb as any).announcements || !Array.isArray((localDb as any).announcements)) (localDb as any).announcements = [];
   if (!(localDb as any).faqs || !Array.isArray((localDb as any).faqs) || (localDb as any).faqs.length === 0) {
     (localDb as any).faqs = defaultData.faqs;
   }
@@ -6145,6 +6152,571 @@ async function startServer() {
     }
     await saveDb();
     res.json({ success: true, message: 'All notifications deleted successfully' });
+  });
+
+  // --- ANNOUNCEMENT SYSTEM HELPER FUNCTIONS & SCHEDULER ---
+  function getEffectiveAnnouncementStatus(announcement: any, now: Date = new Date()): string {
+    if (!announcement) return 'draft';
+    if (announcement.status === 'draft') return 'draft';
+
+    const nowMs = now.getTime();
+    if (announcement.endDate) {
+      const endMs = new Date(announcement.endDate).getTime();
+      if (!isNaN(endMs) && endMs <= nowMs) {
+        return 'expired';
+      }
+    }
+
+    const startMs = new Date(announcement.startDate).getTime();
+    if (!isNaN(startMs) && startMs > nowMs) {
+      return 'scheduled';
+    }
+
+    return 'published';
+  }
+
+  function processScheduledAnnouncements(now: Date = new Date()): boolean {
+    if (!(localDb as any).announcements || !Array.isArray((localDb as any).announcements)) {
+      (localDb as any).announcements = [];
+      return false;
+    }
+
+    let hasChanges = false;
+    const nowMs = now.getTime();
+
+    for (const ann of (localDb as any).announcements) {
+      if (ann.status === 'draft') continue;
+
+      const startMs = new Date(ann.startDate).getTime();
+      const endMs = ann.endDate ? new Date(ann.endDate).getTime() : NaN;
+
+      // Expiration check
+      if (!isNaN(endMs) && endMs <= nowMs) {
+        if (ann.status !== 'expired') {
+          ann.status = 'expired';
+          ann.updatedAt = new Date().toISOString();
+          hasChanges = true;
+        }
+        continue;
+      }
+
+      // Transition scheduled announcement to published once start time has arrived
+      if (ann.status === 'scheduled' && !isNaN(startMs) && startMs <= nowMs) {
+        ann.status = 'published';
+        ann.updatedAt = new Date().toISOString();
+        hasChanges = true;
+
+        // Dispatch broadcast notification if enabled and not already sent
+        if (ann.showNotificationCenter && !ann.notificationDispatched) {
+          if (!localDb.notifications) localDb.notifications = [];
+          const notifId = `notif-ann-${ann.id}`;
+          const alreadyExists = localDb.notifications.some(n => n.id === notifId);
+          if (!alreadyExists) {
+            localDb.notifications.push({
+              id: notifId,
+              userId: ann.targetAudience === 'public' ? 'all' : (ann.targetAudience === 'users' ? 'users' : 'all'),
+              title: `[Announcement] ${ann.titleEn || 'New Notice'}`,
+              message: ann.messageEn || '',
+              isRead: false,
+              createdAt: new Date().toISOString()
+            } as any);
+          }
+          ann.notificationDispatched = true;
+        }
+      }
+
+      // Check upcoming reminder (e.g. For scheduled maintenance)
+      if (ann.enableReminder && !ann.reminderSent && !isNaN(startMs) && startMs > nowMs) {
+        const leadHours = Math.max(1, Number(ann.reminderLeadTimeHours) || 24);
+        const leadTimeMs = leadHours * 3600000;
+        if (nowMs >= (startMs - leadTimeMs)) {
+          if (!localDb.notifications) localDb.notifications = [];
+          const reminderNotifId = `notif-rem-${ann.id}`;
+          const alreadyExists = localDb.notifications.some(n => n.id === reminderNotifId);
+          if (!alreadyExists) {
+            localDb.notifications.push({
+              id: reminderNotifId,
+              userId: ann.targetAudience === 'public' ? 'all' : (ann.targetAudience === 'users' ? 'users' : 'all'),
+              title: `[Upcoming Reminder] ${ann.titleEn || 'Scheduled Event'}`,
+              message: `Upcoming: "${ann.titleEn}" starts soon (${new Date(ann.startDate).toLocaleString('en-US', { timeZone: 'Africa/Addis_Ababa' })} Ethiopia Time).`,
+              isRead: false,
+              createdAt: new Date().toISOString()
+            } as any);
+          }
+          ann.reminderSent = true;
+          ann.updatedAt = new Date().toISOString();
+          hasChanges = true;
+        }
+      }
+    }
+
+    return hasChanges;
+  }
+
+  // Periodic 60s background check ensures scheduled announcements transition on time without requiring admin clicks
+  setInterval(async () => {
+    try {
+      const changed = processScheduledAnnouncements();
+      if (changed) {
+        await saveDb();
+      }
+    } catch (err) {
+      console.error('[Scheduler] Error checking scheduled announcements:', err);
+    }
+  }, 60000);
+
+  // --- ANNOUNCEMENT API ENDPOINTS ---
+
+  // 1. Public / User Announcements (Audience-filtered, only active published announcements)
+  app.get('/api/announcements', async (req, res) => {
+    try {
+      processScheduledAnnouncements();
+
+      if (!(localDb as any).announcements) {
+        (localDb as any).announcements = [];
+      }
+
+      const now = new Date();
+      const user = (req as any).user;
+      const isAdmin = user && isUserAdmin(user);
+
+      const activeList = ((localDb as any).announcements as any[])
+        .filter(a => {
+          const effStatus = getEffectiveAnnouncementStatus(a, now);
+          if (effStatus !== 'published') return false;
+
+          // Audience Filter
+          if (!isAdmin) {
+            if (user) {
+              // Logged in user: 'all' or 'users'
+              if (a.targetAudience === 'public') return false;
+              if (Array.isArray(a.dismissedUserIds) && a.dismissedUserIds.includes(user.id)) return false;
+            } else {
+              // Public visitor: 'all' or 'public'
+              if (a.targetAudience === 'users') return false;
+            }
+          }
+          return true;
+        })
+        .map(a => {
+          // Exclude internal admin metadata from public response
+          return {
+            id: a.id,
+            titleEn: a.titleEn,
+            titleOm: a.titleOm,
+            titleAm: a.titleAm,
+            messageEn: a.messageEn,
+            messageOm: a.messageOm,
+            messageAm: a.messageAm,
+            type: a.type,
+            targetAudience: a.targetAudience,
+            showHomeBanner: a.showHomeBanner !== false,
+            showNotificationCenter: Boolean(a.showNotificationCenter),
+            isImportantAlert: Boolean(a.isImportantAlert),
+            isDismissible: a.isDismissible !== false,
+            startDate: a.startDate,
+            endDate: a.endDate,
+            status: 'published',
+            acknowledgedCount: a.acknowledgedCount || 0,
+            createdAt: a.createdAt,
+            updatedAt: a.updatedAt
+          };
+        });
+
+      res.json(activeList);
+    } catch (err: any) {
+      console.error('Error fetching public announcements:', err);
+      res.status(500).json({ error: 'Failed to load announcements' });
+    }
+  });
+
+  // 2. Dismiss Announcement (Logged in users tracked in DB; public visitors increment counter)
+  app.post('/api/announcements/:id/dismiss', async (req, res) => {
+    try {
+      const { id } = req.params;
+      const announcements: any[] = (localDb as any).announcements || [];
+      const ann = announcements.find(a => a.id === id);
+      if (!ann) {
+        return res.status(404).json({ error: 'Announcement not found' });
+      }
+
+      const user = (req as any).user;
+      if (!ann.dismissedUserIds) ann.dismissedUserIds = [];
+
+      if (user && user.id) {
+        if (!ann.dismissedUserIds.includes(user.id)) {
+          ann.dismissedUserIds.push(user.id);
+          ann.acknowledgedCount = (ann.acknowledgedCount || 0) + 1;
+        }
+      } else {
+        ann.acknowledgedCount = (ann.acknowledgedCount || 0) + 1;
+      }
+
+      await saveDb();
+      res.json({ success: true, acknowledgedCount: ann.acknowledgedCount });
+    } catch (err: any) {
+      console.error('Error dismissing announcement:', err);
+      res.status(500).json({ error: 'Failed to dismiss announcement' });
+    }
+  });
+
+  // 3. Admin: Get all announcements (Draft, Scheduled, Published, Expired)
+  app.get('/api/admin/announcements', requireAdmin, async (req, res) => {
+    try {
+      processScheduledAnnouncements();
+      if (!(localDb as any).announcements) {
+        (localDb as any).announcements = [];
+      }
+
+      const now = new Date();
+      const allWithStatus = ((localDb as any).announcements as any[]).map(a => {
+        return {
+          ...a,
+          effectiveStatus: getEffectiveAnnouncementStatus(a, now)
+        };
+      });
+
+      // Sort newest created first
+      allWithStatus.sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
+      res.json(allWithStatus);
+    } catch (err: any) {
+      console.error('Error fetching admin announcements:', err);
+      res.status(500).json({ error: 'Failed to load admin announcements' });
+    }
+  });
+
+  // 4. Admin: Create an announcement (Draft, Scheduled, or Immediately Published)
+  // CRITICAL: NEVER CHANGES MAINTENANCE MODE
+  app.post('/api/admin/announcements', requireAdmin, async (req, res) => {
+    try {
+      const user = (req as any).user;
+      const body = req.body || {};
+
+      const titleEn = (body.titleEn || '').trim();
+      const messageEn = (body.messageEn || '').trim();
+      const titleOm = (body.titleOm || '').trim();
+      const messageOm = (body.messageOm || '').trim();
+      const titleAm = (body.titleAm || '').trim();
+      const messageAm = (body.messageAm || '').trim();
+
+      if (!titleEn) {
+        return res.status(400).json({ error: 'English Title is required as the primary announcement title.' });
+      }
+      if (!messageEn) {
+        return res.status(400).json({ error: 'English Message body is required as the primary announcement body.' });
+      }
+
+      const rawStartDate = body.startDate ? new Date(body.startDate) : new Date();
+      if (isNaN(rawStartDate.getTime())) {
+        return res.status(400).json({ error: 'Invalid start date and time specified.' });
+      }
+
+      let endDateIso: string | undefined = undefined;
+      if (body.endDate) {
+        const rawEndDate = new Date(body.endDate);
+        if (isNaN(rawEndDate.getTime())) {
+          return res.status(400).json({ error: 'Invalid end date and time specified.' });
+        }
+        if (rawEndDate.getTime() <= rawStartDate.getTime()) {
+          return res.status(400).json({ error: 'End / expiration date must be strictly after the start date.' });
+        }
+        endDateIso = rawEndDate.toISOString();
+      }
+
+      const now = new Date();
+      const nowMs = now.getTime();
+      const startMs = rawStartDate.getTime();
+
+      let requestedStatus = (body.status || 'draft').toLowerCase();
+      if (!['draft', 'scheduled', 'published'].includes(requestedStatus)) {
+        requestedStatus = 'draft';
+      }
+
+      // Determine computed status:
+      // If requested published but start time is in the future -> scheduled
+      // If requested scheduled but start time is in the past -> published
+      let resolvedStatus = requestedStatus;
+      if (requestedStatus === 'published' && startMs > nowMs) {
+        resolvedStatus = 'scheduled';
+      } else if (requestedStatus === 'scheduled' && startMs <= nowMs) {
+        resolvedStatus = 'published';
+      }
+
+      const validTypes = ['general', 'scheduled_maintenance', 'important_update', 'new_feature', 'service_interruption', 'security_notice'];
+      const resolvedType = validTypes.includes(body.type) ? body.type : 'general';
+
+      const validAudiences = ['all', 'public', 'users'];
+      const resolvedAudience = validAudiences.includes(body.targetAudience) ? body.targetAudience : 'all';
+
+      const newAnnouncement = {
+        id: `ann-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+        titleEn,
+        titleOm: titleOm || undefined,
+        titleAm: titleAm || undefined,
+        messageEn,
+        messageOm: messageOm || undefined,
+        messageAm: messageAm || undefined,
+        type: resolvedType,
+        targetAudience: resolvedAudience,
+        showHomeBanner: body.showHomeBanner !== false,
+        showNotificationCenter: Boolean(body.showNotificationCenter),
+        isImportantAlert: Boolean(body.isImportantAlert),
+        isDismissible: body.isDismissible !== false,
+        startDate: rawStartDate.toISOString(),
+        endDate: endDateIso,
+        enableReminder: Boolean(body.enableReminder),
+        reminderLeadTimeHours: Math.max(1, Number(body.reminderLeadTimeHours) || 24),
+        reminderSent: false,
+        notificationDispatched: false,
+        status: resolvedStatus,
+        dismissedUserIds: [],
+        acknowledgedCount: 0,
+        createdBy: user?.id || 'usr-admin',
+        createdByName: user?.fullName || 'Administrator',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+
+      if (!(localDb as any).announcements) {
+        (localDb as any).announcements = [];
+      }
+      (localDb as any).announcements.push(newAnnouncement);
+
+      // If immediately published and notification center is checked, dispatch notification
+      if (resolvedStatus === 'published' && newAnnouncement.showNotificationCenter) {
+        if (!localDb.notifications) localDb.notifications = [];
+        localDb.notifications.push({
+          id: `notif-ann-${newAnnouncement.id}`,
+          userId: resolvedAudience === 'public' ? 'all' : (resolvedAudience === 'users' ? 'users' : 'all'),
+          title: `[Announcement] ${newAnnouncement.titleEn}`,
+          message: newAnnouncement.messageEn,
+          isRead: false,
+          createdAt: new Date().toISOString()
+        } as any);
+        newAnnouncement.notificationDispatched = true;
+      }
+
+      await saveDb();
+      res.status(201).json(newAnnouncement);
+    } catch (err: any) {
+      console.error('Error creating announcement:', err);
+      res.status(500).json({ error: err.message || 'Failed to create announcement' });
+    }
+  });
+
+  // 5. Admin: Edit an announcement
+  // CRITICAL: NEVER CHANGES MAINTENANCE MODE
+  app.put('/api/admin/announcements/:id', requireAdmin, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const announcements: any[] = (localDb as any).announcements || [];
+      const index = announcements.findIndex(a => a.id === id);
+      if (index === -1) {
+        return res.status(404).json({ error: 'Announcement not found' });
+      }
+
+      const existing = announcements[index];
+      const body = req.body || {};
+
+      const titleEn = (body.titleEn !== undefined ? body.titleEn : existing.titleEn || '').trim();
+      const messageEn = (body.messageEn !== undefined ? body.messageEn : existing.messageEn || '').trim();
+
+      if (!titleEn) {
+        return res.status(400).json({ error: 'English Title cannot be empty.' });
+      }
+      if (!messageEn) {
+        return res.status(400).json({ error: 'English Message body cannot be empty.' });
+      }
+
+      let startDateIso = existing.startDate;
+      if (body.startDate) {
+        const d = new Date(body.startDate);
+        if (isNaN(d.getTime())) return res.status(400).json({ error: 'Invalid start date.' });
+        startDateIso = d.toISOString();
+      }
+
+      let endDateIso = existing.endDate;
+      if (body.endDate !== undefined) {
+        if (body.endDate) {
+          const d = new Date(body.endDate);
+          if (isNaN(d.getTime())) return res.status(400).json({ error: 'Invalid end date.' });
+          if (d.getTime() <= new Date(startDateIso).getTime()) {
+            return res.status(400).json({ error: 'End / expiration date must be strictly after the start date.' });
+          }
+          endDateIso = d.toISOString();
+        } else {
+          endDateIso = undefined;
+        }
+      }
+
+      const validTypes = ['general', 'scheduled_maintenance', 'important_update', 'new_feature', 'service_interruption', 'security_notice'];
+      const validAudiences = ['all', 'public', 'users'];
+
+      const updated = {
+        ...existing,
+        titleEn,
+        titleOm: body.titleOm !== undefined ? body.titleOm.trim() : existing.titleOm,
+        titleAm: body.titleAm !== undefined ? body.titleAm.trim() : existing.titleAm,
+        messageEn,
+        messageOm: body.messageOm !== undefined ? body.messageOm.trim() : existing.messageOm,
+        messageAm: body.messageAm !== undefined ? body.messageAm.trim() : existing.messageAm,
+        type: validTypes.includes(body.type) ? body.type : existing.type,
+        targetAudience: validAudiences.includes(body.targetAudience) ? body.targetAudience : existing.targetAudience,
+        showHomeBanner: body.showHomeBanner !== undefined ? Boolean(body.showHomeBanner) : existing.showHomeBanner,
+        showNotificationCenter: body.showNotificationCenter !== undefined ? Boolean(body.showNotificationCenter) : existing.showNotificationCenter,
+        isImportantAlert: body.isImportantAlert !== undefined ? Boolean(body.isImportantAlert) : existing.isImportantAlert,
+        isDismissible: body.isDismissible !== undefined ? Boolean(body.isDismissible) : existing.isDismissible,
+        startDate: startDateIso,
+        endDate: endDateIso,
+        enableReminder: body.enableReminder !== undefined ? Boolean(body.enableReminder) : existing.enableReminder,
+        reminderLeadTimeHours: body.reminderLeadTimeHours !== undefined ? Math.max(1, Number(body.reminderLeadTimeHours) || 24) : existing.reminderLeadTimeHours,
+        updatedAt: new Date().toISOString()
+      };
+
+      if (body.status && ['draft', 'scheduled', 'published'].includes(body.status.toLowerCase())) {
+        const reqStat = body.status.toLowerCase();
+        const startMs = new Date(startDateIso).getTime();
+        const nowMs = Date.now();
+        if (reqStat === 'published' && startMs > nowMs) {
+          updated.status = 'scheduled';
+        } else if (reqStat === 'scheduled' && startMs <= nowMs) {
+          updated.status = 'published';
+        } else {
+          updated.status = reqStat;
+        }
+      }
+
+      announcements[index] = updated;
+      await saveDb();
+      res.json(updated);
+    } catch (err: any) {
+      console.error('Error updating announcement:', err);
+      res.status(500).json({ error: err.message || 'Failed to update announcement' });
+    }
+  });
+
+  // 6. Admin: Publish an announcement immediately
+  app.post('/api/admin/announcements/:id/publish', requireAdmin, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const announcements: any[] = (localDb as any).announcements || [];
+      const ann = announcements.find(a => a.id === id);
+      if (!ann) return res.status(404).json({ error: 'Announcement not found' });
+
+      ann.status = 'published';
+      ann.startDate = new Date().toISOString();
+      ann.updatedAt = new Date().toISOString();
+
+      // Dispatch notification if enabled and not already sent
+      if (ann.showNotificationCenter && !ann.notificationDispatched) {
+        if (!localDb.notifications) localDb.notifications = [];
+        const notifId = `notif-ann-${ann.id}`;
+        const alreadyExists = localDb.notifications.some(n => n.id === notifId);
+        if (!alreadyExists) {
+          localDb.notifications.push({
+            id: notifId,
+            userId: ann.targetAudience === 'public' ? 'all' : (ann.targetAudience === 'users' ? 'users' : 'all'),
+            title: `[Announcement] ${ann.titleEn}`,
+            message: ann.messageEn,
+            isRead: false,
+            createdAt: new Date().toISOString()
+          } as any);
+        }
+        ann.notificationDispatched = true;
+      }
+
+      await saveDb();
+      res.json({ success: true, announcement: ann });
+    } catch (err: any) {
+      console.error('Error publishing announcement:', err);
+      res.status(500).json({ error: 'Failed to publish announcement' });
+    }
+  });
+
+  // 7. Admin: Unpublish an announcement (revert to Draft)
+  app.post('/api/admin/announcements/:id/unpublish', requireAdmin, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const announcements: any[] = (localDb as any).announcements || [];
+      const ann = announcements.find(a => a.id === id);
+      if (!ann) return res.status(404).json({ error: 'Announcement not found' });
+
+      ann.status = 'draft';
+      ann.updatedAt = new Date().toISOString();
+
+      await saveDb();
+      res.json({ success: true, announcement: ann });
+    } catch (err: any) {
+      console.error('Error unpublishing announcement:', err);
+      res.status(500).json({ error: 'Failed to unpublish announcement' });
+    }
+  });
+
+  // 8. Admin: Reschedule an announcement
+  app.post('/api/admin/announcements/:id/reschedule', requireAdmin, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const announcements: any[] = (localDb as any).announcements || [];
+      const ann = announcements.find(a => a.id === id);
+      if (!ann) return res.status(404).json({ error: 'Announcement not found' });
+
+      const { startDate, endDate } = req.body;
+      if (!startDate) return res.status(400).json({ error: 'Start date and time is required.' });
+
+      const startD = new Date(startDate);
+      if (isNaN(startD.getTime())) return res.status(400).json({ error: 'Invalid start date format.' });
+
+      let endDateIso: string | undefined = undefined;
+      if (endDate) {
+        const endD = new Date(endDate);
+        if (isNaN(endD.getTime())) return res.status(400).json({ error: 'Invalid end date format.' });
+        if (endD.getTime() <= startD.getTime()) {
+          return res.status(400).json({ error: 'End date must be strictly after the start date.' });
+        }
+        endDateIso = endD.toISOString();
+      }
+
+      const nowMs = Date.now();
+      ann.startDate = startD.toISOString();
+      ann.endDate = endDateIso;
+      ann.status = startD.getTime() > nowMs ? 'scheduled' : 'published';
+      ann.reminderSent = false;
+      ann.updatedAt = new Date().toISOString();
+
+      await saveDb();
+      res.json({ success: true, announcement: ann });
+    } catch (err: any) {
+      console.error('Error rescheduling announcement:', err);
+      res.status(500).json({ error: err.message || 'Failed to reschedule announcement' });
+    }
+  });
+
+  // 9. Admin: Delete an announcement
+  app.delete('/api/admin/announcements/:id', requireAdmin, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const announcements: any[] = (localDb as any).announcements || [];
+      const index = announcements.findIndex(a => a.id === id);
+      if (index === -1) {
+        return res.status(404).json({ error: 'Announcement not found' });
+      }
+
+      announcements.splice(index, 1);
+
+      if (isMongoConnected) {
+        try {
+          await AnnouncementModel.deleteOne({ id });
+        } catch (mErr) {
+          console.error('[Storage] Error deleting announcement in MongoDB:', mErr);
+        }
+      }
+
+      await saveDb();
+      res.json({ success: true, message: 'Announcement deleted successfully' });
+    } catch (err: any) {
+      console.error('Error deleting announcement:', err);
+      res.status(500).json({ error: 'Failed to delete announcement' });
+    }
   });
 
   // Offers & Negotiation Endpoints

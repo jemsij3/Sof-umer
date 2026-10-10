@@ -12,10 +12,11 @@ import {
   Camera, Image as ImageIcon, Folder, FolderKanban, ChevronDown,
   Mail, Phone, RotateCcw, Zap, LogOut, Gift, Monitor, Smartphone, Upload, XCircle, Save, Globe,
   Ban, PauseCircle, AlertTriangle, Download, ZoomIn, ZoomOut, History, UserX, ArrowLeft, ArrowRight,
-  Key, KeyRound, ShieldOff, UserCheck, Search, Sliders, Layers
+  Key, KeyRound, ShieldOff, UserCheck, Search, Sliders, Layers, Megaphone
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { EmployeeAdminsModule } from './EmployeeAdminsModule';
+import { AdminAnnouncementsManager } from './AdminAnnouncementsManager';
 import { APP_THEMES, getThemeCSS } from '../lib/themes';
 import { extractString } from '../lib/categoriesData';
 import { maskName, maskEmail } from '../lib/utils';
@@ -67,7 +68,8 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
     'overview' | 'users' | 'listings' | 'categories' | 'ads' | 
     'verification' | 'reports' | 'support' | 'languages' | 
     'payments' | 'settings' | 'analytics' | 'employeeAdmins' |
-    'accountLocks' | 'loginHistory' | 'activeSessions' | 'emergencyRecovery'
+    'accountLocks' | 'loginHistory' | 'activeSessions' | 'emergencyRecovery' |
+    'announcements'
   >('overview');
 
   // Admin Privacy Control: Hide admin personal details by default
@@ -152,7 +154,8 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
         if (p === 'Review Payments' || p === 'Manage Payments & Finance') allowed.push('payments');
         if (p === 'Customer Support' || p === 'Reply to Users') allowed.push('support', 'reports');
         if (p === 'Dashboard Statistics' || p === 'View Analytics') allowed.push('analytics');
-        if (p === 'System Settings') allowed.push('settings', 'languages');
+        if (p === 'System Settings') allowed.push('settings', 'languages', 'announcements');
+        if (p === 'Manage Announcements' || p === 'Manage Notifications') allowed.push('announcements');
       });
       return allowed.includes(tab);
     }
@@ -162,7 +165,7 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
   const fetchUserTimeline = async (userId: string) => {
     setIsLoadingTimeline(true);
     try {
-      const token = localStorage.getItem('sof_umer_auth_token');
+      const token = localStorage.getItem('sof_umer_token') || localStorage.getItem('sof_umer_auth_token');
       const res = await fetch(`/api/admin/users/${userId}/timeline`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -181,7 +184,7 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
   const fetchGlobalLoginHistory = async () => {
     setIsLoadingLoginHistory(true);
     try {
-      const token = localStorage.getItem('sof_umer_auth_token');
+      const token = localStorage.getItem('sof_umer_token') || localStorage.getItem('sof_umer_auth_token');
       const res = await fetch(`/api/admin/login-history`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -189,7 +192,9 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
         const data = await res.json();
         setGlobalLoginLogs(data || []);
       } else {
-        const fallbackRes = await fetch(`/api/employee/login-history`);
+        const fallbackRes = await fetch(`/api/employee/login-history`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
         if (fallbackRes.ok) {
           const fallbackData = await fallbackRes.json();
           setGlobalLoginLogs(fallbackData || []);
@@ -208,7 +213,7 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
     if (!unlockModalUser) return;
     setIsSubmittingUnlock(true);
     try {
-      const token = localStorage.getItem('sof_umer_auth_token');
+      const token = localStorage.getItem('sof_umer_token') || localStorage.getItem('sof_umer_auth_token');
       const res = await fetch(`/api/admin/users/${unlockModalUser.id}/unlock`, {
         method: 'POST',
         headers: {
@@ -247,7 +252,7 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
       return;
     }
     try {
-      const token = localStorage.getItem('sof_umer_auth_token');
+      const token = localStorage.getItem('sof_umer_token') || localStorage.getItem('sof_umer_auth_token');
       const res = await fetch(`/api/admin/users/${targetUser.id}/revoke-sessions`, {
         method: 'POST',
         headers: {
@@ -271,7 +276,7 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
   // Toggle Force Password Change on Next Login
   const handleToggleForcePasswordChange = async (targetUser: User, currentValue?: boolean) => {
     try {
-      const token = localStorage.getItem('sof_umer_auth_token');
+      const token = localStorage.getItem('sof_umer_token') || localStorage.getItem('sof_umer_auth_token');
       const res = await fetch(`/api/admin/users/${targetUser.id}/force-password-change`, {
         method: 'POST',
         headers: {
@@ -298,7 +303,7 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
     if (!viewingUser || !adminNoteInput.trim()) return;
     setIsAddingNote(true);
     try {
-      const token = localStorage.getItem('sof_umer_auth_token');
+      const token = localStorage.getItem('sof_umer_token') || localStorage.getItem('sof_umer_auth_token');
       const res = await fetch(`/api/admin/users/${viewingUser.id}/notes`, {
         method: 'POST',
         headers: {
@@ -327,7 +332,7 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
     if (!viewingUser) return;
     if (!confirm('Are you sure you want to delete this private admin note?')) return;
     try {
-      const token = localStorage.getItem('sof_umer_auth_token');
+      const token = localStorage.getItem('sof_umer_token') || localStorage.getItem('sof_umer_auth_token');
       const res = await fetch(`/api/admin/users/${viewingUser.id}/notes/${noteId}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
@@ -349,7 +354,7 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
     setIsSubmittingEmergency(true);
     setEmergencyStatusMsg(null);
     try {
-      const token = localStorage.getItem('sof_umer_auth_token');
+      const token = localStorage.getItem('sof_umer_token') || localStorage.getItem('sof_umer_auth_token');
       const res = await fetch(`/api/admin/recovery/emergency-unlock`, {
         method: 'POST',
         headers: {
@@ -878,6 +883,7 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
       };
       setSystemSettings(updated);
       await updateSystemSettings(updated);
+      await refreshData();
       setSiteStatusSuccess(`Site Live Status updated to "${isMaint ? 'Maintenance' : 'Live (Online)'}" successfully! Changes apply instantly.`);
       setTimeout(() => setSiteStatusSuccess(''), 4000);
     } catch (err: any) {
@@ -899,6 +905,7 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
       };
       setSystemSettings(updated);
       await updateSystemSettings(updated);
+      await refreshData();
       setSiteStatusSuccess('Site Live Status reset to Live (Online) mode successfully.');
       setTimeout(() => setSiteStatusSuccess(''), 4000);
     } catch (err: any) {
@@ -2856,6 +2863,18 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
                     >
                       <Languages className="w-3.5 h-3.5 shrink-0" />
                       <span>{t('admin_nav_languages') || 'Languages & Translations'}</span>
+                    </button>
+                  )}
+
+                  {isTabAllowed('announcements') && (
+                    <button
+                      onClick={() => setAdminTab('announcements')}
+                      className={`w-full text-left px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 cursor-pointer ${
+                        adminTab === 'announcements' ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-black shadow-lg shadow-amber-500/10' : 'text-white/70 hover:text-white hover:bg-white/5'
+                      }`}
+                    >
+                      <Megaphone className="w-3.5 h-3.5 shrink-0" />
+                      <span>{t('admin_nav_announcements') || 'Announcements & Notifications'}</span>
                     </button>
                   )}
 
@@ -8431,6 +8450,11 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
               users={users}
               onRefreshData={refreshData}
             />
+          )}
+
+          {/* 📢 ANNOUNCEMENTS & NOTIFICATIONS SECTION */}
+          {adminTab === 'announcements' && (
+            <AdminAnnouncementsManager />
           )}
 
           {/* 🛡️ SECURITY TAB 1: ACCOUNT LOCKOUTS & SECURITY UNLOCKS */}

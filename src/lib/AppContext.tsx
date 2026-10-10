@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { User, Property, PaymentMethod, PaymentReceipt, Inquiry, Advertisement, Language, TranslationKey, AppNotification, SafetyReport, Category, AppFeature, JobOpening, SupportTicket, PropertyOffer, FAQItem, Review } from '../types';
+import { User, Property, PaymentMethod, PaymentReceipt, Inquiry, Advertisement, Language, TranslationKey, AppNotification, SafetyReport, Category, AppFeature, JobOpening, SupportTicket, PropertyOffer, FAQItem, Review, Announcement } from '../types';
 import { staticTranslations } from './translations';
 import { setGlobalTranslations, getTranslatedCategoryName, getTranslatedSubcategoryName, getTranslatedFieldLabel, getTranslatedOption, getTranslatedPropertyType } from './categoriesData';
 
@@ -137,6 +137,10 @@ interface AppContextType {
   submitReview: (reviewData: { propertyId?: string; sellerId: string; rating: number; title?: string; comment: string }) => Promise<{ success: boolean; error?: string; review?: Review }>;
   updateReviewStatus: (reviewId: string, status: 'active' | 'hidden' | 'flagged') => Promise<boolean>;
   deleteReview: (reviewId: string) => Promise<boolean>;
+
+  // Announcements & Alerts
+  announcements: Announcement[];
+  dismissAnnouncement: (id: string) => Promise<boolean>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -152,7 +156,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   });
   const [token, setTokenState] = useState<string | null>(() => {
     try {
-      return localStorage.getItem('sof_umer_token') || null;
+      return localStorage.getItem('sof_umer_token') || localStorage.getItem('sof_umer_auth_token') || null;
     } catch (e) {
       return null;
     }
@@ -186,6 +190,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const [offers, setOffers] = useState<PropertyOffer[]>([]);
   const [faqs, setFaqs] = useState<FAQItem[]>([]);
   const [reviews, setReviews] = useState<Review[]>([]);
+  const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [systemSettings, setSystemSettings] = useState<SystemSettings>({
     appName: 'SOF-UMER',
     appLogoText: 'SOF-UMER',
@@ -203,7 +208,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   // Restore session on load & verify with backend database
   useEffect(() => {
     const savedUser = localStorage.getItem('sof_umer_user');
-    const savedToken = localStorage.getItem('sof_umer_token');
+    const savedToken = localStorage.getItem('sof_umer_token') || localStorage.getItem('sof_umer_auth_token');
     
     if (savedToken) {
       setTokenState(savedToken);
@@ -228,6 +233,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
           // Only clear session if token is explicitly rejected by backend
           localStorage.removeItem('sof_umer_user');
           localStorage.removeItem('sof_umer_token');
+          localStorage.removeItem('sof_umer_auth_token');
           setCurrentUserState(null);
           setTokenState(null);
         }
@@ -352,8 +358,10 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     setTokenState(t);
     if (t) {
       localStorage.setItem('sof_umer_token', t);
+      localStorage.setItem('sof_umer_auth_token', t);
     } else {
       localStorage.removeItem('sof_umer_token');
+      localStorage.removeItem('sof_umer_auth_token');
     }
   };
 
@@ -385,7 +393,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const refreshData = async () => {
     try {
       const headers: Record<string, string> = {};
-      const savedToken = localStorage.getItem('sof_umer_token') || token;
+      const savedToken = localStorage.getItem('sof_umer_token') || localStorage.getItem('sof_umer_auth_token') || token;
       
       if (savedToken) {
         headers['Authorization'] = `Bearer ${savedToken}`;
@@ -410,7 +418,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         }
       };
 
-      const [langsData, propsData, payData, receiptsData, inqsData, advsData, notifsData, usersData, reportsData, catsData, featsData, jobsData, sysSettingsData, ticketsData, offersData, faqsData, reviewsData] = await Promise.all([
+      const [langsData, propsData, payData, receiptsData, inqsData, advsData, notifsData, usersData, reportsData, catsData, featsData, jobsData, sysSettingsData, ticketsData, offersData, faqsData, reviewsData, announcementsData] = await Promise.all([
         safeFetchJson('/api/languages', { languages: [], translations: [] }),
         safeFetchJson('/api/properties', []),
         safeFetchJson('/api/payment-methods', []),
@@ -427,7 +435,8 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         safeFetchJson('/api/support-tickets', []),
         safeFetchJson('/api/offers', []),
         safeFetchJson('/api/faqs', []),
-        safeFetchJson('/api/reviews', [])
+        safeFetchJson('/api/reviews', []),
+        safeFetchJson('/api/announcements', [])
       ]);
 
       const activeProperties = propsData || [];
@@ -445,6 +454,15 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       setOffers(offersData || []);
       setFaqs(faqsData || []);
       setReviews(reviewsData || []);
+
+      let activeAnnouncementsList = Array.isArray(announcementsData) ? announcementsData : [];
+      try {
+        const dismissedLocal = JSON.parse(localStorage.getItem('sof_umer_dismissed_announcements') || '[]');
+        if (Array.isArray(dismissedLocal) && dismissedLocal.length > 0) {
+          activeAnnouncementsList = activeAnnouncementsList.filter((a: any) => !dismissedLocal.includes(a.id));
+        }
+      } catch (_) {}
+      setAnnouncements(activeAnnouncementsList);
 
       // Keep currentUser updated with latest balance & details from backend
       if (currentUser) {
@@ -1060,6 +1078,34 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     return false;
   };
 
+  const dismissAnnouncement = async (id: string): Promise<boolean> => {
+    try {
+      setAnnouncements(prev => prev.filter(a => a.id !== id));
+      try {
+        const stored = JSON.parse(localStorage.getItem('sof_umer_dismissed_announcements') || '[]');
+        if (Array.isArray(stored) && !stored.includes(id)) {
+          stored.push(id);
+          localStorage.setItem('sof_umer_dismissed_announcements', JSON.stringify(stored));
+        }
+      } catch (_) {}
+
+      const authHeader = localStorage.getItem('sof_umer_token') || token;
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (authHeader) {
+        headers['Authorization'] = `Bearer ${authHeader}`;
+      }
+
+      await fetch(`/api/announcements/${id}/dismiss`, {
+        method: 'POST',
+        headers
+      });
+      return true;
+    } catch (e) {
+      console.error('Failed to dismiss announcement:', e);
+      return false;
+    }
+  };
+
   return (
     <AppContext.Provider value={{
       currentUser,
@@ -1117,7 +1163,9 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       reviews,
       submitReview,
       updateReviewStatus,
-      deleteReview
+      deleteReview,
+      announcements,
+      dismissAnnouncement
     }}>
       {children}
     </AppContext.Provider>

@@ -11,6 +11,7 @@ import {
   Folder, ChevronDown, Plus, Layers
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { AnnouncementBanner } from './AnnouncementBanner';
 import { 
   PRIMARY_CATEGORIES,
   REDESIGNED_CATEGORIES, 
@@ -505,7 +506,7 @@ export default function Marketplace({
       return properties.filter(p => {
         if ((p as any).isArchived) return false;
         if (p.approvalStatus === 'rejected' || p.approvalStatus === 'pending' || p.verificationStatus === 'pending') return false;
-        return p.verificationStatus === 'verified' || p.isVerifiedListing === true;
+        return p.verificationStatus === 'verified' || p.isVerifiedListing === true || p.approvalStatus === 'approved';
       });
     }
 
@@ -1033,6 +1034,11 @@ export default function Marketplace({
           <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/40 to-transparent pointer-events-none" />
         </div>
       )}
+
+      {/* Active Home Page Announcements Banner */}
+      <div className="mb-6">
+        <AnnouncementBanner homeBannerOnly={true} />
+      </div>
 
       {/* Toast Notification */}
       <AnimatePresence>

@@ -112,7 +112,7 @@ export default function Navbar({ onNavigate, activeView, onOpenCreateModal, onOp
   const activeLanguages = languages && languages.filter(l => l.isActive).length > 0
     ? languages.filter(l => l.isActive)
     : fallbackLanguages;
-  const unreadNotifications = notifications.filter(n => n.userId === currentUser?.id && !n.isRead);
+  const unreadNotifications = notifications.filter(n => (n.userId === currentUser?.id || n.userId === 'all' || n.userId === 'users') && !n.isRead);
 
   const handleMarkNotificationsRead = async () => {
     if (!currentUser) return;
@@ -280,13 +280,13 @@ export default function Navbar({ onNavigate, activeView, onOpenCreateModal, onOp
                         )}
                       </div>
                       <div className="divide-y divide-white/5">
-                        {notifications.filter(n => n.userId === currentUser.id).length === 0 ? (
+                        {notifications.filter(n => n.userId === currentUser.id || n.userId === 'all' || n.userId === 'users').length === 0 ? (
                           <div className="px-4 py-8 text-center text-white/30 text-xs">
                             {t('no_notifications_yet')}
                           </div>
                         ) : (
                           notifications
-                            .filter(n => n.userId === currentUser.id)
+                            .filter(n => n.userId === currentUser.id || n.userId === 'all' || n.userId === 'users')
                             .slice()
                             .reverse()
                             .map(notif => (

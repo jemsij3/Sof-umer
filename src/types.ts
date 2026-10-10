@@ -370,6 +370,62 @@ export interface AppNotification {
   createdAt: string;
 }
 
+export type AnnouncementType = 
+  | 'general' 
+  | 'scheduled_maintenance' 
+  | 'important_update' 
+  | 'new_feature' 
+  | 'service_interruption' 
+  | 'security_notice';
+
+export type AnnouncementAudience = 'all' | 'public' | 'users';
+
+export type AnnouncementStatus = 'draft' | 'scheduled' | 'published' | 'expired';
+
+export interface Announcement {
+  id: string;
+  // Multilingual Titles & Messages
+  titleEn: string;
+  titleOm?: string;
+  titleAm?: string;
+  messageEn: string;
+  messageOm?: string;
+  messageAm?: string;
+  
+  // Categorization
+  type: AnnouncementType;
+  
+  // Target Audience & Placements
+  targetAudience: AnnouncementAudience;
+  showHomeBanner: boolean;
+  showNotificationCenter: boolean;
+  isImportantAlert: boolean;
+  isDismissible: boolean;
+
+  // Scheduling (Stored in ISO 8601 UTC string, displayed in Africa/Addis_Ababa)
+  startDate: string;
+  endDate?: string;
+
+  // Reminders
+  enableReminder?: boolean;
+  reminderLeadTimeHours?: number;
+  reminderSent?: boolean;
+  notificationDispatched?: boolean;
+
+  // Status
+  status: AnnouncementStatus;
+
+  // Tracking & Acknowledgement
+  dismissedUserIds?: string[];
+  acknowledgedCount?: number;
+
+  // Metadata
+  createdBy: string;
+  createdByName?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface AppFeature {
   id: string;
   titleEn: string;

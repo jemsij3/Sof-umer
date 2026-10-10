@@ -287,7 +287,7 @@ export default function UserDashboard({
 
   const myNotifications = notifications.filter(n => {
     if (!currentUser) return false;
-    if (n.userId === currentUser.id) return true;
+    if (n.userId === currentUser.id || n.userId === 'all' || n.userId === 'users') return true;
     if (currentUser.email && (n as any).userEmail && ((n as any).userEmail || '').toLowerCase() === (currentUser.email || '').toLowerCase()) return true;
     return false;
   });
