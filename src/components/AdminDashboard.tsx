@@ -30,6 +30,18 @@ interface AdminDashboardProps {
 }
 
 export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal, onSelectProperty }: AdminDashboardProps) {
+  const hasPermission = (requiredPerms: string | string[]) => {
+    if (currentUser?.email === 'jemaljima@gmail.com') return true;
+    const role = (currentUser?.role || '').toLowerCase();
+    if (['owner', 'superadmin'].includes(role)) return true;
+    const perms = currentUser?.permissions || [];
+    if (Array.isArray(requiredPerms)) {
+      return requiredPerms.some(p => perms.includes(p));
+    }
+    return perms.includes(requiredPerms);
+  };
+
+
   const {
     currentUser,
     token,
@@ -146,7 +158,9 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
     } else {
       // Custom Role
       const perms = currentUser.permissions || [];
-      const allowed: string[] = ['overview', 'users', 'accountLocks', 'loginHistory', 'activeSessions'];
+      const allowed: string[] = ['overview'];
+      if (hasPermission(['Verify Users', 'Manage Users'])) allowed.push('users', 'verification', 'accountLocks', 'loginHistory', 'activeSessions');
+      if (hasPermission(['View Audit Logs'])) allowed.push('loginHistory');
       perms.forEach(p => {
         if (p === 'Review Listings' || p === 'Manage Listings') allowed.push('listings', 'categories');
         if (p === 'Verify Users' || p === 'Manage Users') allowed.push('users', 'verification', 'accountLocks', 'loginHistory', 'activeSessions');
@@ -2698,7 +2712,7 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
                         <Building className="w-3.5 h-3.5 shrink-0" />
                         <span>{t('admin_nav_listings') || 'Listing Moderation'}</span>
                       </div>
-                      {pendingListingsCount > 0 && (
+                      {hasPermission(['Approve Listings']) && pendingListingsCount > 0 && (
                         <span className="bg-rose-500 text-white font-extrabold text-[9px] px-2 py-0.5 rounded-full">
                           {pendingListingsCount}
                         </span>
@@ -2767,7 +2781,7 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
                         <CreditCard className="w-3.5 h-3.5 shrink-0" />
                         <span>{t('admin_nav_payments') || 'Payment & Receipts'}</span>
                       </div>
-                      {pendingReceiptsCount > 0 && (
+                      {hasPermission(['Review Payments', 'Manage Payments & Finance']) && pendingReceiptsCount > 0 && (
                         <span className="bg-amber-500 text-black font-extrabold text-[9px] px-2 py-0.5 rounded-full">
                           {pendingReceiptsCount}
                         </span>
@@ -2804,7 +2818,7 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
                         <CreditCard className="w-3.5 h-3.5 shrink-0" />
                         <span>{t('admin_nav_payments') || 'Payment & Receipts'}</span>
                       </div>
-                      {pendingReceiptsCount > 0 && (
+                      {hasPermission(['Review Payments', 'Manage Payments & Finance']) && pendingReceiptsCount > 0 && (
                         <span className="bg-amber-500 text-black font-extrabold text-[9px] px-2 py-0.5 rounded-full">
                           {pendingReceiptsCount}
                         </span>
@@ -3029,7 +3043,7 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
 
                   return (
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                      {pendingListingsCount > 0 && (
+                      {hasPermission(['Approve Listings']) && pendingListingsCount > 0 && (
                         <div
                           onClick={() => setAdminTab('listings')}
                           className="p-4 bg-[#12121a] hover:bg-white/5 border border-rose-500/30 rounded-2xl transition cursor-pointer flex items-center justify-between"
@@ -3042,7 +3056,7 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
                         </div>
                       )}
 
-                      {pendingReceiptsCount > 0 && (
+                      {hasPermission(['Review Payments', 'Manage Payments & Finance']) && pendingReceiptsCount > 0 && (
                         <div
                           onClick={() => setAdminTab('payments')}
                           className="p-4 bg-[#12121a] hover:bg-white/5 border border-amber-500/30 rounded-2xl transition cursor-pointer flex items-center justify-between"
@@ -3658,8 +3672,9 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
                   <h3 className="text-xl font-serif font-bold text-white">Central Listings Moderation Desk</h3>
                   <p className="text-xs text-white/40 mt-1">Review user-submitted property, job, and service entries. Set featured flags or remove non-compliant records.</p>
                 </div>
-                {pendingListingsCount > 0 && (
+                {hasPermission(['Approve Listings']) && pendingListingsCount > 0 && (
                   <button
+                    disabled={!hasPermission(['Approve Listings'])}
                     onClick={handleApproveAllListings}
                     className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-black font-extrabold text-xs uppercase rounded-xl shadow cursor-pointer transition flex items-center gap-1.5 shrink-0"
                   >
@@ -4577,7 +4592,7 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
                               </button>
                               <button
                                 type="button"
-                                onClick={() => handleVerifyReceipt(pendingRec.id, 'Approved')}
+                                disabled={!hasPermission(['Review Payments', 'Manage Payments & Finance'])} onClick={() => handleVerifyReceipt(pendingRec.id, 'Approved')}
                                 className="px-3 py-1.5 bg-amber-500 hover:bg-amber-400 text-black font-extrabold text-xs rounded-xl shadow cursor-pointer transition flex items-center gap-1"
                               >
                                 <Check className="w-3.5 h-3.5" /> Approve
@@ -5234,7 +5249,7 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
                           >
                             <Edit2 className="w-3.5 h-3.5" />
                           </button>
-                          <button onClick={() => handleDeleteAd(ad.id)} className="p-1 text-white/40 hover:text-rose-500 cursor-pointer"><Trash2 className="w-3.5 h-3.5" /></button>
+                          <button disabled={!hasPermission(['Manage Banner Ads', 'Manage Advertisements'])} onClick={() => handleDeleteAd(ad.id)} className="p-1 text-white/40 hover:text-rose-500 cursor-pointer"><Trash2 className="w-3.5 h-3.5" /></button>
                         </div>
                       </div>
                     </div>
@@ -5975,8 +5990,9 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
                     <p className="text-xs text-white/40 mt-1">Audit uploaded manual CBE receipt images, verify against banking logs, and manage payment/receipt history.</p>
                   </div>
                   <div className="flex flex-wrap items-center gap-2">
-                    {pendingReceiptsCount > 0 && (
+                    {hasPermission(['Review Payments', 'Manage Payments & Finance']) && pendingReceiptsCount > 0 && (
                       <button
+                        disabled={!hasPermission(['Review Payments', 'Manage Payments & Finance'])}
                         onClick={handleApproveAllReceipts}
                         className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-black font-extrabold text-xs uppercase rounded-xl shadow cursor-pointer transition flex items-center gap-1.5 shrink-0"
                       >
@@ -6175,7 +6191,7 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
                                       <Eye className="w-3.5 h-3.5" /> Review
                                     </button>
                                     <button 
-                                      onClick={() => handleVerifyReceipt(rec.id, 'Approved')} 
+                                      disabled={!hasPermission(['Review Payments', 'Manage Payments & Finance'])} onClick={() => handleVerifyReceipt(rec.id, 'Approved')}
                                       className="px-2.5 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-black font-extrabold rounded-lg cursor-pointer text-[10px] uppercase flex items-center gap-1"
                                       title="Approve Receipt and Activate Promotion"
                                     >
@@ -6206,7 +6222,7 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
                                       View Audit Log
                                     </button>
                                     <button 
-                                      onClick={() => handleVerifyReceipt(rec.id, rec.status === 'Approved' ? 'Rejected' : 'Approved')}
+                                      disabled={!hasPermission(['Review Payments', 'Manage Payments & Finance'])} onClick={() => handleVerifyReceipt(rec.id, rec.status === 'Approved' ? 'Rejected' : 'Approved')}
                                       className="text-[9px] text-white/40 font-bold hover:underline cursor-pointer uppercase"
                                     >
                                       Re-audit
@@ -6397,7 +6413,7 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
                         <button onClick={() => handleTogglePaymentMethod(pm)} className="cursor-pointer">
                           {pm.isActive ? <ToggleRight className="w-5.5 h-5.5 text-amber-500" /> : <ToggleLeft className="w-5.5 h-5.5 text-white/20" />}
                         </button>
-                        <button onClick={() => handleDeletePaymentMethod(pm.id)} className="text-white/30 hover:text-rose-400 p-1 cursor-pointer" title="Delete"><Trash2 className="w-3.5 h-3.5" /></button>
+                        <button disabled={!hasPermission(['System Settings'])} onClick={() => handleDeletePaymentMethod(pm.id)} className="text-white/30 hover:text-rose-400 p-1 cursor-pointer" title="Delete"><Trash2 className="w-3.5 h-3.5" /></button>
                       </div>
                     </div>
                   ))}
