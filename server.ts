@@ -2142,6 +2142,41 @@ async function startServer() {
     next();
   };
 
+  function hasPermission(user: any, requiredPerms: string | string[]): boolean {
+    if (!user) return false;
+    if (user.status === 'suspended') return false;
+    if (user.email && user.email.toLowerCase() === 'jemaljima@gmail.com') return true;
+
+    const role = (user.role || '').toLowerCase();
+    if (['owner', 'superadmin'].includes(role)) return true;
+
+    // Check permissions array for employees
+    const userPerms = user.permissions || [];
+
+    if (Array.isArray(requiredPerms)) {
+      return requiredPerms.some(p => userPerms.includes(p));
+    }
+    return userPerms.includes(requiredPerms);
+  }
+
+  const requirePermission = (perms: string | string[]) => {
+    return (req: express.Request, res: express.Response, next: express.NextFunction) => {
+      const user = (req as any).user;
+      if (!user) {
+        return res.status(401).json({ error: 'Authentication required.' });
+      }
+      if (!isUserAdmin(user)) {
+        return res.status(403).json({ error: 'Access denied. Admin access required.' });
+      }
+      if (!hasPermission(user, perms)) {
+        return res.status(403).json({ error: 'Access denied. You do not have the required permissions.' });
+      }
+      next();
+    };
+  };
+
+
+
   // --- SERVER-SIDE MAINTENANCE ENFORCEMENT MIDDLEWARE ---
   // When Maintenance Mode is active, all normal users and unauthenticated callers are strictly blocked
   // with HTTP 503 from accessing protected API endpoints. Authorized administrators always bypass.
@@ -3530,12 +3565,12 @@ async function startServer() {
     res.status(404).json({ error: 'User not found' });
   });
 
-  app.get('/api/users', requireAdmin, async (req, res) => {
+  app.get('/api/users', requirePermission(['Verify Users', 'Manage Users', 'View Audit Logs']), async (req, res) => {
     res.json(localDb.users.map(stripSecrets));
   });
 
   // --- USER MODERATION ENDPOINTS ---
-  app.post('/api/admin/users/:id/warn', requireAdmin, async (req, res) => {
+  app.post('/api/admin/users/:id/warn', requirePermission(['Verify Users', 'Manage Users', 'Manage Suspensions']), async (req, res) => {
     const { id } = req.params;
     const { reason, note } = req.body;
     const admin = (req as any).user;
@@ -3591,7 +3626,7 @@ async function startServer() {
     res.json({ success: true, user: stripSecrets(targetUser), warning: warningItem });
   });
 
-  app.post('/api/admin/users/:id/status', requireAdmin, async (req, res) => {
+  app.post('/api/admin/users/:id/status', requirePermission(['Verify Users', 'Manage Users', 'Manage Suspensions']), async (req, res) => {
     const { id } = req.params;
     const { status, reason, note } = req.body;
     const admin = (req as any).user;
@@ -3653,7 +3688,7 @@ async function startServer() {
     res.json({ success: true, user: stripSecrets(targetUser) });
   });
 
-  app.delete('/api/admin/users/:id', requireAdmin, async (req, res) => {
+  app.delete('/api/admin/users/:id', requirePermission('Manage Users'), async (req, res) => {
     const { id } = req.params;
     const admin = (req as any).user;
 
@@ -3689,12 +3724,12 @@ async function startServer() {
     res.json({ success: true, message: 'User deleted successfully.' });
   });
 
-  app.get('/api/admin/moderation-logs', requireAdmin, async (req, res) => {
+  app.get('/api/admin/moderation-logs', requirePermission(['View Audit Logs', 'System Settings']), async (req, res) => {
     res.json((localDb as any).moderationLogs || []);
   });
 
   // --- ACCOUNT UNLOCK & SECURITY MANAGEMENT ENDPOINTS ---
-  app.post('/api/admin/users/:id/unlock', requireAdmin, async (req, res) => {
+  app.post('/api/admin/users/:id/unlock', requirePermission(['Verify Users', 'Manage Users', 'Manage Suspensions']), async (req, res) => {
     const { id } = req.params;
     const { resetFailedAttempts, forcePasswordReset, notes } = req.body;
     const admin = (req as any).user;
@@ -3761,7 +3796,7 @@ async function startServer() {
     res.json({ success: true, message: 'Account successfully unlocked.', user: stripSecrets(targetUser) });
   });
 
-  app.post('/api/admin/users/:id/reset-failed-attempts', requireAdmin, async (req, res) => {
+  app.post('/api/admin/users/:id/reset-failed-attempts', requirePermission(['Verify Users', 'Manage Users', 'Manage Suspensions']), async (req, res) => {
     const { id } = req.params;
     const admin = (req as any).user;
 
@@ -3789,7 +3824,7 @@ async function startServer() {
     res.json({ success: true, message: 'Failed login counter reset.', user: stripSecrets(targetUser) });
   });
 
-  app.post('/api/admin/users/:id/force-password-change', requireAdmin, async (req, res) => {
+  app.post('/api/admin/users/:id/force-password-change', requirePermission(['Verify Users', 'Manage Users', 'Manage Suspensions']), async (req, res) => {
     const { id } = req.params;
     const { mustChangePassword } = req.body;
     const admin = (req as any).user;
@@ -3817,7 +3852,7 @@ async function startServer() {
     res.json({ success: true, user: stripSecrets(targetUser) });
   });
 
-  app.post('/api/admin/users/:id/revoke-sessions', requireAdmin, async (req, res) => {
+  app.post('/api/admin/users/:id/revoke-sessions', requirePermission(['Verify Users', 'Manage Users', 'Manage Suspensions']), async (req, res) => {
     const { id } = req.params;
     const admin = (req as any).user;
 
@@ -3845,7 +3880,7 @@ async function startServer() {
   });
 
   // Admin Private Notes
-  app.post('/api/admin/users/:id/notes', requireAdmin, async (req, res) => {
+  app.post('/api/admin/users/:id/notes', requirePermission(['Manage Users', 'Verify Users']), async (req, res) => {
     const { id } = req.params;
     const { note } = req.body;
     const admin = (req as any).user;
@@ -3884,7 +3919,7 @@ async function startServer() {
     res.json({ success: true, note: noteItem, user: stripSecrets(targetUser) });
   });
 
-  app.delete('/api/admin/users/:id/notes/:noteId', requireAdmin, async (req, res) => {
+  app.delete('/api/admin/users/:id/notes/:noteId', requirePermission(['Manage Users', 'Verify Users']), async (req, res) => {
     const { id, noteId } = req.params;
 
     const targetUser = localDb.users.find(u => u.id === id);
@@ -3899,7 +3934,7 @@ async function startServer() {
   });
 
   // Security Event Timeline
-  app.get('/api/admin/users/:id/timeline', requireAdmin, async (req, res) => {
+  app.get('/api/admin/users/:id/timeline', requirePermission(['View Audit Logs', 'Manage Users', 'System Settings']), async (req, res) => {
     const { id } = req.params;
     const targetUser = localDb.users.find(u => u.id === id);
     if (!targetUser) return res.status(404).json({ error: 'User not found.' });
@@ -3998,7 +4033,7 @@ async function startServer() {
   });
 
   // Emergency Admin Recovery
-  app.post('/api/admin/recovery/emergency-unlock', requireAdmin, async (req, res) => {
+  app.post('/api/admin/recovery/emergency-unlock', requirePermission('System Settings'), async (req, res) => {
     const admin = (req as any).user;
     const { targetEmail } = req.body;
 
@@ -4374,6 +4409,7 @@ async function startServer() {
       const computedExpiresAt = planDays > 0 ? new Date(Date.now() + planDays * 24 * 60 * 60 * 1000).toISOString() : (propertyData.promotionExpiresAt || undefined);
 
       const isAdmin = isUserAdmin(authUser);
+      const canApproveListings = authUser && hasPermission(authUser, 'Approve Listings');
       const createdBy = authUser ? authUser.id : 'usr-guest';
       const createdByName = authUser ? (authUser.fullName || authUser.email) : 'Guest';
       const createdByEmail = authUser ? authUser.email : '';
@@ -4476,9 +4512,9 @@ async function startServer() {
         isTopAd: propertyData.isTopAd === true || requestedPlan === 'starter' || requestedPlan === 'basic' || requestedPlan === 'vip',
         isFeatured: propertyData.isFeatured === true || requestedPlan === 'premium' || requestedPlan === 'vip',
         promotionExpiresAt: computedExpiresAt,
-        approvalStatus: isAdmin ? (propertyData.approvalStatus || 'approved') : 'pending',
-        verificationStatus: isAdmin ? (propertyData.verificationStatus || 'verified') : 'pending',
-        isVerifiedListing: isAdmin ? (propertyData.isVerifiedListing !== undefined ? propertyData.isVerifiedListing : true) : false,
+        approvalStatus: canApproveListings ? (propertyData.approvalStatus || 'approved') : 'pending',
+        verificationStatus: canApproveListings ? (propertyData.verificationStatus || 'verified') : 'pending',
+        isVerifiedListing: canApproveListings ? (propertyData.isVerifiedListing !== undefined ? propertyData.isVerifiedListing : true) : false,
         createdAt: new Date().toISOString(),
         publishedAt: new Date().toISOString(),
         viewsCount: 0
@@ -4529,7 +4565,9 @@ async function startServer() {
         (currentUser.email && (((property as any).ownerEmail && (property as any).ownerEmail.toLowerCase() === currentUser.email.toLowerCase()) || (property.contactEmail && property.contactEmail.toLowerCase() === currentUser.email.toLowerCase()))) ||
         (currentUser.phone && (((property as any).ownerPhone && normalizePhone((property as any).ownerPhone) === normalizePhone(currentUser.phone)) || (property.contactPhone && normalizePhone(property.contactPhone) === normalizePhone(currentUser.phone))));
 
-      if (!isUserAdmin(currentUser) && !isOwner) {
+      const canManageListings = hasPermission(currentUser, ['Manage Listings', 'Review Listings', 'Approve Listings']);
+
+      if (!canManageListings && !isOwner) {
         return res.status(403).json({ error: 'You are not authorized to edit this listing.' });
       }
 
@@ -4542,9 +4580,10 @@ async function startServer() {
       const prevApproval = property.approvalStatus;
       const prevVerification = property.verificationStatus;
       const isAdmin = isUserAdmin(currentUser);
+      const canApproveListings = hasPermission(currentUser, 'Approve Listings');
 
       // Non-admins editing ANY property information automatically triggers re-approval requirement
-      if (!isAdmin) {
+      if (!canApproveListings) {
         delete updates.verificationStatus;
         delete updates.approvalStatus;
         delete updates.isVerifiedListing;
@@ -4718,7 +4757,8 @@ async function startServer() {
         (currentUser.email && (((property as any).ownerEmail && (property as any).ownerEmail.toLowerCase() === currentUser.email.toLowerCase()) || (property.contactEmail && property.contactEmail.toLowerCase() === currentUser.email.toLowerCase()))) ||
         (currentUser.phone && (((property as any).ownerPhone && normalizePhone((property as any).ownerPhone) === normalizePhone(currentUser.phone)) || (property.contactPhone && normalizePhone(property.contactPhone) === normalizePhone(currentUser.phone))));
 
-      if (!isUserAdmin(currentUser) && !isOwner) {
+      const canManageListings = hasPermission(currentUser, ['Manage Listings', 'Review Listings', 'Approve Listings']);
+      if (!canManageListings && !isOwner) {
         return res.status(403).json({ error: 'You are not authorized to delete this listing.' });
       }
 
@@ -4883,7 +4923,7 @@ async function startServer() {
     res.json({ success: true, newBalance: user.walletBalance, transaction: newTx, user: stripSecrets(user) });
   });
 
-  app.post('/api/wallet/approve-tx', requireAdmin, async (req, res) => {
+  app.post('/api/wallet/approve-tx', requirePermission(['Review Payments', 'Manage Payments & Finance']), async (req, res) => {
     const { transactionId } = req.body;
     let foundUser = false;
 
@@ -4908,7 +4948,7 @@ async function startServer() {
     res.json({ success: foundUser });
   });
 
-  app.post('/api/wallet/reject-tx', requireAdmin, async (req, res) => {
+  app.post('/api/wallet/reject-tx', requirePermission(['Review Payments', 'Manage Payments & Finance']), async (req, res) => {
     const { transactionId, rejectionReason } = req.body;
     let foundUser = false;
 
@@ -4970,7 +5010,7 @@ async function startServer() {
     res.status(404).json({ error: 'Category not found' });
   });
 
-  app.delete('/api/categories/:id', requireAdmin, async (req, res) => {
+  app.delete('/api/categories/:id', requirePermission('System Settings'), async (req, res) => {
     const { id } = req.params;
     if (localDb.categories) {
       localDb.categories = localDb.categories.filter(c => c.id !== id);
@@ -4991,7 +5031,7 @@ async function startServer() {
     res.json(localDb.appFeatures || []);
   });
 
-  app.post('/api/app-features', requireAdmin, async (req, res) => {
+  app.post('/api/app-features', requirePermission('System Settings'), async (req, res) => {
     const { id, titleEn, titleOm, titleAm, contentEn, contentOm, contentAm, iconName } = req.body;
     if (!titleEn || !contentEn) {
       return res.status(400).json({ error: 'Title and content in English are required.' });
@@ -5017,7 +5057,7 @@ async function startServer() {
     res.json(newFeature);
   });
 
-  app.put('/api/app-features/:id', requireAdmin, async (req, res) => {
+  app.put('/api/app-features/:id', requirePermission('System Settings'), async (req, res) => {
     const { id } = req.params;
     const { titleEn, titleOm, titleAm, contentEn, contentOm, contentAm, iconName } = req.body;
     const idx = localDb.appFeatures.findIndex(f => f.id === id);
@@ -5036,7 +5076,7 @@ async function startServer() {
     res.status(404).json({ error: 'Feature not found.' });
   });
 
-  app.delete('/api/app-features/:id', requireAdmin, async (req, res) => {
+  app.delete('/api/app-features/:id', requirePermission('System Settings'), async (req, res) => {
     const { id } = req.params;
     const feat = localDb.appFeatures.find(f => f.id === id);
     if (!feat) {
@@ -5059,7 +5099,7 @@ async function startServer() {
     res.json(localDb.jobOpenings || []);
   });
 
-  app.post('/api/job-openings', requireAdmin, async (req, res) => {
+  app.post('/api/job-openings', requirePermission('System Settings'), async (req, res) => {
     const { title, location, department, salary, description } = req.body;
     if (!title || !description) {
       return res.status(400).json({ error: 'Title and description are required.' });
@@ -5077,7 +5117,7 @@ async function startServer() {
     res.json(newJob);
   });
 
-  app.put('/api/job-openings/:id', requireAdmin, async (req, res) => {
+  app.put('/api/job-openings/:id', requirePermission('System Settings'), async (req, res) => {
     const { id } = req.params;
     const { title, location, department, salary, description } = req.body;
     const idx = localDb.jobOpenings.findIndex(j => j.id === id);
@@ -5094,7 +5134,7 @@ async function startServer() {
     res.status(404).json({ error: 'Job opening not found.' });
   });
 
-  app.delete('/api/job-openings/:id', requireAdmin, async (req, res) => {
+  app.delete('/api/job-openings/:id', requirePermission('System Settings'), async (req, res) => {
     const { id } = req.params;
     const job = localDb.jobOpenings.find(j => j.id === id);
     if (!job) {
@@ -5141,7 +5181,7 @@ async function startServer() {
     res.status(404).json({ error: 'Payment method not found' });
   });
 
-  app.delete('/api/payment-methods/:id', requireAdmin, async (req, res) => {
+  app.delete('/api/payment-methods/:id', requirePermission('System Settings'), async (req, res) => {
     const { id } = req.params;
     localDb.paymentMethods = localDb.paymentMethods.filter(m => m.id !== id);
     if (isMongoConnected) {
@@ -5263,7 +5303,7 @@ async function startServer() {
     }
   });
 
-  app.put('/api/reviews/:id/status', requireAdmin, async (req, res) => {
+  app.put('/api/reviews/:id/status', requirePermission('Moderate Reviews'), async (req, res) => {
     try {
       if (!localDb.reviews) localDb.reviews = [];
       const { id } = req.params;
@@ -5287,7 +5327,7 @@ async function startServer() {
     }
   });
 
-  app.delete('/api/reviews/:id', requireAdmin, async (req, res) => {
+  app.delete('/api/reviews/:id', requirePermission('Moderate Reviews'), async (req, res) => {
     try {
       if (!localDb.reviews) localDb.reviews = [];
       const { id } = req.params;
@@ -5414,7 +5454,7 @@ async function startServer() {
     res.status(404).json({ error: 'Receipt not found' });
   });
 
-  app.delete('/api/receipts/:id', requireAdmin, async (req, res) => {
+  app.delete('/api/receipts/:id', requirePermission(['Manage Payments & Finance', 'System Settings']), async (req, res) => {
     const { id } = req.params;
     const idx = localDb.receipts.findIndex(r => r.id === id || (r as any)._id === id);
     if (idx !== -1) {
@@ -5433,7 +5473,7 @@ async function startServer() {
   });
 
   // Batch delete selected payment/receipt history records
-  app.post('/api/receipts/delete-batch', requireAdmin, async (req, res) => {
+  app.post('/api/receipts/delete-batch', requirePermission(['Manage Payments & Finance', 'System Settings']), async (req, res) => {
     const { ids } = req.body;
     if (!Array.isArray(ids) || ids.length === 0) {
       return res.status(400).json({ error: 'Array of receipt IDs required.' });
@@ -5455,7 +5495,7 @@ async function startServer() {
   });
 
   // Delete all payment/receipt history records
-  app.delete('/api/receipts', requireAdmin, async (req, res) => {
+  app.delete('/api/receipts', requirePermission(['Manage Payments & Finance', 'System Settings']), async (req, res) => {
     const deletedCount = localDb.receipts.length;
     localDb.receipts = [];
     if (isMongoConnected) {
@@ -5469,7 +5509,7 @@ async function startServer() {
     res.json({ success: true, deletedCount, remainingCount: 0 });
   });
 
-  app.post('/api/receipts/delete-all', requireAdmin, async (req, res) => {
+  app.post('/api/receipts/delete-all', requirePermission(['Manage Payments & Finance', 'System Settings']), async (req, res) => {
     const deletedCount = localDb.receipts.length;
     localDb.receipts = [];
     if (isMongoConnected) {
@@ -5484,7 +5524,7 @@ async function startServer() {
   });
 
   // Batch approve pending receipts
-  app.post('/api/receipts/approve-all', requireAdmin, async (req, res) => {
+  app.post('/api/receipts/approve-all', requirePermission(['Review Payments', 'Manage Payments & Finance']), async (req, res) => {
     let count = 0;
     for (const receipt of localDb.receipts) {
       if (receipt.status === 'Pending') {
@@ -5510,7 +5550,7 @@ async function startServer() {
   });
 
   // Batch approve pending listings
-  app.post('/api/properties/approve-all', requireAdmin, async (req, res) => {
+  app.post('/api/properties/approve-all', requirePermission('Approve Listings'), async (req, res) => {
     let count = 0;
     for (const prop of localDb.properties) {
       if (!prop.verificationStatus || prop.verificationStatus === 'pending') {
@@ -5665,7 +5705,7 @@ async function startServer() {
     res.status(404).json({ error: 'Advertisement not found' });
   });
 
-  app.delete('/api/advertisements/:id', requireAdmin, async (req, res) => {
+  app.delete('/api/advertisements/:id', requirePermission(['Manage Banner Ads', 'Manage Advertisements']), async (req, res) => {
     const { id } = req.params;
     localDb.advertisements = localDb.advertisements.filter(a => a.id !== id);
     if (isMongoConnected) {
@@ -5728,7 +5768,7 @@ async function startServer() {
     res.json({ success: true, translations: localDb.translations });
   });
 
-  app.post('/api/languages/translation-key', requireAdmin, async (req, res) => {
+  app.post('/api/languages/translation-key', requirePermission('System Settings'), async (req, res) => {
     const { key, en, om, am, category } = req.body;
     if (!key || !en) {
       return res.status(400).json({ error: 'Key and English translation are required.' });
@@ -5855,7 +5895,7 @@ async function startServer() {
     res.json((localDb as any).appSettings);
   });
 
-  app.post('/api/system-settings/reset-online', requireAdmin, async (req, res) => {
+  app.post('/api/system-settings/reset-online', requirePermission('System Settings'), async (req, res) => {
     if (!(localDb as any).appSettings) {
       (localDb as any).appSettings = {};
     }
@@ -5865,7 +5905,7 @@ async function startServer() {
     res.json({ success: true, siteStatus: 'Online', maintenanceMode: false, appSettings: (localDb as any).appSettings });
   });
 
-  app.put('/api/system-settings', requireAdmin, async (req, res) => {
+  app.put('/api/system-settings', requirePermission('System Settings'), async (req, res) => {
     const settings = req.body;
     if (!(localDb as any).appSettings) {
       (localDb as any).appSettings = {};
@@ -5901,7 +5941,7 @@ async function startServer() {
   });
 
   // Database Backup and Safety Routes
-  app.get('/api/admin/database/status', requireAdmin, async (req, res) => {
+  app.get('/api/admin/database/status', requirePermission('System Settings'), async (req, res) => {
     try {
       const backupDir = path.join(path.dirname(DB_FILE), 'backups');
       let backups: string[] = [];
@@ -5922,7 +5962,7 @@ async function startServer() {
     }
   });
 
-  app.post('/api/admin/database/backup', requireAdmin, async (req, res) => {
+  app.post('/api/admin/database/backup', requirePermission('System Settings'), async (req, res) => {
     try {
       await createDatabaseBackup('manual_admin_request');
       res.json({ success: true, message: 'On-demand database backup created successfully.' });
@@ -5932,7 +5972,7 @@ async function startServer() {
   });
 
   // Admin Email Configuration & Diagnostic Testing Routes
-  app.get('/api/admin/email/status', requireAdmin, async (req, res) => {
+  app.get('/api/admin/email/status', requirePermission('System Settings'), async (req, res) => {
     res.json({
       resendConfigured: !!(process.env.RESEND_API_KEY && process.env.RESEND_API_KEY.trim()),
       resendSender: process.env.RESEND_FROM || process.env.EMAIL_FROM || process.env.SMTP_FROM || 'Sof Umer Marketplace <noreply@sofumerapp.com>',
@@ -5945,7 +5985,7 @@ async function startServer() {
     });
   });
 
-  app.post('/api/admin/email/test', requireAdmin, async (req, res) => {
+  app.post('/api/admin/email/test', requirePermission('System Settings'), async (req, res) => {
     try {
       const { to } = req.body;
       const targetEmail = normalizeEmail(to || (req as any).user?.email || 'jemaljima@gmail.com');
@@ -6361,7 +6401,7 @@ async function startServer() {
   });
 
   // 3. Admin: Get all announcements (Draft, Scheduled, Published, Expired)
-  app.get('/api/admin/announcements', requireAdmin, async (req, res) => {
+  app.get('/api/admin/announcements', requirePermission(['Manage Announcements', 'System Settings']), async (req, res) => {
     try {
       processScheduledAnnouncements();
       if (!(localDb as any).announcements) {
@@ -6387,7 +6427,7 @@ async function startServer() {
 
   // 4. Admin: Create an announcement (Draft, Scheduled, or Immediately Published)
   // CRITICAL: NEVER CHANGES MAINTENANCE MODE
-  app.post('/api/admin/announcements', requireAdmin, async (req, res) => {
+  app.post('/api/admin/announcements', requirePermission(['Manage Announcements', 'System Settings']), async (req, res) => {
     try {
       const user = (req as any).user;
       const body = req.body || {};
@@ -6506,7 +6546,7 @@ async function startServer() {
 
   // 5. Admin: Edit an announcement
   // CRITICAL: NEVER CHANGES MAINTENANCE MODE
-  app.put('/api/admin/announcements/:id', requireAdmin, async (req, res) => {
+  app.put('/api/admin/announcements/:id', requirePermission(['Manage Announcements', 'System Settings']), async (req, res) => {
     try {
       const { id } = req.params;
       const announcements: any[] = (localDb as any).announcements || [];
@@ -6596,7 +6636,7 @@ async function startServer() {
   });
 
   // 6. Admin: Publish an announcement immediately
-  app.post('/api/admin/announcements/:id/publish', requireAdmin, async (req, res) => {
+  app.post('/api/admin/announcements/:id/publish', requirePermission(['Manage Announcements', 'System Settings']), async (req, res) => {
     try {
       const { id } = req.params;
       const announcements: any[] = (localDb as any).announcements || [];
@@ -6634,7 +6674,7 @@ async function startServer() {
   });
 
   // 7. Admin: Unpublish an announcement (revert to Draft)
-  app.post('/api/admin/announcements/:id/unpublish', requireAdmin, async (req, res) => {
+  app.post('/api/admin/announcements/:id/unpublish', requirePermission(['Manage Announcements', 'System Settings']), async (req, res) => {
     try {
       const { id } = req.params;
       const announcements: any[] = (localDb as any).announcements || [];
@@ -6653,7 +6693,7 @@ async function startServer() {
   });
 
   // 8. Admin: Reschedule an announcement
-  app.post('/api/admin/announcements/:id/reschedule', requireAdmin, async (req, res) => {
+  app.post('/api/admin/announcements/:id/reschedule', requirePermission(['Manage Announcements', 'System Settings']), async (req, res) => {
     try {
       const { id } = req.params;
       const announcements: any[] = (localDb as any).announcements || [];
@@ -6692,7 +6732,7 @@ async function startServer() {
   });
 
   // 9. Admin: Delete an announcement
-  app.delete('/api/admin/announcements/:id', requireAdmin, async (req, res) => {
+  app.delete('/api/admin/announcements/:id', requirePermission(['Manage Announcements', 'System Settings']), async (req, res) => {
     try {
       const { id } = req.params;
       const announcements: any[] = (localDb as any).announcements || [];
@@ -6866,7 +6906,7 @@ async function startServer() {
   });
 
   // Assign employee role to an existing user or create employee admin
-  app.post('/api/admin/employees/assign-role', requireAdmin, async (req, res) => {
+  app.post('/api/admin/employees/assign-role', requirePermission(['Manage Staff', 'Assign Roles']), async (req, res) => {
     try {
       const {
         email,
@@ -6985,7 +7025,7 @@ async function startServer() {
   });
 
   // Revoke employee role (reverts to normal user without deleting account or data)
-  app.post('/api/admin/employees/:id/revoke', requireAdmin, async (req, res) => {
+  app.post('/api/admin/employees/:id/revoke', requirePermission(['Manage Staff', 'Assign Roles']), async (req, res) => {
     try {
       const { id } = req.params;
       const targetUser = localDb.users.find(u => u.id === id);
@@ -7107,7 +7147,7 @@ async function startServer() {
     res.json(items);
   });
 
-  app.post('/api/faqs', requireAdmin, async (req, res) => {
+  app.post('/api/faqs', requirePermission('System Settings'), async (req, res) => {
     const { category, question, answer, isPopular, status } = req.body;
     if (!question || !answer || !category) {
       return res.status(400).json({ error: 'Category, question, and answer are required.' });
@@ -7131,7 +7171,7 @@ async function startServer() {
     res.json(newFaq);
   });
 
-  app.put('/api/faqs/reorder', requireAdmin, async (req, res) => {
+  app.put('/api/faqs/reorder', requirePermission('System Settings'), async (req, res) => {
     const { faqIds } = req.body;
     if (Array.isArray(faqIds) && (localDb as any).faqs) {
       const faqMap = new Map((localDb as any).faqs.map((f: any) => [f.id, f]));
@@ -7151,7 +7191,7 @@ async function startServer() {
     res.json({ success: true, faqs: (localDb as any).faqs });
   });
 
-  app.put('/api/faqs/:id', requireAdmin, async (req, res) => {
+  app.put('/api/faqs/:id', requirePermission('System Settings'), async (req, res) => {
     const { id } = req.params;
     const { category, question, answer, isPopular, status, orderIndex } = req.body;
     const items = (localDb as any).faqs || [];
@@ -7189,7 +7229,7 @@ async function startServer() {
     res.json({ success: true, helpfulYes: faq.helpfulYes, helpfulNo: faq.helpfulNo });
   });
 
-  app.delete('/api/faqs/:id', requireAdmin, async (req, res) => {
+  app.delete('/api/faqs/:id', requirePermission('System Settings'), async (req, res) => {
     const { id } = req.params;
     if ((localDb as any).faqs) {
       (localDb as any).faqs = (localDb as any).faqs.filter((f: any) => f.id !== id);
