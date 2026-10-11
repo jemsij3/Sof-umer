@@ -1023,13 +1023,25 @@ export default function Marketplace({
               {t('learn_more') || 'Learn More'} <ArrowRight className="w-4 h-4" />
             </a>
           </div>
-          <div className="mt-6 md:mt-0 z-10 w-full md:w-1/3 h-44 rounded-2xl overflow-hidden shadow-2xl border border-white/10 group">
-            <img
-              src={heroAds[0].imageUrl}
-              alt="Promo"
-              className="w-full h-full object-cover transition duration-700 group-hover:scale-105"
-              referrerPolicy="no-referrer"
-            />
+          <div className="mt-6 md:mt-0 z-10 w-full md:w-1/3 h-44 rounded-2xl overflow-hidden shadow-2xl border border-white/10 group bg-black">
+            {heroAds[0].mediaType === 'video' || heroAds[0].videoUrl ? (
+              <video
+                src={heroAds[0].videoUrl || heroAds[0].imageUrl}
+                controls
+                autoPlay
+                muted
+                loop
+                playsInline
+                className="w-full h-full object-cover transition duration-700 group-hover:scale-105"
+              />
+            ) : (
+              <img
+                src={heroAds[0].imageUrl}
+                alt="Promo"
+                className="w-full h-full object-cover transition duration-700 group-hover:scale-105"
+                referrerPolicy="no-referrer"
+              />
+            )}
           </div>
           <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/40 to-transparent pointer-events-none" />
         </div>
@@ -2285,14 +2297,26 @@ export default function Marketplace({
                     key={ad.id}
                     className="bg-[#0d0d12]/80 rounded-3xl overflow-hidden border border-white/5 shadow-2xl text-white relative group"
                   >
-                    <div className="h-48 overflow-hidden relative">
-                      <img
-                        src={ad.imageUrl}
-                        alt={ad.title}
-                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                        referrerPolicy="no-referrer"
-                      />
-                      <span className="absolute top-4 right-4 bg-black/70 backdrop-blur-md text-[#F5F5F4] font-black uppercase tracking-widest text-[8px] px-2.5 py-1.5 rounded-full border border-white/10">
+                    <div className="h-48 overflow-hidden relative bg-black">
+                      {ad.mediaType === 'video' || ad.videoUrl ? (
+                        <video
+                          src={ad.videoUrl || ad.imageUrl}
+                          controls
+                          autoPlay
+                          muted
+                          loop
+                          playsInline
+                          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                        />
+                      ) : (
+                        <img
+                          src={ad.imageUrl}
+                          alt={ad.title}
+                          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                          referrerPolicy="no-referrer"
+                        />
+                      )}
+                      <span className="absolute top-4 right-4 bg-black/70 backdrop-blur-md text-[#F5F5F4] font-black uppercase tracking-widest text-[8px] px-2.5 py-1.5 rounded-full border border-white/10 pointer-events-none">
                         {t('sponsored')}
                       </span>
                     </div>

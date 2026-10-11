@@ -12,7 +12,8 @@ import {
   Camera, Image as ImageIcon, Folder, FolderKanban, ChevronDown,
   Mail, Phone, RotateCcw, Zap, LogOut, Gift, Monitor, Smartphone, Upload, XCircle, Save, Globe,
   Ban, PauseCircle, AlertTriangle, Download, ZoomIn, ZoomOut, History, UserX, ArrowLeft, ArrowRight,
-  Key, KeyRound, ShieldOff, UserCheck, Search, Sliders, Layers, Megaphone
+  Key, KeyRound, ShieldOff, UserCheck, Search, Sliders, Layers, Megaphone,
+  Video, Play
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { EmployeeAdminsModule } from './EmployeeAdminsModule';
@@ -548,9 +549,34 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
 
   // Interactive Sub-States & Modals
   const [editingAd, setEditingAd] = useState<Advertisement | null>(null);
-  const [adForm, setAdForm] = useState({ title: '', description: '', imageUrl: '', linkUrl: '', position: 'sidebar' as Advertisement['position'] });
+  const [adForm, setAdForm] = useState<{
+    title: string;
+    description: string;
+    imageUrl: string;
+    linkUrl: string;
+    position: Advertisement['position'];
+    mediaType?: 'image' | 'video';
+    videoUrl?: string;
+    videoDuration?: number;
+  }>({
+    title: '',
+    description: '',
+    imageUrl: '',
+    linkUrl: '',
+    position: 'sidebar',
+    mediaType: 'image',
+    videoUrl: '',
+    videoDuration: 0
+  });
   const [adImageUploading, setAdImageUploading] = useState(false);
-  const [adUploadedFile, setAdUploadedFile] = useState<{ url: string; fileName: string; fileSize: number; isCloudinary?: boolean } | null>(null);
+  const [adVideoUploading, setAdVideoUploading] = useState(false);
+  const [adUploadedFile, setAdUploadedFile] = useState<{
+    url: string;
+    fileName: string;
+    fileSize: number;
+    isCloudinary?: boolean;
+    duration?: number;
+  } | null>(null);
   const [adUploadError, setAdUploadError] = useState<string | null>(null);
 
   const [editingPay, setEditingPay] = useState<PaymentMethod | null>(null);
@@ -1521,32 +1547,203 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
     }
   };
 
-  const handleSaveAd = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!adForm.imageUrl.trim()) {
-      setAdUploadError('Please upload an advertisement image or provide an Image URL.');
+  const handleAdVideoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const validMimes = ['video/mp4', 'video/webm', 'video/ogg', 'video/quicktime'];
+    const ext = file.name.split('.').pop()?.toLowerCase();
+    const validExts = ['mp4', 'webm', 'ogg', 'mov'];
+
+    if (!validMimes.includes(file.type.toLowerCase()) && !validExts.includes(ext || '')) {
+      setAdUploadError('Unsupported format. Please select an MP4 or WebM video file.');
+      if (e.target) e.target.value = '';
       return;
     }
+
+    const maxSize = 30 * 1024 * 1024; // 30 MB
+    if (file.size > maxSize) {
+      setAdUploadError(`Video file is too large (${(file.size / (1024 * 1024)).toFixed(1)} MB). Maximum allowed size is 30 MB.`);
+      if (e.target) e.target.value = '';
+      return;
+    }
+
+    setAdUploadError(null);
+    setAdVideoUploading(true);
+
+    try {
+      // Validate video duration using an HTMLVideoElement
+      const tempUrl = URL.createObjectURL(file);
+      const videoEl = document.createElement('video');
+      videoEl.preload = 'metadata';
+      videoEl.src = tempUrl;
+
+      const duration: number = await new Promise((resolve, reject) => {
+        videoEl.onloadedmetadata = () => {
+          URL.revokeObjectURL(tempUrl);
+          const dur = videoEl.duration;
+          if (isNaN(dur) || !isFinite(dur)) {
+            reject(new Error('Unable to read video metadata. Please select a valid MP4 or WebM video.'));
+          } else if (dur > 30.0) {
+            reject(new Error(`Video duration exceeds 30 seconds (${dur.toFixed(1)}s). Maximum allowed duration is 30 seconds.`));
+          } else {
+            resolve(dur);
+          }
+        };
+        videoEl.onerror = () => {
+          URL.revokeObjectURL(tempUrl);
+          reject(new Error('Unable to decode video file. Please ensure the file is a valid web video (MP4 or WebM).'));
+        };
+      });
+
+      // Read as base64 Data URL
+      const base64Video = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = () => reject(new Error('Failed to read video file.'));
+        reader.readAsDataURL(file);
+      });
+
+      let finalUrl = base64Video;
+      let isCloudinary = false;
+
+      // Upload via backend /api/upload
+      try {
+        const res = await fetch('/api/upload', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('sof_umer_token') || token}`
+          },
+          body: JSON.stringify({ video: base64Video, media: base64Video, folder: 'sof_umer_ads' })
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          if (data.url) {
+            finalUrl = data.url;
+            isCloudinary = !!data.isCloudinary;
+          }
+        }
+      } catch (err) {
+        console.warn('Ad video upload endpoint warning, using local base64 preview:', err);
+      }
+
+      const formattedDuration = Math.round(duration * 10) / 10;
+      setAdForm(prev => ({
+        ...prev,
+        mediaType: 'video',
+        videoUrl: finalUrl,
+        videoDuration: formattedDuration,
+        imageUrl: prev.imageUrl || finalUrl
+      }));
+
+      setAdUploadedFile({
+        url: finalUrl,
+        fileName: file.name,
+        fileSize: file.size,
+        isCloudinary,
+        duration: formattedDuration
+      });
+    } catch (err: any) {
+      console.error('Ad video upload error:', err);
+      setAdUploadError(err.message || 'Error processing video file.');
+    } finally {
+      setAdVideoUploading(false);
+      if (e.target) e.target.value = '';
+    }
+  };
+
+  const handleVideoUrlChange = (url: string) => {
+    setAdForm(prev => ({
+      ...prev,
+      videoUrl: url,
+      mediaType: 'video',
+      imageUrl: prev.imageUrl || url
+    }));
+    if (!url) {
+      setAdUploadedFile(null);
+      setAdUploadError(null);
+      return;
+    }
+    const videoEl = document.createElement('video');
+    videoEl.preload = 'metadata';
+    videoEl.src = url;
+    videoEl.onloadedmetadata = () => {
+      const dur = videoEl.duration;
+      if (!isNaN(dur) && isFinite(dur)) {
+        if (dur > 30.0) {
+          setAdUploadError(`Video duration exceeds 30 seconds (${dur.toFixed(1)}s). Maximum allowed duration is 30 seconds.`);
+        } else {
+          setAdUploadError(null);
+          setAdForm(prev => ({ ...prev, videoDuration: Math.round(dur * 10) / 10 }));
+        }
+      }
+    };
+  };
+
+  const handleSaveAd = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const isVideo = adForm.mediaType === 'video';
+
+    if (isVideo) {
+      if (!adForm.videoUrl?.trim()) {
+        setAdUploadError('Please upload an advertisement video (max 30s) or provide a Video URL.');
+        return;
+      }
+      if (adForm.videoDuration && adForm.videoDuration > 30.5) {
+        setAdUploadError(`Video duration exceeds 30 seconds (${adForm.videoDuration}s). Maximum allowed duration is 30 seconds.`);
+        return;
+      }
+    } else {
+      if (!adForm.imageUrl?.trim()) {
+        setAdUploadError('Please upload an advertisement image or provide an Image URL.');
+        return;
+      }
+    }
+
     try {
       const url = editingAd ? `/api/advertisements/${editingAd.id}` : '/api/advertisements';
       const method = editingAd ? 'PUT' : 'POST';
+      const payload = {
+        ...adForm,
+        mediaType: isVideo ? 'video' : 'image',
+        imageUrl: isVideo ? (adForm.imageUrl || adForm.videoUrl || '') : adForm.imageUrl,
+        videoUrl: isVideo ? adForm.videoUrl : undefined,
+        videoDuration: isVideo ? adForm.videoDuration : undefined
+      };
+
       const res = await fetch(url, {
         method,
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('sof_umer_token') || token}`
         },
-        body: JSON.stringify(adForm)
+        body: JSON.stringify(payload)
       });
+
       if (res.ok) {
         setEditingAd(null);
-        setAdForm({ title: '', description: '', imageUrl: '', linkUrl: '', position: 'sidebar' });
+        setAdForm({
+          title: '',
+          description: '',
+          imageUrl: '',
+          linkUrl: '',
+          position: 'sidebar',
+          mediaType: 'image',
+          videoUrl: '',
+          videoDuration: 0
+        });
         setAdUploadedFile(null);
         setAdUploadError(null);
         refreshData();
+      } else {
+        const data = await res.json().catch(() => ({}));
+        setAdUploadError(data.error || 'Failed to save advertisement.');
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
+      setAdUploadError(err.message || 'Network error saving advertisement.');
     }
   };
 
@@ -4862,7 +5059,16 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
                 <button
                   onClick={() => {
                     setEditingAd(null);
-                    setAdForm({ title: '', description: '', imageUrl: '', linkUrl: '', position: 'sidebar' });
+                    setAdForm({
+                      title: '',
+                      description: '',
+                      imageUrl: '',
+                      linkUrl: '',
+                      position: 'sidebar',
+                      mediaType: 'image',
+                      videoUrl: '',
+                      videoDuration: 0
+                    });
                     setAdUploadedFile(null);
                     setAdUploadError(null);
                   }}
@@ -4912,127 +5118,294 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
                     />
                   </div>
 
-                  {/* Advert Image Upload & URL Section */}
-                  <div className="sm:col-span-2 space-y-3 bg-black/30 border border-white/10 p-4 rounded-xl">
-                    <div className="flex items-center justify-between">
-                      <label className="text-xs font-bold text-amber-400 flex items-center gap-1.5 uppercase font-mono tracking-wider">
-                        <ImageIcon className="w-4 h-4 text-amber-500" /> Advert Image Selection *
-                      </label>
-                      <span className="text-[10px] text-white/40 font-mono">Upload File or Image URL</span>
-                    </div>
-
-                    {/* Method 1: Upload Advertisement Image */}
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <span className="text-[11px] font-bold text-white/90">Upload Advertisement Image</span>
-                        <span className="text-[9px] text-white/40">JPG, JPEG, PNG, WebP • Max 10 MB</span>
-                      </div>
-
-                      {adImageUploading ? (
-                        <div className="p-4 bg-amber-500/10 border border-amber-500/20 rounded-xl flex items-center justify-center gap-2 text-xs font-bold text-amber-400 animate-pulse">
-                          <Upload className="w-4 h-4 animate-bounce shrink-0 text-amber-500" />
-                          <span>Compressing & uploading advertisement image to Cloudinary...</span>
-                        </div>
-                      ) : adForm.imageUrl ? (
-                        <div className="p-3 bg-white/[0.03] border border-white/10 rounded-xl flex flex-col sm:flex-row items-center justify-between gap-3">
-                          <div className="flex items-center gap-3 w-full sm:w-auto min-w-0">
-                            <img 
-                              src={adForm.imageUrl} 
-                              alt="Advert Preview" 
-                              className="w-16 h-16 rounded-lg object-cover border border-amber-500/30 bg-black shrink-0" 
-                              referrerPolicy="no-referrer"
-                              onError={(e) => {
-                                (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&w=300&q=80';
-                              }}
-                            />
-                            <div className="min-w-0 flex-1">
-                              <div className="flex items-center gap-1.5 flex-wrap">
-                                <span className="text-xs font-bold text-white truncate max-w-[180px]">
-                                  {adUploadedFile?.fileName || 'Current Advertisement Image'}
-                                </span>
-                                <span className="text-[9px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-extrabold px-1.5 py-0.2 rounded font-mono">
-                                  {adUploadedFile?.isCloudinary ? 'Cloudinary' : 'Ready'}
-                                </span>
-                              </div>
-                              {adUploadedFile?.fileSize ? (
-                                <p className="text-[10px] text-white/40 font-mono mt-0.5">
-                                  Size: {(adUploadedFile.fileSize / (1024 * 1024)).toFixed(2)} MB
-                                </p>
-                              ) : null}
-                              <p className="text-[10px] text-amber-400/80 font-mono truncate mt-0.5 max-w-[220px]">
-                                {adForm.imageUrl}
-                              </p>
-                            </div>
-                          </div>
-
-                          <div className="flex items-center gap-2 shrink-0 w-full sm:w-auto justify-end">
-                            <label className="px-3 py-1.5 bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/30 rounded-lg text-xs font-bold cursor-pointer transition flex items-center gap-1">
-                              <Upload className="w-3.5 h-3.5" />
-                              <span>Replace</span>
-                              <input 
-                                type="file" 
-                                accept="image/jpeg,image/png,image/webp,image/jpg" 
-                                onChange={handleAdFileUpload} 
-                                className="hidden" 
-                              />
-                            </label>
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setAdForm(prev => ({ ...prev, imageUrl: '' }));
-                                setAdUploadedFile(null);
-                                setAdUploadError(null);
-                              }}
-                              className="px-2.5 py-1.5 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 rounded-lg text-xs font-bold cursor-pointer transition flex items-center gap-1"
-                              title="Remove image"
-                            >
-                              <XCircle className="w-3.5 h-3.5" />
-                              <span>Remove</span>
-                            </button>
-                          </div>
-                        </div>
-                      ) : (
-                        <label className="border-2 border-dashed border-white/10 hover:border-amber-500/50 bg-black/40 hover:bg-black/60 p-4 rounded-xl flex flex-col items-center justify-center cursor-pointer transition text-center group">
-                          <Upload className="w-6 h-6 text-amber-500/70 group-hover:text-amber-500 group-hover:scale-110 transition mb-1" />
-                          <span className="text-xs font-bold text-white group-hover:text-amber-400">Upload Advertisement Image</span>
-                          <span className="text-[10px] text-white/40 mt-0.5">Select image from phone or computer (JPG, JPEG, PNG, WebP • Max 10 MB)</span>
-                          <input 
-                            type="file" 
-                            accept="image/jpeg,image/png,image/webp,image/jpg" 
-                            onChange={handleAdFileUpload} 
-                            className="hidden" 
-                          />
-                        </label>
-                      )}
-
-                      {adUploadError && (
-                        <p className="text-[11px] text-rose-400 font-medium bg-rose-500/10 border border-rose-500/20 p-2 rounded-lg flex items-center gap-1.5">
-                          <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
-                          <span>{adUploadError}</span>
-                        </p>
-                      )}
-                    </div>
-
-                    {/* Method 2: Image URL Field */}
-                    <div className="pt-2 border-t border-white/5 space-y-1.5">
-                      <label className="block text-[11px] font-bold text-white/70">
-                        Or Provide Image URL directly
-                      </label>
-                      <input
-                        type="text"
-                        placeholder="https://example.com/banner-image.jpg"
-                        value={adForm.imageUrl}
-                        onChange={e => {
-                          setAdForm({ ...adForm, imageUrl: e.target.value });
-                          if (!e.target.value) setAdUploadedFile(null);
+                  {/* Media Type Switcher: Image Banner vs Video Banner */}
+                  <div className="sm:col-span-2 space-y-1.5">
+                    <label className="block text-xs font-bold text-white/70">Banner Media Type *</label>
+                    <div className="grid grid-cols-2 gap-2 p-1 bg-black/40 border border-white/10 rounded-xl">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setAdForm(prev => ({ ...prev, mediaType: 'image' }));
+                          setAdUploadError(null);
                         }}
-                        className="w-full p-2.5 bg-black/60 border border-white/10 text-xs text-white rounded-xl focus:outline-none focus:border-amber-500 font-mono placeholder-white/20"
-                      />
-                      <p className="text-[9px] text-white/30 font-mono">
-                        Populated automatically when uploading an image file above, or paste an external image link directly.
-                      </p>
+                        className={`py-2 px-3 rounded-lg text-xs font-bold flex items-center justify-center gap-2 transition cursor-pointer ${
+                          adForm.mediaType !== 'video'
+                            ? 'bg-amber-500 text-black shadow'
+                            : 'text-white/60 hover:text-white hover:bg-white/5'
+                        }`}
+                      >
+                        <ImageIcon className="w-4 h-4" />
+                        <span>Image Banner</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setAdForm(prev => ({ ...prev, mediaType: 'video' }));
+                          setAdUploadError(null);
+                        }}
+                        className={`py-2 px-3 rounded-lg text-xs font-bold flex items-center justify-center gap-2 transition cursor-pointer ${
+                          adForm.mediaType === 'video'
+                            ? 'bg-amber-500 text-black shadow'
+                            : 'text-white/60 hover:text-white hover:bg-white/5'
+                        }`}
+                      >
+                        <Video className="w-4 h-4" />
+                        <span>Video Banner (Max 30s)</span>
+                      </button>
                     </div>
                   </div>
+
+                  {/* Media Type 1: Image Banner Section (Preserved) */}
+                  {adForm.mediaType !== 'video' ? (
+                    <div className="sm:col-span-2 space-y-3 bg-black/30 border border-white/10 p-4 rounded-xl">
+                      <div className="flex items-center justify-between">
+                        <label className="text-xs font-bold text-amber-400 flex items-center gap-1.5 uppercase font-mono tracking-wider">
+                          <ImageIcon className="w-4 h-4 text-amber-500" /> Advert Image Selection *
+                        </label>
+                        <span className="text-[10px] text-white/40 font-mono">Upload File or Image URL</span>
+                      </div>
+
+                      {/* Method 1: Upload Advertisement Image */}
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[11px] font-bold text-white/90">Upload Advertisement Image</span>
+                          <span className="text-[9px] text-white/40">JPG, JPEG, PNG, WebP • Max 10 MB</span>
+                        </div>
+
+                        {adImageUploading ? (
+                          <div className="p-4 bg-amber-500/10 border border-amber-500/20 rounded-xl flex items-center justify-center gap-2 text-xs font-bold text-amber-400 animate-pulse">
+                            <Upload className="w-4 h-4 animate-bounce shrink-0 text-amber-500" />
+                            <span>Compressing & uploading advertisement image to Cloudinary...</span>
+                          </div>
+                        ) : adForm.imageUrl ? (
+                          <div className="p-3 bg-white/[0.03] border border-white/10 rounded-xl flex flex-col sm:flex-row items-center justify-between gap-3">
+                            <div className="flex items-center gap-3 w-full sm:w-auto min-w-0">
+                              <img 
+                                src={adForm.imageUrl} 
+                                alt="Advert Preview" 
+                                className="w-16 h-16 rounded-lg object-cover border border-amber-500/30 bg-black shrink-0" 
+                                referrerPolicy="no-referrer"
+                                onError={(e) => {
+                                  (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&w=300&q=80';
+                                }}
+                              />
+                              <div className="min-w-0 flex-1">
+                                <div className="flex items-center gap-1.5 flex-wrap">
+                                  <span className="text-xs font-bold text-white truncate max-w-[180px]">
+                                    {adUploadedFile?.fileName || 'Current Advertisement Image'}
+                                  </span>
+                                  <span className="text-[9px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-extrabold px-1.5 py-0.2 rounded font-mono">
+                                    {adUploadedFile?.isCloudinary ? 'Cloudinary' : 'Ready'}
+                                  </span>
+                                </div>
+                                {adUploadedFile?.fileSize ? (
+                                  <p className="text-[10px] text-white/40 font-mono mt-0.5">
+                                    Size: {(adUploadedFile.fileSize / (1024 * 1024)).toFixed(2)} MB
+                                  </p>
+                                ) : null}
+                                <p className="text-[10px] text-amber-400/80 font-mono truncate mt-0.5 max-w-[220px]">
+                                  {adForm.imageUrl}
+                                </p>
+                              </div>
+                            </div>
+
+                            <div className="flex items-center gap-2 shrink-0 w-full sm:w-auto justify-end">
+                              <label className="px-3 py-1.5 bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/30 rounded-lg text-xs font-bold cursor-pointer transition flex items-center gap-1">
+                                <Upload className="w-3.5 h-3.5" />
+                                <span>Replace</span>
+                                <input 
+                                  type="file" 
+                                  accept="image/jpeg,image/png,image/webp,image/jpg" 
+                                  onChange={handleAdFileUpload} 
+                                  className="hidden" 
+                                />
+                              </label>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setAdForm(prev => ({ ...prev, imageUrl: '' }));
+                                  setAdUploadedFile(null);
+                                  setAdUploadError(null);
+                                }}
+                                className="px-2.5 py-1.5 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 rounded-lg text-xs font-bold cursor-pointer transition flex items-center gap-1"
+                                title="Remove image"
+                              >
+                                <XCircle className="w-3.5 h-3.5" />
+                                <span>Remove</span>
+                              </button>
+                            </div>
+                          </div>
+                        ) : (
+                          <label className="border-2 border-dashed border-white/10 hover:border-amber-500/50 bg-black/40 hover:bg-black/60 p-4 rounded-xl flex flex-col items-center justify-center cursor-pointer transition text-center group">
+                            <Upload className="w-6 h-6 text-amber-500/70 group-hover:text-amber-500 group-hover:scale-110 transition mb-1" />
+                            <span className="text-xs font-bold text-white group-hover:text-amber-400">Upload Advertisement Image</span>
+                            <span className="text-[10px] text-white/40 mt-0.5">Select image from phone or computer (JPG, JPEG, PNG, WebP • Max 10 MB)</span>
+                            <input 
+                              type="file" 
+                              accept="image/jpeg,image/png,image/webp,image/jpg" 
+                              onChange={handleAdFileUpload} 
+                              className="hidden" 
+                            />
+                          </label>
+                        )}
+
+                        {adUploadError && (
+                          <p className="text-[11px] text-rose-400 font-medium bg-rose-500/10 border border-rose-500/20 p-2 rounded-lg flex items-center gap-1.5">
+                            <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
+                            <span>{adUploadError}</span>
+                          </p>
+                        )}
+                      </div>
+
+                      {/* Method 2: Image URL Field */}
+                      <div className="pt-2 border-t border-white/5 space-y-1.5">
+                        <label className="block text-[11px] font-bold text-white/70">
+                          Or Provide Image URL directly
+                        </label>
+                        <input
+                          type="text"
+                          placeholder="https://example.com/banner-image.jpg"
+                          value={adForm.imageUrl}
+                          onChange={e => {
+                            setAdForm({ ...adForm, imageUrl: e.target.value });
+                            if (!e.target.value) setAdUploadedFile(null);
+                          }}
+                          className="w-full p-2.5 bg-black/60 border border-white/10 text-xs text-white rounded-xl focus:outline-none focus:border-amber-500 font-mono placeholder-white/20"
+                        />
+                        <p className="text-[9px] text-white/30 font-mono">
+                          Populated automatically when uploading an image file above, or paste an external image link directly.
+                        </p>
+                      </div>
+                    </div>
+                  ) : (
+                    /* Media Type 2: Video Banner Section (New Feature: Max 30s) */
+                    <div className="sm:col-span-2 space-y-3 bg-black/30 border border-white/10 p-4 rounded-xl">
+                      <div className="flex items-center justify-between">
+                        <label className="text-xs font-bold text-amber-400 flex items-center gap-1.5 uppercase font-mono tracking-wider">
+                          <Video className="w-4 h-4 text-amber-500" /> Advert Video Selection *
+                        </label>
+                        <span className="text-[10px] text-white/40 font-mono">Max 30s • MP4 or WebM</span>
+                      </div>
+
+                      {/* Method 1: Upload Video */}
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[11px] font-bold text-white/90">Upload Short Advert Video</span>
+                          <span className="text-[9px] text-white/40">MP4, WebM • Max 30s • Max 30 MB</span>
+                        </div>
+
+                        {adVideoUploading ? (
+                          <div className="p-4 bg-amber-500/10 border border-amber-500/20 rounded-xl flex items-center justify-center gap-2 text-xs font-bold text-amber-400 animate-pulse">
+                            <Upload className="w-4 h-4 animate-bounce shrink-0 text-amber-500" />
+                            <span>Validating video duration & uploading to storage...</span>
+                          </div>
+                        ) : adForm.videoUrl ? (
+                          <div className="p-3 bg-white/[0.03] border border-white/10 rounded-xl space-y-3">
+                            {/* Video Preview Player */}
+                            <div className="relative rounded-xl overflow-hidden bg-black border border-amber-500/30 max-h-56 flex items-center justify-center">
+                              <video
+                                src={adForm.videoUrl}
+                                controls
+                                muted
+                                loop
+                                playsInline
+                                className="w-full max-h-56 object-contain"
+                              />
+                            </div>
+
+                            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pt-1">
+                              <div className="min-w-0 flex-1">
+                                <div className="flex items-center gap-1.5 flex-wrap">
+                                  <span className="text-xs font-bold text-white truncate max-w-[200px]">
+                                    {adUploadedFile?.fileName || 'Current Advertisement Video'}
+                                  </span>
+                                  <span className="text-[9px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-extrabold px-1.5 py-0.5 rounded font-mono flex items-center gap-1">
+                                    <Check className="w-2.5 h-2.5" />
+                                    {adForm.videoDuration ? `${adForm.videoDuration}s (≤ 30s)` : 'Duration Valid'}
+                                  </span>
+                                  {adUploadedFile?.isCloudinary && (
+                                    <span className="text-[9px] bg-sky-500/20 text-sky-400 border border-sky-500/30 font-extrabold px-1.5 py-0.5 rounded font-mono">
+                                      Cloudinary
+                                    </span>
+                                  )}
+                                </div>
+                                {adUploadedFile?.fileSize ? (
+                                  <p className="text-[10px] text-white/40 font-mono mt-0.5">
+                                    Size: {(adUploadedFile.fileSize / (1024 * 1024)).toFixed(2)} MB
+                                  </p>
+                                ) : null}
+                                <p className="text-[10px] text-amber-400/80 font-mono truncate mt-0.5 max-w-[260px]">
+                                  {adForm.videoUrl}
+                                </p>
+                              </div>
+
+                              <div className="flex items-center gap-2 shrink-0 w-full sm:w-auto justify-end">
+                                <label className="px-3 py-1.5 bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/30 rounded-lg text-xs font-bold cursor-pointer transition flex items-center gap-1">
+                                  <Upload className="w-3.5 h-3.5" />
+                                  <span>Replace</span>
+                                  <input 
+                                    type="file" 
+                                    accept="video/mp4,video/webm,video/ogg,video/quicktime,.mp4,.webm" 
+                                    onChange={handleAdVideoUpload} 
+                                    className="hidden" 
+                                  />
+                                </label>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setAdForm(prev => ({ ...prev, videoUrl: '', videoDuration: 0 }));
+                                    setAdUploadedFile(null);
+                                    setAdUploadError(null);
+                                  }}
+                                  className="px-2.5 py-1.5 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 rounded-lg text-xs font-bold cursor-pointer transition flex items-center gap-1"
+                                  title="Remove video"
+                                >
+                                  <XCircle className="w-3.5 h-3.5" />
+                                  <span>Remove</span>
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        ) : (
+                          <label className="border-2 border-dashed border-white/10 hover:border-amber-500/50 bg-black/40 hover:bg-black/60 p-5 rounded-xl flex flex-col items-center justify-center cursor-pointer transition text-center group">
+                            <Video className="w-7 h-7 text-amber-500/70 group-hover:text-amber-500 group-hover:scale-110 transition mb-1.5" />
+                            <span className="text-xs font-bold text-white group-hover:text-amber-400">Upload Short Advertisement Video</span>
+                            <span className="text-[10px] text-white/40 mt-0.5">MP4 or WebM format • Maximum 30 seconds • Up to 30 MB</span>
+                            <input 
+                              type="file" 
+                              accept="video/mp4,video/webm,video/ogg,video/quicktime,.mp4,.webm" 
+                              onChange={handleAdVideoUpload} 
+                              className="hidden" 
+                            />
+                          </label>
+                        )}
+
+                        {adUploadError && (
+                          <p className="text-[11px] text-rose-400 font-medium bg-rose-500/10 border border-rose-500/20 p-2.5 rounded-lg flex items-center gap-2">
+                            <AlertTriangle className="w-4 h-4 shrink-0" />
+                            <span>{adUploadError}</span>
+                          </p>
+                        )}
+                      </div>
+
+                      {/* Method 2: Direct Video URL */}
+                      <div className="pt-2 border-t border-white/5 space-y-1.5">
+                        <label className="block text-[11px] font-bold text-white/70">
+                          Or Provide Direct Video URL
+                        </label>
+                        <input
+                          type="text"
+                          placeholder="https://example.com/banner-video.mp4"
+                          value={adForm.videoUrl || ''}
+                          onChange={e => handleVideoUrlChange(e.target.value)}
+                          className="w-full p-2.5 bg-black/60 border border-white/10 text-xs text-white rounded-xl focus:outline-none focus:border-amber-500 font-mono placeholder-white/20"
+                        />
+                        <p className="text-[9px] text-white/30 font-mono">
+                          Direct link to an MP4 or WebM video file (duration must be ≤ 30s).
+                        </p>
+                      </div>
+                    </div>
+                  )}
 
                   <div className="sm:col-span-2">
                     <label className="block text-xs font-bold text-white/40 mb-2">Description / Copy text *</label>
@@ -5051,7 +5424,16 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
                       type="button"
                       onClick={() => {
                         setEditingAd(null);
-                        setAdForm({ title: '', description: '', imageUrl: '', linkUrl: '', position: 'sidebar' });
+                        setAdForm({
+                          title: '',
+                          description: '',
+                          imageUrl: '',
+                          linkUrl: '',
+                          position: 'sidebar',
+                          mediaType: 'image',
+                          videoUrl: '',
+                          videoDuration: 0
+                        });
                         setAdUploadedFile(null);
                         setAdUploadError(null);
                       }}
@@ -5062,10 +5444,10 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
                   )}
                   <button 
                     type="submit" 
-                    disabled={adImageUploading}
+                    disabled={adImageUploading || adVideoUploading}
                     className="px-5 py-2 bg-amber-500 hover:bg-amber-400 text-black font-bold text-xs rounded-xl cursor-pointer disabled:opacity-50"
                   >
-                    {adImageUploading ? 'Uploading...' : 'Save Advert'}
+                    {adImageUploading ? 'Uploading Image...' : adVideoUploading ? 'Uploading Video...' : 'Save Advert'}
                   </button>
                 </div>
               </form>
@@ -5223,11 +5605,30 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
                   {advertisements.map(ad => (
                     <div key={ad.id} className="bg-[#12121a] border border-white/5 rounded-2xl overflow-hidden flex flex-col justify-between">
                       <div className="p-4 flex gap-3">
-                        <img src={ad.imageUrl} alt="Promo" className="w-14 h-14 rounded-xl object-cover border border-white/5 shrink-0" referrerPolicy="no-referrer" />
+                        {ad.mediaType === 'video' || ad.videoUrl ? (
+                          <div className="w-14 h-14 rounded-xl overflow-hidden bg-black border border-white/5 shrink-0 relative flex items-center justify-center">
+                            <video
+                              src={ad.videoUrl || ad.imageUrl}
+                              muted
+                              playsInline
+                              className="w-full h-full object-cover"
+                            />
+                            <div className="absolute inset-0 bg-black/40 flex items-center justify-center pointer-events-none">
+                              <Video className="w-4 h-4 text-amber-400" />
+                            </div>
+                          </div>
+                        ) : (
+                          <img src={ad.imageUrl} alt="Promo" className="w-14 h-14 rounded-xl object-cover border border-white/5 shrink-0" referrerPolicy="no-referrer" />
+                        )}
                         <div>
-                          <h5 className="font-bold text-xs text-white flex items-center gap-1">
+                          <h5 className="font-bold text-xs text-white flex items-center gap-1.5 flex-wrap">
                             <span>{extractString(ad.title)}</span>
-                            <span className="text-[8px] bg-amber-500/15 text-amber-400 font-extrabold px-1.5 rounded uppercase">{ad.position}</span>
+                            <span className="text-[8px] bg-amber-500/15 text-amber-400 font-extrabold px-1.5 py-0.5 rounded uppercase">{ad.position}</span>
+                            {(ad.mediaType === 'video' || ad.videoUrl) && (
+                              <span className="text-[8px] bg-sky-500/20 text-sky-400 border border-sky-500/30 font-extrabold px-1.5 py-0.5 rounded font-mono">
+                                Video {ad.videoDuration ? `${ad.videoDuration}s` : ''}
+                              </span>
+                            )}
                           </h5>
                           <p className="text-[10px] text-white/50 leading-tight mt-1 line-clamp-2">{ad.description}</p>
                         </div>
@@ -5240,9 +5641,23 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
                           </button>
                           <button
                             onClick={() => {
+                              const isVideo = ad.mediaType === 'video' || (!ad.mediaType && !!ad.videoUrl);
                               setEditingAd(ad);
-                              setAdForm({ title: ad.title, description: ad.description, imageUrl: ad.imageUrl, linkUrl: ad.linkUrl, position: ad.position });
-                              setAdUploadedFile(ad.imageUrl ? { url: ad.imageUrl, fileName: 'Current Advert Image', fileSize: 0 } : null);
+                              setAdForm({
+                                title: ad.title,
+                                description: ad.description,
+                                imageUrl: ad.imageUrl || '',
+                                linkUrl: ad.linkUrl,
+                                position: ad.position,
+                                mediaType: isVideo ? 'video' : 'image',
+                                videoUrl: ad.videoUrl || (isVideo ? ad.imageUrl : ''),
+                                videoDuration: ad.videoDuration || 0
+                              });
+                              setAdUploadedFile(
+                                isVideo
+                                  ? (ad.videoUrl || ad.imageUrl ? { url: ad.videoUrl || ad.imageUrl, fileName: 'Current Advert Video', fileSize: 0, duration: ad.videoDuration } : null)
+                                  : (ad.imageUrl ? { url: ad.imageUrl, fileName: 'Current Advert Image', fileSize: 0 } : null)
+                              );
                               setAdUploadError(null);
                             }}
                             className="p-1 text-white/40 hover:text-amber-500 cursor-pointer"

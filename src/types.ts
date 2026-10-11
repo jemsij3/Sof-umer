@@ -322,6 +322,9 @@ export interface Advertisement {
   title: string;
   description: string;
   imageUrl: string;
+  mediaType?: 'image' | 'video';
+  videoUrl?: string;
+  videoDuration?: number;
   linkUrl: string;
   isActive: boolean;
   position: 'hero' | 'sidebar' | 'banner';
