@@ -5598,9 +5598,9 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
                 </div>
               </div>
 
-              {/* Ad lists */}
+              {/* Published Banners list */}
               <div className="space-y-3">
-                <h4 className="text-xs font-bold uppercase tracking-wider text-white/40">Active Campaigns</h4>
+                <h4 className="text-xs font-bold uppercase tracking-wider text-white/40">Published Banners</h4>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {advertisements.map(ad => (
                     <div key={ad.id} className="bg-[#12121a] border border-white/5 rounded-2xl overflow-hidden flex flex-col justify-between">

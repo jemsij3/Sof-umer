@@ -1003,47 +1003,69 @@ export default function Marketplace({
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 font-sans">
 
-      {/* Dynamic Hero Advertisement / Welcome Banner */}
+      {/* Dynamic Hero Advertisement / Published Banners */}
       {heroAds.length > 0 && (
-        <div className="mb-10 rounded-3xl overflow-hidden relative bg-[#0e0e13] text-[#F5F5F4] min-h-[220px] flex flex-col md:flex-row items-center justify-between p-8 md:p-10 border border-white/5 shadow-2xl relative">
-          <div className="z-10 max-w-xl text-left">
-            <span className="bg-gradient-to-r from-amber-400 to-amber-600 text-black text-[9px] font-black uppercase px-3 py-1.5 rounded-full mb-4 inline-block tracking-widest shadow-md">
-              {t('special_promotion') || 'Special Promotion'}
-            </span>
-            <h3 className="text-2xl md:text-3xl font-serif text-white mb-3 leading-tight tracking-wide">
-              {heroAds[0].title}
-            </h3>
-            <p className="text-[#F5F5F4]/70 text-sm mb-6 leading-relaxed font-light">
-              {heroAds[0].description}
-            </p>
-            <a
-              href={heroAds[0].linkUrl}
-              className="inline-flex items-center gap-2 bg-[#F5F5F4] hover:bg-zinc-200 text-[#050505] font-bold uppercase tracking-wider px-6 py-3.5 rounded-xl text-xs transition-all duration-300 hover:scale-[1.02] cursor-pointer shadow-lg"
+        <div className="space-y-6 mb-10">
+          {heroAds.map(heroAd => (
+            <div
+              key={heroAd.id}
+              className="rounded-3xl overflow-hidden bg-[#0e0e13] text-[#F5F5F4] border border-white/10 shadow-2xl flex flex-col"
             >
-              {t('learn_more') || 'Learn More'} <ArrowRight className="w-4 h-4" />
-            </a>
-          </div>
-          <div className="mt-6 md:mt-0 z-10 w-full md:w-1/3 h-44 rounded-2xl overflow-hidden shadow-2xl border border-white/10 group bg-black">
-            {heroAds[0].mediaType === 'video' || heroAds[0].videoUrl ? (
-              <video
-                src={heroAds[0].videoUrl || heroAds[0].imageUrl}
-                controls
-                autoPlay
-                muted
-                loop
-                playsInline
-                className="w-full h-full object-cover transition duration-700 group-hover:scale-105"
-              />
-            ) : (
-              <img
-                src={heroAds[0].imageUrl}
-                alt="Promo"
-                className="w-full h-full object-cover transition duration-700 group-hover:scale-105"
-                referrerPolicy="no-referrer"
-              />
-            )}
-          </div>
-          <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/40 to-transparent pointer-events-none" />
+              {/* Top Section: Compact Title, Description, and Learn More Button above media */}
+              <div className="px-4 sm:px-6 py-3 sm:py-3.5 bg-[#12121c] border-b border-white/5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5 sm:gap-4 z-10">
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2 flex-wrap mb-1">
+                    <span className="bg-gradient-to-r from-amber-400 to-amber-600 text-black text-[9px] font-black uppercase px-2.5 py-0.5 rounded-full inline-block tracking-wider shadow-sm shrink-0">
+                      {t('special_promotion') || 'Special Promotion'}
+                    </span>
+                    <h3 className="text-sm sm:text-base md:text-lg font-serif font-bold text-white tracking-wide truncate">
+                      {heroAd.title}
+                    </h3>
+                  </div>
+                  <p className="text-xs sm:text-[13px] text-[#F5F5F4]/75 leading-snug line-clamp-1 sm:line-clamp-2 font-light">
+                    {heroAd.description}
+                  </p>
+                </div>
+                {heroAd.linkUrl && (
+                  <a
+                    href={heroAd.linkUrl}
+                    className="shrink-0 inline-flex items-center gap-2 bg-[#F5F5F4] hover:bg-zinc-200 text-[#050505] font-bold uppercase tracking-wider px-5 py-2.5 rounded-xl text-xs transition-all duration-300 hover:scale-[1.02] cursor-pointer shadow-lg self-start sm:self-center"
+                  >
+                    <span>{t('learn_more') || 'Learn More'}</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </a>
+                )}
+              </div>
+
+              {/* Main Media Section: Maximum Space, Preserving Clear Aspect Ratio Without Cropping */}
+              <div className="w-full bg-[#050508] relative flex items-center justify-center overflow-hidden min-h-[220px] sm:min-h-[320px] md:min-h-[420px] lg:min-h-[480px] max-h-[560px]">
+                {heroAd.mediaType === 'video' || heroAd.videoUrl ? (
+                  <video
+                    src={heroAd.videoUrl || heroAd.imageUrl}
+                    controls
+                    autoPlay
+                    muted
+                    loop
+                    playsInline
+                    preload="metadata"
+                    className="w-full h-full max-h-[560px] object-contain mx-auto"
+                  />
+                ) : (
+                  <a
+                    href={heroAd.linkUrl}
+                    className="w-full h-full flex items-center justify-center cursor-pointer"
+                  >
+                    <img
+                      src={heroAd.imageUrl}
+                      alt={heroAd.title}
+                      className="w-full h-full max-h-[560px] object-contain mx-auto transition duration-700 hover:scale-[1.01]"
+                      referrerPolicy="no-referrer"
+                    />
+                  </a>
+                )}
+              </div>
+            </div>
+          ))}
         </div>
       )}
 
