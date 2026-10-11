@@ -317,6 +317,36 @@ export interface Inquiry {
   createdAt: string;
 }
 
+export type AdPlacement = 'hero' | 'sidebar' | 'banner';
+export type AdStatus = 'pending' | 'approved' | 'rejected' | 'active' | 'paused' | 'expired';
+export type AdPaymentStatus = 'unpaid' | 'pending' | 'verified' | 'rejected' | 'exempt';
+export type AdCategoryType = 'youtube' | 'tiktok' | 'event' | 'website' | 'other';
+
+export interface AdPlacementPackage {
+  id: string;
+  name: string;
+  durationDays: number;
+  price: number;
+  desc?: string;
+}
+
+export interface AdPlacementSetting {
+  enabled: boolean;
+  title: string;
+  description?: string;
+  price: number;
+  durationDays: number;
+  currency: string;
+  maxSlots?: number;
+  packages: AdPlacementPackage[];
+}
+
+export interface BannerAdPricingSettings {
+  hero: AdPlacementSetting;
+  sidebar: AdPlacementSetting;
+  banner: AdPlacementSetting;
+}
+
 export interface Advertisement {
   id: string;
   title: string;
@@ -327,7 +357,26 @@ export interface Advertisement {
   videoDuration?: number;
   linkUrl: string;
   isActive: boolean;
-  position: 'hero' | 'sidebar' | 'banner';
+  position: AdPlacement;
+  status?: AdStatus;
+  paymentStatus?: AdPaymentStatus;
+  price?: number;
+  currency?: string;
+  durationDays?: number;
+  packageId?: string;
+  userId?: string;
+  userEmail?: string;
+  userName?: string;
+  adType?: AdCategoryType;
+  receiptUrl?: string;
+  paymentReference?: string;
+  startDate?: string;
+  endDate?: string;
+  rejectionReason?: string;
+  viewsCount?: number;
+  clicksCount?: number;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface Language {
@@ -540,6 +589,7 @@ export interface SystemSettings {
   maintenanceMessage?: string;
   adPackages?: AdPackage[];
   freeListingSettings?: FreeListingSettings;
+  bannerAdPricing?: BannerAdPricingSettings;
   contactUsSettings?: {
     title: string;
     subtitle: string;

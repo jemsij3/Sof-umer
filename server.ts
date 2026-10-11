@@ -393,7 +393,100 @@ const getInitialData = () => {
 
   const inquiries: Inquiry[] = [];
 
-  const advertisements: Advertisement[] = [];
+  const todayStr = new Date().toISOString().split('T')[0];
+  const nextMonthStr = new Date(Date.now() + 30 * 86400000).toISOString().split('T')[0];
+  const advertisements: Advertisement[] = [
+    {
+      id: 'adv-hero-1',
+      title: 'Addis Premier Luxury Residences & Commercial Suites',
+      description: 'Exclusive penthouses and executive commercial towers in the heart of Bole. Inquire for private viewing and prime corporate leases.',
+      imageUrl: 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&w=1200&q=80',
+      mediaType: 'image',
+      linkUrl: 'https://sofumer.et/promotions/addis-luxury',
+      position: 'hero',
+      status: 'active',
+      paymentStatus: 'verified',
+      price: 1500,
+      currency: 'ETB',
+      durationDays: 30,
+      startDate: todayStr,
+      endDate: nextMonthStr,
+      viewsCount: 1420,
+      clicksCount: 184,
+      isActive: true,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    },
+    {
+      id: 'adv-sidebar-1',
+      title: 'Bole Tech Hub & Innovation Co-Working Desks',
+      description: 'Modern co-working desks, private conference rooms, and high-speed fiber internet for growing startups and remote professionals.',
+      imageUrl: 'https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=800&q=80',
+      mediaType: 'image',
+      linkUrl: 'https://sofumer.et/promotions/bole-tech',
+      position: 'sidebar',
+      status: 'active',
+      paymentStatus: 'verified',
+      price: 1000,
+      currency: 'ETB',
+      durationDays: 15,
+      startDate: todayStr,
+      endDate: nextMonthStr,
+      viewsCount: 890,
+      clicksCount: 92,
+      isActive: true,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    },
+    {
+      id: 'adv-footer-1',
+      title: 'Awash Logistics & Nationwide Transport Solutions',
+      description: 'Reliable freight transport, secured warehousing, and streamlined customs clearance across all Ethiopian industrial corridors.',
+      imageUrl: 'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&w=1200&q=80',
+      mediaType: 'image',
+      linkUrl: 'https://sofumer.et/promotions/awash-logistics',
+      position: 'banner',
+      status: 'active',
+      paymentStatus: 'verified',
+      price: 800,
+      currency: 'ETB',
+      durationDays: 15,
+      startDate: todayStr,
+      endDate: nextMonthStr,
+      viewsCount: 650,
+      clicksCount: 71,
+      isActive: true,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    },
+    {
+      id: 'adv-user-pending-1',
+      title: 'Addis Vibes Official YouTube Channel',
+      description: 'Explore the heart of Ethiopian lifestyle, culture, exclusive travel vlogs, and traditional gastronomy. Subscribe today!',
+      imageUrl: 'https://images.unsplash.com/photo-1516251193007-45ef944ab0c6?auto=format&fit=crop&w=800&q=80',
+      mediaType: 'image',
+      linkUrl: 'https://youtube.com/@AddisVibesOfficial',
+      position: 'sidebar',
+      status: 'pending',
+      paymentStatus: 'pending',
+      price: 1000,
+      currency: 'ETB',
+      durationDays: 7,
+      adType: 'youtube',
+      userId: 'usr-demo-1',
+      userEmail: 'creator@addisvibes.et',
+      userName: 'Addis Vibes Media',
+      receiptUrl: 'https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?auto=format&fit=crop&w=600&q=80',
+      paymentReference: 'CBE-FT2610199482',
+      startDate: todayStr,
+      endDate: nextMonthStr,
+      viewsCount: 0,
+      clicksCount: 0,
+      isActive: false,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    }
+  ];
 
   const languages: Language[] = [
     { code: 'en', name: 'English', isActive: true },
@@ -1448,7 +1541,9 @@ const applyDataSanityAndMigrations = () => {
   }
   if (!localDb.receipts || !Array.isArray(localDb.receipts)) localDb.receipts = [];
   if (!localDb.inquiries || !Array.isArray(localDb.inquiries)) localDb.inquiries = [];
-  if (!localDb.advertisements || !Array.isArray(localDb.advertisements)) localDb.advertisements = [];
+  if (!localDb.advertisements || !Array.isArray(localDb.advertisements) || localDb.advertisements.length === 0) {
+    localDb.advertisements = getInitialData().advertisements;
+  }
   if (!localDb.supportTickets || !Array.isArray(localDb.supportTickets)) localDb.supportTickets = [];
   if (!(localDb as any).offers || !Array.isArray((localDb as any).offers)) (localDb as any).offers = [];
   if (!localDb.languages || !Array.isArray(localDb.languages)) {
@@ -1535,7 +1630,52 @@ const applyDataSanityAndMigrations = () => {
   // Single source of truth: synchronize live siteStatus and maintenanceMode
   const isMaint = isPlatformInMaintenance(appSet);
   appSet.maintenanceMode = isMaint;
-  appSet.siteStatus = isMaint ? 'Maintenance' : 'Online';
+  if (!appSet.bannerAdPricing) {
+    appSet.bannerAdPricing = {
+      hero: {
+        enabled: true,
+        title: 'Hero Top Banner',
+        description: 'High-visibility billboard placement at the very top of SOF-UMER marketplace.',
+        price: 1500,
+        durationDays: 7,
+        currency: 'ETB',
+        maxSlots: 3,
+        packages: [
+          { id: 'hero-7', name: '7 Days Hero Banner', durationDays: 7, price: 1500, desc: 'Top full-width billboard for 7 days' },
+          { id: 'hero-15', name: '15 Days Hero Banner', durationDays: 15, price: 2800, desc: 'Top full-width billboard for 15 days' },
+          { id: 'hero-30', name: '30 Days Hero Banner', durationDays: 30, price: 5000, desc: 'Top full-width billboard for 30 days' }
+        ]
+      },
+      sidebar: {
+        enabled: true,
+        title: 'Sidebar Widgets',
+        description: 'Engaging promotional cards displayed alongside listings in the marketplace sidebar.',
+        price: 1000,
+        durationDays: 7,
+        currency: 'ETB',
+        maxSlots: 5,
+        packages: [
+          { id: 'sidebar-7', name: '7 Days Sidebar Widget', durationDays: 7, price: 1000, desc: 'Sidebar promotional card for 7 days' },
+          { id: 'sidebar-15', name: '15 Days Sidebar Widget', durationDays: 15, price: 1800, desc: 'Sidebar promotional card for 15 days' },
+          { id: 'sidebar-30', name: '30 Days Sidebar Widget', durationDays: 30, price: 3200, desc: 'Sidebar promotional card for 30 days' }
+        ]
+      },
+      banner: {
+        enabled: true,
+        title: 'Inline Footer Bar',
+        description: 'Wide horizontal promotional banner positioned directly above the platform footer.',
+        price: 800,
+        durationDays: 7,
+        currency: 'ETB',
+        maxSlots: 3,
+        packages: [
+          { id: 'footer-7', name: '7 Days Inline Footer Bar', durationDays: 7, price: 800, desc: 'Inline footer banner for 7 days' },
+          { id: 'footer-15', name: '15 Days Inline Footer Bar', durationDays: 15, price: 1400, desc: 'Inline footer banner for 15 days' },
+          { id: 'footer-30', name: '30 Days Inline Footer Bar', durationDays: 30, price: 2500, desc: 'Inline footer banner for 30 days' }
+        ]
+      }
+    };
+  }
 
   if (Array.isArray(localDb.translations)) {
     for (const tr of localDb.translations) {
@@ -5667,21 +5807,85 @@ async function startServer() {
     res.json({ success: true, message: 'All message threads deleted successfully.' });
   });
 
-  // Advertisements
+  // Advertisements System (Placements, User Requests, Review Workflow & Campaigns)
   app.get('/api/advertisements', async (req, res) => {
-    res.json(localDb.advertisements);
+    res.json(localDb.advertisements || []);
   });
 
   app.post('/api/advertisements', async (req, res) => {
     const advData = req.body;
     const authUser = (req as any).user;
-    const isAdmin = authUser?.role === 'admin';
+    const isAdmin = isUserAdmin(authUser);
+
+    // Validate destination URL to prevent unsafe schemes
+    let linkUrl = (advData.linkUrl || '').trim();
+    if (!linkUrl) {
+      return res.status(400).json({ error: 'Destination URL is required.' });
+    }
+    if (!/^https?:\/\//i.test(linkUrl)) {
+      linkUrl = 'https://' + linkUrl;
+    }
+    try {
+      const parsed = new URL(linkUrl);
+      if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+        return res.status(400).json({ error: 'Invalid URL protocol. Only HTTP and HTTPS links are allowed.' });
+      }
+    } catch {
+      return res.status(400).json({ error: 'Please enter a valid destination URL.' });
+    }
+
+    // Validate video duration if video media is chosen
+    if (advData.mediaType === 'video' && advData.videoDuration && advData.videoDuration > 30) {
+      return res.status(400).json({ error: 'Video duration must not exceed 30 seconds.' });
+    }
+
+    const position = ['hero', 'sidebar', 'banner'].includes(advData.position) ? advData.position : 'sidebar';
+    const nowIso = new Date().toISOString();
+    const durationDays = Number(advData.durationDays) || 7;
+
+    // Calculate default end date based on duration
+    let endDate = advData.endDate;
+    if (!endDate) {
+      const endD = new Date();
+      endD.setDate(endD.getDate() + durationDays);
+      endDate = endD.toISOString().split('T')[0];
+    }
 
     const newAdv: Advertisement = {
       id: 'adv-' + Date.now(),
-      ...advData,
+      title: advData.title || 'Advertisement',
+      description: advData.description || '',
+      imageUrl: advData.imageUrl || '',
+      mediaType: advData.mediaType === 'video' ? 'video' : 'image',
+      videoUrl: advData.videoUrl || undefined,
+      videoDuration: advData.videoDuration || undefined,
+      linkUrl,
+      position,
+      price: Number(advData.price) || 0,
+      currency: advData.currency || 'ETB',
+      durationDays,
+      packageId: advData.packageId || undefined,
+      adType: advData.adType || 'other',
+      receiptUrl: advData.receiptUrl || undefined,
+      paymentReference: advData.paymentReference || undefined,
+      startDate: advData.startDate || nowIso.split('T')[0],
+      endDate,
+      userId: authUser?.id || advData.userId || undefined,
+      userEmail: authUser?.email || advData.userEmail || undefined,
+      userName: authUser?.fullName || advData.userName || undefined,
+      viewsCount: 0,
+      clicksCount: 0,
+      createdAt: nowIso,
+      updatedAt: nowIso,
+      // Status & visibility rules:
+      // Admins creating banner ads: can be live immediately
+      // Users requesting ads: must be pending review and inactive until admin verified
+      status: isAdmin ? (advData.status || (advData.isActive === false ? 'paused' : 'active')) : 'pending',
+      paymentStatus: isAdmin ? (advData.paymentStatus || 'verified') : (advData.receiptUrl ? 'pending' : 'unpaid'),
       isActive: isAdmin ? (advData.isActive !== undefined ? advData.isActive : true) : false
     };
+
+    localDb.advertisements = localDb.advertisements || [];
     localDb.advertisements.push(newAdv);
     await saveDb();
     res.json(newAdv);
@@ -5691,23 +5895,125 @@ async function startServer() {
     const { id } = req.params;
     const updates = req.body;
     const authUser = (req as any).user;
-    const isAdmin = authUser?.role === 'admin';
+    const isAdmin = isUserAdmin(authUser);
 
-    const idx = localDb.advertisements.findIndex(a => a.id === id);
-    if (idx !== -1) {
-      if (!isAdmin) {
-        delete updates.isActive;
-      }
-      localDb.advertisements[idx] = { ...localDb.advertisements[idx], ...updates };
-      await saveDb();
-      return res.json(localDb.advertisements[idx]);
+    const idx = (localDb.advertisements || []).findIndex(a => a.id === id);
+    if (idx === -1) {
+      return res.status(404).json({ error: 'Advertisement not found' });
     }
-    res.status(404).json({ error: 'Advertisement not found' });
+
+    const currentAd = localDb.advertisements[idx];
+    if (!isAdmin && currentAd.userId && authUser?.id && currentAd.userId !== authUser.id) {
+      return res.status(403).json({ error: 'You are not authorized to edit this advertisement.' });
+    }
+
+    if (!isAdmin) {
+      delete updates.isActive;
+      delete updates.status;
+      delete updates.paymentStatus;
+      delete updates.price;
+      delete updates.startDate;
+      delete updates.endDate;
+    }
+
+    if (updates.linkUrl) {
+      let trimmed = updates.linkUrl.trim();
+      if (!/^https?:\/\//i.test(trimmed)) trimmed = 'https://' + trimmed;
+      try {
+        const parsed = new URL(trimmed);
+        if (parsed.protocol === 'http:' || parsed.protocol === 'https:') {
+          updates.linkUrl = trimmed;
+        }
+      } catch (_) {}
+    }
+
+    localDb.advertisements[idx] = {
+      ...currentAd,
+      ...updates,
+      updatedAt: new Date().toISOString()
+    };
+    await saveDb();
+    return res.json(localDb.advertisements[idx]);
   });
 
-  app.delete('/api/advertisements/:id', requirePermission(['Manage Banner Ads', 'Manage Advertisements']), async (req, res) => {
+  // Admin Review / Approval / Rejection Workflow Endpoint
+  app.put('/api/advertisements/:id/review', requirePermission(['Manage Banner Ads', 'Manage Advertisements', 'Create Banner Ads', 'Manage Sponsored Ads', 'Advertisement Reports', 'System Settings']), async (req, res) => {
     const { id } = req.params;
-    localDb.advertisements = localDb.advertisements.filter(a => a.id !== id);
+    const { action, status, paymentStatus, startDate, endDate, rejectionReason, isActive } = req.body;
+    const idx = (localDb.advertisements || []).findIndex(a => a.id === id);
+    if (idx === -1) return res.status(404).json({ error: 'Advertisement not found' });
+
+    const ad = localDb.advertisements[idx];
+    if (action === 'approve') {
+      ad.status = 'approved';
+      ad.isActive = isActive !== undefined ? isActive : true;
+      ad.paymentStatus = paymentStatus || 'verified';
+      if (startDate) ad.startDate = startDate;
+      if (endDate) ad.endDate = endDate;
+      delete ad.rejectionReason;
+    } else if (action === 'reject') {
+      ad.status = 'rejected';
+      ad.isActive = false;
+      if (paymentStatus) ad.paymentStatus = paymentStatus;
+      ad.rejectionReason = rejectionReason || 'Content does not meet promotional guidelines.';
+    } else if (action === 'pause') {
+      ad.status = 'paused';
+      ad.isActive = false;
+    } else if (action === 'resume') {
+      ad.status = 'active';
+      ad.isActive = true;
+    } else if (action === 'verify_payment') {
+      ad.paymentStatus = 'verified';
+    } else {
+      if (status) ad.status = status;
+      if (paymentStatus) ad.paymentStatus = paymentStatus;
+      if (startDate) ad.startDate = startDate;
+      if (endDate) ad.endDate = endDate;
+      if (isActive !== undefined) ad.isActive = isActive;
+      if (rejectionReason !== undefined) ad.rejectionReason = rejectionReason;
+    }
+
+    ad.updatedAt = new Date().toISOString();
+    localDb.advertisements[idx] = ad;
+    await saveDb();
+    res.json({ success: true, advertisement: ad });
+  });
+
+  // Dedicated pricing endpoint for Banner Advertisements (Hero, Sidebar, Inline Footer)
+  app.put('/api/admin/banner-pricing', requirePermission(['Manage Banner Ads', 'Manage Advertisements', 'Create Banner Ads', 'Manage Sponsored Ads', 'Advertisement Reports', 'System Settings']), async (req, res) => {
+    const { hero, sidebar, banner } = req.body;
+    if (!(localDb as any).appSettings) {
+      (localDb as any).appSettings = {};
+    }
+    const current = (localDb as any).appSettings.bannerAdPricing || {
+      hero: { enabled: true, title: 'Hero Top Banner', price: 1500, durationDays: 7, currency: 'ETB', maxSlots: 3, packages: [] },
+      sidebar: { enabled: true, title: 'Sidebar Widgets', price: 1000, durationDays: 7, currency: 'ETB', maxSlots: 5, packages: [] },
+      banner: { enabled: true, title: 'Inline Footer Bar', price: 800, durationDays: 7, currency: 'ETB', maxSlots: 3, packages: [] }
+    };
+
+    (localDb as any).appSettings.bannerAdPricing = {
+      hero: hero ? { ...current.hero, ...hero } : current.hero,
+      sidebar: sidebar ? { ...current.sidebar, ...sidebar } : current.sidebar,
+      banner: banner ? { ...current.banner, ...banner } : current.banner
+    };
+    await saveDb();
+    res.json({ success: true, bannerAdPricing: (localDb as any).appSettings.bannerAdPricing });
+  });
+
+  // Advertisement Click tracking
+  app.post('/api/advertisements/:id/click', async (req, res) => {
+    const { id } = req.params;
+    const ad = (localDb.advertisements || []).find(a => a.id === id);
+    if (ad) {
+      ad.clicksCount = (ad.clicksCount || 0) + 1;
+      await saveDb();
+    }
+    res.json({ success: true });
+  });
+
+  app.delete('/api/advertisements/:id', requirePermission(['Manage Banner Ads', 'Manage Advertisements', 'Create Banner Ads', 'Manage Sponsored Ads', 'Advertisement Reports', 'System Settings']), async (req, res) => {
+    const { id } = req.params;
+    localDb.advertisements = (localDb.advertisements || []).filter(a => a.id !== id);
     if (isMongoConnected) {
       try {
         await AdvertisementModel.deleteOne({ id });
@@ -5859,7 +6165,51 @@ async function startServer() {
           badge: 'VIP ELITE',
           desc: 'Top search billboard pin + Full site promotion'
         }
-      ]
+      ],
+      bannerAdPricing: {
+        hero: {
+          enabled: true,
+          title: 'Hero Top Banner',
+          description: 'High-visibility billboard placement at the very top of SOF-UMER marketplace.',
+          price: 1500,
+          durationDays: 7,
+          currency: 'ETB',
+          maxSlots: 3,
+          packages: [
+            { id: 'hero-7', name: '7 Days Hero Banner', durationDays: 7, price: 1500, desc: 'Top full-width billboard for 7 days' },
+            { id: 'hero-15', name: '15 Days Hero Banner', durationDays: 15, price: 2800, desc: 'Top full-width billboard for 15 days' },
+            { id: 'hero-30', name: '30 Days Hero Banner', durationDays: 30, price: 5000, desc: 'Top full-width billboard for 30 days' }
+          ]
+        },
+        sidebar: {
+          enabled: true,
+          title: 'Sidebar Widgets',
+          description: 'Engaging promotional cards displayed alongside listings in the marketplace sidebar.',
+          price: 1000,
+          durationDays: 7,
+          currency: 'ETB',
+          maxSlots: 5,
+          packages: [
+            { id: 'sidebar-7', name: '7 Days Sidebar Widget', durationDays: 7, price: 1000, desc: 'Sidebar promotional card for 7 days' },
+            { id: 'sidebar-15', name: '15 Days Sidebar Widget', durationDays: 15, price: 1800, desc: 'Sidebar promotional card for 15 days' },
+            { id: 'sidebar-30', name: '30 Days Sidebar Widget', durationDays: 30, price: 3200, desc: 'Sidebar promotional card for 30 days' }
+          ]
+        },
+        banner: {
+          enabled: true,
+          title: 'Inline Footer Bar',
+          description: 'Wide horizontal promotional banner positioned directly above the platform footer.',
+          price: 800,
+          durationDays: 7,
+          currency: 'ETB',
+          maxSlots: 3,
+          packages: [
+            { id: 'footer-7', name: '7 Days Inline Footer Bar', durationDays: 7, price: 800, desc: 'Inline footer banner for 7 days' },
+            { id: 'footer-15', name: '15 Days Inline Footer Bar', durationDays: 15, price: 1400, desc: 'Inline footer banner for 15 days' },
+            { id: 'footer-30', name: '30 Days Inline Footer Bar', durationDays: 30, price: 2500, desc: 'Inline footer banner for 30 days' }
+          ]
+        }
+      }
     };
 
     (localDb as any).appSettings = {
@@ -5871,7 +6221,8 @@ async function startServer() {
       },
       adPackages: ((localDb as any).appSettings.adPackages && (localDb as any).appSettings.adPackages.length > 0)
         ? (localDb as any).appSettings.adPackages
-        : defaults.adPackages
+        : defaults.adPackages,
+      bannerAdPricing: (localDb as any).appSettings.bannerAdPricing || defaults.bannerAdPricing
     };
 
     // Normalize legacy 50/150/500 placeholder defaults to 49/149/399
