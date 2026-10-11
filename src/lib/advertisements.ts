@@ -96,16 +96,20 @@ export function isAdPubliclyActive(ad: Advertisement): boolean {
 
   // Scheduling check: start date and end date
   const now = new Date();
+  now.setHours(0, 0, 0, 0); // Ignore time for today
+
   if (ad.startDate) {
     const start = new Date(ad.startDate);
-    if (!isNaN(start.getTime()) && now < start) {
+    start.setHours(0, 0, 0, 0);
+    if (!isNaN(start.getTime()) && now.getTime() < start.getTime()) {
       return false;
     }
   }
 
   if (ad.endDate) {
     const end = new Date(ad.endDate);
-    if (!isNaN(end.getTime()) && now > end) {
+    end.setHours(23, 59, 59, 999);
+    if (!isNaN(end.getTime()) && now.getTime() > end.getTime()) {
       return false;
     }
   }
@@ -120,7 +124,9 @@ export function getAdDaysRemaining(ad: Advertisement): number | null {
   if (!ad.endDate) return null;
   const end = new Date(ad.endDate);
   if (isNaN(end.getTime())) return null;
+  end.setHours(23, 59, 59, 999);
   const now = new Date();
+  now.setHours(0, 0, 0, 0);
   const diffTime = end.getTime() - now.getTime();
   const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
   return Math.max(0, diffDays);

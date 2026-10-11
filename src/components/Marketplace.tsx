@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useApp } from '../lib/AppContext';
 import { Property, Advertisement, AdPlacement } from '../types';
 import { 
@@ -1015,13 +1015,39 @@ export default function Marketplace({
   const sidebarAds = advertisements.filter(a => isAdPubliclyActive(a) && a.position === 'sidebar');
   const footerAds = advertisements.filter(a => isAdPubliclyActive(a) && a.position === 'banner');
 
+  const [heroAdIndex, setHeroAdIndex] = useState(0);
+  const [sidebarAdIndex, setSidebarAdIndex] = useState(0);
+  const [footerAdIndex, setFooterAdIndex] = useState(0);
+
+  useEffect(() => {
+    const heroInterval = setInterval(() => {
+      setHeroAdIndex(prev => heroAds.length > 0 ? (prev + 1) % heroAds.length : 0);
+    }, 8000);
+
+    const sidebarInterval = setInterval(() => {
+      setSidebarAdIndex(prev => sidebarAds.length > 0 ? (prev + 1) % sidebarAds.length : 0);
+    }, 9000);
+
+    const footerInterval = setInterval(() => {
+      setFooterAdIndex(prev => footerAds.length > 0 ? (prev + 1) % footerAds.length : 0);
+    }, 10000);
+
+    return () => {
+      clearInterval(heroInterval);
+      clearInterval(sidebarInterval);
+      clearInterval(footerInterval);
+    };
+  }, [heroAds.length, sidebarAds.length, footerAds.length]);
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 font-sans">
 
       {/* Dynamic Hero Advertisement / Published Banners */}
       {heroAds.length > 0 && (
         <div className="space-y-6 mb-10">
-          {heroAds.map(heroAd => (
+          {heroAds.length > 0 && (() => {
+          const heroAd = heroAds[heroAdIndex % heroAds.length];
+          return (
             <AdVisibilityTracker key={heroAd.id} ad={heroAd}>
               <div
                 className="rounded-3xl overflow-hidden bg-[#0e0e13] text-[#F5F5F4] border border-white/10 shadow-2xl flex flex-col"
@@ -1101,7 +1127,8 @@ export default function Marketplace({
                 </div>
               </div>
             </AdVisibilityTracker>
-          ))}
+          );
+        })()}
         </div>
       )}
 
@@ -2349,8 +2376,8 @@ export default function Marketplace({
 
             {/* Right Side: Sidebar Adverts */}
             <div className="lg:col-span-3 space-y-6">
-              {sidebarAds.length > 0 ? (
-                <>
+              {sidebarAds.length > 0 && (
+<>
                   <div className="flex items-center justify-between pb-2 border-b border-white/5">
                     <span className="text-[10px] font-bold text-white/40 uppercase tracking-widest flex items-center gap-1.5">
                       <Megaphone className="w-3.5 h-3.5 text-amber-500" />
@@ -2368,8 +2395,10 @@ export default function Marketplace({
                     </button>
                   </div>
 
-                  {sidebarAds.map(ad => (
-                    <AdVisibilityTracker key={ad.id} ad={ad}>
+                  {(() => {
+                    const sidebarAd = sidebarAds[sidebarAdIndex % sidebarAds.length];
+                    return (
+                      <AdVisibilityTracker key={sidebarAd.id} ad={sidebarAd}>
                       <div
                         className="bg-[#0d0d12]/90 rounded-3xl overflow-hidden border border-white/10 shadow-2xl text-white relative group flex flex-col"
                       >
@@ -2379,12 +2408,12 @@ export default function Marketplace({
                             <span className="bg-gradient-to-r from-sky-400 to-blue-500 text-black font-black uppercase tracking-widest text-[8px] px-2 py-0.5 rounded-full shrink-0">
                               {t('sponsored') || 'Sponsored'}
                             </span>
-                            {ad.linkUrl && (
+                            {sidebarAd.linkUrl && (
                               <a
-                                href={ad.linkUrl}
+                                href={sidebarAd.linkUrl}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                onClick={() => handleAdClick(ad)}
+                                onClick={() => handleAdClick(sidebarAd)}
                                 className="inline-flex items-center gap-1 bg-white/10 hover:bg-white/20 text-white font-bold uppercase tracking-wider px-2.5 py-1 rounded-lg text-[10px] transition cursor-pointer"
                               >
                                 <span>{t('visit_offer') || 'Visit'}</span>
@@ -2392,15 +2421,15 @@ export default function Marketplace({
                               </a>
                             )}
                           </div>
-                          <h4 className="font-serif text-sm text-white font-bold truncate">{ad.title}</h4>
-                          <p className="text-[11px] text-[#F5F5F4]/65 leading-snug line-clamp-2 font-light">{ad.description}</p>
+                          <h4 className="font-serif text-sm text-white font-bold truncate">{sidebarAd.title}</h4>
+                          <p className="text-[11px] text-[#F5F5F4]/65 leading-snug line-clamp-2 font-light">{sidebarAd.description}</p>
                         </div>
 
                         {/* Main Media Section: Maximum Space, Preserving Clear Aspect Ratio */}
                         <div className="w-full h-56 bg-[#050508] relative flex items-center justify-center overflow-hidden">
-                          {ad.mediaType === 'video' || ad.videoUrl ? (
+                          {sidebarAd.mediaType === 'video' || sidebarAd.videoUrl ? (
                             <video
-                              src={ad.videoUrl || ad.imageUrl}
+                              src={sidebarAd.videoUrl || sidebarAd.imageUrl}
                               controls
                               autoPlay
                               muted
@@ -2410,15 +2439,15 @@ export default function Marketplace({
                             />
                           ) : (
                             <a
-                              href={ad.linkUrl}
+                              href={sidebarAd.linkUrl}
                               target="_blank"
                               rel="noopener noreferrer"
-                              onClick={() => handleAdClick(ad)}
+                              onClick={() => handleAdClick(sidebarAd)}
                               className="w-full h-full flex items-center justify-center cursor-pointer"
                             >
                               <img
-                                src={ad.imageUrl}
-                                alt={ad.title}
+                                src={sidebarAd.imageUrl}
+                                alt={sidebarAd.title}
                                 className="w-full h-full object-contain mx-auto transition-transform duration-700 group-hover:scale-[1.02]"
                                 referrerPolicy="no-referrer"
                               />
@@ -2427,7 +2456,8 @@ export default function Marketplace({
                         </div>
                       </div>
                     </AdVisibilityTracker>
-                  ))}
+                    );
+                  })()}
 
                   {/* Sidebar Book Placement CTA Card */}
                   <div className="p-4 rounded-2xl bg-gradient-to-br from-[#12121c] to-[#181828] border border-amber-500/20 text-left space-y-2">
@@ -2450,38 +2480,15 @@ export default function Marketplace({
                     </button>
                   </div>
                 </>
-              ) : (
-                <div className="p-5 rounded-3xl bg-[#0e0e13] border border-white/5 text-left space-y-3">
-                  <span className="text-[9px] font-mono font-bold uppercase text-amber-400 block">
-                    Sidebar Promotion Space
-                  </span>
-                  <h5 className="text-sm font-serif font-bold text-white">
-                    Advertise in SOF-UMER Sidebar
-                  </h5>
-                  <p className="text-xs text-white/50 leading-relaxed font-light">
-                    Promote your YouTube channel, TikTok videos, local events, or business website alongside active listings.
-                  </p>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setUserAdInitialPlacement('sidebar');
-                      setUserAdModalOpen(true);
-                    }}
-                    className="w-full py-2.5 bg-amber-500 hover:bg-amber-400 text-black font-extrabold text-xs rounded-xl transition cursor-pointer flex items-center justify-center gap-1.5 shadow-md"
-                  >
-                    <Megaphone className="w-3.5 h-3.5" />
-                    <span>Advertise Here</span>
-                  </button>
-                </div>
-              )}
+)}
             </div>
           </div>
         </div>
       )}
 
       {/* 3. INLINE FOOTER BAR PLACEMENT */}
-      {footerAds.length > 0 ? (
-        <div className="mt-12 mb-16 space-y-6">
+      {footerAds.length > 0 && (
+<div className="mt-12 mb-16 space-y-6">
           <div className="flex items-center justify-between border-b border-white/5 pb-3">
             <div className="flex items-center gap-2">
               <span className="p-1.5 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
@@ -2505,8 +2512,10 @@ export default function Marketplace({
           </div>
 
           <div className="space-y-6">
-            {footerAds.map(footerAd => (
-              <AdVisibilityTracker key={footerAd.id} ad={footerAd}>
+            {(() => {
+              const footerAd = footerAds[footerAdIndex % footerAds.length];
+              return (
+                <AdVisibilityTracker key={footerAd.id} ad={footerAd}>
                 <div
                   className="rounded-3xl overflow-hidden bg-[#0e0e13] text-[#F5F5F4] border border-white/10 shadow-2xl flex flex-col group"
                 >
@@ -2585,35 +2594,11 @@ export default function Marketplace({
                   </div>
                 </div>
               </AdVisibilityTracker>
-            ))}
+              );
+            })()}
           </div>
         </div>
-      ) : (
-        <div className="mt-12 mb-16 p-6 sm:p-8 rounded-3xl bg-gradient-to-r from-[#12121c] via-[#161626] to-[#12121c] border border-white/10 shadow-xl flex flex-col md:flex-row items-center justify-between gap-6 text-left">
-          <div className="space-y-1.5 max-w-xl">
-            <span className="text-[10px] uppercase font-mono font-bold tracking-wider px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
-              INLINE FOOTER ADVERTISING
-            </span>
-            <h4 className="text-lg sm:text-xl font-serif font-bold text-white">
-              Promote Your Business, YouTube, TikTok or Event on SOF-UMER
-            </h4>
-            <p className="text-xs text-white/60 leading-relaxed font-light">
-              Reach thousands of active shoppers and investors across Ethiopia. Book your high-impact full-width Inline Footer Bar advertisement today.
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={() => {
-              setUserAdInitialPlacement('banner');
-              setUserAdModalOpen(true);
-            }}
-            className="px-6 py-3.5 bg-gradient-to-r from-amber-400 to-amber-600 hover:from-amber-300 hover:to-amber-500 text-black font-extrabold text-xs uppercase tracking-wider rounded-2xl shadow-lg transition duration-300 hover:scale-[1.02] cursor-pointer shrink-0 flex items-center gap-2"
-          >
-            <Megaphone className="w-4 h-4" />
-            <span>Advertise on Footer Bar</span>
-          </button>
-        </div>
-      )}
+)}
 
       {/* User Advertisement Request Modal */}
       <UserAdBannerModal
