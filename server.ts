@@ -6000,13 +6000,137 @@ async function startServer() {
     res.json({ success: true, bannerAdPricing: (localDb as any).appSettings.bannerAdPricing });
   });
 
+  // --- REAL-TIME ADVERTISEMENT STREAM & ACCURATE VIEW TRACKING ---
+  const adSseClients = new Set<express.Response>();
+  const recentAdViewsMap = new Map<string, number>();
+
+  // Periodically clean up deduplication cache (prune entries older than 10 minutes)
+  setInterval(() => {
+    const now = Date.now();
+    for (const [key, timestamp] of recentAdViewsMap.entries()) {
+      if (now - timestamp > 10 * 60 * 1000) {
+        recentAdViewsMap.delete(key);
+      }
+    }
+  }, 5 * 60 * 1000);
+
+  const broadcastAdEvent = (payload: any) => {
+    const message = `data: ${JSON.stringify(payload)}\n\n`;
+    for (const client of adSseClients) {
+      try {
+        client.write(message);
+      } catch (_) {
+        adSseClients.delete(client);
+      }
+    }
+  };
+
+  // Real-time SSE stream for live banner view & click counter updates
+  app.get('/api/advertisements/stream', (req, res) => {
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache, no-transform');
+    res.setHeader('Connection', 'keep-alive');
+    res.setHeader('X-Accel-Buffering', 'no');
+    if (typeof (res as any).flushHeaders === 'function') {
+      (res as any).flushHeaders();
+    }
+
+    res.write(`data: ${JSON.stringify({ type: 'connected', timestamp: Date.now() })}\n\n`);
+    adSseClients.add(res);
+
+    req.on('close', () => {
+      adSseClients.delete(res);
+    });
+  });
+
+  // Accurate Banner Advertisement View Tracking Endpoint (Deduplicated, Visible-Only, Persistent in Mongo)
+  app.post('/api/advertisements/:id/view', async (req, res) => {
+    const { id } = req.params;
+    const { sessionId } = req.body || {};
+    const ip = req.ip || req.socket.remoteAddress || '127.0.0.1';
+
+    const ad = (localDb.advertisements || []).find(a => a.id === id);
+    if (!ad) {
+      return res.status(404).json({ error: 'Advertisement not found.' });
+    }
+
+    // Deduplication check: prevent multiple views from same client/session within 5 minutes
+    const dedupKey = `${ip}_${sessionId || 'session'}_${id}`;
+    const now = Date.now();
+    const lastViewedAt = recentAdViewsMap.get(dedupKey);
+
+    if (lastViewedAt && (now - lastViewedAt < 5 * 60 * 1000)) {
+      return res.json({
+        success: true,
+        recorded: false,
+        deduplicated: true,
+        viewsCount: ad.viewsCount || 0
+      });
+    }
+
+    // Record verified new view
+    recentAdViewsMap.set(dedupKey, now);
+    ad.viewsCount = (ad.viewsCount || 0) + 1;
+    ad.updatedAt = new Date().toISOString();
+
+    // Persist in MongoDB
+    if (isMongoConnected) {
+      try {
+        await AdvertisementModel.updateOne(
+          { id },
+          { $inc: { viewsCount: 1 }, $set: { updatedAt: ad.updatedAt } }
+        );
+      } catch (err) {
+        console.error('[Storage] Error incrementing views in Mongo:', err);
+      }
+    }
+
+    await saveDb();
+
+    // Broadcast live view count update to real-time subscribers
+    broadcastAdEvent({
+      type: 'ad_view',
+      adId: ad.id,
+      position: ad.position,
+      viewsCount: ad.viewsCount,
+      timestamp: now
+    });
+
+    res.json({
+      success: true,
+      recorded: true,
+      viewsCount: ad.viewsCount
+    });
+  });
+
   // Advertisement Click tracking
   app.post('/api/advertisements/:id/click', async (req, res) => {
     const { id } = req.params;
     const ad = (localDb.advertisements || []).find(a => a.id === id);
     if (ad) {
       ad.clicksCount = (ad.clicksCount || 0) + 1;
+      ad.updatedAt = new Date().toISOString();
+
+      if (isMongoConnected) {
+        try {
+          await AdvertisementModel.updateOne(
+            { id },
+            { $inc: { clicksCount: 1 }, $set: { updatedAt: ad.updatedAt } }
+          );
+        } catch (err) {
+          console.error('[Storage] Error incrementing clicks in Mongo:', err);
+        }
+      }
+
       await saveDb();
+
+      broadcastAdEvent({
+        type: 'ad_click',
+        adId: ad.id,
+        position: ad.position,
+        clicksCount: ad.clicksCount,
+        timestamp: Date.now()
+      });
     }
     res.json({ success: true });
   });

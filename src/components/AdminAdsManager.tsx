@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Megaphone, DollarSign, Clock, CheckCircle2, XCircle, AlertTriangle,
   Play, Pause, Trash2, Edit2, Plus, ExternalLink, Calendar, Eye,
   Video, Image as ImageIcon, ShieldCheck, Tag, Sparkles, Filter,
-  ArrowRight, Check, Zap, Layers, Upload, Globe, ChevronRight, ToggleLeft, ToggleRight, X
+  ArrowRight, Check, Zap, Layers, Upload, Globe, ChevronRight, ToggleLeft, ToggleRight, X, BarChart3
 } from 'lucide-react';
 import { useApp } from '../lib/AppContext';
 import { Advertisement, AdPlacement, AdPackage, SystemSettings } from '../types';
@@ -89,12 +89,71 @@ export const AdminAdsManager: React.FC<AdminAdsManagerProps> = () => {
   const rawAdPackages: AdPackage[] = systemSettings.adPackages || [];
   const adPackages = rawAdPackages.filter((p: any) => p.name !== 'New Custom Promotion Package' && !p.name.includes('Custom'));
 
-  // Counts & stats
-  const pendingRequests = advertisements.filter(a => a.status === 'pending');
-  const activeAds = advertisements.filter(a => isAdPubliclyActive(a));
-  const heroAds = advertisements.filter(a => a.position === 'hero');
-  const sidebarAds = advertisements.filter(a => a.position === 'sidebar');
-  const footerAds = advertisements.filter(a => a.position === 'banner');
+  // Local synchronized advertisements state for instant real-time view updates
+  const [localAds, setLocalAds] = useState<Advertisement[]>(advertisements || []);
+
+  useEffect(() => {
+    setLocalAds(advertisements || []);
+  }, [advertisements]);
+
+  // Real-time EventSource connection + active polling for live view counting
+  useEffect(() => {
+    let eventSource: EventSource | null = null;
+    try {
+      eventSource = new EventSource('/api/advertisements/stream');
+      eventSource.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          if (data && data.type === 'ad_view' && data.adId) {
+            setLocalAds(prev =>
+              prev.map(a => a.id === data.adId ? { ...a, viewsCount: data.viewsCount } : a)
+            );
+          } else if (data && data.type === 'ad_click' && data.adId) {
+            setLocalAds(prev =>
+              prev.map(a => a.id === data.adId ? { ...a, clicksCount: data.clicksCount } : a)
+            );
+          }
+        } catch (_) {}
+      };
+    } catch (_) {}
+
+    // Polling interval (every 4 seconds) to ensure real-time consistency
+    const pollInterval = setInterval(async () => {
+      try {
+        const res = await fetch('/api/advertisements', { cache: 'no-store' });
+        if (res.ok) {
+          const data = await res.json();
+          if (Array.isArray(data)) {
+            setLocalAds(data);
+          }
+        }
+      } catch (_) {}
+    }, 4000);
+
+    return () => {
+      if (eventSource) {
+        eventSource.close();
+      }
+      clearInterval(pollInterval);
+    };
+  }, []);
+
+  // Counts & stats based on live synchronized localAds
+  const pendingRequests = localAds.filter(a => a.status === 'pending');
+  const activeAds = localAds.filter(a => isAdPubliclyActive(a));
+  const heroAds = localAds.filter(a => a.position === 'hero');
+  const sidebarAds = localAds.filter(a => a.position === 'sidebar');
+  const footerAds = localAds.filter(a => a.position === 'banner');
+
+  // Placement-specific view metrics (isolated from listing-boosting statistics)
+  const heroTotalViews = heroAds.reduce((sum, a) => sum + (a.viewsCount || 0), 0);
+  const heroTotalClicks = heroAds.reduce((sum, a) => sum + (a.clicksCount || 0), 0);
+  const sidebarTotalViews = sidebarAds.reduce((sum, a) => sum + (a.viewsCount || 0), 0);
+  const sidebarTotalClicks = sidebarAds.reduce((sum, a) => sum + (a.clicksCount || 0), 0);
+  const footerTotalViews = footerAds.reduce((sum, a) => sum + (a.viewsCount || 0), 0);
+  const footerTotalClicks = footerAds.reduce((sum, a) => sum + (a.clicksCount || 0), 0);
+  const totalBannerViews = localAds.reduce((sum, a) => sum + (a.viewsCount || 0), 0);
+  const totalBannerClicks = localAds.reduce((sum, a) => sum + (a.clicksCount || 0), 0);
 
   // --- Handlers for Pricing ---
   const handleSavePricing = async () => {
@@ -478,7 +537,7 @@ export const AdminAdsManager: React.FC<AdminAdsManagerProps> = () => {
   };
 
   // Filter ads for Placements tab
-  const filteredPlacementAds = advertisements.filter(ad => {
+  const filteredPlacementAds = localAds.filter(ad => {
     if (selectedPlacementTab !== 'all' && ad.position !== selectedPlacementTab) return false;
     if (placementStatusFilter === 'active' && !isAdPubliclyActive(ad)) return false;
     if (placementStatusFilter === 'pending' && ad.status !== 'pending') return false;
@@ -493,6 +552,11 @@ export const AdminAdsManager: React.FC<AdminAdsManagerProps> = () => {
       {/* Top Header & Reorganized Navigation */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-5 border-b border-white/5">
         <div>
+          <div className="flex items-center gap-1.5 text-[10px] uppercase font-bold tracking-wider text-amber-500 mb-1">
+            <span>Marketplace Operations</span>
+            <ChevronRight className="w-3 h-3 text-white/30" />
+            <span className="text-white/70">Ads & Campaigns</span>
+          </div>
           <div className="flex items-center gap-2">
             <span className="p-2 bg-amber-500/10 text-amber-400 rounded-xl border border-amber-500/20">
               <Megaphone className="w-5 h-5" />
@@ -500,7 +564,7 @@ export const AdminAdsManager: React.FC<AdminAdsManagerProps> = () => {
             <h3 className="text-xl font-serif font-bold text-white">Ads & Campaigns Control Center</h3>
           </div>
           <p className="text-xs text-white/50 mt-1">
-            Manage banner placements, customize pricing tiers, review user advertisement requests, and track campaigns.
+            Manage banner placements, track verified view counters in real-time, customize pricing, and review user campaigns.
           </p>
         </div>
 
@@ -513,19 +577,32 @@ export const AdminAdsManager: React.FC<AdminAdsManagerProps> = () => {
         </button>
       </div>
 
-      {/* 4 REQUIRED ORGANIZED SECTIONS (Segmented Controls) */}
+      {/* ORGANIZED SECTIONS (Segmented Controls) */}
       <div className="flex flex-wrap items-center gap-1.5 p-1.5 bg-[#12121a] rounded-2xl border border-white/5">
         <button
           type="button"
           onClick={() => setActiveSubTab('placements')}
           className={`px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 cursor-pointer ${
-            activeSubTab === 'placements' || activeSubTab === 'campaigns'
+            activeSubTab === 'placements'
               ? 'bg-amber-500 text-black shadow-md'
               : 'text-white/60 hover:text-white hover:bg-white/5'
           }`}
         >
           <Layers className="w-4 h-4" />
           <span>1. Ad Placement Management</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveSubTab('campaigns')}
+          className={`px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 cursor-pointer ${
+            activeSubTab === 'campaigns'
+              ? 'bg-amber-500 text-black shadow-md'
+              : 'text-white/60 hover:text-white hover:bg-white/5'
+          }`}
+        >
+          <BarChart3 className="w-4 h-4" />
+          <span>2. Active Campaigns Overview</span>
         </button>
 
         <button
@@ -538,7 +615,7 @@ export const AdminAdsManager: React.FC<AdminAdsManagerProps> = () => {
           }`}
         >
           <DollarSign className="w-4 h-4" />
-          <span>2. Advertising Pricing & Packages</span>
+          <span>3. Advertising Pricing & Packages</span>
         </button>
 
         <button
@@ -551,7 +628,7 @@ export const AdminAdsManager: React.FC<AdminAdsManagerProps> = () => {
           }`}
         >
           <ShieldCheck className="w-4 h-4" />
-          <span>3. User Advertisement Requests</span>
+          <span>4. User Advertisement Requests</span>
           {pendingRequests.length > 0 && (
             <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${
               activeSubTab === 'requests' ? 'bg-black text-amber-400' : 'bg-amber-500 text-black'
@@ -571,7 +648,7 @@ export const AdminAdsManager: React.FC<AdminAdsManagerProps> = () => {
           }`}
         >
           <Zap className="w-4 h-4" />
-          <span>4. Listing Promotions (Existing)</span>
+          <span>5. Listing Promotions (Existing)</span>
         </button>
       </div>
 
@@ -580,7 +657,49 @@ export const AdminAdsManager: React.FC<AdminAdsManagerProps> = () => {
       {/* ======================================================== */}
       {activeSubTab === 'placements' && (
         <div className="space-y-6">
-          {/* 3 Placements Capacity Cards */}
+          {/* Real-time Banner Performance Overview Banner */}
+          <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-amber-500/10 via-[#161626] to-emerald-500/10 border border-white/10 flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                <span className="text-[10px] uppercase font-mono font-bold tracking-wider text-emerald-400">
+                  Live View Counter Active • Real-Time Stats
+                </span>
+              </div>
+              <h4 className="font-serif font-bold text-sm text-white">
+                Banner Advertisements Verified View Statistics
+              </h4>
+              <p className="text-[11px] text-white/50">
+                Views are accurately counted when banners are visible on screen (≥ 50% in view). Deduplication prevents false counts on reloads or re-renders.
+              </p>
+            </div>
+
+            <div className="flex items-center gap-3 sm:gap-4 shrink-0 flex-wrap">
+              <div className="p-2.5 sm:p-3 bg-black/50 border border-white/5 rounded-xl text-center min-w-[100px]">
+                <span className="text-[9px] uppercase font-mono font-bold text-white/40 block">Total Views</span>
+                <span className="text-base sm:text-lg font-mono font-extrabold text-amber-400 flex items-center justify-center gap-1 mt-0.5">
+                  <Eye className="w-4 h-4 text-amber-400" />
+                  {totalBannerViews.toLocaleString()}
+                </span>
+              </div>
+
+              <div className="p-2.5 sm:p-3 bg-black/50 border border-white/5 rounded-xl text-center min-w-[90px]">
+                <span className="text-[9px] uppercase font-mono font-bold text-white/40 block">Total Clicks</span>
+                <span className="text-base sm:text-lg font-mono font-extrabold text-white mt-0.5">
+                  {totalBannerClicks.toLocaleString()}
+                </span>
+              </div>
+
+              <div className="p-2.5 sm:p-3 bg-black/50 border border-white/5 rounded-xl text-center min-w-[90px]">
+                <span className="text-[9px] uppercase font-mono font-bold text-white/40 block">Avg CTR</span>
+                <span className="text-base sm:text-lg font-mono font-extrabold text-emerald-400 mt-0.5">
+                  {totalBannerViews > 0 ? ((totalBannerClicks / totalBannerViews) * 100).toFixed(1) : '0.0'}%
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* 3 Placements Capacity & Views Cards */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {/* Hero Top Banner Card */}
             <div className={`p-5 rounded-2xl border transition-all ${
@@ -603,10 +722,19 @@ export const AdminAdsManager: React.FC<AdminAdsManagerProps> = () => {
                   <span className="font-extrabold text-white font-mono">
                     {heroAds.filter(a => isAdPubliclyActive(a)).length} / {effectivePricing.hero.maxSlots || 3} spaces
                   </span>
+                  <div className="flex items-center gap-2 mt-1">
+                    <span className="text-amber-400 font-bold font-mono text-[11px] flex items-center gap-1">
+                      <Eye className="w-3 h-3 text-amber-400" /> {heroTotalViews.toLocaleString()} Views
+                    </span>
+                    <span className="text-white/30 text-[10px]">•</span>
+                    <span className="text-white/50 font-mono text-[10px]">
+                      {heroTotalClicks.toLocaleString()} Clicks
+                    </span>
+                  </div>
                 </div>
                 <button
                   onClick={() => setSelectedPlacementTab('hero')}
-                  className="px-2.5 py-1 bg-white/5 hover:bg-white/10 text-amber-400 text-[11px] font-bold rounded-lg cursor-pointer"
+                  className="px-2.5 py-1 bg-white/5 hover:bg-white/10 text-amber-400 text-[11px] font-bold rounded-lg cursor-pointer shrink-0"
                 >
                   Manage Hero →
                 </button>
@@ -634,10 +762,19 @@ export const AdminAdsManager: React.FC<AdminAdsManagerProps> = () => {
                   <span className="font-extrabold text-white font-mono">
                     {sidebarAds.filter(a => isAdPubliclyActive(a)).length} / {effectivePricing.sidebar.maxSlots || 5} spaces
                   </span>
+                  <div className="flex items-center gap-2 mt-1">
+                    <span className="text-sky-400 font-bold font-mono text-[11px] flex items-center gap-1">
+                      <Eye className="w-3 h-3 text-sky-400" /> {sidebarTotalViews.toLocaleString()} Views
+                    </span>
+                    <span className="text-white/30 text-[10px]">•</span>
+                    <span className="text-white/50 font-mono text-[10px]">
+                      {sidebarTotalClicks.toLocaleString()} Clicks
+                    </span>
+                  </div>
                 </div>
                 <button
                   onClick={() => setSelectedPlacementTab('sidebar')}
-                  className="px-2.5 py-1 bg-white/5 hover:bg-white/10 text-amber-400 text-[11px] font-bold rounded-lg cursor-pointer"
+                  className="px-2.5 py-1 bg-white/5 hover:bg-white/10 text-amber-400 text-[11px] font-bold rounded-lg cursor-pointer shrink-0"
                 >
                   Manage Sidebar →
                 </button>
@@ -665,10 +802,19 @@ export const AdminAdsManager: React.FC<AdminAdsManagerProps> = () => {
                   <span className="font-extrabold text-white font-mono">
                     {footerAds.filter(a => isAdPubliclyActive(a)).length} / {effectivePricing.banner.maxSlots || 3} spaces
                   </span>
+                  <div className="flex items-center gap-2 mt-1">
+                    <span className="text-emerald-400 font-bold font-mono text-[11px] flex items-center gap-1">
+                      <Eye className="w-3 h-3 text-emerald-400" /> {footerTotalViews.toLocaleString()} Views
+                    </span>
+                    <span className="text-white/30 text-[10px]">•</span>
+                    <span className="text-white/50 font-mono text-[10px]">
+                      {footerTotalClicks.toLocaleString()} Clicks
+                    </span>
+                  </div>
                 </div>
                 <button
                   onClick={() => setSelectedPlacementTab('banner')}
-                  className="px-2.5 py-1 bg-white/5 hover:bg-white/10 text-amber-400 text-[11px] font-bold rounded-lg cursor-pointer"
+                  className="px-2.5 py-1 bg-white/5 hover:bg-white/10 text-amber-400 text-[11px] font-bold rounded-lg cursor-pointer shrink-0"
                 >
                   Manage Footer →
                 </button>
@@ -766,6 +912,10 @@ export const AdminAdsManager: React.FC<AdminAdsManagerProps> = () => {
                                 {ad.status?.toUpperCase() || 'PAUSED'}
                               </span>
                             )}
+                            <span className="text-[9px] font-mono font-bold px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-400 border border-emerald-500/25 flex items-center gap-1">
+                              <Eye className="w-3 h-3 text-emerald-400" />
+                              <span>{(ad.viewsCount || 0).toLocaleString()} Views</span>
+                            </span>
                             {daysLeft !== null && isLive && (
                               <span className="text-[9px] text-white/40 font-mono">
                                 {daysLeft}d left
@@ -785,11 +935,22 @@ export const AdminAdsManager: React.FC<AdminAdsManagerProps> = () => {
                         </div>
                       </div>
 
-                      {/* Footer Actions */}
+                      {/* Footer Actions & Real-Time Views Stats */}
                       <div className="p-2.5 bg-black/40 border-t border-white/5 flex items-center justify-between px-4">
-                        <span className="text-[10px] text-white/40 font-mono">
-                          Views: {ad.viewsCount || 0}
-                        </span>
+                        <div className="flex items-center gap-2.5">
+                          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-500/10 border border-amber-500/25 text-amber-400 font-mono font-bold text-xs">
+                            <Eye className="w-3.5 h-3.5 text-amber-400" />
+                            <span>Views: {(ad.viewsCount || 0).toLocaleString()}</span>
+                          </div>
+                          <span className="text-[11px] text-white/50 font-mono">
+                            Clicks: {(ad.clicksCount || 0).toLocaleString()}
+                          </span>
+                          {ad.viewsCount ? (
+                            <span className="text-[10px] font-mono text-emerald-400 font-bold bg-emerald-500/10 px-1.5 py-0.5 rounded">
+                              CTR: {(((ad.clicksCount || 0) / (ad.viewsCount || 1)) * 100).toFixed(1)}%
+                            </span>
+                          ) : null}
+                        </div>
 
                         <div className="flex items-center gap-1">
                           <button
@@ -1181,7 +1342,7 @@ export const AdminAdsManager: React.FC<AdminAdsManagerProps> = () => {
       )}
 
       {/* ======================================================== */}
-      {/* 4. ACTIVE CAMPAIGNS                                      */}
+      {/* 2. ACTIVE CAMPAIGNS                                      */}
       {/* ======================================================== */}
       {activeSubTab === 'campaigns' && (
         <div className="space-y-4">
@@ -1189,18 +1350,65 @@ export const AdminAdsManager: React.FC<AdminAdsManagerProps> = () => {
             <div>
               <h4 className="font-bold text-sm text-white">All Campaigns Overview</h4>
               <p className="text-xs text-white/50">
-                Track running, scheduled, paused, and expired advertisements across all placements.
+                Track running, scheduled, paused, and expired advertisements across all placements with real-time verified view statistics.
               </p>
             </div>
-            <div className="flex items-center gap-2 text-xs font-mono">
-              <span className="text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-lg border border-emerald-500/20 font-bold">
-                {activeAds.length} Running Live
+            <div className="flex items-center gap-2.5 text-xs font-mono flex-wrap">
+              <span className="text-amber-400 bg-amber-500/10 px-2.5 py-1 rounded-lg border border-amber-500/25 font-bold flex items-center gap-1.5">
+                <Eye className="w-3.5 h-3.5 text-amber-400" />
+                <span>Total Views: {totalBannerViews.toLocaleString()}</span>
+              </span>
+              <span className="text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-lg border border-emerald-500/20 font-bold flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                <span>{activeAds.length} Running Live</span>
               </span>
             </div>
           </div>
 
+          {/* Placement Statistics Overview Cards in Active Campaigns */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div className="p-3.5 bg-black/40 border border-white/5 rounded-xl">
+              <span className="text-[10px] font-mono uppercase text-amber-400 font-bold block">Hero Top Banner</span>
+              <div className="flex items-center justify-between mt-1">
+                <span className="text-sm sm:text-base font-bold font-mono text-white flex items-center gap-1.5">
+                  <Eye className="w-3.5 h-3.5 text-amber-400" />
+                  {heroTotalViews.toLocaleString()} Views
+                </span>
+                <span className="text-[10px] text-white/40 font-mono">
+                  {heroAds.filter(a => isAdPubliclyActive(a)).length} live
+                </span>
+              </div>
+            </div>
+
+            <div className="p-3.5 bg-black/40 border border-white/5 rounded-xl">
+              <span className="text-[10px] font-mono uppercase text-sky-400 font-bold block">Sidebar Widgets</span>
+              <div className="flex items-center justify-between mt-1">
+                <span className="text-sm sm:text-base font-bold font-mono text-white flex items-center gap-1.5">
+                  <Eye className="w-3.5 h-3.5 text-sky-400" />
+                  {sidebarTotalViews.toLocaleString()} Views
+                </span>
+                <span className="text-[10px] text-white/40 font-mono">
+                  {sidebarAds.filter(a => isAdPubliclyActive(a)).length} live
+                </span>
+              </div>
+            </div>
+
+            <div className="p-3.5 bg-black/40 border border-white/5 rounded-xl">
+              <span className="text-[10px] font-mono uppercase text-emerald-400 font-bold block">Inline Footer Bar</span>
+              <div className="flex items-center justify-between mt-1">
+                <span className="text-sm sm:text-base font-bold font-mono text-white flex items-center gap-1.5">
+                  <Eye className="w-3.5 h-3.5 text-emerald-400" />
+                  {footerTotalViews.toLocaleString()} Views
+                </span>
+                <span className="text-[10px] text-white/40 font-mono">
+                  {footerAds.filter(a => isAdPubliclyActive(a)).length} live
+                </span>
+              </div>
+            </div>
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {advertisements.map(ad => {
+            {localAds.map(ad => {
               const isLive = isAdPubliclyActive(ad);
               const daysLeft = getAdDaysRemaining(ad);
 
@@ -1238,6 +1446,10 @@ export const AdminAdsManager: React.FC<AdminAdsManagerProps> = () => {
                             PAUSED / EXPIRED
                           </span>
                         )}
+                        <span className="text-[9px] font-mono font-bold px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-400 border border-emerald-500/25 flex items-center gap-1">
+                          <Eye className="w-3 h-3 text-emerald-400" />
+                          <span>{(ad.viewsCount || 0).toLocaleString()} Views</span>
+                        </span>
                         {daysLeft !== null && isLive && (
                           <span className="text-[9px] text-white/40 font-mono">
                             {daysLeft} days remaining
@@ -1256,9 +1468,15 @@ export const AdminAdsManager: React.FC<AdminAdsManagerProps> = () => {
                   </div>
 
                   <div className="p-2.5 bg-black/40 border-t border-white/5 flex items-center justify-between px-4">
-                    <span className="text-[10px] text-white/40 font-mono">
-                      Views: {ad.viewsCount || 0} • Clicks: {ad.clicksCount || 0}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className="flex items-center gap-1 text-[11px] font-mono font-bold text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">
+                        <Eye className="w-3 h-3 text-amber-400" />
+                        <span>Views: {(ad.viewsCount || 0).toLocaleString()}</span>
+                      </span>
+                      <span className="text-[10px] text-white/50 font-mono">
+                        Clicks: {(ad.clicksCount || 0).toLocaleString()}
+                      </span>
+                    </div>
 
                     <div className="flex items-center gap-1">
                       <button

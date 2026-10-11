@@ -14,6 +14,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { AnnouncementBanner } from './AnnouncementBanner';
 import { isAdPubliclyActive } from '../lib/advertisements';
 import { UserAdBannerModal } from './UserAdBannerModal';
+import { AdVisibilityTracker } from './AdVisibilityTracker';
 import { 
   PRIMARY_CATEGORIES,
   REDESIGNED_CATEGORIES, 
@@ -1021,84 +1022,85 @@ export default function Marketplace({
       {heroAds.length > 0 && (
         <div className="space-y-6 mb-10">
           {heroAds.map(heroAd => (
-            <div
-              key={heroAd.id}
-              className="rounded-3xl overflow-hidden bg-[#0e0e13] text-[#F5F5F4] border border-white/10 shadow-2xl flex flex-col"
-            >
-              {/* Top Section: Compact Title, Description, and Learn More Button above media */}
-              <div className="px-4 sm:px-6 py-3 sm:py-3.5 bg-[#12121c] border-b border-white/5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5 sm:gap-4 z-10">
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2 flex-wrap mb-1">
-                    <span className="bg-gradient-to-r from-amber-400 to-amber-600 text-black text-[9px] font-black uppercase px-2.5 py-0.5 rounded-full inline-block tracking-wider shadow-sm shrink-0">
-                      {t('special_promotion') || 'Special Promotion'}
-                    </span>
-                    <h3 className="text-sm sm:text-base md:text-lg font-serif font-bold text-white tracking-wide truncate">
-                      {heroAd.title}
-                    </h3>
+            <AdVisibilityTracker key={heroAd.id} ad={heroAd}>
+              <div
+                className="rounded-3xl overflow-hidden bg-[#0e0e13] text-[#F5F5F4] border border-white/10 shadow-2xl flex flex-col"
+              >
+                {/* Top Section: Compact Title, Description, and Learn More Button above media */}
+                <div className="px-4 sm:px-6 py-3 sm:py-3.5 bg-[#12121c] border-b border-white/5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5 sm:gap-4 z-10">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2 flex-wrap mb-1">
+                      <span className="bg-gradient-to-r from-amber-400 to-amber-600 text-black text-[9px] font-black uppercase px-2.5 py-0.5 rounded-full inline-block tracking-wider shadow-sm shrink-0">
+                        {t('special_promotion') || 'Special Promotion'}
+                      </span>
+                      <h3 className="text-sm sm:text-base md:text-lg font-serif font-bold text-white tracking-wide truncate">
+                        {heroAd.title}
+                      </h3>
+                    </div>
+                    <p className="text-xs sm:text-[13px] text-[#F5F5F4]/75 leading-snug line-clamp-1 sm:line-clamp-2 font-light">
+                      {heroAd.description}
+                    </p>
                   </div>
-                  <p className="text-xs sm:text-[13px] text-[#F5F5F4]/75 leading-snug line-clamp-1 sm:line-clamp-2 font-light">
-                    {heroAd.description}
-                  </p>
+                  <div className="flex items-center gap-2 self-start sm:self-center shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setUserAdInitialPlacement('hero');
+                        setUserAdModalOpen(true);
+                      }}
+                      className="inline-flex items-center gap-1.5 text-white/50 hover:text-amber-400 text-[11px] font-bold px-3 py-2 rounded-xl border border-white/5 hover:border-amber-500/30 transition cursor-pointer"
+                      title="Advertise with us"
+                    >
+                      <Megaphone className="w-3.5 h-3.5 text-amber-500" />
+                      <span className="hidden md:inline">{t('advertise_here') || 'Advertise Here'}</span>
+                    </button>
+                    {heroAd.linkUrl && (
+                      <a
+                        href={heroAd.linkUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={() => handleAdClick(heroAd)}
+                        className="shrink-0 inline-flex items-center gap-2 bg-[#F5F5F4] hover:bg-zinc-200 text-[#050505] font-bold uppercase tracking-wider px-5 py-2.5 rounded-xl text-xs transition-all duration-300 hover:scale-[1.02] cursor-pointer shadow-lg"
+                      >
+                        <span>{t('learn_more') || 'Learn More'}</span>
+                        <ArrowRight className="w-3.5 h-3.5" />
+                      </a>
+                    )}
+                  </div>
                 </div>
-                <div className="flex items-center gap-2 self-start sm:self-center shrink-0">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setUserAdInitialPlacement('hero');
-                      setUserAdModalOpen(true);
-                    }}
-                    className="inline-flex items-center gap-1.5 text-white/50 hover:text-amber-400 text-[11px] font-bold px-3 py-2 rounded-xl border border-white/5 hover:border-amber-500/30 transition cursor-pointer"
-                    title="Advertise with us"
-                  >
-                    <Megaphone className="w-3.5 h-3.5 text-amber-500" />
-                    <span className="hidden md:inline">{t('advertise_here') || 'Advertise Here'}</span>
-                  </button>
-                  {heroAd.linkUrl && (
+
+                {/* Main Media Section: Maximum Space, Preserving Clear Aspect Ratio Without Cropping */}
+                <div className="w-full bg-[#050508] relative flex items-center justify-center overflow-hidden min-h-[220px] sm:min-h-[320px] md:min-h-[420px] lg:min-h-[480px] max-h-[560px]">
+                  {heroAd.mediaType === 'video' || heroAd.videoUrl ? (
+                    <video
+                      src={heroAd.videoUrl || heroAd.imageUrl}
+                      controls
+                      autoPlay
+                      muted
+                      loop
+                      playsInline
+                      preload="metadata"
+                      className="w-full h-full max-h-[560px] object-contain mx-auto"
+                    />
+                  ) : (
                     <a
                       href={heroAd.linkUrl}
                       target="_blank"
                       rel="noopener noreferrer"
                       onClick={() => handleAdClick(heroAd)}
-                      className="shrink-0 inline-flex items-center gap-2 bg-[#F5F5F4] hover:bg-zinc-200 text-[#050505] font-bold uppercase tracking-wider px-5 py-2.5 rounded-xl text-xs transition-all duration-300 hover:scale-[1.02] cursor-pointer shadow-lg"
+                      className="w-full h-full flex items-center justify-center cursor-pointer"
                     >
-                      <span>{t('learn_more') || 'Learn More'}</span>
-                      <ArrowRight className="w-3.5 h-3.5" />
+                      <img
+                        src={heroAd.imageUrl}
+                        alt={heroAd.title}
+                        className="w-full h-full max-h-[560px] object-contain mx-auto transition duration-700 hover:scale-[1.01]"
+                        referrerPolicy="no-referrer"
+                      />
                     </a>
                   )}
                 </div>
               </div>
-
-              {/* Main Media Section: Maximum Space, Preserving Clear Aspect Ratio Without Cropping */}
-              <div className="w-full bg-[#050508] relative flex items-center justify-center overflow-hidden min-h-[220px] sm:min-h-[320px] md:min-h-[420px] lg:min-h-[480px] max-h-[560px]">
-                {heroAd.mediaType === 'video' || heroAd.videoUrl ? (
-                  <video
-                    src={heroAd.videoUrl || heroAd.imageUrl}
-                    controls
-                    autoPlay
-                    muted
-                    loop
-                    playsInline
-                    preload="metadata"
-                    className="w-full h-full max-h-[560px] object-contain mx-auto"
-                  />
-                ) : (
-                  <a
-                    href={heroAd.linkUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    onClick={() => handleAdClick(heroAd)}
-                    className="w-full h-full flex items-center justify-center cursor-pointer"
-                  >
-                    <img
-                      src={heroAd.imageUrl}
-                      alt={heroAd.title}
-                      className="w-full h-full max-h-[560px] object-contain mx-auto transition duration-700 hover:scale-[1.01]"
-                      referrerPolicy="no-referrer"
-                    />
-                  </a>
-                )}
-              </div>
-            </div>
+            </AdVisibilityTracker>
           ))}
         </div>
       )}
@@ -2367,63 +2369,64 @@ export default function Marketplace({
                   </div>
 
                   {sidebarAds.map(ad => (
-                    <div
-                      key={ad.id}
-                      className="bg-[#0d0d12]/90 rounded-3xl overflow-hidden border border-white/10 shadow-2xl text-white relative group flex flex-col"
-                    >
-                      {/* Top Header Section: Compact Title, Description, and Visit Button */}
-                      <div className="p-4 bg-[#12121c] border-b border-white/5 space-y-2">
-                        <div className="flex items-center justify-between gap-2">
-                          <span className="bg-gradient-to-r from-sky-400 to-blue-500 text-black font-black uppercase tracking-widest text-[8px] px-2 py-0.5 rounded-full shrink-0">
-                            {t('sponsored') || 'Sponsored'}
-                          </span>
-                          {ad.linkUrl && (
+                    <AdVisibilityTracker key={ad.id} ad={ad}>
+                      <div
+                        className="bg-[#0d0d12]/90 rounded-3xl overflow-hidden border border-white/10 shadow-2xl text-white relative group flex flex-col"
+                      >
+                        {/* Top Header Section: Compact Title, Description, and Visit Button */}
+                        <div className="p-4 bg-[#12121c] border-b border-white/5 space-y-2">
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="bg-gradient-to-r from-sky-400 to-blue-500 text-black font-black uppercase tracking-widest text-[8px] px-2 py-0.5 rounded-full shrink-0">
+                              {t('sponsored') || 'Sponsored'}
+                            </span>
+                            {ad.linkUrl && (
+                              <a
+                                href={ad.linkUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                onClick={() => handleAdClick(ad)}
+                                className="inline-flex items-center gap-1 bg-white/10 hover:bg-white/20 text-white font-bold uppercase tracking-wider px-2.5 py-1 rounded-lg text-[10px] transition cursor-pointer"
+                              >
+                                <span>{t('visit_offer') || 'Visit'}</span>
+                                <ArrowRight className="w-3 h-3" />
+                              </a>
+                            )}
+                          </div>
+                          <h4 className="font-serif text-sm text-white font-bold truncate">{ad.title}</h4>
+                          <p className="text-[11px] text-[#F5F5F4]/65 leading-snug line-clamp-2 font-light">{ad.description}</p>
+                        </div>
+
+                        {/* Main Media Section: Maximum Space, Preserving Clear Aspect Ratio */}
+                        <div className="w-full h-56 bg-[#050508] relative flex items-center justify-center overflow-hidden">
+                          {ad.mediaType === 'video' || ad.videoUrl ? (
+                            <video
+                              src={ad.videoUrl || ad.imageUrl}
+                              controls
+                              autoPlay
+                              muted
+                              loop
+                              playsInline
+                              className="w-full h-full object-contain mx-auto transition-transform duration-700 group-hover:scale-[1.02]"
+                            />
+                          ) : (
                             <a
                               href={ad.linkUrl}
                               target="_blank"
                               rel="noopener noreferrer"
                               onClick={() => handleAdClick(ad)}
-                              className="inline-flex items-center gap-1 bg-white/10 hover:bg-white/20 text-white font-bold uppercase tracking-wider px-2.5 py-1 rounded-lg text-[10px] transition cursor-pointer"
+                              className="w-full h-full flex items-center justify-center cursor-pointer"
                             >
-                              <span>{t('visit_offer') || 'Visit'}</span>
-                              <ArrowRight className="w-3 h-3" />
+                              <img
+                                src={ad.imageUrl}
+                                alt={ad.title}
+                                className="w-full h-full object-contain mx-auto transition-transform duration-700 group-hover:scale-[1.02]"
+                                referrerPolicy="no-referrer"
+                              />
                             </a>
                           )}
                         </div>
-                        <h4 className="font-serif text-sm text-white font-bold truncate">{ad.title}</h4>
-                        <p className="text-[11px] text-[#F5F5F4]/65 leading-snug line-clamp-2 font-light">{ad.description}</p>
                       </div>
-
-                      {/* Main Media Section: Maximum Space, Preserving Clear Aspect Ratio */}
-                      <div className="w-full h-56 bg-[#050508] relative flex items-center justify-center overflow-hidden">
-                        {ad.mediaType === 'video' || ad.videoUrl ? (
-                          <video
-                            src={ad.videoUrl || ad.imageUrl}
-                            controls
-                            autoPlay
-                            muted
-                            loop
-                            playsInline
-                            className="w-full h-full object-contain mx-auto transition-transform duration-700 group-hover:scale-[1.02]"
-                          />
-                        ) : (
-                          <a
-                            href={ad.linkUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            onClick={() => handleAdClick(ad)}
-                            className="w-full h-full flex items-center justify-center cursor-pointer"
-                          >
-                            <img
-                              src={ad.imageUrl}
-                              alt={ad.title}
-                              className="w-full h-full object-contain mx-auto transition-transform duration-700 group-hover:scale-[1.02]"
-                              referrerPolicy="no-referrer"
-                            />
-                          </a>
-                        )}
-                      </div>
-                    </div>
+                    </AdVisibilityTracker>
                   ))}
 
                   {/* Sidebar Book Placement CTA Card */}
@@ -2503,84 +2506,85 @@ export default function Marketplace({
 
           <div className="space-y-6">
             {footerAds.map(footerAd => (
-              <div
-                key={footerAd.id}
-                className="rounded-3xl overflow-hidden bg-[#0e0e13] text-[#F5F5F4] border border-white/10 shadow-2xl flex flex-col group"
-              >
-                {/* Top Section: Compact Title, Description, and Learn More Button */}
-                <div className="px-4 sm:px-6 py-3 sm:py-3.5 bg-[#12121c] border-b border-white/5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5 sm:gap-4 z-10">
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2 flex-wrap mb-1">
-                      <span className="bg-gradient-to-r from-emerald-500 to-teal-600 text-black text-[9px] font-black uppercase px-2.5 py-0.5 rounded-full inline-block tracking-wider shadow-sm shrink-0">
-                        {t('verified_partner') || 'Verified Partner'}
-                      </span>
-                      <h4 className="text-sm sm:text-base font-serif font-bold text-white tracking-wide truncate">
-                        {footerAd.title}
-                      </h4>
+              <AdVisibilityTracker key={footerAd.id} ad={footerAd}>
+                <div
+                  className="rounded-3xl overflow-hidden bg-[#0e0e13] text-[#F5F5F4] border border-white/10 shadow-2xl flex flex-col group"
+                >
+                  {/* Top Section: Compact Title, Description, and Learn More Button */}
+                  <div className="px-4 sm:px-6 py-3 sm:py-3.5 bg-[#12121c] border-b border-white/5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5 sm:gap-4 z-10">
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2 flex-wrap mb-1">
+                        <span className="bg-gradient-to-r from-emerald-500 to-teal-600 text-black text-[9px] font-black uppercase px-2.5 py-0.5 rounded-full inline-block tracking-wider shadow-sm shrink-0">
+                          {t('verified_partner') || 'Verified Partner'}
+                        </span>
+                        <h4 className="text-sm sm:text-base font-serif font-bold text-white tracking-wide truncate">
+                          {footerAd.title}
+                        </h4>
+                      </div>
+                      <p className="text-xs sm:text-[13px] text-[#F5F5F4]/75 leading-snug line-clamp-1 sm:line-clamp-2 font-light">
+                        {footerAd.description}
+                      </p>
                     </div>
-                    <p className="text-xs sm:text-[13px] text-[#F5F5F4]/75 leading-snug line-clamp-1 sm:line-clamp-2 font-light">
-                      {footerAd.description}
-                    </p>
+                    <div className="flex items-center gap-2 self-start sm:self-center shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setUserAdInitialPlacement('banner');
+                          setUserAdModalOpen(true);
+                        }}
+                        className="inline-flex items-center gap-1.5 text-white/50 hover:text-amber-400 text-[11px] font-bold px-3 py-2 rounded-xl border border-white/5 hover:border-amber-500/30 transition cursor-pointer"
+                        title="Advertise with us"
+                      >
+                        <Megaphone className="w-3.5 h-3.5 text-amber-500" />
+                        <span className="hidden md:inline">{t('advertise_here') || 'Advertise Here'}</span>
+                      </button>
+                      {footerAd.linkUrl && (
+                        <a
+                          href={footerAd.linkUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={() => handleAdClick(footerAd)}
+                          className="shrink-0 inline-flex items-center gap-2 bg-[#F5F5F4] hover:bg-zinc-200 text-[#050505] font-bold uppercase tracking-wider px-5 py-2.5 rounded-xl text-xs transition-all duration-300 hover:scale-[1.02] cursor-pointer shadow-lg"
+                        >
+                          <span>{t('learn_more') || 'Learn More'}</span>
+                          <ArrowRight className="w-3.5 h-3.5" />
+                        </a>
+                      )}
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2 self-start sm:self-center shrink-0">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setUserAdInitialPlacement('banner');
-                        setUserAdModalOpen(true);
-                      }}
-                      className="inline-flex items-center gap-1.5 text-white/50 hover:text-amber-400 text-[11px] font-bold px-3 py-2 rounded-xl border border-white/5 hover:border-amber-500/30 transition cursor-pointer"
-                      title="Advertise with us"
-                    >
-                      <Megaphone className="w-3.5 h-3.5 text-amber-500" />
-                      <span className="hidden md:inline">{t('advertise_here') || 'Advertise Here'}</span>
-                    </button>
-                    {footerAd.linkUrl && (
+
+                  {/* Main Media Section: Maximum Space, Clear Aspect Ratio */}
+                  <div className="w-full bg-[#050508] relative flex items-center justify-center overflow-hidden min-h-[200px] sm:min-h-[280px] md:min-h-[360px] max-h-[460px]">
+                    {footerAd.mediaType === 'video' || footerAd.videoUrl ? (
+                      <video
+                        src={footerAd.videoUrl || footerAd.imageUrl}
+                        controls
+                        autoPlay
+                        muted
+                        loop
+                        playsInline
+                        preload="metadata"
+                        className="w-full h-full max-h-[460px] object-contain mx-auto"
+                      />
+                    ) : (
                       <a
                         href={footerAd.linkUrl}
                         target="_blank"
                         rel="noopener noreferrer"
                         onClick={() => handleAdClick(footerAd)}
-                        className="shrink-0 inline-flex items-center gap-2 bg-[#F5F5F4] hover:bg-zinc-200 text-[#050505] font-bold uppercase tracking-wider px-5 py-2.5 rounded-xl text-xs transition-all duration-300 hover:scale-[1.02] cursor-pointer shadow-lg"
+                        className="w-full h-full flex items-center justify-center cursor-pointer"
                       >
-                        <span>{t('learn_more') || 'Learn More'}</span>
-                        <ArrowRight className="w-3.5 h-3.5" />
+                        <img
+                          src={footerAd.imageUrl}
+                          alt={footerAd.title}
+                          className="w-full h-full max-h-[460px] object-contain mx-auto transition-transform duration-700 group-hover:scale-[1.01]"
+                          referrerPolicy="no-referrer"
+                        />
                       </a>
                     )}
                   </div>
                 </div>
-
-                {/* Main Media Section: Maximum Space, Clear Aspect Ratio */}
-                <div className="w-full bg-[#050508] relative flex items-center justify-center overflow-hidden min-h-[200px] sm:min-h-[280px] md:min-h-[360px] max-h-[460px]">
-                  {footerAd.mediaType === 'video' || footerAd.videoUrl ? (
-                    <video
-                      src={footerAd.videoUrl || footerAd.imageUrl}
-                      controls
-                      autoPlay
-                      muted
-                      loop
-                      playsInline
-                      preload="metadata"
-                      className="w-full h-full max-h-[460px] object-contain mx-auto"
-                    />
-                  ) : (
-                    <a
-                      href={footerAd.linkUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      onClick={() => handleAdClick(footerAd)}
-                      className="w-full h-full flex items-center justify-center cursor-pointer"
-                    >
-                      <img
-                        src={footerAd.imageUrl}
-                        alt={footerAd.title}
-                        className="w-full h-full max-h-[460px] object-contain mx-auto transition-transform duration-700 group-hover:scale-[1.01]"
-                        referrerPolicy="no-referrer"
-                      />
-                    </a>
-                  )}
-                </div>
-              </div>
+              </AdVisibilityTracker>
             ))}
           </div>
         </div>
