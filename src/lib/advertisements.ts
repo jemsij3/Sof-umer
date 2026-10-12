@@ -9,6 +9,10 @@ export const DEFAULT_BANNER_AD_PRICING: BannerAdPricingSettings = {
     durationDays: 7,
     currency: 'ETB',
     maxSlots: 3,
+    dailySchedulingEnabled: false,
+    dailyDisplayLimit: 48,
+    calculatedIntervalMinutes: 30,
+    operatingHoursPerDay: 24,
     packages: [
       { id: 'hero-7', name: '7 Days Hero Banner', durationDays: 7, price: 1500, desc: 'Top full-width billboard for 7 days' },
       { id: 'hero-15', name: '15 Days Hero Banner', durationDays: 15, price: 2800, desc: 'Top full-width billboard for 15 days' },
@@ -23,6 +27,10 @@ export const DEFAULT_BANNER_AD_PRICING: BannerAdPricingSettings = {
     durationDays: 7,
     currency: 'ETB',
     maxSlots: 5,
+    dailySchedulingEnabled: false,
+    dailyDisplayLimit: 96,
+    calculatedIntervalMinutes: 15,
+    operatingHoursPerDay: 24,
     packages: [
       { id: 'sidebar-7', name: '7 Days Sidebar Widget', durationDays: 7, price: 1000, desc: 'Sidebar promotional card for 7 days' },
       { id: 'sidebar-15', name: '15 Days Sidebar Widget', durationDays: 15, price: 1800, desc: 'Sidebar promotional card for 15 days' },
@@ -37,6 +45,10 @@ export const DEFAULT_BANNER_AD_PRICING: BannerAdPricingSettings = {
     durationDays: 7,
     currency: 'ETB',
     maxSlots: 3,
+    dailySchedulingEnabled: false,
+    dailyDisplayLimit: 48,
+    calculatedIntervalMinutes: 30,
+    operatingHoursPerDay: 24,
     packages: [
       { id: 'footer-7', name: '7 Days Inline Footer Bar', durationDays: 7, price: 800, desc: 'Inline footer banner for 7 days' },
       { id: 'footer-15', name: '15 Days Inline Footer Bar', durationDays: 15, price: 1400, desc: 'Inline footer banner for 15 days' },
@@ -46,71 +58,99 @@ export const DEFAULT_BANNER_AD_PRICING: BannerAdPricingSettings = {
 };
 
 /**
+ * Automatically calculates display interval in minutes from daily display limit and operating hours.
+ * Formula: Interval in minutes = Available advertising minutes per day / Daily display limit
+ * Default available time: 24 hours (1440 minutes)
+ */
+export function calculateDisplayInterval(dailyLimit: number, operatingHours = 24): number {
+  const safeLimit = Math.max(1, Math.min(10000, Number(dailyLimit) || 1));
+  const safeHours = Math.max(1, Math.min(24, Number(operatingHours) || 24));
+  const totalMinutes = safeHours * 60;
+  return Math.max(1, Math.round(totalMinutes / safeLimit));
+}
+
+/**
  * Returns the effective banner advertising pricing configured in SystemSettings, falling back to defaults.
  */
 export function getEffectiveBannerPricing(systemSettings?: SystemSettings): BannerAdPricingSettings {
   if (systemSettings?.bannerAdPricing) {
+    const raw = systemSettings.bannerAdPricing;
+    const mergePlacement = (key: 'hero' | 'sidebar' | 'banner') => {
+      const def = DEFAULT_BANNER_AD_PRICING[key];
+      const custom: any = raw[key] || {};
+      const limit = Number(custom.dailyDisplayLimit) > 0 ? Number(custom.dailyDisplayLimit) : def.dailyDisplayLimit;
+      const opHours = Number(custom.operatingHoursPerDay) > 0 ? Number(custom.operatingHoursPerDay) : def.operatingHoursPerDay;
+      const calculatedInterval = calculateDisplayInterval(limit || 48, opHours || 24);
+
+      return {
+        ...def,
+        ...custom,
+        dailySchedulingEnabled: custom.dailySchedulingEnabled !== undefined ? Boolean(custom.dailySchedulingEnabled) : def.dailySchedulingEnabled,
+        dailyDisplayLimit: limit,
+        calculatedIntervalMinutes: custom.calculatedIntervalMinutes || calculatedInterval,
+        operatingHoursPerDay: opHours,
+        packages: custom.packages?.length ? custom.packages : def.packages
+      };
+    };
+
     return {
-      hero: {
-        ...DEFAULT_BANNER_AD_PRICING.hero,
-        ...(systemSettings.bannerAdPricing.hero || {}),
-        packages: systemSettings.bannerAdPricing.hero?.packages?.length
-          ? systemSettings.bannerAdPricing.hero.packages
-          : DEFAULT_BANNER_AD_PRICING.hero.packages
-      },
-      sidebar: {
-        ...DEFAULT_BANNER_AD_PRICING.sidebar,
-        ...(systemSettings.bannerAdPricing.sidebar || {}),
-        packages: systemSettings.bannerAdPricing.sidebar?.packages?.length
-          ? systemSettings.bannerAdPricing.sidebar.packages
-          : DEFAULT_BANNER_AD_PRICING.sidebar.packages
-      },
-      banner: {
-        ...DEFAULT_BANNER_AD_PRICING.banner,
-        ...(systemSettings.bannerAdPricing.banner || {}),
-        packages: systemSettings.bannerAdPricing.banner?.packages?.length
-          ? systemSettings.bannerAdPricing.banner.packages
-          : DEFAULT_BANNER_AD_PRICING.banner.packages
-      }
+      hero: mergePlacement('hero'),
+      sidebar: mergePlacement('sidebar'),
+      banner: mergePlacement('banner')
     };
   }
   return DEFAULT_BANNER_AD_PRICING;
 }
 
 /**
- * Determines whether an advertisement is currently approved, paid, and within its active schedule
- * to be displayed publicly to marketplace visitors.
+ * Determines whether an advertisement is currently approved, paid, within its active schedule,
+ * and within its daily display limit to be displayed publicly to marketplace visitors.
  */
-export function isAdPubliclyActive(ad: Advertisement): boolean {
+export function isAdPubliclyActive(ad: Advertisement, systemSettings?: SystemSettings): boolean {
   if (!ad || !ad.isActive) return false;
 
   // Status check: if explicit status is set, only 'approved' and 'active' are allowed
-  if (ad.status && !['approved', 'active'].includes(ad.status)) {
+  const status = (ad.status || '').toLowerCase();
+  if (status && !['approved', 'active'].includes(status)) {
     return false;
   }
 
   // Payment check: if explicit paymentStatus is set, only 'verified', 'paid', or 'exempt' are allowed
-  if (ad.paymentStatus && !['verified', 'paid', 'exempt'].includes(ad.paymentStatus)) {
+  const paymentStatus = (ad.paymentStatus || '').toLowerCase();
+  if (paymentStatus && !['verified', 'paid', 'exempt'].includes(paymentStatus)) {
     return false;
   }
 
   // Scheduling check: start date and end date
   const now = new Date();
-  now.setHours(0, 0, 0, 0); // Ignore time for today
+  const todayStr = now.toISOString().split('T')[0];
 
   if (ad.startDate) {
-    const start = new Date(ad.startDate);
-    start.setHours(0, 0, 0, 0);
-    if (!isNaN(start.getTime()) && now.getTime() < start.getTime()) {
+    const startStr = ad.startDate.includes('T') ? ad.startDate.split('T')[0] : ad.startDate;
+    if (startStr > todayStr) {
       return false;
     }
   }
 
   if (ad.endDate) {
-    const end = new Date(ad.endDate);
-    end.setHours(23, 59, 59, 999);
-    if (!isNaN(end.getTime()) && now.getTime() > end.getTime()) {
+    const endStr = ad.endDate.includes('T') ? ad.endDate.split('T')[0] : ad.endDate;
+    if (endStr < todayStr) {
       return false;
+    }
+  }
+
+  // Daily Display Frequency Scheduling Check
+  if (systemSettings?.bannerAdPricing && ad.position) {
+    const pricing = systemSettings.bannerAdPricing as BannerAdPricingSettings;
+    const placementSetting = pricing[ad.position];
+    if (placementSetting?.dailySchedulingEnabled) {
+      const limit = Number(placementSetting.dailyDisplayLimit) || 0;
+      if (limit > 0) {
+        const todayViews = (ad.dailyViews && Number(ad.dailyViews[todayStr])) || Number(ad.todayViewsCount) || 0;
+        if (todayViews >= limit) {
+          return false;
+        }
+      }
     }
   }
 
@@ -124,9 +164,7 @@ export function getAdDaysRemaining(ad: Advertisement): number | null {
   if (!ad.endDate) return null;
   const end = new Date(ad.endDate);
   if (isNaN(end.getTime())) return null;
-  end.setHours(23, 59, 59, 999);
   const now = new Date();
-  now.setHours(0, 0, 0, 0);
   const diffTime = end.getTime() - now.getTime();
   const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
   return Math.max(0, diffDays);

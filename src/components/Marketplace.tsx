@@ -1011,9 +1011,9 @@ export default function Marketplace({
   };
 
   // Active advertisements matching positions
-  const heroAds = advertisements.filter(a => isAdPubliclyActive(a) && a.position === 'hero');
-  const sidebarAds = advertisements.filter(a => isAdPubliclyActive(a) && a.position === 'sidebar');
-  const footerAds = advertisements.filter(a => isAdPubliclyActive(a) && a.position === 'banner');
+  const heroAds = advertisements.filter(a => isAdPubliclyActive(a, systemSettings) && a.position === 'hero');
+  const sidebarAds = advertisements.filter(a => isAdPubliclyActive(a, systemSettings) && a.position === 'sidebar');
+  const footerAds = advertisements.filter(a => isAdPubliclyActive(a, systemSettings) && a.position === 'banner');
 
   const [heroAdIndex, setHeroAdIndex] = useState(0);
   const [sidebarAdIndex, setSidebarAdIndex] = useState(0);

@@ -128,7 +128,7 @@ export default function UserDashboard({
   const filteredMyAds = useMemo(() => {
     if (userAdFilter === 'all') return myAdvertisements;
     if (userAdFilter === 'pending') return myAdvertisements.filter(a => a.status === 'pending');
-    if (userAdFilter === 'active') return myAdvertisements.filter(a => isAdPubliclyActive(a));
+    if (userAdFilter === 'active') return myAdvertisements.filter(a => isAdPubliclyActive(a, systemSettings) || a.status === 'approved' || a.status === 'active');
     if (userAdFilter === 'rejected') return myAdvertisements.filter(a => a.status === 'rejected');
     if (userAdFilter === 'expired') return myAdvertisements.filter(a => a.status === 'expired' || (a.endDate && new Date(a.endDate) < new Date()));
     return myAdvertisements;
@@ -1707,7 +1707,7 @@ export default function UserDashboard({
                     {[
                       { id: 'all', label: 'All Campaigns', count: myAdvertisements.length },
                       { id: 'pending', label: 'Pending Review', count: myAdvertisements.filter(a => a.status === 'pending').length },
-                      { id: 'active', label: 'Running Live', count: myAdvertisements.filter(isAdPubliclyActive).length },
+                      { id: 'active', label: 'Running Live', count: myAdvertisements.filter(a => isAdPubliclyActive(a, systemSettings) || a.status === 'approved' || a.status === 'active').length },
                       { id: 'rejected', label: 'Rejected', count: myAdvertisements.filter(a => a.status === 'rejected').length },
                       { id: 'expired', label: 'Expired', count: myAdvertisements.filter(a => a.status === 'expired' || (a.endDate && new Date(a.endDate) < new Date())).length }
                     ].map(tab => (
@@ -1753,7 +1753,8 @@ export default function UserDashboard({
                   ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {filteredMyAds.map(ad => {
-                        const isLive = isAdPubliclyActive(ad);
+                        const isLive = isAdPubliclyActive(ad, systemSettings);
+                        const isApproved = ad.status === 'approved' || isLive;
                         const daysLeft = getAdDaysRemaining(ad);
 
                         return (
@@ -1777,6 +1778,10 @@ export default function UserDashboard({
                                   {isLive ? (
                                     <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center gap-1">
                                       <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" /> LIVE & PUBLISHED
+                                    </span>
+                                  ) : isApproved ? (
+                                    <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 flex items-center gap-1">
+                                      <CheckCircle2 className="w-3 h-3 text-emerald-400" /> APPROVED
                                     </span>
                                   ) : ad.status === 'pending' ? (
                                     <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30 flex items-center gap-1">

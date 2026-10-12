@@ -10,6 +10,7 @@ import { Advertisement, AdPlacement, AdPackage, SystemSettings } from '../types'
 import {
   DEFAULT_BANNER_AD_PRICING,
   getEffectiveBannerPricing,
+  calculateDisplayInterval,
   isAdPubliclyActive,
   getAdDaysRemaining,
   validateVideoFile
@@ -1194,6 +1195,161 @@ export const AdminAdsManager: React.FC<AdminAdsManagerProps> = () => {
                         </div>
                       </div>
                     ))}
+                  </div>
+                </div>
+
+                {/* ======================================================== */}
+                {/* Daily Advertisement Display Scheduling                   */}
+                {/* ======================================================== */}
+                <div className="pt-5 border-t border-white/5 space-y-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <h5 className="font-bold text-sm text-white flex items-center gap-2">
+                        <Clock className="w-4 h-4 text-amber-500" />
+                        <span>Daily Advertisement Display Scheduling</span>
+                      </h5>
+                      <p className="text-xs text-white/50 mt-0.5">
+                        Configure independent daily display limits and automatic interval pacing for <strong className="text-white">{currentSetting.title}</strong>.
+                      </p>
+                    </div>
+
+                    {/* Enable / Disable Toggle Switch */}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const newEnabled = !currentSetting.dailySchedulingEnabled;
+                        const limit = Number(currentSetting.dailyDisplayLimit) || 24;
+                        const opHours = Number(currentSetting.operatingHoursPerDay) || 24;
+                        const interval = calculateDisplayInterval(limit, opHours);
+                        setPricingForm({
+                          ...pricingForm,
+                          [activePricingTab]: {
+                            ...currentSetting,
+                            dailySchedulingEnabled: newEnabled,
+                            dailyDisplayLimit: limit,
+                            operatingHoursPerDay: opHours,
+                            calculatedIntervalMinutes: interval
+                          }
+                        });
+                      }}
+                      className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer shrink-0 border ${
+                        currentSetting.dailySchedulingEnabled
+                          ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
+                          : 'bg-white/5 text-white/40 border-white/10 hover:text-white'
+                      }`}
+                    >
+                      {currentSetting.dailySchedulingEnabled ? (
+                        <>
+                          <ToggleRight className="w-4 h-4 text-emerald-400" />
+                          <span>Scheduling Active</span>
+                        </>
+                      ) : (
+                        <>
+                          <ToggleLeft className="w-4 h-4 text-white/40" />
+                          <span>Scheduling Disabled</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+
+                  <div className="p-4 bg-black/40 border border-white/10 rounded-xl space-y-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                      {/* Daily display limit */}
+                      <div>
+                        <label className="block text-[11px] uppercase font-bold text-white/50 mb-1">
+                          Daily Display Limit
+                        </label>
+                        <input
+                          type="number"
+                          min="1"
+                          max="10000"
+                          value={currentSetting.dailyDisplayLimit || 24}
+                          onChange={e => {
+                            const val = Math.max(1, parseInt(e.target.value, 10) || 1);
+                            const opHours = Number(currentSetting.operatingHoursPerDay) || 24;
+                            const calculatedInterval = calculateDisplayInterval(val, opHours);
+                            setPricingForm({
+                              ...pricingForm,
+                              [activePricingTab]: {
+                                ...currentSetting,
+                                dailyDisplayLimit: val,
+                                calculatedIntervalMinutes: calculatedInterval
+                              }
+                            });
+                          }}
+                          placeholder="e.g. 24 or 48"
+                          className="w-full p-2.5 bg-black/60 border border-white/10 rounded-xl text-xs text-amber-400 font-mono font-bold focus:outline-none focus:border-amber-500"
+                        />
+                        <span className="text-[10px] text-white/40 mt-1 block">
+                          Maximum times this placement will render per day.
+                        </span>
+                      </div>
+
+                      {/* Operating Hours per day */}
+                      <div>
+                        <label className="block text-[11px] uppercase font-bold text-white/50 mb-1">
+                          Operating Hours per Day
+                        </label>
+                        <input
+                          type="number"
+                          min="1"
+                          max="24"
+                          value={currentSetting.operatingHoursPerDay || 24}
+                          onChange={e => {
+                            const val = Math.max(1, Math.min(24, parseInt(e.target.value, 10) || 24));
+                            const limit = Number(currentSetting.dailyDisplayLimit) || 24;
+                            const calculatedInterval = calculateDisplayInterval(limit, val);
+                            setPricingForm({
+                              ...pricingForm,
+                              [activePricingTab]: {
+                                ...currentSetting,
+                                operatingHoursPerDay: val,
+                                calculatedIntervalMinutes: calculatedInterval
+                              }
+                            });
+                          }}
+                          placeholder="Default: 24 hours"
+                          className="w-full p-2.5 bg-black/60 border border-white/10 rounded-xl text-xs text-white font-mono focus:outline-none focus:border-amber-500"
+                        />
+                        <span className="text-[10px] text-white/40 mt-1 block">
+                          Total active operating hours per day (default: 24h = 1440 min).
+                        </span>
+                      </div>
+
+                      {/* Automatic interval between displays */}
+                      <div>
+                        <label className="block text-[11px] uppercase font-bold text-white/50 mb-1">
+                          Automatic Interval Between Displays
+                        </label>
+                        <div className="w-full p-2.5 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-xs text-emerald-400 font-mono font-bold flex items-center justify-between">
+                          <span>
+                            {calculateDisplayInterval(
+                              Number(currentSetting.dailyDisplayLimit) || 24,
+                              Number(currentSetting.operatingHoursPerDay) || 24
+                            )} minutes
+                          </span>
+                          <span className="text-[9px] uppercase px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300">
+                            Auto Calculated
+                          </span>
+                        </div>
+                        <span className="text-[10px] text-white/40 mt-1 block">
+                          Formula: {(Number(currentSetting.operatingHoursPerDay) || 24) * 60}m ÷ {Number(currentSetting.dailyDisplayLimit) || 24} limit
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Informative description block */}
+                    <div className="p-3 bg-amber-500/5 border border-amber-500/20 rounded-lg text-xs text-white/70 flex items-start gap-2.5">
+                      <Clock className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+                      <div>
+                        <p className="font-semibold text-amber-300">
+                          Automatic Frequency Scheduling Logic
+                        </p>
+                        <p className="text-[11px] text-white/60 mt-0.5">
+                          When daily scheduling is enabled, advertisements under <strong>{currentSetting.title}</strong> will automatically pace displays so they do not exceed {currentSetting.dailyDisplayLimit || 24} impressions per day, spacing out impressions evenly every {calculateDisplayInterval(Number(currentSetting.dailyDisplayLimit) || 24, Number(currentSetting.operatingHoursPerDay) || 24)} minutes.
+                        </p>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>

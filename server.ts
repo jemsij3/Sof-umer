@@ -5809,6 +5809,24 @@ async function startServer() {
 
   // Advertisements System (Placements, User Requests, Review Workflow & Campaigns)
   app.get('/api/advertisements', async (req, res) => {
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+
+    if (isMongoConnected) {
+      try {
+        const mongoAds = await (AdvertisementModel as any).find({}).lean();
+        if (mongoAds && mongoAds.length > 0) {
+          localDb.advertisements = mongoAds.map((a: any) => ({
+            ...a,
+            id: a.id || a._id?.toString()
+          }));
+        }
+      } catch (err) {
+        console.error('[Storage] Error fetching advertisements from Mongo:', err);
+      }
+    }
+
     res.json(localDb.advertisements || []);
   });
 
@@ -5875,6 +5893,8 @@ async function startServer() {
       userName: authUser?.fullName || advData.userName || undefined,
       viewsCount: 0,
       clicksCount: 0,
+      dailyViews: {},
+      todayViewsCount: 0,
       createdAt: nowIso,
       updatedAt: nowIso,
       // Status & visibility rules:
@@ -5887,7 +5907,23 @@ async function startServer() {
 
     localDb.advertisements = localDb.advertisements || [];
     localDb.advertisements.push(newAdv);
+
+    if (isMongoConnected) {
+      try {
+        await AdvertisementModel.updateOne({ id: newAdv.id }, { $set: newAdv }, { upsert: true });
+      } catch (err) {
+        console.error('[Storage] Error saving new advertisement in Mongo:', err);
+      }
+    }
+
     await saveDb();
+
+    broadcastAdEvent({
+      type: 'ad_create',
+      advertisement: newAdv,
+      timestamp: Date.now()
+    });
+
     res.json(newAdv);
   });
 
@@ -5932,8 +5968,26 @@ async function startServer() {
       ...updates,
       updatedAt: new Date().toISOString()
     };
+
+    const updatedAd = localDb.advertisements[idx];
+
+    if (isMongoConnected) {
+      try {
+        await AdvertisementModel.updateOne({ id }, { $set: updatedAd }, { upsert: true });
+      } catch (err) {
+        console.error('[Storage] Error updating advertisement in Mongo:', err);
+      }
+    }
+
     await saveDb();
-    return res.json(localDb.advertisements[idx]);
+
+    broadcastAdEvent({
+      type: 'ad_update',
+      advertisement: updatedAd,
+      timestamp: Date.now()
+    });
+
+    return res.json(updatedAd);
   });
 
   // Admin Review / Approval / Rejection Workflow Endpoint
@@ -5975,7 +6029,24 @@ async function startServer() {
 
     ad.updatedAt = new Date().toISOString();
     localDb.advertisements[idx] = ad;
+
+    if (isMongoConnected) {
+      try {
+        await AdvertisementModel.updateOne({ id }, { $set: ad }, { upsert: true });
+      } catch (err) {
+        console.error('[Storage] Error updating advertisement review in Mongo:', err);
+      }
+    }
+
     await saveDb();
+
+    broadcastAdEvent({
+      type: 'ad_update',
+      action,
+      advertisement: ad,
+      timestamp: Date.now()
+    });
+
     res.json({ success: true, advertisement: ad });
   });
 
@@ -5996,7 +6067,27 @@ async function startServer() {
       sidebar: sidebar ? { ...current.sidebar, ...sidebar } : current.sidebar,
       banner: banner ? { ...current.banner, ...banner } : current.banner
     };
+
+    if (isMongoConnected) {
+      try {
+        await AppSettingsModel.updateOne(
+          { key: 'appSettings' },
+          { $set: { key: 'appSettings', data: (localDb as any).appSettings } },
+          { upsert: true }
+        );
+      } catch (err) {
+        console.error('[Storage] Error saving banner pricing in Mongo:', err);
+      }
+    }
+
     await saveDb();
+
+    broadcastAdEvent({
+      type: 'pricing_update',
+      bannerAdPricing: (localDb as any).appSettings.bannerAdPricing,
+      timestamp: Date.now()
+    });
+
     res.json({ success: true, bannerAdPricing: (localDb as any).appSettings.bannerAdPricing });
   });
 

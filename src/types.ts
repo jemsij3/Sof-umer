@@ -339,6 +339,11 @@ export interface AdPlacementSetting {
   currency: string;
   maxSlots?: number;
   packages: AdPlacementPackage[];
+  // Daily Display Scheduling Settings
+  dailySchedulingEnabled?: boolean;
+  dailyDisplayLimit?: number;
+  calculatedIntervalMinutes?: number;
+  operatingHoursPerDay?: number;
 }
 
 export interface BannerAdPricingSettings {
@@ -375,6 +380,9 @@ export interface Advertisement {
   rejectionReason?: string;
   viewsCount?: number;
   clicksCount?: number;
+  dailyViews?: Record<string, number>;
+  todayViewsCount?: number;
+  lastViewedAt?: number;
   createdAt?: string;
   updatedAt?: string;
 }
