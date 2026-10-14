@@ -17,15 +17,11 @@ import {
   ChevronRight, UploadCloud, HelpCircle, FileText, AlertTriangle, Send, 
   ShieldCheck, Camera, Heart, Eye, Trash2, Edit2, Play, Pause, TrendingUp, 
   Info, List, Clock, Zap, DollarSign, Languages, Smartphone, Globe, ShieldAlert, Check, Plus, Lock, EyeOff, CheckSquare,
-  ChevronDown, Search, ArrowRight, ArrowLeft, Mail, Shield, ToggleLeft, ToggleRight, X, Folder, FolderOpen, Building, Gift, Briefcase, Save, Download,
-  Megaphone, Video, ExternalLink
+  ChevronDown, Search, ArrowRight, ArrowLeft, Mail, Shield, ToggleLeft, ToggleRight, X, Folder, FolderOpen, Building, Gift, Briefcase, Save, Download
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { usePWAInstall } from '../lib/usePWAInstall';
 import { AmharicInput } from './AmharicInput';
-import { Advertisement, AdPlacement } from '../types';
-import { isAdPubliclyActive, getAdDaysRemaining } from '../lib/advertisements';
-import { UserAdBannerModal } from './UserAdBannerModal';
 
 // Expandable Accordion Item for FAQ Section
 function AccordionItem({ title, content, isOpen, onToggle }: { title: string; content: string; isOpen: boolean; onToggle: () => void; key?: React.Key }) {
@@ -61,7 +57,7 @@ function AccordionItem({ title, content, isOpen, onToggle }: { title: string; co
 // AccordionItem for expandable FAQ items
 
 interface UserDashboardProps {
-  initialTab?: 'profile' | 'mylistings' | 'favorites' | 'messages' | 'payments' | 'notifications' | 'settings' | 'supportsafety' | 'edit-profile' | 'security' | 'myadvertisements';
+  initialTab?: 'profile' | 'mylistings' | 'favorites' | 'messages' | 'payments' | 'notifications' | 'settings' | 'supportsafety' | 'edit-profile' | 'security';
   onNavigate: (view: 'marketplace' | 'profile') => void;
   onNavigateToInfo?: (pageId: string) => void;
   onOpenCreateModal?: () => void;
@@ -85,7 +81,6 @@ export default function UserDashboard({
     properties,
     inquiries,
     notifications,
-    advertisements,
     currentLanguage,
     refreshData,
     logout,
@@ -106,33 +101,11 @@ export default function UserDashboard({
   // Navigation and State Tabs mapping
   const [activeTab, setActiveTab] = useState<string>(() => {
     if (initialTab === 'mylistings') return 'mylistings';
-    if (initialTab === 'myadvertisements') return 'myadvertisements';
     if (initialTab === 'notifications') return 'notifications';
     if (initialTab === 'settings' || initialTab === 'security') return 'security';
     if (initialTab === 'edit-profile') return 'edit-profile';
     return 'profile';
   });
-
-  // User Ad Banner Modal & Ad management state
-  const [userAdModalOpen, setUserAdModalOpen] = useState(false);
-  const [userAdFilter, setUserAdFilter] = useState<'all' | 'pending' | 'active' | 'rejected' | 'expired'>('all');
-
-  const myAdvertisements = useMemo(() => {
-    return (advertisements || []).filter(a => {
-      if (a.userId && currentUser?.id && a.userId === currentUser.id) return true;
-      if (a.userEmail && currentUser?.email && a.userEmail.toLowerCase() === currentUser.email.toLowerCase()) return true;
-      return false;
-    });
-  }, [advertisements, currentUser]);
-
-  const filteredMyAds = useMemo(() => {
-    if (userAdFilter === 'all') return myAdvertisements;
-    if (userAdFilter === 'pending') return myAdvertisements.filter(a => a.status === 'pending');
-    if (userAdFilter === 'active') return myAdvertisements.filter(a => isAdPubliclyActive(a, systemSettings) || a.status === 'approved' || a.status === 'active');
-    if (userAdFilter === 'rejected') return myAdvertisements.filter(a => a.status === 'rejected');
-    if (userAdFilter === 'expired') return myAdvertisements.filter(a => a.status === 'expired' || (a.endDate && new Date(a.endDate) < new Date()));
-    return myAdvertisements;
-  }, [myAdvertisements, userAdFilter]);
 
   const { isInstallable, isInstalled, isIOS, install: installPWA } = usePWAInstall();
   const [showIOSPWAModal, setShowIOSPWAModal] = useState(false);
@@ -910,34 +883,6 @@ export default function UserDashboard({
 
             <button
               type="button"
-              onClick={() => setActiveTab('myadvertisements')}
-              className="w-full flex items-center justify-between p-4 text-left hover:bg-white/5 transition-colors cursor-pointer group"
-            >
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-xl bg-amber-500/10 text-amber-400 border border-amber-500/10 group-hover:scale-105 transition-transform">
-                  <Megaphone className="w-4 h-4" />
-                </div>
-                <div>
-                  <span className="text-sm font-semibold text-white group-hover:text-amber-400 transition-colors block">
-                    {t('my_advertisements') || 'My Advertisements & Campaigns'}
-                  </span>
-                  <span className="text-[11px] text-white/40 block mt-0.5">
-                    Track banner promotions, YouTube/TikTok ads, and approval status
-                  </span>
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                {myAdvertisements.length > 0 && (
-                  <span className="px-2 py-0.5 rounded-full text-xs font-mono font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30">
-                    {myAdvertisements.length}
-                  </span>
-                )}
-                <ChevronRight className="w-4 h-4 text-white/40 group-hover:text-amber-400 group-hover:translate-x-0.5 transition-all" />
-              </div>
-            </button>
-
-            <button
-              type="button"
               onClick={() => setActiveTab('notifications')}
               className="w-full flex items-center justify-between p-4 text-left hover:bg-white/5 transition-colors cursor-pointer group"
             >
@@ -1663,222 +1608,6 @@ export default function UserDashboard({
                           </button>
                         </div>
                       </form>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* SECTION: MY ADVERTISEMENTS & CAMPAIGNS */}
-              {activeTab === 'myadvertisements' && (
-                <div className="space-y-6">
-                  {/* Top Header */}
-                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-white/5 pb-4">
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <button
-                          type="button"
-                          onClick={() => setActiveTab('profile')}
-                          className="p-1 text-white/50 hover:text-white sm:hidden cursor-pointer"
-                        >
-                          <ArrowLeft className="w-4 h-4" />
-                        </button>
-                        <h3 className="text-xl font-bold text-white tracking-tight flex items-center gap-2">
-                          <Megaphone className="w-5 h-5 text-amber-500" />
-                          <span>{t('my_advertisements') || 'My Advertisements & Campaigns'}</span>
-                        </h3>
-                      </div>
-                      <p className="text-xs text-white/40 mt-1">
-                        Manage your promotional banner campaigns, YouTube/TikTok videos, website links, and track verification status.
-                      </p>
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={() => setUserAdModalOpen(true)}
-                      className="inline-flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black font-extrabold text-xs rounded-xl transition shadow-lg shadow-amber-500/10 cursor-pointer shrink-0"
-                    >
-                      <Plus className="w-4 h-4" strokeWidth={3} />
-                      <span>{t('create_new_ad') || 'Create New Advertisement'}</span>
-                    </button>
-                  </div>
-
-                  {/* Filter chips */}
-                  <div className="flex items-center gap-2 flex-wrap">
-                    {[
-                      { id: 'all', label: 'All Campaigns', count: myAdvertisements.length },
-                      { id: 'pending', label: 'Pending Review', count: myAdvertisements.filter(a => a.status === 'pending').length },
-                      { id: 'active', label: 'Running Live', count: myAdvertisements.filter(a => isAdPubliclyActive(a, systemSettings) || a.status === 'approved' || a.status === 'active').length },
-                      { id: 'rejected', label: 'Rejected', count: myAdvertisements.filter(a => a.status === 'rejected').length },
-                      { id: 'expired', label: 'Expired', count: myAdvertisements.filter(a => a.status === 'expired' || (a.endDate && new Date(a.endDate) < new Date())).length }
-                    ].map(tab => (
-                      <button
-                        key={tab.id}
-                        type="button"
-                        onClick={() => setUserAdFilter(tab.id as any)}
-                        className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
-                          userAdFilter === tab.id
-                            ? 'bg-amber-500 text-black shadow-md'
-                            : 'bg-white/5 text-white/60 hover:text-white hover:bg-white/10'
-                        }`}
-                      >
-                        <span>{tab.label}</span>
-                        <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${
-                          userAdFilter === tab.id ? 'bg-black text-amber-400' : 'bg-white/10 text-white/60'
-                        }`}>
-                          {tab.count}
-                        </span>
-                      </button>
-                    ))}
-                  </div>
-
-                  {/* Advertisements Grid */}
-                  {filteredMyAds.length === 0 ? (
-                    <div className="text-center py-16 bg-black/20 rounded-3xl border border-white/5 space-y-3">
-                      <Megaphone className="w-10 h-10 text-white/20 mx-auto" />
-                      <h4 className="text-sm font-bold text-white font-serif">
-                        {userAdFilter === 'all' ? 'No Advertisements Submitted Yet' : `No ${userAdFilter} advertisements found`}
-                      </h4>
-                      <p className="text-xs text-white/40 max-w-sm mx-auto font-light">
-                        Promote your YouTube channel, TikTok videos, local events, or business website on SOF-UMER high-visibility banner placements.
-                      </p>
-                      <button
-                        type="button"
-                        onClick={() => setUserAdModalOpen(true)}
-                        className="mt-2 inline-flex items-center gap-1.5 px-4 py-2 bg-amber-500/20 hover:bg-amber-500 text-amber-400 hover:text-black border border-amber-500/30 font-bold text-xs rounded-xl transition cursor-pointer"
-                      >
-                        <Plus className="w-3.5 h-3.5" />
-                        <span>Start New Advertising Campaign</span>
-                      </button>
-                    </div>
-                  ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {filteredMyAds.map(ad => {
-                        const isLive = isAdPubliclyActive(ad, systemSettings);
-                        const isApproved = ad.status === 'approved' || isLive;
-                        const daysLeft = getAdDaysRemaining(ad);
-
-                        return (
-                          <div
-                            key={ad.id}
-                            className="bg-[#0e0e13] border border-white/10 rounded-2xl overflow-hidden flex flex-col justify-between shadow-xl text-left"
-                          >
-                            <div className="p-4 space-y-3">
-                              {/* Top Bar: Placement & Status Badge */}
-                              <div className="flex items-center justify-between gap-2 flex-wrap">
-                                <div className="flex items-center gap-1.5 flex-wrap">
-                                  <span className="text-[9px] uppercase font-mono font-bold px-2 py-0.5 rounded bg-amber-500/20 text-amber-400">
-                                    {ad.position === 'hero' ? 'Hero Billboard' : ad.position === 'sidebar' ? 'Sidebar Widget' : 'Inline Footer Bar'}
-                                  </span>
-                                  <span className="text-[9px] uppercase font-mono font-bold px-1.5 py-0.5 rounded bg-sky-500/20 text-sky-400">
-                                    {ad.adType || 'Promotion'}
-                                  </span>
-                                </div>
-
-                                <div>
-                                  {isLive ? (
-                                    <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center gap-1">
-                                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" /> LIVE & PUBLISHED
-                                    </span>
-                                  ) : isApproved ? (
-                                    <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 flex items-center gap-1">
-                                      <CheckCircle2 className="w-3 h-3 text-emerald-400" /> APPROVED
-                                    </span>
-                                  ) : ad.status === 'pending' ? (
-                                    <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30 flex items-center gap-1">
-                                      <Clock className="w-3 h-3 text-amber-400" /> PENDING REVIEW
-                                    </span>
-                                  ) : ad.status === 'rejected' ? (
-                                    <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-rose-500/20 text-rose-400 border border-rose-500/30">
-                                      REJECTED
-                                    </span>
-                                  ) : (
-                                    <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-white/10 text-white/50">
-                                      {ad.status?.toUpperCase() || 'PAUSED'}
-                                    </span>
-                                  )}
-                                </div>
-                              </div>
-
-                              {/* Media Thumbnail */}
-                              <div className="w-full h-40 rounded-xl overflow-hidden bg-black relative flex items-center justify-center border border-white/5">
-                                {ad.mediaType === 'video' || ad.videoUrl ? (
-                                  <video
-                                    src={ad.videoUrl || ad.imageUrl}
-                                    controls
-                                    playsInline
-                                    className="w-full h-full object-contain"
-                                  />
-                                ) : (
-                                  <img
-                                    src={ad.imageUrl}
-                                    alt={ad.title}
-                                    className="w-full h-full object-cover"
-                                    referrerPolicy="no-referrer"
-                                  />
-                                )}
-                              </div>
-
-                              {/* Content Details */}
-                              <div>
-                                <h4 className="font-bold text-sm text-white">{ad.title}</h4>
-                                <p className="text-xs text-white/60 mt-1 line-clamp-2 leading-relaxed font-light">{ad.description}</p>
-                              </div>
-
-                              {/* Destination Link */}
-                              {ad.linkUrl && (
-                                <div className="p-2 bg-black/40 border border-white/5 rounded-xl flex items-center justify-between text-xs font-mono">
-                                  <span className="text-white/40 text-[10px] truncate max-w-[180px]">{ad.linkUrl}</span>
-                                  <a
-                                    href={ad.linkUrl}
-                                    target="_blank"
-                                    rel="noreferrer"
-                                    className="text-amber-400 hover:underline flex items-center gap-1 text-[11px] shrink-0"
-                                  >
-                                    <span>Visit Destination</span>
-                                    <ExternalLink className="w-3 h-3" />
-                                  </a>
-                                </div>
-                              )}
-
-                              {/* Rejection notice if rejected */}
-                              {ad.status === 'rejected' && ad.rejectionReason && (
-                                <div className="p-3 bg-rose-500/10 border border-rose-500/20 rounded-xl text-xs text-rose-300 space-y-1">
-                                  <span className="font-bold flex items-center gap-1.5 text-rose-400">
-                                    <AlertTriangle className="w-3.5 h-3.5" /> Rejection Reason:
-                                  </span>
-                                  <p className="text-[11px] leading-relaxed text-rose-200/90">{ad.rejectionReason}</p>
-                                </div>
-                              )}
-
-                              {/* Payment status badge */}
-                              <div className="flex items-center justify-between text-[11px] pt-1">
-                                <span className="text-white/40">Payment Status:</span>
-                                <span className={`font-mono font-bold capitalize ${
-                                  ad.paymentStatus === 'verified'
-                                    ? 'text-emerald-400'
-                                    : ad.paymentStatus === 'pending'
-                                    ? 'text-amber-400'
-                                    : 'text-white/60'
-                                }`}>
-                                  {ad.paymentStatus || 'unpaid'}
-                                  {ad.paymentReference && ` (Ref: ${ad.paymentReference})`}
-                                </span>
-                              </div>
-                            </div>
-
-                            {/* Card Footer: Metrics & Dates */}
-                            <div className="p-3 bg-black/40 border-t border-white/5 flex items-center justify-between text-[11px] font-mono text-white/40 px-4">
-                              <span>Views: {ad.viewsCount || 0} • Clicks: {ad.clicksCount || 0}</span>
-                              {daysLeft !== null && isLive && (
-                                <span className="text-amber-400 font-bold">{daysLeft} days active remaining</span>
-                              )}
-                              {ad.endDate && !isLive && (
-                                <span>Expires: {ad.endDate}</span>
-                              )}
-                            </div>
-                          </div>
-                        );
-                      })}
                     </div>
                   )}
                 </div>
@@ -2675,15 +2404,6 @@ export default function UserDashboard({
           </motion.div>
         </AnimatePresence>
       </div>
-
-      {/* User Advertisement Request Modal */}
-      <UserAdBannerModal
-        isOpen={userAdModalOpen}
-        onClose={() => setUserAdModalOpen(false)}
-        onSuccess={() => {
-          refreshData();
-        }}
-      />
     </div>
   );
 }
