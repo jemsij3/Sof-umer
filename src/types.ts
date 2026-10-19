@@ -177,6 +177,7 @@ export interface Property {
   promotionExpiresAt?: string; // ISO date string
   promotedUntil?: string; // ISO date string
   approvalStatus?: 'approved' | 'pending' | 'rejected';
+  status?: 'active' | 'pending' | 'sold' | 'rented' | 'rejected' | string;
 
   // Retail & Wholesale Selling extensions
   sellingType?: 'Retail' | 'Wholesale' | 'Retail + Wholesale' | 'Retail & Wholesale' | 'retail' | 'wholesale' | 'retail_wholesale' | string;

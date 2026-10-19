@@ -177,25 +177,25 @@ let isMongoConnected = false;
 let isInitialLoadComplete = false;
 
 // Mongoose Schemas (strict: false allows dynamic properties while using MongoDB as persistent single source of truth)
-const userSchema = new mongoose.Schema({ id: { type: String, required: true, unique: true } }, { strict: false });
-const propertySchema = new mongoose.Schema({ id: { type: String, required: true, unique: true } }, { strict: false });
-const paymentMethodSchema = new mongoose.Schema({ id: { type: String, required: true, unique: true } }, { strict: false });
-const receiptSchema = new mongoose.Schema({ id: { type: String, required: true, unique: true } }, { strict: false });
-const inquirySchema = new mongoose.Schema({ id: { type: String, required: true, unique: true } }, { strict: false });
-const advertisementSchema = new mongoose.Schema({ id: { type: String, required: true, unique: true } }, { strict: false });
-const reportSchema = new mongoose.Schema({ id: { type: String, required: true, unique: true } }, { strict: false });
-const notificationSchema = new mongoose.Schema({ id: { type: String, required: true, unique: true } }, { strict: false });
-const categorySchema = new mongoose.Schema({ id: { type: String, required: true, unique: true } }, { strict: false });
-const appFeatureSchema = new mongoose.Schema({ id: { type: String, required: true, unique: true } }, { strict: false });
-const jobOpeningSchema = new mongoose.Schema({ id: { type: String, required: true, unique: true } }, { strict: false });
-const supportTicketSchema = new mongoose.Schema({ id: { type: String, required: true, unique: true } }, { strict: false });
-const offerSchema = new mongoose.Schema({ id: { type: String, required: true, unique: true } }, { strict: false });
-const languageSchema = new mongoose.Schema({ code: { type: String, required: true, unique: true } }, { strict: false });
-const translationSchema = new mongoose.Schema({ key: { type: String, required: true, unique: true } }, { strict: false });
-const faqSchema = new mongoose.Schema({ id: { type: String, required: true, unique: true } }, { strict: false });
-const reviewSchema = new mongoose.Schema({ id: { type: String, required: true, unique: true } }, { strict: false });
-const appSettingsSchema = new mongoose.Schema({ key: { type: String, required: true, unique: true } }, { strict: false });
-const announcementSchema = new mongoose.Schema({ id: { type: String, required: true, unique: true } }, { strict: false });
+const userSchema = new mongoose.Schema({ id: { type: String, index: true, sparse: true }, email: { type: String, index: true, sparse: true } }, { strict: false, timestamps: true });
+const propertySchema = new mongoose.Schema({ id: { type: String, index: true, sparse: true }, ownerId: { type: String, index: true, sparse: true }, status: { type: String, index: true, sparse: true } }, { strict: false, timestamps: true });
+const paymentMethodSchema = new mongoose.Schema({ id: { type: String, index: true, sparse: true } }, { strict: false });
+const receiptSchema = new mongoose.Schema({ id: { type: String, index: true, sparse: true } }, { strict: false });
+const inquirySchema = new mongoose.Schema({ id: { type: String, index: true, sparse: true } }, { strict: false });
+const advertisementSchema = new mongoose.Schema({ id: { type: String, index: true, sparse: true } }, { strict: false });
+const reportSchema = new mongoose.Schema({ id: { type: String, index: true, sparse: true } }, { strict: false });
+const notificationSchema = new mongoose.Schema({ id: { type: String, index: true, sparse: true } }, { strict: false });
+const categorySchema = new mongoose.Schema({ id: { type: String, index: true, sparse: true } }, { strict: false });
+const appFeatureSchema = new mongoose.Schema({ id: { type: String, index: true, sparse: true } }, { strict: false });
+const jobOpeningSchema = new mongoose.Schema({ id: { type: String, index: true, sparse: true } }, { strict: false });
+const supportTicketSchema = new mongoose.Schema({ id: { type: String, index: true, sparse: true } }, { strict: false });
+const offerSchema = new mongoose.Schema({ id: { type: String, index: true, sparse: true } }, { strict: false });
+const languageSchema = new mongoose.Schema({ code: { type: String, index: true, sparse: true } }, { strict: false });
+const translationSchema = new mongoose.Schema({ key: { type: String, index: true, sparse: true } }, { strict: false });
+const faqSchema = new mongoose.Schema({ id: { type: String, index: true, sparse: true } }, { strict: false });
+const reviewSchema = new mongoose.Schema({ id: { type: String, index: true, sparse: true } }, { strict: false });
+const appSettingsSchema = new mongoose.Schema({ key: { type: String, index: true, sparse: true } }, { strict: false });
+const announcementSchema = new mongoose.Schema({ id: { type: String, index: true, sparse: true } }, { strict: false });
 
 export const UserModel = mongoose.models.User || mongoose.model('User', userSchema);
 export const PropertyModel = mongoose.models.Property || mongoose.model('Property', propertySchema);
@@ -250,6 +250,108 @@ function attachMongoListeners() {
   });
 }
 
+function getMongoConnectOptions(overrideDbName?: string): mongoose.ConnectOptions {
+  const explicitDbName = overrideDbName || process.env.MONGODB_DB_NAME || process.env.MONGO_DB || process.env.DB_NAME;
+  const options: mongoose.ConnectOptions = {
+    serverSelectionTimeoutMS: 15000,
+    connectTimeoutMS: 15000,
+    socketTimeoutMS: 45000,
+  };
+  if (explicitDbName) {
+    options.dbName = explicitDbName;
+  } else if (MONGODB_URI) {
+    const match = MONGODB_URI.match(/mongodb(?:\+srv)?:\/\/[^/]+\/([^?/\s]+)/);
+    if (match && match[1] && match[1] !== 'test') {
+      options.dbName = match[1];
+    } else {
+      options.dbName = 'sof_umer_db';
+    }
+  }
+  return options;
+}
+
+let activeMongoDbName: string = 'sof_umer_db';
+
+async function inspectAndAlignMongoDatabase(): Promise<string> {
+  try {
+    const client = (mongoose.connection as any).client || (mongoose.connection.getClient ? mongoose.connection.getClient() : null);
+    const currentDbName = mongoose.connection.name || 'sof_umer_db';
+    activeMongoDbName = currentDbName;
+    console.log(`[Storage] Active MongoDB Database: "${currentDbName}"`);
+
+    const explicitDb = process.env.MONGODB_DB_NAME || process.env.MONGO_DB || process.env.DB_NAME;
+    if (explicitDb) {
+      console.log(`[Storage] Explicit database configured via environment: "${explicitDb}"`);
+      activeMongoDbName = explicitDb;
+      return explicitDb;
+    }
+
+    if (!client) return currentDbName;
+
+    // Check candidate databases that may contain the real production data
+    const candidateDbNames = Array.from(new Set([
+      currentDbName,
+      'sofumerapp',
+      'sofumer',
+      'sof_umer_db',
+      'sof_umer',
+      'marketplace',
+      'production',
+      'test'
+    ].filter(Boolean)));
+
+    let bestDbName = currentDbName;
+    let maxRecords = 0;
+
+    for (const candName of candidateDbNames) {
+      try {
+        const testDb = client.db(candName);
+        const cols = await testDb.listCollections().toArray();
+        if (!cols || cols.length === 0) continue;
+
+        let totalRecordsInCand = 0;
+        const propCol = cols.find((c: any) => ['properties', 'property', 'listings', 'listing', 'realestate'].includes(c.name.toLowerCase()));
+        if (propCol) {
+          try {
+            const count = await testDb.collection(propCol.name).countDocuments();
+            totalRecordsInCand += count * 10;
+          } catch (_) {}
+        }
+        const userCol = cols.find((c: any) => ['users', 'user', 'accounts', 'account', 'members'].includes(c.name.toLowerCase()));
+        if (userCol) {
+          try {
+            const count = await testDb.collection(userCol.name).countDocuments();
+            totalRecordsInCand += count * 5;
+          } catch (_) {}
+        }
+        console.log(`[Storage] Evaluated MongoDB database candidate "${candName}": ${cols.length} collections, record score: ${totalRecordsInCand}`);
+
+        if (totalRecordsInCand > maxRecords) {
+          maxRecords = totalRecordsInCand;
+          bestDbName = candName;
+        }
+      } catch (err: any) {
+        // Not authorized or doesn't exist
+      }
+    }
+
+    if (bestDbName && bestDbName !== currentDbName && maxRecords > 0) {
+      console.log(`[Storage] Re-aligning active MongoDB database to populated target: "${bestDbName}" (score: ${maxRecords})`);
+      const switched = mongoose.connection.useDb(bestDbName, { useCache: true });
+      (mongoose.connection as any).name = bestDbName;
+      (mongoose.connection as any).db = switched.db;
+      activeMongoDbName = bestDbName;
+      return bestDbName;
+    }
+
+    activeMongoDbName = bestDbName;
+    return bestDbName;
+  } catch (inspectErr) {
+    console.warn('[Storage] Database inspection warning:', inspectErr);
+    return mongoose.connection.name || 'sof_umer_db';
+  }
+}
+
 let isBackgroundRetrying = false;
 function retryMongoInBackground() {
   if (isBackgroundRetrying || !MONGODB_URI || isMongoConnected) return;
@@ -263,14 +365,12 @@ function retryMongoInBackground() {
     }
     try {
       console.log('[Storage] Attempting background MongoDB connection...');
-      await mongoose.connect(MONGODB_URI, {
-        serverSelectionTimeoutMS: 5000,
-        connectTimeoutMS: 5000,
-      });
+      await mongoose.connect(MONGODB_URI, getMongoConnectOptions());
       isMongoConnected = true;
       clearInterval(interval);
       isBackgroundRetrying = false;
       console.log('[Storage] Successfully established background MongoDB connection!');
+      await inspectAndAlignMongoDatabase();
       const loaded = await loadFromMongo();
       if (loaded) {
         applyDataSanityAndMigrations();
@@ -282,7 +382,7 @@ function retryMongoInBackground() {
   }, 6000);
 }
 
-async function connectMongo(retries: number = 2): Promise<boolean> {
+async function connectMongo(retries: number = 3): Promise<boolean> {
   if (!MONGODB_URI) {
     console.log('[Storage] MONGODB_URI is not set. Using persistent disk file storage fallback.');
     return false;
@@ -293,12 +393,10 @@ async function connectMongo(retries: number = 2): Promise<boolean> {
       console.log(`[Storage] Connecting to MongoDB instance (attempt ${attempt}/${retries})...`);
       mongoose.set('bufferCommands', false);
 
-      await mongoose.connect(MONGODB_URI, {
-        serverSelectionTimeoutMS: 5000,
-        connectTimeoutMS: 5000,
-      });
+      await mongoose.connect(MONGODB_URI, getMongoConnectOptions());
       isMongoConnected = true;
       console.log('[Storage] Successfully connected to MongoDB database as primary source of truth!');
+      await inspectAndAlignMongoDatabase();
       return true;
     } catch (err: any) {
       console.error(`[Storage] Error connecting to MongoDB (attempt ${attempt}/${retries}):`, err.message || err);
@@ -1015,25 +1113,33 @@ async function syncCollectionToMongo<T extends Record<string, any>>(
   if (!isMongoConnected || !isInitialLoadComplete) return;
   try {
     if (!items || !Array.isArray(items) || items.length === 0) {
-      // Guard against accidental wipes: Never delete all documents if array is unexpectedly empty
       console.warn(`[Storage] syncCollectionToMongo: skipping sync for ${model.modelName} because items array is empty`);
       return;
     }
-    const currentIds = items.map(item => item[idKey]).filter(id => id !== undefined && id !== null && id !== '');
     const bulkOps: any[] = items.map(item => {
+      const cleanItem: any = { ...item };
+      if (cleanItem._id) {
+        if (typeof cleanItem._id === 'string' && mongoose.Types.ObjectId.isValid(cleanItem._id) && cleanItem._id.length === 24) {
+          cleanItem._id = new mongoose.Types.ObjectId(cleanItem._id);
+        } else {
+          delete cleanItem._id;
+        }
+      }
+
       const filter: Record<string, any> = {};
-      filter[idKey] = item[idKey];
+      if (cleanItem.id) {
+        filter.id = cleanItem.id;
+      } else if (cleanItem[idKey]) {
+        filter[idKey] = cleanItem[idKey];
+      }
       return {
         updateOne: {
           filter,
-          update: { $set: item },
+          update: { $set: cleanItem },
           upsert: true
         }
       };
     });
-    // CRITICAL FIX: NEVER run blanket deleteMany during background sync!
-    // Blanket deletions wipe records whenever in-memory state is partial or unpopulated.
-    // Deletions in MongoDB are strictly handled by dedicated, explicit delete API endpoints.
     if (bulkOps.length > 0) {
       await model.bulkWrite(bulkOps as any, { ordered: false });
     }
@@ -1079,22 +1185,189 @@ async function saveToMongo() {
   }
 }
 
-async function fetchCollection<T = any>(model: mongoose.Model<any>): Promise<T[]> {
-  const docs = await model.find({}).lean().exec();
-  return docs.map((doc: any) => {
-    delete doc._id;
-    delete doc.__v;
-    return doc;
-  }) as T[];
+function normalizePropertyDoc(raw: any): Property {
+  if (!raw) return {} as Property;
+  const p = { ...raw };
+  const rawId = p.id || (p._id ? String(p._id) : '') || p.propertyId || p.listingId || ('prop-' + Math.random().toString(36).substring(2, 9));
+  p.id = String(rawId);
+  if (p._id) p._id = String(p._id);
+
+  if (!p.title && p.name) p.title = p.name;
+  if (!p.description && p.desc) p.description = p.desc;
+  if (!p.images || !Array.isArray(p.images)) {
+    p.images = p.image ? [p.image] : p.photos ? (Array.isArray(p.photos) ? p.photos : [p.photos]) : [];
+  }
+  if (!p.coverImage && p.images && p.images.length > 0) {
+    p.coverImage = p.images[0];
+  }
+
+  // Ensure price is a clean number
+  if (p.price === undefined && p.amount !== undefined) {
+    p.price = p.amount;
+  }
+  if (typeof p.price === 'string') {
+    p.price = Number(String(p.price).replace(/[^\d.]/g, '')) || 0;
+  } else if (typeof p.price !== 'number' || isNaN(p.price)) {
+    p.price = 0;
+  }
+
+  if (!p.currency) p.currency = 'ETB';
+  if (!p.category && p.majorCategory) p.category = p.majorCategory;
+  if (!p.majorCategory && p.category) p.majorCategory = p.category;
+  if (!p.majorCategory) p.majorCategory = 'Properties';
+
+  // Ensure location is a clean string
+  if (typeof p.location === 'object' && p.location !== null) {
+    p.location = [p.location.address, p.location.city, p.location.region].filter(Boolean).join(', ');
+  }
+  if (!p.location) {
+    p.location = [p.address, p.city, p.region].filter(Boolean).join(', ') || 'Addis Ababa, Ethiopia';
+  }
+
+  const statusLower = String(p.status || '').toLowerCase();
+  const isActive = statusLower === 'active' || statusLower === 'approved' || statusLower === 'published' || statusLower === 'available' || statusLower === 'live' || p.isVerifiedListing === true || p.approvalStatus === 'approved' || p.verificationStatus === 'verified';
+
+  // Default missing status on existing records to active/approved so they are not hidden
+  if (!p.status && !p.approvalStatus && !p.verificationStatus) {
+    p.status = 'active';
+    p.approvalStatus = 'approved';
+    p.verificationStatus = 'verified';
+    p.isVerifiedListing = true;
+  } else {
+    if (!p.status) p.status = isActive ? 'active' : 'pending';
+    if (!p.approvalStatus) p.approvalStatus = isActive ? 'approved' : 'pending';
+    if (!p.verificationStatus) p.verificationStatus = isActive ? 'verified' : 'pending';
+  }
+
+  if (isActive && p.approvalStatus !== 'rejected') {
+    p.approvalStatus = 'approved';
+    p.verificationStatus = 'verified';
+  }
+
+  if (p.viewsCount === undefined) p.viewsCount = p.views || 0;
+  if (!p.createdAt) p.createdAt = p.created_at || new Date().toISOString();
+  if (p.isArchived === undefined) p.isArchived = false;
+
+  return p as Property;
+}
+
+function normalizeUserDoc(raw: any): ServerUser {
+  if (!raw) return {} as ServerUser;
+  const u = { ...raw };
+  const rawId = u.id || (u._id ? String(u._id) : '') || u.userId || ('usr-' + Math.random().toString(36).substring(2, 9));
+  u.id = String(rawId);
+  if (u._id) u._id = String(u._id);
+
+  if (u.email) u.email = normalizeEmail(u.email);
+  if (u.phone) u.phone = normalizePhone(u.phone);
+  if (!u.fullName && (u.name || u.displayName || u.username)) {
+    u.fullName = u.name || u.displayName || u.username;
+  }
+  if (!u.fullName) u.fullName = u.email ? u.email.split('@')[0] : 'User';
+  if (!u.role) u.role = 'user';
+  if (!u.status) u.status = 'active';
+  if (u.isVerified === undefined) {
+    u.isVerified = u.verificationStatus === 'verified' || u.role === 'admin';
+  }
+  if (!u.verificationStatus) {
+    u.verificationStatus = u.isVerified ? 'verified' : 'unverified';
+  }
+  if (!u.createdAt) u.createdAt = u.created_at || new Date().toISOString();
+  if (!u.tokenVersion) u.tokenVersion = 1;
+  if (!u.loginHistory || !Array.isArray(u.loginHistory)) u.loginHistory = [];
+
+  return u as ServerUser;
+}
+
+async function fetchCollection<T = any>(
+  model: mongoose.Model<any>,
+  candidateCollectionNames?: string[]
+): Promise<T[]> {
+  try {
+    let docs: any[] = [];
+    const client = (mongoose.connection as any).client || (mongoose.connection.getClient ? mongoose.connection.getClient() : null);
+    const activeDb = mongoose.connection.db;
+
+    const dbsToSearch: any[] = [];
+    if (activeDb) dbsToSearch.push(activeDb);
+
+    if (client) {
+      const extraDbNames = [activeMongoDbName, 'sofumerapp', 'sofumer', 'sof_umer_db', 'sof_umer', 'marketplace', 'production', 'test'];
+      for (const edb of extraDbNames) {
+        if (edb && (!activeDb || activeDb.databaseName !== edb)) {
+          try {
+            dbsToSearch.push(client.db(edb));
+          } catch (_) {}
+        }
+      }
+    }
+
+    if (candidateCollectionNames && candidateCollectionNames.length > 0) {
+      for (const currentTargetDb of dbsToSearch) {
+        try {
+          const cols = await currentTargetDb.listCollections().toArray();
+          const colMap = new Map(cols.map((c: any) => [c.name.toLowerCase(), c.name]));
+          for (const candidate of candidateCollectionNames) {
+            const matched = colMap.get(candidate.toLowerCase());
+            if (matched) {
+              const foundDocs = await currentTargetDb.collection(matched).find({}).toArray();
+              if (foundDocs && foundDocs.length > 0) {
+                console.log(`[Storage] Retrieved ${foundDocs.length} records from raw MongoDB database "${currentTargetDb.databaseName}", collection "${matched}"`);
+                docs = foundDocs;
+                break;
+              }
+            }
+          }
+          if (docs && docs.length > 0) break;
+        } catch (colErr) {
+          // Continue to next db candidate
+        }
+      }
+    }
+
+    if (!docs || docs.length === 0) {
+      docs = await model.find({}).lean().exec();
+    }
+
+    return (docs || []).map((rawDoc: any) => {
+      const doc = { ...rawDoc };
+      const rawId = doc.id || (doc._id ? String(doc._id) : '') || doc.userId || doc.propertyId || doc.listingId;
+      doc.id = rawId ? String(rawId) : ('id-' + Math.random().toString(36).substring(2, 9));
+      if (doc._id) {
+        doc._id = String(doc._id);
+      }
+      delete doc.__v;
+      return doc;
+    }) as T[];
+  } catch (err) {
+    console.error(`[Storage] Error fetching collection for ${model.modelName}:`, err);
+    return [];
+  }
 }
 
 async function fetchAppSettings(): Promise<any> {
-  const doc: any = await AppSettingsModel.findOne({ key: 'appSettings' } as any).lean().exec();
-  if (doc) {
-    delete doc._id;
-    delete doc.__v;
+  try {
+    let doc: any = await AppSettingsModel.findOne({ key: 'appSettings' } as any).lean().exec();
+    if (!doc && mongoose.connection.db) {
+      const cols = await mongoose.connection.db.listCollections().toArray();
+      const colMap = new Map(cols.map(c => [c.name.toLowerCase(), c.name]));
+      for (const name of ['appsettings', 'systemsettings', 'settings']) {
+        const matched = colMap.get(name);
+        if (matched) {
+          doc = await mongoose.connection.db.collection(matched).findOne({});
+          if (doc) break;
+        }
+      }
+    }
+    if (doc) {
+      if (doc._id) doc._id = String(doc._id);
+      delete doc.__v;
+    }
+    return doc;
+  } catch (err) {
+    console.warn('[Storage] Error fetching appSettings:', err);
+    return null;
   }
-  return doc;
 }
 
 async function loadFromMongo(): Promise<boolean> {
@@ -1115,24 +1388,29 @@ async function loadFromMongo(): Promise<boolean> {
       console.warn('[Storage] Could not list MongoDB collections:', colErr);
     }
 
-    // Support legacy single-document state collections (dbstates, DbState) if present
+    // Support legacy single-document state collections (dbstates, DbState, etc.) if present
     let legacyData: any = null;
-    if (collectionNames.includes('dbstates') || collectionNames.includes('dbstate')) {
+    const legacyStateCandidates = ['dbstates', 'dbstate', 'db_state', 'state', 'states', 'data', 'store', 'backup'];
+    const matchedStateCol = collectionNames.find(c => legacyStateCandidates.includes(c));
+    if (matchedStateCol) {
       try {
         const DbStateModel = mongoose.models.DbState || mongoose.model('DbState', new mongoose.Schema({}, { strict: false }));
-        const stateDoc: any = await (DbStateModel as any).findOne({}).lean().exec();
+        let stateDoc: any = await (DbStateModel as any).findOne({}).lean().exec();
+        if (!stateDoc && mongoose.connection.db) {
+          stateDoc = await mongoose.connection.db.collection(matchedStateCol).findOne({});
+        }
         if (stateDoc) {
           legacyData = stateDoc.data || stateDoc.state || stateDoc;
           if (legacyData && (Array.isArray(legacyData.users) || Array.isArray(legacyData.properties))) {
-            console.log(`[Storage] Discovered legacy DbState collection with ${legacyData.users?.length || 0} users, ${legacyData.properties?.length || 0} properties.`);
+            console.log(`[Storage] Discovered legacy state collection "${matchedStateCol}" with ${legacyData.users?.length || 0} users, ${legacyData.properties?.length || 0} properties.`);
           }
         }
       } catch (legacyErr) {
-        console.warn('[Storage] Error checking legacy DbState:', legacyErr);
+        console.warn('[Storage] Error checking legacy state collection:', legacyErr);
       }
     }
 
-    // Fetch discrete collections
+    // Fetch discrete collections with candidate names
     const [
       users,
       properties,
@@ -1154,24 +1432,24 @@ async function loadFromMongo(): Promise<boolean> {
       announcements,
       appSettingsDoc
     ] = await Promise.all([
-      fetchCollection(UserModel),
-      fetchCollection(PropertyModel),
-      fetchCollection(PaymentMethodModel),
-      fetchCollection(ReceiptModel),
-      fetchCollection(InquiryModel),
-      fetchCollection(AdvertisementModel),
-      fetchCollection(ReportModel),
-      fetchCollection(NotificationModel),
-      fetchCollection(CategoryModel),
-      fetchCollection(AppFeatureModel),
-      fetchCollection(JobOpeningModel),
-      fetchCollection(SupportTicketModel),
-      fetchCollection(OfferModel),
-      fetchCollection(LanguageModel),
-      fetchCollection(TranslationModel),
-      fetchCollection(FaqModel),
-      fetchCollection(ReviewModel),
-      fetchCollection(AnnouncementModel),
+      fetchCollection(UserModel, ['users', 'user', 'Users', 'User', 'accounts', 'account', 'Accounts', 'members', 'member', 'profiles', 'profile']),
+      fetchCollection(PropertyModel, ['properties', 'property', 'listings', 'listing', 'Properties', 'Listings', 'Property', 'Listing', 'realestate', 'houses', 'items', 'posts']),
+      fetchCollection(PaymentMethodModel, ['paymentmethods', 'payment_methods', 'paymentMethods']),
+      fetchCollection(ReceiptModel, ['receipts', 'receipt', 'Receipts']),
+      fetchCollection(InquiryModel, ['inquiries', 'inquiry', 'Inquiries']),
+      fetchCollection(AdvertisementModel, ['advertisements', 'advertisement', 'ads', 'Ads']),
+      fetchCollection(ReportModel, ['reports', 'report', 'Reports']),
+      fetchCollection(NotificationModel, ['notifications', 'notification', 'Notifications']),
+      fetchCollection(CategoryModel, ['categories', 'category', 'Categories']),
+      fetchCollection(AppFeatureModel, ['appfeatures', 'app_features', 'appFeatures']),
+      fetchCollection(JobOpeningModel, ['jobopenings', 'job_openings', 'jobOpenings']),
+      fetchCollection(SupportTicketModel, ['supporttickets', 'support_tickets', 'supportTickets']),
+      fetchCollection(OfferModel, ['offers', 'offer', 'Offers']),
+      fetchCollection(LanguageModel, ['languages', 'language', 'Languages']),
+      fetchCollection(TranslationModel, ['translations', 'translation', 'Translations']),
+      fetchCollection(FaqModel, ['faqs', 'faq', 'Faqs']),
+      fetchCollection(ReviewModel, ['reviews', 'review', 'Reviews']),
+      fetchCollection(AnnouncementModel, ['announcements', 'announcement', 'Announcements']),
       fetchAppSettings()
     ]);
 
@@ -1194,15 +1472,17 @@ async function loadFromMongo(): Promise<boolean> {
     const allUsersMap = new Map<string, ServerUser>();
     if (Array.isArray(loadedUsers)) {
       for (const u of loadedUsers) {
-        const key = u.id || (u.email ? normalizeEmail(u.email) : '');
-        if (key) allUsersMap.set(key, u);
+        const normU = normalizeUserDoc(u);
+        const key = normU.id || (normU.email ? normalizeEmail(normU.email) : '');
+        if (key) allUsersMap.set(key, normU);
       }
     }
     if (Array.isArray(prevLocal.users)) {
       for (const u of prevLocal.users) {
-        const key = u.id || (u.email ? normalizeEmail(u.email) : '');
+        const normU = normalizeUserDoc(u);
+        const key = normU.id || (normU.email ? normalizeEmail(normU.email) : '');
         if (key && !allUsersMap.has(key)) {
-          allUsersMap.set(key, u);
+          allUsersMap.set(key, normU);
         }
       }
     }
@@ -1212,13 +1492,15 @@ async function loadFromMongo(): Promise<boolean> {
     const allPropsMap = new Map<string, Property>();
     if (Array.isArray(loadedProperties)) {
       for (const p of loadedProperties) {
-        if (p.id) allPropsMap.set(p.id, p);
+        const normP = normalizePropertyDoc(p);
+        if (normP.id) allPropsMap.set(normP.id, normP);
       }
     }
     if (Array.isArray(prevLocal.properties)) {
       for (const p of prevLocal.properties) {
-        if (p.id && !allPropsMap.has(p.id)) {
-          allPropsMap.set(p.id, p);
+        const normP = normalizePropertyDoc(p);
+        if (normP.id && !allPropsMap.has(normP.id)) {
+          allPropsMap.set(normP.id, normP);
         }
       }
     }
@@ -1449,15 +1731,33 @@ const applyDataSanityAndMigrations = () => {
   if (!localDb.properties || !Array.isArray(localDb.properties)) {
     localDb.properties = [];
   } else {
-    localDb.properties = localDb.properties.filter(p => !p.id.startsWith('prop-sample-'));
+    localDb.properties = localDb.properties
+      .filter(Boolean)
+      .map(normalizePropertyDoc);
+
     localDb.properties.forEach(p => {
-      // Preserve active status: if a listing is active or approved, do NOT force to pending
-      const isActive = (p as any).status === 'active' || (p as any).status === 'approved' || p.isVerifiedListing === true || p.approvalStatus === 'approved';
+      if (!p) return;
+      if (!p.id) {
+        p.id = (p as any)._id ? String((p as any)._id) : ('prop-' + Math.random().toString(36).substring(2, 9));
+      }
+      if ((p as any)._id) {
+        (p as any)._id = String((p as any)._id);
+      }
+      // Preserve active status: if a listing is active or approved, ensure approvalStatus is approved
+      const statusLower = String(p.status || '').toLowerCase();
+      const isActive = statusLower === 'active' || statusLower === 'approved' || statusLower === 'published' || statusLower === 'available' || statusLower === 'live' || p.isVerifiedListing === true || p.approvalStatus === 'approved' || p.verificationStatus === 'verified';
+      if (isActive && p.approvalStatus !== 'rejected') {
+        p.approvalStatus = 'approved';
+        p.verificationStatus = 'verified';
+      }
       if (!p.verificationStatus) {
         p.verificationStatus = isActive ? 'verified' : 'pending';
       }
       if (!p.approvalStatus) {
         p.approvalStatus = isActive ? 'approved' : 'pending';
+      }
+      if (!p.status) {
+        p.status = isActive ? 'active' : 'pending';
       }
       if ((p as any).isArchived === undefined) {
         (p as any).isArchived = false;
@@ -2288,7 +2588,7 @@ async function startServer() {
     if (user.email && user.email.toLowerCase() === 'jemaljima@gmail.com') return true;
 
     const role = (user.role || '').toLowerCase();
-    if (['owner', 'superadmin'].includes(role)) return true;
+    if (['admin', 'owner', 'superadmin'].includes(role) || user.isAdmin === true || user.isOwner === true || user.isSuperAdmin === true) return true;
 
     // Check permissions array for employees
     const userPerms = user.permissions || [];
@@ -3268,6 +3568,13 @@ async function startServer() {
     };
 
     localDb.users.push(newUser);
+    if (isMongoConnected) {
+      try {
+        await UserModel.updateOne({ id: newUser.id }, { $set: newUser }, { upsert: true });
+      } catch (mErr) {
+        console.warn('[Storage] Direct UserModel write warning:', mErr);
+      }
+    }
     await saveDb();
 
     // Dispatch verification email
@@ -3699,6 +4006,53 @@ async function startServer() {
       }
 
       localDb.users[idx] = { ...localDb.users[idx], ...updates };
+      if (isMongoConnected) {
+        try {
+          await UserModel.updateOne(
+            { $or: [{ id }, { _id: id }] },
+            { $set: localDb.users[idx] },
+            { upsert: true }
+          );
+        } catch (mErr) {
+          console.warn('[Storage] Direct UserModel update warning:', mErr);
+        }
+      }
+      await saveDb();
+      return res.json(stripSecrets(localDb.users[idx]));
+    }
+    res.status(404).json({ error: 'User not found' });
+  });
+
+  app.patch('/api/users/:id', requireAuth, async (req, res) => {
+    const { id } = req.params;
+    const updates = req.body;
+    const currentUser = (req as any).user;
+
+    if (currentUser.id !== id && !isUserAdmin(currentUser)) {
+      return res.status(403).json({ error: 'You are not authorized to update this user profile.' });
+    }
+
+    const idx = localDb.users.findIndex(u => u.id === id || (u as any)._id === id);
+    if (idx !== -1) {
+      if (!isUserAdmin(currentUser)) {
+        delete updates.role;
+        delete updates.status;
+        delete updates.isVerified;
+        delete updates.verificationStatus;
+        delete updates.passwordHash;
+      }
+      localDb.users[idx] = { ...localDb.users[idx], ...updates };
+      if (isMongoConnected) {
+        try {
+          await UserModel.updateOne(
+            { $or: [{ id }, { _id: id }] },
+            { $set: localDb.users[idx] },
+            { upsert: true }
+          );
+        } catch (mErr) {
+          console.warn('[Storage] Direct UserModel patch warning:', mErr);
+        }
+      }
       await saveDb();
       return res.json(stripSecrets(localDb.users[idx]));
     }
@@ -3706,7 +4060,99 @@ async function startServer() {
   });
 
   app.get('/api/users', requirePermission(['Verify Users', 'Manage Users', 'View Audit Logs']), async (req, res) => {
-    res.json(localDb.users.map(stripSecrets));
+    let userList = localDb.users || [];
+    if (isMongoConnected) {
+      try {
+        const dbUsers = await fetchCollection(UserModel, ['users', 'user', 'Users', 'User', 'accounts', 'account', 'Accounts', 'members', 'member', 'profiles', 'profile']);
+        if (dbUsers && dbUsers.length > 0) {
+          const userMap = new Map<string, ServerUser>();
+          for (const u of dbUsers) {
+            const norm = normalizeUserDoc(u);
+            const key = norm.id || (norm.email ? normalizeEmail(norm.email) : '');
+            if (key) userMap.set(key, norm);
+          }
+          for (const u of userList) {
+            const norm = normalizeUserDoc(u);
+            const key = norm.id || (norm.email ? normalizeEmail(norm.email) : '');
+            if (key && !userMap.has(key)) userMap.set(key, norm);
+          }
+          localDb.users = Array.from(userMap.values());
+          userList = localDb.users;
+        }
+      } catch (err) {
+        console.warn('[Storage] Fallback UserModel query error:', err);
+      }
+    }
+
+    const { role, status, search } = req.query;
+    let filteredUsers = userList;
+    if (role && role !== 'all') {
+      const rLower = String(role).toLowerCase();
+      filteredUsers = filteredUsers.filter(u => (u.role || '').toLowerCase() === rLower);
+    }
+    if (status && status !== 'all') {
+      const sLower = String(status).toLowerCase();
+      filteredUsers = filteredUsers.filter(u => (u.status || '').toLowerCase() === sLower);
+    }
+    if (search && typeof search === 'string' && search.trim()) {
+      const q = search.trim().toLowerCase();
+      filteredUsers = filteredUsers.filter(u => 
+        (u.fullName && u.fullName.toLowerCase().includes(q)) || 
+        (u.email && u.email.toLowerCase().includes(q)) ||
+        (u.phone && u.phone.includes(q))
+      );
+    }
+
+    res.json(filteredUsers.map(stripSecrets));
+  });
+
+  app.get('/api/users/count', async (req, res) => {
+    const count = (localDb.users || []).length;
+    res.json({ count, total: count });
+  });
+
+  app.get('/api/users/:id', requireAuth, async (req, res) => {
+    const { id } = req.params;
+    const currentUser = (req as any).user;
+    if (!isUserAdmin(currentUser) && currentUser.id !== id && (currentUser as any)._id !== id) {
+      return res.status(403).json({ error: 'Access denied.' });
+    }
+    let target = (localDb.users || []).find(u => u.id === id || (u as any)._id === id);
+    if (!target && isMongoConnected) {
+      try {
+        const query: any = {
+          $or: [
+            { id },
+            { _id: id },
+            ...(mongoose.Types.ObjectId.isValid(id) && id.length === 24 ? [{ _id: new mongoose.Types.ObjectId(id) }] : [])
+          ]
+        };
+        let doc: any = await UserModel.findOne(query).lean().exec();
+        if (!doc) {
+          const client = (mongoose.connection as any).client || (mongoose.connection.getClient ? mongoose.connection.getClient() : null);
+          const dbsToSearch = [mongoose.connection.db, client ? client.db(activeMongoDbName) : null, client ? client.db('sofumerapp') : null, client ? client.db('sofumer') : null].filter(Boolean);
+          const candCols = ['users', 'user', 'Users', 'User', 'accounts', 'account', 'members'];
+          for (const d of dbsToSearch) {
+            for (const c of candCols) {
+              try {
+                doc = await d.collection(c).findOne(query);
+                if (doc) break;
+              } catch (_) {}
+            }
+            if (doc) break;
+          }
+        }
+        if (doc) {
+          target = normalizeUserDoc(doc);
+          if (!localDb.users) localDb.users = [];
+          localDb.users.push(target);
+        }
+      } catch (err) {
+        console.warn('[Storage] Fallback user query error:', err);
+      }
+    }
+    if (!target) return res.status(404).json({ error: 'User not found.' });
+    res.json(stripSecrets(target));
   });
 
   // --- USER MODERATION ENDPOINTS ---
@@ -4212,6 +4658,18 @@ async function startServer() {
 
   // Properties & Listings Endpoints
   app.get(['/api/properties', '/api/listings'], async (req, res) => {
+    // If local memory is empty but MongoDB is connected, load latest properties directly
+    if (isMongoConnected && (!localDb.properties || localDb.properties.length === 0)) {
+      try {
+        const dbProps = await fetchCollection(PropertyModel, ['properties', 'property', 'listings', 'listing', 'Properties', 'Listings', 'Property', 'Listing', 'realestate', 'houses', 'items', 'posts']);
+        if (dbProps && dbProps.length > 0) {
+          localDb.properties = dbProps.map(normalizePropertyDoc);
+        }
+      } catch (propErr) {
+        console.warn('[Storage] Property fallback fetch warning:', propErr);
+      }
+    }
+
     // Automatically transition expired promotions back to standard status
     const now = Date.now();
     for (const p of (localDb.properties || [])) {
@@ -4231,9 +4689,24 @@ async function startServer() {
     }
 
     const ownerId = req.query.ownerId as string;
+    const catQuery = (req.query.category || req.query.majorCategory) as string;
+    const statusQuery = req.query.status as string;
+
     let list = localDb.properties || [];
     if (ownerId) {
       list = list.filter(p => p.ownerId === ownerId || (p as any).createdBy === ownerId);
+    }
+    if (catQuery && catQuery !== 'all' && catQuery !== 'All') {
+      const qLower = catQuery.toLowerCase();
+      list = list.filter(p => 
+        (p.majorCategory && p.majorCategory.toLowerCase() === qLower) || 
+        (p.category && p.category.toLowerCase() === qLower) ||
+        (p.subCategoryId && p.subCategoryId.toLowerCase() === qLower)
+      );
+    }
+    if (statusQuery && statusQuery !== 'all' && statusQuery !== 'All') {
+      const sLower = statusQuery.toLowerCase();
+      list = list.filter(p => (p.status && p.status.toLowerCase() === sLower) || (p.approvalStatus && p.approvalStatus.toLowerCase() === sLower));
     }
 
     // Resolve requester auth if token provided
@@ -4286,8 +4759,8 @@ async function startServer() {
         return false;
       }
 
-      const isApproved = p.approvalStatus === 'approved' || p.verificationStatus === 'verified' || p.isVerifiedListing === true || status === 'active';
-      if (!isApproved && (p.approvalStatus === 'pending' || p.verificationStatus === 'pending')) {
+      const isApproved = p.approvalStatus === 'approved' || p.verificationStatus === 'verified' || p.isVerifiedListing === true || ['active', 'approved', 'published', 'available', 'live'].includes(status);
+      if (!isApproved && (p.approvalStatus === 'pending' || p.verificationStatus === 'pending' || status === 'pending')) {
         return false;
       }
       return true;
@@ -4311,8 +4784,50 @@ async function startServer() {
     res.json(myListings);
   });
 
+  app.get(['/api/properties/count', '/api/listings/count'], async (req, res) => {
+    const count = (localDb.properties || []).length;
+    res.json({ count, total: count });
+  });
+
   app.get(['/api/properties/:id', '/api/listings/:id'], async (req, res) => {
-    const prop = (localDb.properties || []).find(p => p.id === req.params.id);
+    const targetId = req.params.id;
+    let prop = (localDb.properties || []).find(p => p.id === targetId || (p as any)._id === targetId);
+
+    // If not found in memory, query directly from MongoDB by id or ObjectId
+    if (!prop && isMongoConnected) {
+      try {
+        const query: any = {
+          $or: [
+            { id: targetId },
+            { _id: targetId },
+            ...(mongoose.Types.ObjectId.isValid(targetId) && targetId.length === 24 ? [{ _id: new mongoose.Types.ObjectId(targetId) }] : [])
+          ]
+        };
+        let mongoDoc: any = await PropertyModel.findOne(query).lean().exec();
+        if (!mongoDoc) {
+          const client = (mongoose.connection as any).client || (mongoose.connection.getClient ? mongoose.connection.getClient() : null);
+          const dbsToSearch = [mongoose.connection.db, client ? client.db(activeMongoDbName) : null, client ? client.db('sofumerapp') : null, client ? client.db('sofumer') : null].filter(Boolean);
+          const candCols = ['properties', 'property', 'listings', 'listing', 'Properties', 'Listings'];
+          for (const d of dbsToSearch) {
+            for (const c of candCols) {
+              try {
+                mongoDoc = await d.collection(c).findOne(query);
+                if (mongoDoc) break;
+              } catch (_) {}
+            }
+            if (mongoDoc) break;
+          }
+        }
+        if (mongoDoc) {
+          prop = normalizePropertyDoc(mongoDoc);
+          if (!localDb.properties) localDb.properties = [];
+          localDb.properties.push(prop);
+        }
+      } catch (err) {
+        console.warn('[Storage] Fallback single property query error:', err);
+      }
+    }
+
     if (!prop) return res.status(404).json({ error: 'Listing not found' });
 
     // Transition expired promotion back to standard status
@@ -4331,7 +4846,9 @@ async function startServer() {
     }
 
     // Check if listing is pending admin approval
-    const isPending = prop.approvalStatus === 'pending' || prop.verificationStatus === 'pending' || prop.approvalStatus === 'rejected';
+    const status = ((prop as any).status || '').toLowerCase();
+    const isApproved = prop.approvalStatus === 'approved' || prop.verificationStatus === 'verified' || prop.isVerifiedListing === true || ['active', 'approved', 'published', 'available', 'live'].includes(status);
+    const isPending = !isApproved && (prop.approvalStatus === 'pending' || prop.verificationStatus === 'pending' || prop.approvalStatus === 'rejected');
     if (isPending) {
       let authUser: ServerUser | undefined = undefined;
       const authHeader = req.headers.authorization;
@@ -4652,6 +5169,7 @@ async function startServer() {
         isTopAd: propertyData.isTopAd === true || requestedPlan === 'starter' || requestedPlan === 'basic' || requestedPlan === 'vip',
         isFeatured: propertyData.isFeatured === true || requestedPlan === 'premium' || requestedPlan === 'vip',
         promotionExpiresAt: computedExpiresAt,
+        status: canApproveListings ? (propertyData.status || 'active') : (propertyData.status || 'pending'),
         approvalStatus: canApproveListings ? (propertyData.approvalStatus || 'approved') : 'pending',
         verificationStatus: canApproveListings ? (propertyData.verificationStatus || 'verified') : 'pending',
         isVerifiedListing: canApproveListings ? (propertyData.isVerifiedListing !== undefined ? propertyData.isVerifiedListing : true) : false,
@@ -4665,6 +5183,13 @@ async function startServer() {
       (newProperty as any).isArchived = false;
 
       localDb.properties.push(newProperty);
+      if (isMongoConnected) {
+        try {
+          await PropertyModel.updateOne({ id: newProperty.id }, { $set: newProperty }, { upsert: true });
+        } catch (mErr) {
+          console.warn('[Storage] Direct PropertyModel write warning:', mErr);
+        }
+      }
       await saveDb();
 
       console.log(`[ListingCreated] ID: ${newProperty.id}, Title: "${newProperty.title}", Category: ${newProperty.category}, Images: ${processedImages.length}`);
@@ -4698,7 +5223,7 @@ async function startServer() {
     const { id } = req.params;
     const updates = req.body;
     const currentUser = (req as any).user;
-    const idx = localDb.properties.findIndex(p => p.id === id);
+    const idx = localDb.properties.findIndex(p => p.id === id || (p as any)._id === id);
     if (idx !== -1) {
       const property = localDb.properties[idx];
       const isOwner = property.ownerId === currentUser.id ||
@@ -4804,6 +5329,7 @@ async function startServer() {
           updates.isVerifiedListing = updates.verificationStatus === 'verified';
           if (updates.verificationStatus === 'verified') {
             updates.approvalStatus = 'approved';
+            updates.status = 'active';
             updates.lastApprovedAt = new Date().toISOString();
             updates.approvedBy = currentUser.email || currentUser.id;
 
@@ -4822,6 +5348,7 @@ async function startServer() {
             }
           } else if (updates.verificationStatus === 'rejected') {
             updates.approvalStatus = 'rejected';
+            updates.status = 'rejected';
           }
         }
       }
@@ -4881,6 +5408,24 @@ async function startServer() {
         }
       }
 
+      if (isMongoConnected) {
+        try {
+          const updateFilter: any = {
+            $or: [
+              { id },
+              { _id: id },
+              ...(mongoose.Types.ObjectId.isValid(id) && id.length === 24 ? [{ _id: new mongoose.Types.ObjectId(id) }] : [])
+            ]
+          };
+          await PropertyModel.updateOne(
+            updateFilter,
+            { $set: localDb.properties[idx] },
+            { upsert: true }
+          );
+        } catch (mErr) {
+          console.warn('[Storage] Direct PropertyModel update warning:', mErr);
+        }
+      }
       await saveDb();
       return res.json(localDb.properties[idx]);
     }
@@ -4890,7 +5435,7 @@ async function startServer() {
   app.delete(['/api/properties/:id', '/api/listings/:id'], requireAuth, async (req, res) => {
     const { id } = req.params;
     const currentUser = (req as any).user;
-    const idx = (localDb.properties || []).findIndex(p => p.id === id);
+    const idx = (localDb.properties || []).findIndex(p => p.id === id || (p as any)._id === id);
     if (idx !== -1) {
       const property = localDb.properties[idx];
       const isOwner = property.ownerId === currentUser.id ||
@@ -4919,7 +5464,14 @@ async function startServer() {
       // 3. Directly delete from MongoDB Atlas immediately
       if (isMongoConnected) {
         try {
-          await PropertyModel.deleteOne({ id });
+          const deleteFilter: any = {
+            $or: [
+              { id },
+              { _id: id },
+              ...(mongoose.Types.ObjectId.isValid(id) && id.length === 24 ? [{ _id: new mongoose.Types.ObjectId(id) }] : [])
+            ]
+          };
+          await PropertyModel.deleteOne(deleteFilter);
           await InquiryModel.deleteMany({ $or: [{ propertyId: id }, { relatedPropertyId: id }] });
           await ReviewModel.deleteMany({ propertyId: id });
           await OfferModel.deleteMany({ propertyId: id });
@@ -5693,8 +6245,10 @@ async function startServer() {
   app.post('/api/properties/approve-all', requirePermission('Approve Listings'), async (req, res) => {
     let count = 0;
     for (const prop of localDb.properties) {
-      if (!prop.verificationStatus || prop.verificationStatus === 'pending') {
+      if (!prop.verificationStatus || prop.verificationStatus === 'pending' || prop.approvalStatus === 'pending' || prop.status === 'pending') {
         prop.verificationStatus = 'verified';
+        prop.approvalStatus = 'approved';
+        prop.status = 'active';
         prop.isVerifiedListing = true;
         count++;
       }
@@ -6504,6 +7058,20 @@ async function startServer() {
     };
     await saveDb();
     res.json((localDb as any).appSettings);
+  });
+
+  // Public Counts & Stats Endpoints
+  app.get(['/api/stats', '/api/counts'], async (req, res) => {
+    const properties = localDb.properties || [];
+    const users = localDb.users || [];
+    res.json({
+      propertiesCount: properties.length,
+      activePropertiesCount: properties.filter(p => p.status === 'active' || p.approvalStatus === 'approved').length,
+      usersCount: users.length,
+      activeUsersCount: users.filter(u => u.status === 'active').length,
+      mongoConnected: isMongoConnected,
+      timestamp: new Date().toISOString()
+    });
   });
 
   // Database Backup and Safety Routes

@@ -625,21 +625,29 @@ export const PRODUCT_CATEGORIES: CategoryRedesign[] = REDESIGNED_CATEGORIES.filt
 
 export function isListingActiveAndPublished(p: any): boolean {
   if (!p) return false;
+  if ((p as any).isArchived) return false;
+  if (p.isSold || p.isRented || p.isExpired || p.isDeleted) return false;
 
-  // 1. Approval/Verification check: Must be verified or explicitly verified listing, and not pending/rejected
-  const isApproved = (p.verificationStatus === 'verified' || p.isVerifiedListing === true || p.approvalStatus === 'approved') &&
-                     p.verificationStatus !== 'rejected' &&
-                     p.approvalStatus !== 'rejected' &&
-                     p.verificationStatus !== 'pending' &&
-                     p.approvalStatus !== 'pending';
-  if (!isApproved) return false;
-
-  // 2. Status checks
   const status = extractString(p.status).toLowerCase();
-  if (['sold', 'rented', 'unavailable', 'expired', 'deleted', 'rejected', 'pending'].includes(status)) {
+  if (['sold', 'rented', 'unavailable', 'expired', 'deleted', 'rejected'].includes(status)) {
     return false;
   }
-  if (p.isSold || p.isRented || p.isExpired || p.isDeleted) {
+  if (p.verificationStatus === 'rejected' || p.approvalStatus === 'rejected') {
+    return false;
+  }
+
+  // 1. Approval/Verification/Active check
+  const isApproved = p.verificationStatus === 'verified' || 
+                     p.isVerifiedListing === true || 
+                     p.approvalStatus === 'approved' ||
+                     ['active', 'approved', 'published', 'available', 'live'].includes(status);
+
+  if (isApproved) {
+    return true;
+  }
+
+  // If explicitly pending and not marked active
+  if (p.verificationStatus === 'pending' || p.approvalStatus === 'pending' || status === 'pending') {
     return false;
   }
 

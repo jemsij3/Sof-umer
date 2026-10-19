@@ -1949,7 +1949,8 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
         video: propForm.videoUrl,
         videoUrl: propForm.videoUrl,
         isVerifiedListing: propForm.verificationStatus === 'verified',
-        approvalStatus: propForm.verificationStatus === 'verified' ? 'approved' : propForm.verificationStatus === 'rejected' ? 'rejected' : propForm.approvalStatus
+        approvalStatus: propForm.verificationStatus === 'verified' ? 'approved' : propForm.verificationStatus === 'rejected' ? 'rejected' : propForm.approvalStatus,
+        status: propForm.verificationStatus === 'verified' ? 'active' : propForm.verificationStatus === 'rejected' ? 'rejected' : propForm.status
       };
 
       const res = await fetch(`/api/properties/${editingProp.id}`, {
@@ -1980,6 +1981,7 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
         body: JSON.stringify({
           verificationStatus: status,
           approvalStatus: status === 'verified' ? 'approved' : status === 'rejected' ? 'rejected' : 'pending',
+          status: status === 'verified' ? 'active' : status === 'rejected' ? 'rejected' : 'pending',
           isVerifiedListing: status === 'verified'
         })
       });
@@ -2590,16 +2592,16 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
     const matchesSearch = extractString(p.title).toLowerCase().includes(searchLower) || 
                           extractString(p.location).toLowerCase().includes(searchLower) ||
                           extractString(p.ownerName).toLowerCase().includes(searchLower);
-    const matchesCat = listingCatFilter === 'all' || p.majorCategory === listingCatFilter;
+    const matchesCat = listingCatFilter === 'all' || p.majorCategory === listingCatFilter || p.category === listingCatFilter;
     
     const hasPendingSlip = receipts.some(r => r.relatedPropertyId === p.id && r.status === 'Pending');
     const isPromoted = p.isFeatured || p.isTopAd || !!p.boostPlan;
 
     const matchesStatus = listingStatusFilter === 'all' || 
-      (listingStatusFilter === 'pending' && (p.verificationStatus === 'pending' || p.approvalStatus === 'pending' || !p.verificationStatus)) ||
+      (listingStatusFilter === 'pending' && (p.verificationStatus === 'pending' || p.approvalStatus === 'pending')) ||
       (listingStatusFilter === 'promoted' && isPromoted) ||
       (listingStatusFilter === 'promotion_requested' && hasPendingSlip) ||
-      (listingStatusFilter === 'verified' && (p.verificationStatus === 'verified' || p.isVerifiedListing || p.approvalStatus === 'approved') && p.verificationStatus !== 'pending' && p.approvalStatus !== 'pending') ||
+      (listingStatusFilter === 'verified' && (p.verificationStatus === 'verified' || p.isVerifiedListing || p.approvalStatus === 'approved' || (p as any).status === 'active') && p.verificationStatus !== 'rejected' && p.approvalStatus !== 'rejected') ||
       (listingStatusFilter === 'rejected' && (p.verificationStatus === 'rejected' || p.approvalStatus === 'rejected'));
     return matchesSearch && matchesCat && matchesStatus;
   });

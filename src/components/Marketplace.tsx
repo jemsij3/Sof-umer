@@ -382,8 +382,7 @@ export default function Marketplace({
   // Filter properties dynamically
   const filteredProperties = useMemo(() => {
     return properties.filter(prop => {
-      if ((prop as any).isArchived) return false;
-      if (prop.approvalStatus === 'rejected' || prop.approvalStatus === 'pending' || prop.verificationStatus === 'pending') return false;
+      if (!isListingActiveAndPublished(prop)) return false;
 
       // Search text
       const matchesSearch =
@@ -427,11 +426,7 @@ export default function Marketplace({
       // Featured only filter from footer
       const matchesFeaturedOnly = !featuredOnlyFilter || isPropertyActivelyFeatured(prop);
 
-      // Only display approved/verified properties to the public
-      const isApproved = prop.verificationStatus === 'verified' || prop.isVerifiedListing === true || prop.approvalStatus === 'approved';
-
       return (
-        isApproved &&
         matchesSearch &&
         matchesMajorCategory &&
         matchesType &&
