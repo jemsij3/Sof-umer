@@ -2,6 +2,7 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 import express from 'express';
+import compression from 'compression';
 import path from 'path';
 import fs from 'fs/promises';
 import fsSync from 'fs';
@@ -177,8 +178,31 @@ let isMongoConnected = false;
 let isInitialLoadComplete = false;
 
 // Mongoose Schemas (strict: false allows dynamic properties while using MongoDB as persistent single source of truth)
-const userSchema = new mongoose.Schema({ id: { type: String, index: true, sparse: true }, email: { type: String, index: true, sparse: true } }, { strict: false, timestamps: true });
-const propertySchema = new mongoose.Schema({ id: { type: String, index: true, sparse: true }, ownerId: { type: String, index: true, sparse: true }, status: { type: String, index: true, sparse: true } }, { strict: false, timestamps: true });
+const userSchema = new mongoose.Schema({
+  id: { type: String, index: true, sparse: true },
+  email: { type: String, index: true, sparse: true },
+  phone: { type: String, index: true, sparse: true },
+  role: { type: String, index: true, sparse: true },
+  status: { type: String, index: true, sparse: true },
+  verificationStatus: { type: String, index: true, sparse: true }
+}, { strict: false, timestamps: true });
+userSchema.index({ role: 1, status: 1 });
+userSchema.index({ createdAt: -1 });
+
+const propertySchema = new mongoose.Schema({
+  id: { type: String, index: true, sparse: true },
+  ownerId: { type: String, index: true, sparse: true },
+  status: { type: String, index: true, sparse: true },
+  approvalStatus: { type: String, index: true, sparse: true },
+  majorCategory: { type: String, index: true, sparse: true },
+  category: { type: String, index: true, sparse: true },
+  isFeatured: { type: Boolean, index: true, sparse: true },
+  createdAt: { type: Date, index: true, sparse: true },
+  price: { type: Number, index: true, sparse: true }
+}, { strict: false, timestamps: true });
+propertySchema.index({ status: 1, approvalStatus: 1, createdAt: -1 });
+propertySchema.index({ status: 1, approvalStatus: 1, majorCategory: 1 });
+propertySchema.index({ ownerId: 1, createdAt: -1 });
 const paymentMethodSchema = new mongoose.Schema({ id: { type: String, index: true, sparse: true } }, { strict: false });
 const receiptSchema = new mongoose.Schema({ id: { type: String, index: true, sparse: true } }, { strict: false });
 const inquirySchema = new mongoose.Schema({ id: { type: String, index: true, sparse: true } }, { strict: false });
@@ -2068,6 +2092,11 @@ async function startServer() {
 
   // Trust proxy for Render / Cloudflare reverse proxies
   app.set('trust proxy', 1);
+
+  // Enable Gzip/Deflate HTTP Response Compression for high performance & minimal data transfer
+  app.use(compression({
+    threshold: 1024 // Compress any response larger than 1KB
+  }));
 
   // Global CORS Middleware
   app.use((req, res, next) => {
@@ -5666,6 +5695,7 @@ async function startServer() {
 
   // Categories Endpoints
   app.get('/api/categories', async (req, res) => {
+    res.setHeader('Cache-Control', 'public, max-age=300, stale-while-revalidate=600');
     res.json(localDb.categories || []);
   });
 
@@ -5720,6 +5750,7 @@ async function startServer() {
 
   // App Features / Info Pages Endpoints
   app.get('/api/app-features', async (req, res) => {
+    res.setHeader('Cache-Control', 'public, max-age=300, stale-while-revalidate=600');
     res.json(localDb.appFeatures || []);
   });
 
@@ -5846,6 +5877,7 @@ async function startServer() {
 
   // Payment Methods Endpoints
   app.get('/api/payment-methods', async (req, res) => {
+    res.setHeader('Cache-Control', 'public, max-age=300, stale-while-revalidate=600');
     res.json(localDb.paymentMethods);
   });
 
@@ -6809,6 +6841,7 @@ async function startServer() {
 
   // Languages & Translations
   app.get('/api/languages', async (req, res) => {
+    res.setHeader('Cache-Control', 'public, max-age=300, stale-while-revalidate=600');
     res.json({
       languages: localDb.languages,
       translations: localDb.translations
@@ -6880,6 +6913,7 @@ async function startServer() {
 
   // System Settings
   app.get('/api/system-settings', async (req, res) => {
+    res.setHeader('Cache-Control', 'public, max-age=60, stale-while-revalidate=120');
     if (!(localDb as any).appSettings) {
       (localDb as any).appSettings = {};
     }
@@ -8275,6 +8309,7 @@ async function startServer() {
     let items = (localDb as any).faqs || [];
     const isAdmin = (req as any).user && (req as any).user.role === 'admin';
     if (!isAdmin) {
+      res.setHeader('Cache-Control', 'public, max-age=300, stale-while-revalidate=600');
       items = items.filter((f: any) => f.status !== 'draft');
     }
     items = [...items].sort((a: any, b: any) => (a.orderIndex || 999) - (b.orderIndex || 999));

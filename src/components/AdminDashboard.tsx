@@ -3636,6 +3636,14 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
                 <div className="flex items-center gap-2">
                   <button
                     type="button"
+                    onClick={() => refreshData()}
+                    className="px-3.5 py-2 bg-white/5 hover:bg-white/10 text-white border border-white/10 rounded-xl text-xs font-bold flex items-center gap-1.5 cursor-pointer transition"
+                    title="Reload latest user accounts from database"
+                  >
+                    <RefreshCw className="w-3.5 h-3.5 text-amber-400" /> Refresh Users
+                  </button>
+                  <button
+                    type="button"
                     onClick={() => {
                       fetchModerationLogs();
                       setShowModerationLogs(true);
@@ -3858,6 +3866,15 @@ export default function AdminDashboard({ onBackToMarketplace, onOpenCreateModal,
                       </tr>
                       );
                     })}
+                    {filteredUsers.length === 0 && (
+                      <tr>
+                        <td colSpan={5} className="py-12 text-center text-white/40">
+                          <Users className="w-8 h-8 text-white/20 mx-auto mb-2" />
+                          <p className="font-semibold text-sm">No registered user accounts found</p>
+                          <p className="text-[11px] text-white/30 mt-0.5">User accounts registered in the database will appear here.</p>
+                        </td>
+                      </tr>
+                    )}
                   </tbody>
                 </table>
               </div>

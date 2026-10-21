@@ -206,7 +206,8 @@ export default function Marketplace({
     categories,
     t,
     refreshData,
-    systemSettings
+    systemSettings,
+    loading
   } = useApp();
 
   const [searchQuery, setSearchQuery] = useState('');
@@ -2167,7 +2168,27 @@ export default function Marketplace({
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 text-left mb-16">
             {/* Left Side: Listings */}
             <div className={`${sidebarAds.length > 0 ? 'lg:col-span-9' : 'lg:col-span-12'} space-y-16 animate-fade-in`}>
-              {filteredProperties.length === 0 ? (
+              {loading && properties.length === 0 ? (
+                <div className="space-y-8">
+                  <div className="flex items-center justify-between border-b border-white/5 pb-4">
+                    <div className="h-6 w-48 bg-white/10 rounded-lg animate-pulse" />
+                    <div className="h-4 w-24 bg-white/5 rounded-lg animate-pulse" />
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+                    {[1, 2, 3, 4, 5, 6].map(i => (
+                      <div key={i} className="rounded-3xl bg-[#0e0e13] border border-white/5 p-4 space-y-4 animate-pulse">
+                        <div className="h-48 bg-white/5 rounded-2xl w-full" />
+                        <div className="h-4 bg-white/10 rounded-lg w-3/4" />
+                        <div className="h-3 bg-white/5 rounded-lg w-1/2" />
+                        <div className="flex justify-between pt-2 border-t border-white/5">
+                          <div className="h-4 bg-amber-500/20 rounded-md w-1/3" />
+                          <div className="h-4 bg-white/5 rounded-md w-1/4" />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : filteredProperties.length === 0 ? (
                 <div className="bg-[#0d0d12]/60 rounded-3xl border border-white/5 p-16 text-center shadow-lg">
                   <Building className="w-12 h-12 text-white/20 mx-auto mb-4" />
                   <h4 className="text-lg font-serif text-white font-semibold">{t('no_listings_found')}</h4>

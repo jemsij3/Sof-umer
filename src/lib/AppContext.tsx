@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef, ReactNode } from 'react';
 import { User, Property, PaymentMethod, PaymentReceipt, Inquiry, Advertisement, Language, TranslationKey, AppNotification, SafetyReport, Category, AppFeature, JobOpening, SupportTicket, PropertyOffer, FAQItem, Review, Announcement } from '../types';
 import { staticTranslations } from './translations';
 import { setGlobalTranslations, getTranslatedCategoryName, getTranslatedSubcategoryName, getTranslatedFieldLabel, getTranslatedOption, getTranslatedPropertyType } from './categoriesData';
@@ -204,6 +204,8 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     maintenanceMessage: 'SOF-UMER is currently undergoing scheduled platform maintenance. Normal operations will resume shortly. Thank you for your patience.'
   });
   const [loading, setLoading] = useState<boolean>(true);
+  const staticLoadedRef = useRef(false);
+  const isFetchingRef = useRef(false);
 
   // Restore session on load & verify with backend database
   useEffect(() => {
@@ -390,7 +392,10 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     setToken(null);
   };
 
-  const refreshData = async () => {
+  const refreshData = async (options?: { forceStatic?: boolean }) => {
+    if (isFetchingRef.current) return;
+    isFetchingRef.current = true;
+
     try {
       const headers: Record<string, string> = {};
       const savedToken = localStorage.getItem('sof_umer_token') || localStorage.getItem('sof_umer_auth_token') || token;
@@ -401,59 +406,91 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
 
       const safeFetchJson = async (url: string, defaultValue: any = []) => {
         try {
-          const res = await fetch(url, { headers, cache: 'no-store' });
+          const res = await fetch(url, { headers });
           if (!res.ok) {
-            console.warn(`Fetch to ${url} returned status ${res.status}`);
             return defaultValue;
           }
           const contentType = res.headers.get('content-type');
           if (!contentType || !contentType.includes('application/json')) {
-            console.warn(`Fetch to ${url} returned non-JSON content-type for ${url}`);
             return defaultValue;
           }
           return await res.json();
         } catch (e) {
-          console.error(`Failed to fetch or parse JSON from ${url}:`, e);
           return defaultValue;
         }
       };
 
-      const [langsData, propsData, payData, receiptsData, inqsData, advsData, notifsData, usersData, reportsData, catsData, featsData, jobsData, sysSettingsData, ticketsData, offersData, faqsData, reviewsData, announcementsData] = await Promise.all([
-        safeFetchJson('/api/languages', { languages: [], translations: [] }),
+      const shouldLoadStatic = !staticLoadedRef.current || options?.forceStatic === true;
+
+      // Check if user is an authorized admin to avoid sending unauthorized requests
+      const isAdmin = Boolean(
+        currentUser && (
+          currentUser.role === 'admin' ||
+          currentUser.role === 'owner' ||
+          currentUser.role === 'superadmin' ||
+          (currentUser as any).isAdmin ||
+          (currentUser.email && currentUser.email.toLowerCase() === 'jemaljima@gmail.com')
+        ) &&
+        currentUser.status !== 'suspended' &&
+        currentUser.status !== 'banned'
+      );
+
+      // Core dynamic requests (fast, changes regularly)
+      const dynamicFetches = [
         safeFetchJson('/api/properties', []),
-        safeFetchJson('/api/payment-methods', []),
-        safeFetchJson('/api/receipts', []),
-        safeFetchJson('/api/inquiries', []),
         safeFetchJson('/api/advertisements', []),
-        safeFetchJson('/api/notifications', []),
-        safeFetchJson('/api/users', []),
-        safeFetchJson('/api/reports', []),
+        safeFetchJson('/api/system-settings', null),
+        safeFetchJson('/api/announcements', []),
+        safeFetchJson('/api/reviews', [])
+      ];
+
+      // Static requests (cached, only reloaded if forceStatic or initial mount)
+      const staticFetches = shouldLoadStatic ? [
+        safeFetchJson('/api/languages', { languages: [], translations: [] }),
         safeFetchJson('/api/categories', []),
         safeFetchJson('/api/app-features', []),
         safeFetchJson('/api/job-openings', []),
-        safeFetchJson('/api/system-settings', null),
-        safeFetchJson('/api/support-tickets', []),
-        safeFetchJson('/api/offers', []),
-        safeFetchJson('/api/faqs', []),
-        safeFetchJson('/api/reviews', []),
-        safeFetchJson('/api/announcements', [])
+        safeFetchJson('/api/payment-methods', []),
+        safeFetchJson('/api/faqs', [])
+      ] : [];
+
+      // Authenticated user requests
+      const userFetches = savedToken ? [
+        safeFetchJson('/api/notifications', []),
+        safeFetchJson('/api/inquiries', []),
+        safeFetchJson('/api/offers', [])
+      ] : [];
+
+      // Admin-only requests (never spammed for guests/non-admins)
+      const adminFetches = (savedToken && isAdmin) ? [
+        safeFetchJson('/api/users', []),
+        safeFetchJson('/api/receipts', []),
+        safeFetchJson('/api/reports', []),
+        safeFetchJson('/api/support-tickets', [])
+      ] : [];
+
+      const [
+        dynamicResults,
+        staticResults,
+        userResults,
+        adminResults
+      ] = await Promise.all([
+        Promise.all(dynamicFetches),
+        Promise.all(staticFetches),
+        Promise.all(userFetches),
+        Promise.all(adminFetches)
       ]);
 
-      const activeProperties = propsData || [];
-      const activeUsers = Array.isArray(usersData) ? usersData : [];
+      const [propsData, advsData, sysSettingsData, announcementsData, reviewsData] = dynamicResults;
 
-      setLanguages(langsData.languages || []);
-      setTranslations(langsData.translations || []);
-      setProperties(activeProperties);
-      setPaymentMethods(payData || []);
-      setReceipts(receiptsData || []);
-      setInquiries(inqsData || []);
+      setProperties(propsData || []);
       setAdvertisements(advsData || []);
-      setNotifications(notifsData || []);
-      setUsers(activeUsers);
-      setOffers(offersData || []);
-      setFaqs(faqsData || []);
       setReviews(reviewsData || []);
+
+      if (sysSettingsData) {
+        setSystemSettings(sysSettingsData);
+        localStorage.setItem('sof_umer_sys_settings', JSON.stringify(sysSettingsData));
+      }
 
       let activeAnnouncementsList = Array.isArray(announcementsData) ? announcementsData : [];
       try {
@@ -464,31 +501,52 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       } catch (_) {}
       setAnnouncements(activeAnnouncementsList);
 
-      // Keep currentUser updated with latest balance & details from backend
-      if (currentUser) {
-        const matchingUser = activeUsers.find(u => u.id === currentUser.id || (u.email && currentUser.email && u.email.toLowerCase() === currentUser.email.toLowerCase()));
-        if (matchingUser) {
-          const matchingStr = JSON.stringify(matchingUser);
-          if (matchingStr !== JSON.stringify(currentUser)) {
-            setCurrentUserState(matchingUser);
-            localStorage.setItem('sof_umer_user', matchingStr);
-          }
-        }
+      // Apply static configurations
+      if (shouldLoadStatic && staticResults.length >= 6) {
+        const [langsData, catsData, featsData, jobsData, payData, faqsData] = staticResults;
+        setLanguages(langsData.languages || []);
+        setTranslations(langsData.translations || []);
+        setCategories(catsData || []);
+        setAppFeatures(featsData || []);
+        setJobOpenings(jobsData || []);
+        setPaymentMethods(payData || []);
+        setFaqs(faqsData || []);
+        staticLoadedRef.current = true;
       }
 
-      setReports(reportsData || []);
-      setCategories(catsData || []);
-      setAppFeatures(featsData || []);
-      setJobOpenings(jobsData || []);
-      setSupportTickets(ticketsData || []);
-      if (sysSettingsData) {
-        setSystemSettings(sysSettingsData);
-        localStorage.setItem('sof_umer_sys_settings', JSON.stringify(sysSettingsData));
+      // Apply authenticated user data
+      if (savedToken && userResults.length >= 3) {
+        const [notifsData, inqsData, offersData] = userResults;
+        setNotifications(notifsData || []);
+        setInquiries(inqsData || []);
+        setOffers(offersData || []);
+      }
+
+      // Apply admin records
+      if (savedToken && isAdmin && adminResults.length >= 4) {
+        const [usersData, receiptsData, reportsData, ticketsData] = adminResults;
+        const activeUsers = Array.isArray(usersData) ? usersData : [];
+        setUsers(activeUsers);
+        setReceipts(receiptsData || []);
+        setReports(reportsData || []);
+        setSupportTickets(ticketsData || []);
+
+        if (currentUser) {
+          const matchingUser = activeUsers.find(u => u.id === currentUser.id || (u.email && currentUser.email && u.email.toLowerCase() === currentUser.email.toLowerCase()));
+          if (matchingUser) {
+            const matchingStr = JSON.stringify(matchingUser);
+            if (matchingStr !== JSON.stringify(currentUser)) {
+              setCurrentUserState(matchingUser);
+              localStorage.setItem('sof_umer_user', matchingStr);
+            }
+          }
+        }
       }
     } catch (err) {
       console.error('Failed to load data from backend:', err);
     } finally {
       setLoading(false);
+      isFetchingRef.current = false;
     }
   };
 
@@ -499,14 +557,29 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [translations]);
 
-  // Re-fetch initial data and start background polling interval
+  // Re-fetch initial data and start background polling interval (45s, visibility-aware)
   useEffect(() => {
-    refreshData();
+    refreshData({ forceStatic: true });
+
     const interval = setInterval(() => {
+      // Pause background polling when browser tab is inactive to preserve client memory and bandwidth
+      if (typeof document !== 'undefined' && document.hidden) return;
       refreshData();
-    }, 15000);
-    return () => clearInterval(interval);
-  }, [currentUser?.id]);
+    }, 45000);
+
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        refreshData();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [currentUser?.id, currentUser?.role]);
 
   // Translate helper - Single Source of Truth: Admin Translation Dictionary -> staticTranslations -> Categories / Fields Fallback
   const t = (key: string, params?: Record<string, string | number>): string => {
